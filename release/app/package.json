@@ -1,0 +1,16 @@
+{
+  "name": "vde-dataset-viewer",
+  "version": "1.0.0",
+  "description": "VDE Dataset Viewer",
+  "license": "MIT",
+  "author": {
+    "name": "Dmitry Kolosov"
+  },
+  "main": "./dist/main/main.js",
+  "scripts": {
+    "rebuild": "node -r ts-node/register ../../.erb/scripts/electron-rebuild.js",
+    "postinstall": "npm run rebuild && npm run link-modules",
+    "link-modules": "node -r ts-node/register ../../.erb/scripts/link-modules.ts"
+  },
+  "dependencies": {}
+}
