@@ -12,14 +12,15 @@ import {
     ColumnDef,
     flexRender,
     getCoreRowModel,
-    getSortedRowModel,
     Row,
     useReactTable,
 } from '@tanstack/react-table';
 
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { useAppDispatch } from 'renderer/redux/hooks';
+import { openSnackbar } from 'renderer/redux/slices/ui';
 
-interface TableRow {
+interface ITableRow {
     [key: string]: string | number | boolean | null;
 }
 
@@ -64,6 +65,11 @@ const styles = {
     highlightedCell: {
         backgroundColor: '#f1fae0',
     },
+    rowNumber: {
+        backgroundColor: '#f4f4f4',
+        fontSize: 'small',
+        justifyContent: 'center',
+    },
     selectingCell: {
         backgroundColor: '#e0f7fa',
     },
@@ -74,34 +80,42 @@ const DatasetView: React.FC<{ tableData: ITableData }> = ({
 }: {
     tableData: ITableData;
 }) => {
-    const columns = React.useMemo<ColumnDef<TableRow>[]>(
-        () =>
-            tableData.header.map((column) => {
-                return {
-                    accessorKey: column.id,
-                    header: column.id,
-                    size: 120,
-                };
-            }),
-        [tableData.header],
-    );
+    const dispatch = useAppDispatch();
+
+    const columns = React.useMemo<ColumnDef<ITableRow>[]>(() => {
+        const result = tableData.header.map((column) => {
+            return {
+                accessorKey: column.id,
+                header: column.id,
+                size: 120,
+            };
+        });
+        // Add row number column
+        result.unshift({
+            accessorKey: '#',
+            header: '#',
+            size: 50,
+        });
+        return result;
+    }, [tableData.header]);
 
     // Inital rows;
-    const [data, _setData] = React.useState(() =>
-        tableData.data.map((row) => {
-            const newRow: TableRow = {};
+    const data = React.useMemo(() => {
+        return tableData.data.map((row, index) => {
+            const newRow: ITableRow = {};
             row.forEach((cell, index) => {
                 newRow[tableData.header[index].id] = cell;
             });
+            // Add row number
+            newRow['#'] = index + 1;
             return newRow;
-        }),
-    );
+        });
+    }, [tableData]);
 
     const table = useReactTable({
         data,
         columns,
         getCoreRowModel: getCoreRowModel(),
-        getSortedRowModel: getSortedRowModel(),
         debugTable: true,
     });
 
@@ -121,24 +135,18 @@ const DatasetView: React.FC<{ tableData: ITableData }> = ({
         overscan: 3, //how many columns to render on each side off screen each way (adjust this for performance)
     });
 
-    //dynamic row height virtualization - alternatively you could use a simpler fixed row height strategy without the need for `measureElement`
     const rowVirtualizer = useVirtualizer({
         count: rows.length,
         estimateSize: () => 33, //estimate row height for accurate scrollbar dragging
         getScrollElement: () => tableContainerRef.current,
         //measure dynamic row height, except in firefox because it measures table border height incorrectly
-        measureElement:
-            typeof window !== 'undefined' &&
-            navigator.userAgent.indexOf('Firefox') === -1
-                ? (element) => element?.getBoundingClientRect().height
-                : undefined,
+        measureElement: (element) => element?.getBoundingClientRect().height,
         overscan: 15,
     });
 
     const virtualColumns = columnVirtualizer.getVirtualItems();
     const virtualRows = rowVirtualizer.getVirtualItems();
 
-    //different virtualization strategy for columns - instead of absolute and translateY, we add empty columns to the left and right
     let virtualPaddingLeft: number | undefined;
     let virtualPaddingRight: number | undefined;
 
@@ -190,6 +198,57 @@ const DatasetView: React.FC<{ tableData: ITableData }> = ({
         setStartCell(null);
     };
 
+    const handleCopyToClipboard = () => {
+        if (highlightedCells.length > 0) {
+            const rowIndices = [
+                ...new Set(highlightedCells.map((cell) => cell.row)),
+            ];
+            const columnIndices = [
+                ...new Set(highlightedCells.map((cell) => cell.column)),
+            ];
+
+            rowIndices.sort((a, b) => a - b);
+            columnIndices.sort((a, b) => a - b);
+
+            const selectedData = rowIndices
+                .map((rowIndex) => {
+                    const row = rows[rowIndex];
+                    return columnIndices
+                        .map((columnIndex) => {
+                            const cell = row.getVisibleCells()[columnIndex];
+                            return cell.getValue();
+                        })
+                        .join('\t');
+                })
+                .join('\n');
+
+            window.electron.writeToClipboard(selectedData);
+            dispatch(
+                openSnackbar({
+                    message: 'Copied to clipboard',
+                    type: 'success',
+                    props: { duration: 1000 },
+                }),
+            );
+        }
+    };
+
+    React.useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.ctrlKey && event.key === 'c') {
+                // Ctrl + C to copy selected cells to clipboard
+                handleCopyToClipboard();
+            } else if (event.key === 'Escape') {
+                // Escape to clear selection
+                setHighlightedCells([]);
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [highlightedCells]);
+
     React.useEffect(() => {
         document.addEventListener('mouseup', handleMouseUp);
         return () => {
@@ -203,7 +262,6 @@ const DatasetView: React.FC<{ tableData: ITableData }> = ({
             ref={tableContainerRef}
             sx={styles.container}
         >
-            {/* Even though we're still using sematic table tags, we must use CSS grid and flexbox for dynamic row heights */}
             <Table sx={styles.table}>
                 <TableHead sx={styles.header}>
                     {table.getHeaderGroups().map((headerGroup) => (
@@ -225,31 +283,26 @@ const DatasetView: React.FC<{ tableData: ITableData }> = ({
                                 return (
                                     <TableRow
                                         key={header.id}
-                                        style={{
-                                            display: 'flex',
-                                            width: header.getSize(),
-                                        }}
+                                        sx={
+                                            header.id === '#'
+                                                ? {
+                                                    display: 'flex',
+                                                    justifyContent: 'center',
+                                                    fontSize: 'small',
+                                                    width: header.getSize(),
+                                                    backgroundColor: '#f4f4f4',
+                                                }
+                                                : {
+                                                    display: 'flex',
+                                                    width: header.getSize(),
+                                                  }
+                                        }
                                     >
-                                        <TableCell
-                                            {...{
-                                                className:
-                                                    header.column.getCanSort()
-                                                        ? 'cursor-pointer select-none'
-                                                        : '',
-                                                onClick:
-                                                    header.column.getToggleSortingHandler(),
-                                            }}
-                                        >
+                                        <TableCell>
                                             {flexRender(
                                                 header.column.columnDef.header,
                                                 header.getContext(),
                                             )}
-                                            {{
-                                                asc: ' 🔼',
-                                                desc: ' 🔽',
-                                            }[
-                                                header.column.getIsSorted() as string
-                                            ] ?? null}
                                         </TableCell>
                                     </TableRow>
                                 );
@@ -273,7 +326,7 @@ const DatasetView: React.FC<{ tableData: ITableData }> = ({
                     }}
                 >
                     {virtualRows.map((virtualRow) => {
-                        const row = rows[virtualRow.index] as Row<TableRow>;
+                        const row = rows[virtualRow.index] as Row<ITableRow>;
                         const visibleCells = row.getVisibleCells();
 
                         return (
@@ -290,7 +343,7 @@ const DatasetView: React.FC<{ tableData: ITableData }> = ({
                             >
                                 {virtualPaddingLeft ? (
                                     //fake empty column to the left for virtualization scroll padding
-                                    <TableRow
+                                    <TableCell
                                         style={{
                                             display: 'flex',
                                             width: virtualPaddingLeft,
@@ -311,6 +364,9 @@ const DatasetView: React.FC<{ tableData: ITableData }> = ({
                                             style={{
                                                 ...styles.tableCell,
                                                 width: cell.column.getSize(),
+                                                ...(vc.index === 0
+                                                    ? styles.rowNumber
+                                                    : {}),
                                                 ...(isHighlighted
                                                     ? styles.highlightedCell
                                                     : {}),
@@ -343,7 +399,7 @@ const DatasetView: React.FC<{ tableData: ITableData }> = ({
                                 })}
                                 {virtualPaddingRight ? (
                                     //fake empty column to the right for virtualization scroll padding
-                                    <TableRow
+                                    <TableCell
                                         style={{
                                             display: 'flex',
                                             width: virtualPaddingRight,

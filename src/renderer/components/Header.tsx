@@ -3,10 +3,10 @@ import AppBar from '@mui/material/AppBar';
 import Stack from '@mui/material/Stack';
 import HomeIcon from '@mui/icons-material/Home';
 import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
-import CloudDownloadOutlinedIcon from '@mui/icons-material/CloudDownloadOutlined';
+import ShortcutIcon from '@mui/icons-material/Shortcut'; // Import the icon for the GoTo button
 import IconButton from '@mui/material/IconButton';
 import Toolbar from '@mui/material/Toolbar';
-import { setView } from 'renderer/redux/slices/ui';
+import { setView, openModal } from 'renderer/redux/slices/ui';
 import { setData, addRecent } from 'renderer/redux/slices/data';
 import { useAppDispatch } from 'renderer/redux/hooks';
 import { openNewDataset } from 'renderer/utils/readData';
@@ -37,9 +37,10 @@ const Header: React.FC = () => {
         // To implement
     };
 
-    const handleCloudClick = () => {
-        // To implement
-    };
+    const handleGoToClick = () => {
+        dispatch(openModal({ type: 'GOTO', props: {} }));
+    }
+
 
     return (
         <AppBar
@@ -80,11 +81,11 @@ const Header: React.FC = () => {
                         />
                     </IconButton>
                     <IconButton
-                        onClick={handleCloudClick}
+                        onClick={handleGoToClick}
                         id="cloud"
                         size="medium"
                     >
-                        <CloudDownloadOutlinedIcon
+                        <ShortcutIcon
                             sx={{
                                 color: 'primary.main',
                                 fontSize: '32px',
