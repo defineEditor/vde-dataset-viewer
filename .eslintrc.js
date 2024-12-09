@@ -1,5 +1,5 @@
 module.exports = {
-    extends: 'erb',
+    extends: ['erb', 'prettier'],
     rules: {
         // A temporary hack related to IDE not resolving correct package.json
         'import/no-extraneous-dependencies': 'off',
@@ -8,8 +8,14 @@ module.exports = {
         'import/extensions': 'off',
         'import/no-unresolved': 'off',
         'import/no-import-module-exports': 'off',
-        'react/function-component-definition': 'arrow-function',
+        'react/function-component-definition': [
+            2,
+            { namedComponents: 'arrow-function' },
+        ],
         indent: ['error', 4],
+        'react/jsx-props-no-spreading': 'off',
+        'class-methods-use-this': [0],
+        'no-plusplus': [0],
     },
     parserOptions: {
         ecmaVersion: 2022,

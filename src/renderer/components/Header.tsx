@@ -14,7 +14,7 @@ import AppContext from 'renderer/utils/AppContext';
 
 const Header: React.FC = () => {
     const dispatch = useAppDispatch();
-    const apiService = useContext(AppContext).apiService;
+    const { apiService } = useContext(AppContext);
 
     const handleHomeClick = () => {
         dispatch(setView({ view: 'select' }));
@@ -28,10 +28,10 @@ const Header: React.FC = () => {
         dispatch(setData({ ...newDataInfo }));
         dispatch(
             addRecent({
-                name: newDataInfo.name,
-                label: newDataInfo.label,
+                name: newDataInfo.metadata.name,
+                label: newDataInfo.metadata.label,
                 path: `/some/path/to/file/{name}.json`,
-            })
+            }),
         );
         dispatch(setView({ view: 'view', currentFileId: newDataInfo.fileId }));
         // To implement
@@ -39,8 +39,7 @@ const Header: React.FC = () => {
 
     const handleGoToClick = () => {
         dispatch(openModal({ type: 'GOTO', props: {} }));
-    }
-
+    };
 
     return (
         <AppBar

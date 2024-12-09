@@ -12,8 +12,7 @@ export type ItemType =
 /**
  * The first item in the data array needs to be a number (itemGroupDataSeq)
  */
-export type FirstItemType = number;
-export type ItemDataArray = [FirstItemType, ...Array<string | number | null>];
+export type ItemDataArray = [...Array<string | number | null | boolean>];
 
 /**
  * Definition for Variable in the Dataset

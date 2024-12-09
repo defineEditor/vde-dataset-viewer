@@ -3,7 +3,7 @@ import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
-import { resolveHtmlPath } from './util';
+import { resolveHtmlPath, writeToClipboard } from './util';
 import FileManager from './fileManager';
 
 class AppUpdater {
@@ -26,17 +26,19 @@ const isDebug =
 
 if (isDebug) {
     require('electron-debug')();
+    const sourceMapSupport = require('source-map-support');
+    sourceMapSupport.install();
 }
 
 const installExtensions = async () => {
     const installer = require('electron-devtools-installer');
     const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
-    const extensions = ['REACT_DEVELOPER_TOOLS'];
+    const extensions = ['REACT_DEVELOPER_TOOLS', 'REDUX_DEVTOOLS'];
 
     return installer
         .default(
             extensions.map((name) => installer[name]),
-            forceDownload
+            forceDownload,
         )
         .catch(console.log);
 };
@@ -54,8 +56,6 @@ const createWindow = async () => {
         return path.join(RESOURCES_PATH, ...paths);
     };
 
-
-    console.log(app);
     mainWindow = new BrowserWindow({
         show: false,
         width: 1024,
@@ -117,10 +117,11 @@ app.whenReady()
         const fileManager = new FileManager();
         ipcMain.handle('main:openFile', fileManager.handleFileOpen);
         ipcMain.handle('main:closeFile', fileManager.handleFileClose);
+        ipcMain.handle('main:writeToClipboard', writeToClipboard);
         ipcMain.handle('read:getMetadata', fileManager.handleGetMetadata);
         ipcMain.handle(
             'read:getObservations',
-            fileManager.handleGetObservations
+            fileManager.handleGetObservations,
         );
         createWindow();
         app.on('activate', () => {

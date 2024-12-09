@@ -1,4 +1,5 @@
 import { ItemDataArray } from 'interfaces/datasetJson';
+import { DatasetJsonMetadata } from 'interfaces/api.d';
 
 export type SortOrder = 'asc' | 'desc';
 export type AlignType = 'left' | 'center' | 'right' | 'justify';
@@ -73,6 +74,6 @@ export interface ISearchInTableProps {
 
 export interface ITableData {
     header: IGeneralTableHeaderCell[];
-    metadata: { name: string; label: string; records: number };
+    metadata: DatasetJsonMetadata;
     data: ItemDataArray[];
 }

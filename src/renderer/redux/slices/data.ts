@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { data as initialData } from 'renderer/redux/initialState';
-import { IRecentFile } from 'interfaces/common';
+import { DatasetJsonMetadata, IRecentFile, DatasetType } from 'interfaces/common';
 
 export const dataSlice = createSlice({
     name: 'data',
@@ -10,8 +10,8 @@ export const dataSlice = createSlice({
             state,
             action: PayloadAction<{
                 fileId: string;
-                name: string;
-                label: string;
+                metadata: DatasetJsonMetadata;
+                type: DatasetType;
             }>
         ) => {
             const newState = {
@@ -19,9 +19,14 @@ export const dataSlice = createSlice({
                 openedFileIds: {
                     ...state.openedFileIds,
                     [action.payload.fileId]: {
-                        name: action.payload.name,
-                        label: action.payload.label,
+                        name: action.payload.metadata.name,
+                        label: action.payload.metadata.label,
+                        type: action.payload.type,
                     },
+                },
+                openedFileMetadata: {
+                    ...state.openedFileMetadata,
+                    [action.payload.fileId]: action.payload.metadata,
                 },
             };
             return newState;

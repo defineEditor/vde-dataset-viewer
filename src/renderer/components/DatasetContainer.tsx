@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Stack from '@mui/material/Stack';
 import Paper from '@mui/material/Paper';
 import TablePagination from '@mui/material/TablePagination';
@@ -11,7 +11,6 @@ import estimateWidth from 'renderer/utils/estimateWidth';
 
 const styles = {
     main: {
-        display: 'flex',
         flex: '1 1 auto',
     },
     table: {
@@ -27,33 +26,29 @@ const styles = {
 
 const apiService = new ApiService('local');
 
-const blankTable = {
-    header: [],
-    metadata: { name: '', label: '', records: 0 },
-    data: [],
-};
-
-const ViewDataset: React.FC = () => {
+const DatasetContainer: React.FC = () => {
     const dispatch = useAppDispatch();
     const fileId = useAppSelector((state) => state.ui.currentFileId);
     const estimateWidthRows = useAppSelector(
-        (state) => state.settings.estimateWidthRows
+        (state) => state.settings.estimateWidthRows,
     );
     const name = useAppSelector(
-        (state) => state.data.openedFileIds[fileId]?.name
+        (state) => state.data.openedFileIds[fileId]?.name,
     );
     const pageSize = useAppSelector((state) => state.settings.pageSize);
 
-    const [table, setTable] = useState<ITableData>(blankTable);
+    const [isLoading, setIsLoading] = useState(true);
+    const [table, setTable] = useState<ITableData | null>(null);
 
     useEffect(() => {
-        setTable(blankTable);
+        setTable(null);
         const readDataset = async () => {
             if (fileId === '') {
                 return;
             }
 
-            const newData = await getData(apiService, fileId, 0, pageSize + 1);
+            setIsLoading(true);
+            const newData = await getData(apiService, fileId, 0, pageSize);
             // Get width estimation for columns
             if (newData !== null) {
                 const widths = estimateWidth(newData, estimateWidthRows);
@@ -67,6 +62,7 @@ const ViewDataset: React.FC = () => {
                 });
                 newData.header = header;
                 setTable(newData);
+                setIsLoading(false);
             }
         };
 
@@ -76,34 +72,62 @@ const ViewDataset: React.FC = () => {
     // Pagination
     const [page, setPage] = useState(0);
 
-    const handleChangePage = (
-        _event: any,
-        newPage: React.SetStateAction<number>
-    ) => {
-        if (table.data.length === 0) {
-            // Do nothing, as data is loaded;
-            return;
-        }
-        setTable({ ...table, data: [] });
-        setPage(newPage);
-        const readNext = async (start: number) => {
-            const newData = await getData(apiService, fileId, start, pageSize);
-            if (newData !== null) {
-                setTable(newData);
+    const handleChangePage = useCallback(
+        (_event: any, newPage: React.SetStateAction<number>) => {
+            if (table === null) {
+                return;
             }
-        };
 
-        readNext((newPage as number) * pageSize + 1);
-    };
+            if (table.data.length === 0) {
+                // Do nothing, as data is loaded;
+                return;
+            }
+            setTable({ ...table, data: [] });
+            setIsLoading(true);
+            setPage(newPage);
+            const readNext = async (start: number) => {
+                const newData = await getData(
+                    apiService,
+                    fileId,
+                    start,
+                    pageSize,
+                );
+                if (newData !== null) {
+                    setTable(newData);
+                    setIsLoading(false);
+                }
+            };
 
-    if (table.header.length === 0) {
+            readNext((newPage as number) * pageSize);
+        },
+        [fileId, pageSize, table],
+    );
+
+    // GoTo control
+    const goToRow = useAppSelector((state) => state.ui.control.goTo.row);
+
+    useEffect(() => {
+        if (goToRow !== null) {
+            const newPage = Math.floor(goToRow / pageSize);
+            if (newPage !== page) {
+                handleChangePage(null, newPage);
+            }
+        }
+    }, [goToRow, page, pageSize, handleChangePage]);
+
+    if (table === null) {
         return null;
     }
 
     return (
         <Stack sx={styles.main}>
             <Paper sx={styles.table}>
-                <DatasetView tableData={table}/>
+                <DatasetView
+                    key={`${fileId}:${page}`} // Add key prop to force unmount/remount
+                    tableData={table}
+                    currentPage={page}
+                    isLoading={isLoading}
+                />
             </Paper>
             {pageSize < table.metadata.records && (
                 <Paper sx={styles.pagination}>
@@ -122,4 +146,4 @@ const ViewDataset: React.FC = () => {
     );
 };
 
-export default ViewDataset;
+export default DatasetContainer;

@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { ui as initialUi } from 'renderer/redux/initialState';
-import { IUi } from 'interfaces/common';
+import { IUi, IUiSnackbar, IUiModal } from 'interfaces/common';
 
 export const uiSlice = createSlice({
     name: 'ui',
@@ -10,9 +10,50 @@ export const uiSlice = createSlice({
             const newState = { ...state, ...action.payload };
             return newState;
         },
+        openSnackbar: (state, action: PayloadAction<IUiSnackbar>) => {
+            const { type, message, props } = action.payload;
+            state.snackbar = { type, message, props };
+        },
+        closeSnackbar: (state) => {
+            state.snackbar = { type: null, message: null, props: {} };
+        },
+        openModal: (state, action: PayloadAction<IUiModal>) => {
+            const { type, props } = action.payload;
+            state.modals.push({ type, props });
+        },
+        setGoTo: (
+            state,
+            action: PayloadAction<{
+                row?: number | null;
+                column?: string | null;
+            }>,
+        ) => {
+            const { row, column } = action.payload;
+            if (row !== undefined) {
+                state.control.goTo.row = row;
+            }
+            if (column !== undefined) {
+                state.control.goTo.column = column;
+            }
+        },
+        closeModal: (state, action: PayloadAction<{ type: string }>) => {
+            const { type } = action.payload;
+            // Find the last opened modal of the given type and remove it
+            const index = state.modals.map((m) => m.type).lastIndexOf(type);
+            if (index !== -1) {
+                state.modals.splice(index, 1);
+            }
+        },
     },
 });
 
-export const { setView } = uiSlice.actions;
+export const {
+    setView,
+    openSnackbar,
+    closeSnackbar,
+    closeModal,
+    openModal,
+    setGoTo,
+} = uiSlice.actions;
 
 export default uiSlice.reducer;

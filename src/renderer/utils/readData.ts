@@ -1,4 +1,10 @@
-import { IGeneralTableHeaderCell, ITableData } from 'interfaces/common';
+import {
+    DatasetJsonMetadata,
+    IGeneralTableHeaderCell,
+    ITableData,
+    DatasetType,
+} from 'interfaces/common';
+import { ItemDataArray } from 'js-stream-dataset-json';
 import ApiService from 'renderer/services/ApiService';
 
 /*
@@ -116,57 +122,47 @@ const getData = async (
     apiService: ApiService,
     fileId: string,
     start: number,
-    pageSize: number
+    pageSize: number,
 ): Promise<ITableData | null> => {
     const metadata = await apiService.getMetadata(fileId);
     if (Object.keys(metadata).length === 0) {
         return null;
     }
 
-    const newMetadata = {
-        name: metadata.name,
-        label: metadata.label,
-        records: metadata.records,
-    };
-
-    const itemData = await apiService.getObservations(fileId, start, pageSize);
+    const itemData = (await apiService.getObservations(
+        fileId,
+        start,
+        pageSize,
+    )) as ItemDataArray[];
 
     const rawHeader = metadata.columns;
 
     const newHeader: IGeneralTableHeaderCell[] = rawHeader.map((item) => {
-        let result;
-        if (item.name === 'ITEMGROUPDATASEQ') {
-            result = {
-                id: '#',
-                label: item.label,
-                hidden: false,
-                key: true,
-            };
-        } else {
-            result = {
-                id: item.name,
-                label: item.label,
-            };
-        }
-        return result;
+        return {
+            id: item.name,
+            label: item.label,
+        };
     });
 
-    return { header: newHeader, metadata: newMetadata, data: itemData };
+    return { header: newHeader, metadata, data: itemData };
 };
 
 // Open new dataset;
 const openNewDataset = async (
-    apiService: ApiService
-): Promise<{ fileId: string; name: string; label: string } | null> => {
-    const { fileId } = await apiService.openFile();
-    if (fileId === undefined) {
+    apiService: ApiService,
+): Promise<{
+    fileId: string;
+    metadata: DatasetJsonMetadata;
+    type: DatasetType;
+} | null> => {
+    const result = await apiService.openFile();
+    // There was an error reading the file
+    if (result === null) {
         return null;
     }
+    const { fileId, type } = result;
     const metadata = await apiService.getMetadata(fileId);
-    const { name, label } = {
-        ...metadata,
-    };
-    return { fileId, name, label };
+    return { fileId, metadata, type };
 };
 
 export { getData, openNewDataset };

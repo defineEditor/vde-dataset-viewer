@@ -7,10 +7,23 @@ export const settings: ISettings = {
 export const ui: IUi = {
     view: 'select',
     currentFileId: '',
+    modals: [],
+    snackbar: {
+        type: null,
+        message: null,
+        props: {},
+    },
+    control: {
+        goTo: {
+            row: null,
+            column: null,
+        },
+    },
 };
 
 export const data: IData = {
     openedFileIds: {},
+    openedFileMetadata: {},
     recentFiles: [],
 };
 

@@ -18,8 +18,8 @@ const Main = () => {
         <Box sx={styles.main}>
             {currentView === 'select' && <SelectDataset />}
             {currentView === 'view' && <ViewFile />}
-            <Snackbar/>
-            <Modal/>
+            <Snackbar />
+            <Modal />
         </Box>
     );
 };

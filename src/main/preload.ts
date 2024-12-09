@@ -5,6 +5,8 @@ export type Channels = 'ipc-example';
 contextBridge.exposeInMainWorld('electron', {
     openFile: (mode: 'local' | 'remote') =>
         ipcRenderer.invoke('main:openFile', mode),
+    writeToClipboard: (text: string) =>
+        ipcRenderer.invoke('main:writeToClipboard', text),
     closeFile: (fileId: string, mode: 'local' | 'remote') =>
         ipcRenderer.invoke('main:closeFile', fileId, mode),
     getMetadata: (fileId: string) =>

@@ -3,8 +3,15 @@ import {
     ItemDataArray,
     DatasetJsonData,
     DatasetJsonMetadata,
+    DatasetType,
 } from 'interfaces/common';
 import DatasetJson from 'js-stream-dataset-json';
+
+interface IOpenFile {
+    fileId: string;
+    type: DatasetType;
+    datasetNames?: string[];
+}
 
 class ApiService {
     private mode: 'local' | 'remote';
@@ -14,34 +21,36 @@ class ApiService {
     }
 
     // Open file
-    public openFile = async (): Promise<{
-        fileId: string;
-        datasetNames?: string[];
-    }> => {
+    public openFile = async (): Promise<IOpenFile> => {
         if (this.mode === 'remote') {
             return this.openFileRemote();
         }
         return this.openFileLocal();
     };
 
-    private openFileLocal = async (): Promise<{
-        fileId: string;
-    }> => {
-        const fileId: string = await window.electron.openFile('local');
-        const result = { fileId };
-        return result;
+    private openFileLocal = async (): Promise<IOpenFile> => {
+        const response = await window.electron.openFile('local');
+        if (response === null) {
+            return { fileId: '', type: 'json' };
+        }
+        return response;
     };
 
-    private openFileRemote = async (): Promise<{
-        fileId: string;
-        datasetNames: string[];
-    }> => {
-        let result = { fileId: '', datasetNames: [] };
+    private openFileRemote = async (): Promise<IOpenFile> => {
+        let result: IOpenFile = {
+            fileId: '',
+            type: 'json',
+            datasetNames: [],
+        };
         try {
             // Get the file path
             let fileId = '';
             let datasetNames = [];
-            const filePath: string = await window.electron.openFile('remote');
+            const response = await window.electron.openFile('remote');
+            if (response === null) {
+                throw new Error('Error opening the file');
+            }
+            const filePath = response.fileId;
             // Request to open the file
             if (filePath !== undefined) {
                 // Check if the dataset is already open
@@ -49,7 +58,7 @@ class ApiService {
                     [name: string]: { name: string; path: string };
                 } = {};
                 const openFilesResp = await fetch(
-                    'http://localhost:8000/jsons'
+                    'http://localhost:8000/jsons',
                 );
                 if ([200, 204].includes(openFilesResp.status)) {
                     openFiles = (await openFilesResp.json()) as unknown as {
@@ -76,7 +85,7 @@ class ApiService {
                     };
                     const requestResponse = await fetch(
                         'http://localhost:8000/jsons',
-                        requestOptions
+                        requestOptions,
                     );
                     if ([200, 204].includes(requestResponse.status)) {
                         fileId = await requestResponse.text();
@@ -86,12 +95,12 @@ class ApiService {
                     // Get the list of datasets
                     const requestResponseGet = await fetch(
                         `http://localhost:8000/jsons/${fileId}/datasets`,
-                        { method: 'GET' }
+                        { method: 'GET' },
                     );
                     if ([200, 204].includes(requestResponseGet.status)) {
                         datasetNames = await requestResponseGet.json();
                     }
-                    result = { fileId, datasetNames };
+                    result = { fileId, type: 'json', datasetNames };
                 }
             }
         } catch {
@@ -102,7 +111,7 @@ class ApiService {
 
     // Get dataset metadata
     public getMetadata = async (
-        fileId: string
+        fileId: string,
     ): Promise<DatasetJsonMetadata> => {
         let result: DatasetJsonMetadata;
         if (this.mode === 'remote') {
@@ -122,7 +131,7 @@ class ApiService {
         try {
             const requestResponse = await fetch(
                 `http://localhost:8000/jsons/${fileId}/datasets/${datasetName}/metadata`,
-                { method: 'GET' }
+                { method: 'GET' },
             );
             if ([200, 204].includes(requestResponse.status)) {
                 result =
@@ -144,7 +153,7 @@ class ApiService {
         fileId: string,
         start: number,
         length: number,
-        query = ''
+        query = '',
     ): Promise<DatasetJsonData> => {
         if (this.mode === 'remote') {
             return this.getObservationsRemote(
@@ -152,7 +161,7 @@ class ApiService {
                 '',
                 Math.trunc(start / length) + 1,
                 length,
-                query
+                query,
             );
         }
         return this.getObservationsLocal(fileId, start, length);
@@ -161,7 +170,7 @@ class ApiService {
     private getObservationsLocal = async (
         fileId: string,
         start: number,
-        length: number
+        length: number,
     ) => {
         const result = await window.electron.getData(fileId, start, length);
         return result;
@@ -172,7 +181,7 @@ class ApiService {
         datasetName: string,
         page: number,
         pageSize: number,
-        query = ''
+        query = '',
     ) => {
         let result;
         try {
@@ -181,7 +190,7 @@ class ApiService {
             };
             const requestResponse = await fetch(
                 `http://localhost:8000/jsons/${fileId}/datasets/${datasetName}/observations?page=${page}&page_size=${pageSize}&query=${query}`,
-                requestOptions
+                requestOptions,
             );
             if ([200, 204].includes(requestResponse.status)) {
                 result =
@@ -215,7 +224,7 @@ class ApiService {
             };
             const requestResponse = await fetch(
                 `http://localhost:8000/jsons/${fileId}`,
-                requestOptions
+                requestOptions,
             );
             if ([200, 204].includes(requestResponse.status)) {
                 // Closed succussfully

@@ -1,7 +1,7 @@
 import React from 'react';
 import Stack from '@mui/material/Stack';
 import Header from 'renderer/components/Header';
-import ViewDataset from 'renderer/components/ViewDataset';
+import DatasetContainer from 'renderer/components/DatasetContainer';
 import AppContextProvider from 'renderer/utils/AppContextProvider';
 
 const styles = {
@@ -16,7 +16,7 @@ const ViewFile: React.FC = () => {
         <AppContextProvider>
             <Stack sx={styles.stack}>
                 <Header />
-                <ViewDataset />
+                <DatasetContainer />
             </Stack>
         </AppContextProvider>
     );
