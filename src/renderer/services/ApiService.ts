@@ -1,7 +1,6 @@
 import {
     ItemGroupData,
     ItemDataArray,
-    DatasetJsonData,
     DatasetJsonMetadata,
     DatasetType,
 } from 'interfaces/common';
@@ -10,6 +9,7 @@ import DatasetJson from 'js-stream-dataset-json';
 interface IOpenFile {
     fileId: string;
     type: DatasetType;
+    path: string;
     datasetNames?: string[];
 }
 
@@ -31,7 +31,7 @@ class ApiService {
     private openFileLocal = async (): Promise<IOpenFile> => {
         const response = await window.electron.openFile('local');
         if (response === null) {
-            return { fileId: '', type: 'json' };
+            return { fileId: '', type: 'json', path: '' };
         }
         return response;
     };
@@ -40,6 +40,7 @@ class ApiService {
         let result: IOpenFile = {
             fileId: '',
             type: 'json',
+            path: '',
             datasetNames: [],
         };
         try {
@@ -100,7 +101,12 @@ class ApiService {
                     if ([200, 204].includes(requestResponseGet.status)) {
                         datasetNames = await requestResponseGet.json();
                     }
-                    result = { fileId, type: 'json', datasetNames };
+                    result = {
+                        fileId,
+                        type: 'json',
+                        datasetNames,
+                        path: filePath,
+                    };
                 }
             }
         } catch {
@@ -154,7 +160,7 @@ class ApiService {
         start: number,
         length: number,
         query = '',
-    ): Promise<DatasetJsonData> => {
+    ): Promise<ItemDataArray[]> => {
         if (this.mode === 'remote') {
             return this.getObservationsRemote(
                 fileId,
@@ -199,9 +205,7 @@ class ApiService {
         } catch (error) {
             // Handle exception
         }
-        return result as unknown as ReturnType<
-            Awaited<InstanceType<typeof DatasetJson>['getData']>
-        >;
+        return result as ItemDataArray[];
     };
 
     // Close file

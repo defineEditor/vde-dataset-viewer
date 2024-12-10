@@ -6,7 +6,7 @@ import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
 import ShortcutIcon from '@mui/icons-material/Shortcut'; // Import the icon for the GoTo button
 import IconButton from '@mui/material/IconButton';
 import Toolbar from '@mui/material/Toolbar';
-import { setView, openModal } from 'renderer/redux/slices/ui';
+import { setView, openModal, setPage } from 'renderer/redux/slices/ui';
 import { setData, addRecent } from 'renderer/redux/slices/data';
 import { useAppDispatch } from 'renderer/redux/hooks';
 import { openNewDataset } from 'renderer/utils/readData';
@@ -30,11 +30,12 @@ const Header: React.FC = () => {
             addRecent({
                 name: newDataInfo.metadata.name,
                 label: newDataInfo.metadata.label,
-                path: `/some/path/to/file/{name}.json`,
+                path: newDataInfo.path,
             }),
         );
         dispatch(setView({ view: 'view', currentFileId: newDataInfo.fileId }));
-        // To implement
+        // Reset page for the new dataset
+        dispatch(setPage(0));
     };
 
     const handleGoToClick = () => {

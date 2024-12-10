@@ -10,7 +10,6 @@ import {
     ListItemButton,
 } from '@mui/material';
 import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
-import CloudDownloadOutlinedIcon from '@mui/icons-material/CloudDownloadOutlined';
 import { setView } from 'renderer/redux/slices/ui';
 import { setData, addRecent } from 'renderer/redux/slices/data';
 import { openNewDataset } from 'renderer/utils/readData';
@@ -18,7 +17,7 @@ import AppContext from 'renderer/utils/AppContext';
 
 const SelectDataset = () => {
     const dispatch = useAppDispatch();
-    const apiService = useContext(AppContext).apiService;
+    const { apiService } = useContext(AppContext);
     const recentFiles = useAppSelector((state) => state.data.recentFiles);
 
     const handleOpenLocal = async () => {
@@ -29,14 +28,27 @@ const SelectDataset = () => {
         dispatch(setData({ ...newDataInfo }));
         dispatch(
             addRecent({
-                name: newDataInfo.name,
-                label: newDataInfo.label,
-                path: `/some/path/to/file/{name}.json`,
-            })
+                name: newDataInfo.metadata.name,
+                label: newDataInfo.metadata.label,
+                path: newDataInfo.path,
+            }),
         );
         dispatch(setView({ view: 'view', currentFileId: newDataInfo.fileId }));
     };
 
+    // Open recent file
+    const handleRecentFileClick = (file: {
+        name: string;
+        label: string;
+        path: string;
+    }) => {
+        dispatch(
+            setView({
+                view: 'view',
+                currentFileId: file.path,
+            }),
+        );
+    };
     return (
         <Stack
             spacing={2}
@@ -70,7 +82,11 @@ const SelectDataset = () => {
                 }}
             >
                 {recentFiles.map((file) => (
-                    <ListItemButton>
+                    <ListItemButton
+                        onClick={() => {
+                            handleRecentFileClick(file);
+                        }}
+                    >
                         <ListItem>
                             <ListItemText
                                 primary={`${file.name} ${file.label}`}

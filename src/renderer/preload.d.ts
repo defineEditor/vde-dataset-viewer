@@ -1,26 +1,30 @@
-import DatasetJson from 'js-stream-dataset-json';
+/* eslint-disable no-unused-vars */
 import { Channels } from 'main/preload';
-import { DatasetType } from 'interfaces/common';
+import {
+    DatasetType,
+    DatasetJsonMetadata,
+    ItemDataArray,
+} from 'interfaces/common';
 
 declare global {
     interface Window {
         electron: {
-            openFile: (
-                mode: 'local' | 'remote',
-            ) => Promise<{ fileId: string; type: DatasetType } | null>;
+            openFile: (mode: 'local' | 'remote') => Promise<{
+                fileId: string;
+                type: DatasetType;
+                path: string;
+            } | null>;
             closeFile: (
                 fileId: string,
                 mode: 'local' | 'remote',
             ) => Promise<boolean>;
-            getMetadata: (
-                fileId: string,
-            ) => ReturnType<InstanceType<typeof DatasetJson>['getMetadata']>;
+            getMetadata: (fileId: string) => DatasetJsonMetadata;
             getData: (
                 fileId: string,
                 start: number,
                 length: number,
                 query?: string,
-            ) => ReturnType<InstanceType<typeof DatasetJson>['getData']>;
+            ) => ItemDataArray[];
             ipcRenderer: {
                 sendMessage(channel: Channels, args: unknown[]): void;
                 on(

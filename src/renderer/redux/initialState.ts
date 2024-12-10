@@ -7,6 +7,7 @@ export const settings: ISettings = {
 export const ui: IUi = {
     view: 'select',
     currentFileId: '',
+    currentPage: 0,
     modals: [],
     snackbar: {
         type: null,

@@ -6,6 +6,7 @@ import { ITableData } from 'interfaces/common';
 import DatasetView from 'renderer/components/DatasetView';
 import ApiService from 'renderer/services/ApiService';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
+import { setPage } from 'renderer/redux/slices/ui';
 import { getData } from 'renderer/utils/readData';
 import estimateWidth from 'renderer/utils/estimateWidth';
 
@@ -29,6 +30,7 @@ const apiService = new ApiService('local');
 const DatasetContainer: React.FC = () => {
     const dispatch = useAppDispatch();
     const fileId = useAppSelector((state) => state.ui.currentFileId);
+
     const estimateWidthRows = useAppSelector(
         (state) => state.settings.estimateWidthRows,
     );
@@ -70,10 +72,10 @@ const DatasetContainer: React.FC = () => {
     }, [name, dispatch, fileId, pageSize, estimateWidthRows]);
 
     // Pagination
-    const [page, setPage] = useState(0);
+    const page = useAppSelector((state) => state.ui.currentPage);
 
     const handleChangePage = useCallback(
-        (_event: any, newPage: React.SetStateAction<number>) => {
+        (_event: any, newPage: number) => {
             if (table === null) {
                 return;
             }
@@ -84,7 +86,7 @@ const DatasetContainer: React.FC = () => {
             }
             setTable({ ...table, data: [] });
             setIsLoading(true);
-            setPage(newPage);
+            dispatch(setPage(newPage));
             const readNext = async (start: number) => {
                 const newData = await getData(
                     apiService,
@@ -100,7 +102,7 @@ const DatasetContainer: React.FC = () => {
 
             readNext((newPage as number) * pageSize);
         },
-        [fileId, pageSize, table],
+        [fileId, pageSize, table, dispatch],
     );
 
     // GoTo control
@@ -125,7 +127,6 @@ const DatasetContainer: React.FC = () => {
                 <DatasetView
                     key={`${fileId}:${page}`} // Add key prop to force unmount/remount
                     tableData={table}
-                    currentPage={page}
                     isLoading={isLoading}
                 />
             </Paper>

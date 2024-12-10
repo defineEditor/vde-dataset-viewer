@@ -30,6 +30,7 @@ export interface IUiControl {
 export interface IUi {
     view: 'select' | 'view';
     currentFileId: string;
+    currentPage: number;
     modals: IUiModal[];
     snackbar: IUiSnackbar;
     control: IUiControl;

@@ -36,15 +36,20 @@ const ModalGoTo: React.FC<IUiModal> = (props: IUiModal) => {
     }, [dispatch, type]);
 
     const handleGoTo = useCallback(() => {
-        if (!Number.isNaN(Number(inputValue))) {
+        const normalizedValue = inputValue.replace(/[\s.,]/g, '');
+        if (!Number.isNaN(Number(normalizedValue))) {
             // If the input value is a number, go to the row number
             // Check the line is less than the total number of rows
-            const rowNumber = Number(inputValue);
+            const rowNumber = Number(normalizedValue);
             if (rowNumber <= currentMetadata.records && rowNumber > 0) {
                 dispatch(setGoTo({ row: rowNumber }));
                 dispatch(closeModal({ type }));
             } else {
-                setHelperText('Row number does not exist');
+                setHelperText(
+                    `Row number does not exist (dataset has ${
+                        currentMetadata.records
+                    } rows)`,
+                );
             }
         } else {
             // If the input value is a string, go to the column name
@@ -69,7 +74,7 @@ const ModalGoTo: React.FC<IUiModal> = (props: IUiModal) => {
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setInputValue(event.target.value);
-        if (!Number.isNaN(Number(event.target.value))) {
+        if (!Number.isNaN(Number(event.target.value.replace(/[\s.,]/g, '')))) {
             setGoToType('Row');
         } else {
             setGoToType('Column');

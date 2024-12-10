@@ -44,6 +44,9 @@ export const uiSlice = createSlice({
                 state.modals.splice(index, 1);
             }
         },
+        setPage: (state, action: PayloadAction<number>) => {
+            state.currentPage = action.payload;
+        },
     },
 });
 
@@ -54,6 +57,7 @@ export const {
     closeModal,
     openModal,
     setGoTo,
+    setPage,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

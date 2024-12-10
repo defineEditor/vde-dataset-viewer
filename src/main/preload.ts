@@ -17,7 +17,7 @@ contextBridge.exposeInMainWorld('electron', {
             fileId,
             start,
             length,
-            query
+            query,
         ),
     ipcRenderer: {
         sendMessage(channel: Channels, args: unknown[]) {

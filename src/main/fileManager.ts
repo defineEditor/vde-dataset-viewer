@@ -1,7 +1,7 @@
-import { dialog } from 'electron';
+import { dialog, IpcMainInvokeEvent } from 'electron';
 import DatasetJson from 'js-stream-dataset-json';
-import openFile from './openFile';
 import { DatasetType } from 'interfaces/common';
+import openFile from './openFile';
 
 class FileManager {
     private openedFiles: { [key: string]: DatasetJson } = {};
@@ -22,9 +22,9 @@ class FileManager {
     }
 
     handleFileOpen = async (
-        _event: Electron.IpcMainInvokeEvent,
-        mode: 'local' | 'remote'
-    ): Promise<{ fileId: string; type: DatasetType } | null> => {
+        _event: IpcMainInvokeEvent,
+        mode: 'local' | 'remote',
+    ): Promise<{ fileId: string; type: DatasetType; path: string } | null> => {
         const newFile = await openFile();
         let type: DatasetType;
 
@@ -33,7 +33,7 @@ class FileManager {
         }
 
         if (mode === 'remote') {
-            return { fileId: newFile.path, type: 'json' };
+            return { fileId: newFile.path, type: 'json', path: newFile.path };
         }
 
         const fileId = this.getFileId();
@@ -49,7 +49,10 @@ class FileManager {
                 type = 'xpt';
                 break;
             default:
-                dialog.showErrorBox('File Open Error', `File extension not supported: ${newFile.path}`);
+                dialog.showErrorBox(
+                    'File Open Error',
+                    `File extension not supported: ${newFile.path}`,
+                );
                 return null;
         }
         let data: DatasetJson;
@@ -57,18 +60,21 @@ class FileManager {
             data = new DatasetJson(newFile.path);
         } catch (error) {
             // Show a popup with the error message
-            dialog.showErrorBox('File Open Error', `An error occurred while opening the file: ${newFile.path}`);
+            dialog.showErrorBox(
+                'File Open Error',
+                `An error occurred while opening the file: ${newFile.path}`,
+            );
             return null;
         }
         this.openedFiles[fileId] = data;
 
-        return { fileId, type };
+        return { fileId, type, path: newFile.path };
     };
 
     handleFileClose = async (
-        _event: Electron.IpcMainInvokeEvent,
+        _event: IpcMainInvokeEvent,
         fileId: string,
-        mode: 'local' | 'remote'
+        mode: 'local' | 'remote',
     ): Promise<boolean> => {
         if (mode === 'local') {
             if (this.openedFiles[fileId]) {
@@ -86,38 +92,44 @@ class FileManager {
         return false;
     };
 
-    handleGetMetadata = async (
-        _event: Electron.IpcMainInvokeEvent,
-        fileId: string
-    ) => {
+    handleGetMetadata = async (_event: IpcMainInvokeEvent, fileId: string) => {
         if (this.openedFiles[fileId]) {
             try {
                 const metadata = await this.openedFiles[fileId].getMetadata();
                 return metadata;
             } catch (error) {
-                dialog.showErrorBox('Metadata Error', `An error occurred while retrieving metadata: ${error.message}`);
-                return { helperText: 'Column name or row does not exist' };
+                dialog.showErrorBox(
+                    'Metadata Error',
+                    `An error occurred while retrieving metadata: ${(error as Error).message}`,
+                );
+                return null;
             }
         }
-        return { helperText: 'Column name or row does not exist' };
+        return null;
     };
 
     handleGetObservations = async (
-        _event: Electron.IpcMainInvokeEvent,
+        _event: IpcMainInvokeEvent,
         fileId: string,
         start: number,
-        length: number
+        length: number,
     ) => {
         if (this.openedFiles[fileId]) {
             try {
-                const data = await this.openedFiles[fileId].getData({start, length});
+                const data = await this.openedFiles[fileId].getData({
+                    start,
+                    length,
+                });
                 return data;
             } catch (error) {
-                dialog.showErrorBox('Data Error', `An error occurred while retrieving data: ${error.message}`);
-                return { helperText: 'Column name or row does not exist' };
+                dialog.showErrorBox(
+                    'Data Error',
+                    `An error occurred while retrieving data: ${(error as Error).message}`,
+                );
+                return null;
             }
         }
-        return { helperText: 'Column name or row does not exist' };
+        return null;
     };
 }
 

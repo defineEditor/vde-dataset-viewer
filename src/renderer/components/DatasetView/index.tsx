@@ -1,5 +1,10 @@
-/* eslint-disable prettier/prettier */
-import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, {
+    useState,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+} from 'react';
 import { ITableData } from 'interfaces/common';
 import {
     Table,
@@ -18,7 +23,6 @@ import {
     useReactTable,
 } from '@tanstack/react-table';
 import Loading from 'renderer/components/Loading';
-
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { openSnackbar, setGoTo } from 'renderer/redux/slices/ui';
@@ -91,12 +95,25 @@ const styles = {
     highlightedCell: {
         backgroundColor: '#f1fae0',
     },
+    headerRowNumberCell: {
+        justifyContent: 'center',
+        fontSize: 'small',
+        backgroundColor: '#f4f4f4',
+        position: 'sticky',
+        left: 0,
+        zIndex: 2,
+        maxHeight: '100%',
+    },
     rowNumberCell: {
         backgroundColor: '#f4f4f4',
         fontSize: 'small',
         overflow: 'visible',
-        padding: 1,
+        padding: 0.5,
         justifyContent: 'center',
+        position: 'sticky',
+        left: 0,
+        zIndex: 2,
+        maxHeight: '100%',
     },
     selectingCell: {
         backgroundColor: '#e0f7fa',
@@ -114,20 +131,19 @@ const styles = {
         fontSize: '14px',
         color: '#888',
         textAlign: 'center',
-    }
+    },
 };
 
-const DatasetView: React.FC<{ tableData: ITableData, currentPage: number, isLoading: boolean }> = ({
+const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
     tableData,
-    currentPage,
-    isLoading
+    isLoading,
 }: {
     tableData: ITableData;
-    currentPage: number;
     isLoading: boolean;
 }) => {
     const dispatch = useAppDispatch();
     const pageSize = useAppSelector((state) => state.settings.pageSize);
+    const currentPage = useAppSelector((state) => state.ui.currentPage);
 
     const columns = useMemo<ColumnDef<ITableRow>[]>(() => {
         const result = tableData.header.map((column) => {
@@ -167,6 +183,11 @@ const DatasetView: React.FC<{ tableData: ITableData, currentPage: number, isLoad
         getCoreRowModel: getCoreRowModel(),
         debugTable: true,
         columnResizeMode: 'onEnd',
+        initialState: {
+            columnPinning: {
+                left: ['#'],
+            },
+        },
     });
 
     const { rows } = table.getRowModel();
@@ -176,20 +197,18 @@ const DatasetView: React.FC<{ tableData: ITableData, currentPage: number, isLoad
     // The virtualizers need to know the scrollable container element
     const tableContainerRef = useRef<HTMLDivElement>(null);
 
-    // we are using a slightly different virtualization strategy for columns (compared to virtual rows) in order to support dynamic row heights
     const columnVirtualizer = useVirtualizer({
-        count: visibleColumns.length,
-        estimateSize: (index) => visibleColumns[index].getSize(), // estimate width of each column for accurate scrollbar dragging
+        count: visibleColumns.length - 1, // Exclude the first column
+        estimateSize: (index) => visibleColumns[index + 1].getSize(), // Adjust index
         getScrollElement: () => tableContainerRef.current,
         horizontal: true,
-        overscan: 3, // how many columns to render on each side off screen each way (adjust this for performance)
+        overscan: 3,
     });
 
     const rowVirtualizer = useVirtualizer({
         count: rows.length,
-        estimateSize: () => 33, // estimate row height for accurate scrollbar dragging
+        estimateSize: () => 33,
         getScrollElement: () => tableContainerRef.current,
-        // measure dynamic row height, except in firefox because it measures table border height incorrectly
         measureElement: (element) => element?.getBoundingClientRect().height,
         overscan: 15,
     });
@@ -216,17 +235,23 @@ const DatasetView: React.FC<{ tableData: ITableData, currentPage: number, isLoad
         column: number;
     } | null>(null);
 
-    const handleCellClick = useCallback((rowIndex: number, columnIndex: number) => {
-        setHighlightedCells([{ row: rowIndex, column: columnIndex }]);
-    }, []);
+    const handleCellClick = useCallback(
+        (rowIndex: number, columnIndex: number) => {
+            setHighlightedCells([{ row: rowIndex, column: columnIndex }]);
+        },
+        [],
+    );
 
-    const handleColumnSelect = useCallback((columnIndex: number) => {
-        const newHighlightedCells: { row: number; column: number }[] = [];
-        for (let row = 0; row < rows.length; row++) {
-            newHighlightedCells.push({ row, column: columnIndex });
-        }
-        setHighlightedCells(newHighlightedCells);
-    }, [rows]);
+    const handleColumnSelect = useCallback(
+        (columnIndex: number) => {
+            const newHighlightedCells: { row: number; column: number }[] = [];
+            for (let row = 0; row < rows.length; row++) {
+                newHighlightedCells.push({ row, column: columnIndex });
+            }
+            setHighlightedCells(newHighlightedCells);
+        },
+        [rows],
+    );
 
     const handleMouseDown = (rowIndex: number, columnIndex: number) => {
         setSelecting(true);
@@ -319,19 +344,33 @@ const DatasetView: React.FC<{ tableData: ITableData, currentPage: number, isLoad
 
     useEffect(() => {
         // Scroll to the row if it is on the current page, otherwise change will be changed and scroll will not be visible
-        if (goTo.row !== null && currentPage === Math.floor(goTo.row/pageSize) && isLoading === false) {
+        if (
+            goTo.row !== null &&
+            currentPage === Math.floor(goTo.row / pageSize) &&
+            isLoading === false
+        ) {
             const row = (goTo.row - 1) % pageSize;
             rowVirtualizer.scrollToIndex(row);
             dispatch(setGoTo({ row: null }));
             // Highlight the row number
             handleCellClick(row, 0);
         }
-    }, [goTo.row, rowVirtualizer, dispatch, pageSize, currentPage, handleCellClick, isLoading]);
+    }, [
+        goTo.row,
+        rowVirtualizer,
+        dispatch,
+        pageSize,
+        currentPage,
+        handleCellClick,
+        isLoading,
+    ]);
 
     useEffect(() => {
         if (goTo.column !== null) {
             // Add +1 as the first column is the row number
-            const columnIndex = tableData.header.findIndex(item => item.id === goTo.column) + 1;
+            const columnIndex =
+                tableData.header.findIndex((item) => item.id === goTo.column) +
+                1;
             if (columnIndex !== -1) {
                 columnVirtualizer.scrollToIndex(columnIndex);
             }
@@ -339,13 +378,16 @@ const DatasetView: React.FC<{ tableData: ITableData, currentPage: number, isLoad
             // Highlight the column
             handleColumnSelect(columnIndex);
         }
-    }, [goTo.column, tableData.header, columnVirtualizer, dispatch, handleColumnSelect]);
+    }, [
+        goTo.column,
+        tableData.header,
+        columnVirtualizer,
+        dispatch,
+        handleColumnSelect,
+    ]);
 
     return (
-        <Paper
-            ref={tableContainerRef}
-            sx={styles.container}
-        >
+        <Paper ref={tableContainerRef} sx={styles.container}>
             <Table sx={styles.table}>
                 <TableHead sx={styles.header}>
                     {table.getHeaderGroups().map((headerGroup) => (
@@ -353,8 +395,22 @@ const DatasetView: React.FC<{ tableData: ITableData, currentPage: number, isLoad
                             key={headerGroup.id}
                             style={styles.headerColumn}
                         >
+                            <TableCell
+                                sx={{
+                                    ...styles.tableHeaderCell,
+                                    width: visibleColumns[0].getSize(),
+                                    ...styles.headerRowNumberCell,
+                                }}
+                            >
+                                <Box sx={styles.tableHeaderLabel}>
+                                    {flexRender(
+                                        headerGroup.headers[0].column.columnDef
+                                            .header,
+                                        headerGroup.headers[0].getContext(),
+                                    )}
+                                </Box>
+                            </TableCell>
                             {virtualPaddingLeft ? (
-                                // Fake empty column to the left for virtualization scroll padding
                                 <TableCell
                                     sx={{
                                         display: 'flex',
@@ -363,26 +419,17 @@ const DatasetView: React.FC<{ tableData: ITableData, currentPage: number, isLoad
                                 />
                             ) : null}
                             {virtualColumns.map((vc) => {
-                                const header = headerGroup.headers[vc.index];
+                                const header =
+                                    headerGroup.headers[vc.index + 1]; // Adjust index
                                 return (
                                     <TableCell
                                         key={header.id}
                                         sx={{
                                             ...styles.tableHeaderCell,
                                             width: header.getSize(),
-                                            ...(header.id === '#'
-                                                ? {
-                                                    justifyContent: 'center',
-                                                    fontSize: 'small',
-                                                    backgroundColor:
-                                                          '#f4f4f4',
-                                                }
-                                                : {}),
                                         }}
                                     >
-                                        <Box
-                                            sx={styles.tableHeaderLabel}
-                                        >
+                                        <Box sx={styles.tableHeaderLabel}>
                                             {flexRender(
                                                 header.column.columnDef.header,
                                                 header.getContext(),
@@ -391,35 +438,42 @@ const DatasetView: React.FC<{ tableData: ITableData, currentPage: number, isLoad
                                         <Box
                                             sx={styles.resizer}
                                             {...{
-                                                onDoubleClick: () => header.column.resetSize(),
-                                                onMouseDown: header.getResizeHandler(),
-                                                onTouchStart: header.getResizeHandler(),
+                                                onDoubleClick: () =>
+                                                    header.column.resetSize(),
+                                                onMouseDown:
+                                                    header.getResizeHandler(),
+                                                onTouchStart:
+                                                    header.getResizeHandler(),
                                                 className: `resizer ${
-                                                    table.options.columnResizeDirection
+                                                    table.options
+                                                        .columnResizeDirection
                                                 } ${
-                                                    header.column.getIsResizing() ? 'isResizing' : ''
+                                                    header.column.getIsResizing()
+                                                        ? 'isResizing'
+                                                        : ''
                                                 }`,
                                                 style: {
                                                     transform:
-                              header.column.getIsResizing()
-                                  ? `translateX(${
-                                      (table.options.columnResizeDirection ===
-                                    'rtl'
-                                          ? -1
-                                          : 1) *
-                                    (table.getState().columnSizingInfo
-                                        .deltaOffset ?? 0)
-                                  }px)`
-                                  : '',
+                                                        header.column.getIsResizing()
+                                                            ? `translateX(${
+                                                                  (table.options
+                                                                      .columnResizeDirection ===
+                                                                  'rtl'
+                                                                      ? -1
+                                                                      : 1) *
+                                                                  (table.getState()
+                                                                      .columnSizingInfo
+                                                                      .deltaOffset ??
+                                                                      0)
+                                                              }px)`
+                                                            : '',
                                                 },
                                             }}
                                         />
-
                                     </TableCell>
                                 );
                             })}
                             {virtualPaddingRight ? (
-                                // fake empty column to the right for virtualization scroll padding
                                 <TableCell
                                     style={{
                                         display: 'flex',
@@ -433,7 +487,7 @@ const DatasetView: React.FC<{ tableData: ITableData, currentPage: number, isLoad
                 <TableBody
                     sx={{
                         ...styles.tbody,
-                        height: `${rowVirtualizer.getTotalSize()}px`, // tells scrollbar how big the table is
+                        height: `${rowVirtualizer.getTotalSize()}px`,
                     }}
                 >
                     {virtualRows.map((virtualRow) => {
@@ -442,18 +496,29 @@ const DatasetView: React.FC<{ tableData: ITableData, currentPage: number, isLoad
 
                         return (
                             <TableRow
-                                data-index={virtualRow.index} // needed for dynamic row height measurement
+                                data-index={virtualRow.index}
                                 ref={(node) =>
                                     rowVirtualizer.measureElement(node)
-                                } // measure dynamic row height
+                                }
                                 key={row.id}
                                 sx={{
                                     ...styles.tableRow,
-                                    transform: `translateY(${virtualRow.start}px)`, // this should always be a `style` as it changes on scroll
+                                    transform: `translateY(${virtualRow.start}px)`,
                                 }}
                             >
+                                <TableCell
+                                    sx={{
+                                        ...styles.tableCell,
+                                        width: visibleCells[0].column.getSize(),
+                                        ...styles.rowNumberCell,
+                                    }}
+                                >
+                                    {flexRender(
+                                        visibleCells[0].column.columnDef.cell,
+                                        visibleCells[0].getContext(),
+                                    )}
+                                </TableCell>
                                 {virtualPaddingLeft ? (
-                                    // fake empty column to the left for virtualization scroll padding
                                     <TableCell
                                         sx={{
                                             display: 'flex',
@@ -462,12 +527,13 @@ const DatasetView: React.FC<{ tableData: ITableData, currentPage: number, isLoad
                                     />
                                 ) : null}
                                 {virtualColumns.map((vc) => {
-                                    const cell = visibleCells[vc.index];
+                                    const cell = visibleCells[vc.index + 1]; // Adjust index
                                     const isHighlighted = highlightedCells.some(
                                         (highlightedCell) =>
                                             highlightedCell.row ===
                                                 virtualRow.index &&
-                                            highlightedCell.column === vc.index,
+                                            highlightedCell.column ===
+                                                vc.index + 1,
                                     );
                                     return (
                                         <TableCell
@@ -475,9 +541,6 @@ const DatasetView: React.FC<{ tableData: ITableData, currentPage: number, isLoad
                                             sx={{
                                                 ...styles.tableCell,
                                                 width: cell.column.getSize(),
-                                                ...(vc.index === 0
-                                                    ? styles.rowNumberCell
-                                                    : {}),
                                                 ...(isHighlighted
                                                     ? styles.highlightedCell
                                                     : {}),
@@ -485,19 +548,19 @@ const DatasetView: React.FC<{ tableData: ITableData, currentPage: number, isLoad
                                             onClick={() =>
                                                 handleCellClick(
                                                     virtualRow.index,
-                                                    vc.index,
+                                                    vc.index + 1,
                                                 )
                                             }
                                             onMouseDown={() =>
                                                 handleMouseDown(
                                                     virtualRow.index,
-                                                    vc.index,
+                                                    vc.index + 1,
                                                 )
                                             }
                                             onMouseOver={() =>
                                                 handleMouseOver(
                                                     virtualRow.index,
-                                                    vc.index,
+                                                    vc.index + 1,
                                                 )
                                             }
                                         >
@@ -509,7 +572,6 @@ const DatasetView: React.FC<{ tableData: ITableData, currentPage: number, isLoad
                                     );
                                 })}
                                 {virtualPaddingRight ? (
-                                    // fake empty column to the right for virtualization scroll padding
                                     <TableCell
                                         style={{
                                             display: 'flex',
@@ -522,7 +584,7 @@ const DatasetView: React.FC<{ tableData: ITableData, currentPage: number, isLoad
                     })}
                 </TableBody>
             </Table>
-            { isLoading && (
+            {isLoading && (
                 <Box sx={styles.loading}>
                     <Loading />
                     <Box sx={styles.sponsored}>Sponsored by:</Box>

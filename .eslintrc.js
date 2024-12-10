@@ -12,7 +12,6 @@ module.exports = {
             2,
             { namedComponents: 'arrow-function' },
         ],
-        indent: ['error', 4],
         'react/jsx-props-no-spreading': 'off',
         'class-methods-use-this': [0],
         'no-plusplus': [0],
