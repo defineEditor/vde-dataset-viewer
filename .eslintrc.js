@@ -15,6 +15,7 @@ module.exports = {
         'react/jsx-props-no-spreading': 'off',
         'class-methods-use-this': [0],
         'no-plusplus': [0],
+        'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
     parserOptions: {
         ecmaVersion: 2022,
