@@ -23,7 +23,7 @@ export interface ItemDescription {
      *
      * @TJS-type string
      */
-    OID: string;
+    itemOID: string;
     /**
      * Name for Variable
      *
@@ -41,7 +41,7 @@ export interface ItemDescription {
      *
      * @TJS-type ItemType
      */
-    type: ItemType;
+    dataType: ItemType;
     /**
      * Length for Variable
      *
@@ -49,6 +49,9 @@ export interface ItemDescription {
      * @TJS-type integer
      */
     length?: number | null;
+    targetDataType?: number;
+    displayFormat: string;
+    keySequence: number;
 }
 
 /**

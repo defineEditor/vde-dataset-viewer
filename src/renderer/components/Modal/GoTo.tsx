@@ -18,7 +18,7 @@ const styles = {
     },
 };
 
-const ModalGoTo: React.FC<IUiModal> = (props: IUiModal) => {
+const GoTo: React.FC<IUiModal> = (props: IUiModal) => {
     const { type } = props;
     const dispatch = useAppDispatch();
     const currentMetadata = useAppSelector(
@@ -162,4 +162,4 @@ const ModalGoTo: React.FC<IUiModal> = (props: IUiModal) => {
     );
 };
 
-export default ModalGoTo;
+export default GoTo;

@@ -3,18 +3,21 @@ import AppBar from '@mui/material/AppBar';
 import Stack from '@mui/material/Stack';
 import HomeIcon from '@mui/icons-material/Home';
 import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
-import ShortcutIcon from '@mui/icons-material/Shortcut'; // Import the icon for the GoTo button
+import ShortcutIcon from '@mui/icons-material/Shortcut';
+import InfoIcon from '@mui/icons-material/Info';
 import IconButton from '@mui/material/IconButton';
 import Toolbar from '@mui/material/Toolbar';
 import { setView, openModal, setPage } from 'renderer/redux/slices/ui';
 import { setData, addRecent } from 'renderer/redux/slices/data';
-import { useAppDispatch } from 'renderer/redux/hooks';
+import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { openNewDataset } from 'renderer/utils/readData';
 import AppContext from 'renderer/utils/AppContext';
 
 const Header: React.FC = () => {
     const dispatch = useAppDispatch();
     const { apiService } = useContext(AppContext);
+
+    const view = useAppSelector((state) => state.ui.view);
 
     const handleHomeClick = () => {
         dispatch(setView({ view: 'select' }));
@@ -40,6 +43,10 @@ const Header: React.FC = () => {
 
     const handleGoToClick = () => {
         dispatch(openModal({ type: 'GOTO', props: {} }));
+    };
+
+    const handleDataSetInfoClick = () => {
+        dispatch(openModal({ type: 'DATASETINFO', props: {} }));
     };
 
     return (
@@ -82,10 +89,24 @@ const Header: React.FC = () => {
                     </IconButton>
                     <IconButton
                         onClick={handleGoToClick}
-                        id="cloud"
+                        id="goto"
                         size="medium"
+                        disabled={view !== 'view'}
                     >
                         <ShortcutIcon
+                            sx={{
+                                color: 'primary.main',
+                                fontSize: '32px',
+                            }}
+                        />
+                    </IconButton>
+                    <IconButton
+                        onClick={handleDataSetInfoClick}
+                        id="datasetInfo"
+                        size="medium"
+                        disabled={view !== 'view'}
+                    >
+                        <InfoIcon
                             sx={{
                                 color: 'primary.main',
                                 fontSize: '32px',
