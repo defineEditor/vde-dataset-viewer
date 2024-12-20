@@ -273,8 +273,10 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
         if (goTo.column !== null) {
             // Add +1 as the first column is the row number
             const columnIndex =
-                tableData.header.findIndex((item) => item.id === goTo.column) +
-                1;
+                tableData.header.findIndex(
+                    (item) =>
+                        item.id.toLowerCase() === goTo.column?.toLowerCase(),
+                ) + 1;
             if (columnIndex !== -1) {
                 columnVirtualizer.scrollToIndex(columnIndex);
             }
