@@ -16,7 +16,6 @@ const styles = {
     },
     table: {
         height: '100%',
-        paddingTop: '65px',
     },
     pagination: {
         display: 'flex',

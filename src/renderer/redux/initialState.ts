@@ -5,7 +5,7 @@ export const settings: ISettings = {
     estimateWidthRows: 500,
 };
 export const ui: IUi = {
-    view: 'select',
+    pathname: '/select',
     currentFileId: '',
     currentPage: 0,
     modals: [],
