@@ -73,7 +73,7 @@ const styles = {
         touchAction: 'none',
     },
     highlightedCell: {
-        backgroundColor: '#f1fae0',
+        backgroundColor: '#42a5f533',
     },
     headerRowNumberCell: {
         justifyContent: 'center',
@@ -95,9 +95,6 @@ const styles = {
         zIndex: 2,
         maxHeight: '100%',
         textAlign: 'center',
-    },
-    selectingCell: {
-        backgroundColor: '#e0f7fa',
     },
     loading: {
         position: 'absolute',

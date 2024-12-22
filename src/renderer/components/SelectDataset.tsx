@@ -10,10 +10,17 @@ import {
     ListItemButton,
 } from '@mui/material';
 import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
-import { setView } from 'renderer/redux/slices/ui';
+import { setPathname } from 'renderer/redux/slices/ui';
 import { setData, addRecent } from 'renderer/redux/slices/data';
 import { openNewDataset } from 'renderer/utils/readData';
 import AppContext from 'renderer/utils/AppContext';
+
+const styles = {
+    main: {
+        flex: '1 1 0',
+        padding: 4,
+    },
+};
 
 const SelectDataset = () => {
     const dispatch = useAppDispatch();
@@ -33,7 +40,12 @@ const SelectDataset = () => {
                 path: newDataInfo.path,
             }),
         );
-        dispatch(setView({ view: 'view', currentFileId: newDataInfo.fileId }));
+        dispatch(
+            setPathname({
+                pathname: '/viewer',
+                currentFileId: newDataInfo.fileId,
+            }),
+        );
     };
 
     // Open recent file
@@ -43,8 +55,8 @@ const SelectDataset = () => {
         path: string;
     }) => {
         dispatch(
-            setView({
-                view: 'view',
+            setPathname({
+                pathname: '/viewer',
                 currentFileId: file.path,
             }),
         );
@@ -52,7 +64,7 @@ const SelectDataset = () => {
     return (
         <Stack
             spacing={2}
-            sx={{ flex: '1 1 auto', padding: 4 }}
+            sx={styles.main}
             alignItems="center"
             justifyContent="center"
         >

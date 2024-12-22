@@ -27,8 +27,16 @@ export interface IUiControl {
     };
 }
 
+export type AllowedPathnames =
+    | '/select'
+    | '/viewer'
+    | '/api'
+    | '/settings'
+    | '/about'
+    | '/converter';
+
 export interface IUi {
-    view: 'select' | 'view';
+    pathname: AllowedPathnames;
     currentFileId: string;
     currentPage: number;
     modals: IUiModal[];
