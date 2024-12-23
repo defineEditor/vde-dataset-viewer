@@ -20,6 +20,33 @@ interface ITableRow {
     [key: string]: string | number | boolean | null;
 }
 
+const formatDateToDDMONYYYY = (date: Date, addTime?: boolean): string => {
+    const day = date.getDate().toString().padStart(2, '0');
+    const monthNames = [
+        'JAN',
+        'FEB',
+        'MAR',
+        'APR',
+        'MAY',
+        'JUN',
+        'JUL',
+        'AUG',
+        'SEP',
+        'OCT',
+        'NOV',
+        'DEC',
+    ];
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear().toString();
+    if (addTime) {
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        const seconds = date.getSeconds().toString().padStart(2, '0');
+        return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+    }
+    return `${day}${month}${year}`;
+};
+
 const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
     tableData,
     isLoading,
@@ -28,7 +55,7 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
     isLoading: boolean;
 }) => {
     const dispatch = useAppDispatch();
-    const pageSize = useAppSelector((state) => state.settings.pageSize);
+    const settings = useAppSelector((state) => state.settings.viewer);
     const currentPage = useAppSelector((state) => state.ui.currentPage);
 
     const columns = useMemo<ColumnDef<ITableRow>[]>(() => {
@@ -52,16 +79,72 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
 
     // Inital rows;
     const data = useMemo(() => {
+        // If the data is rounded, round the numbers
+        const colsToRound: number[] = [];
+        if (settings.roundNumbers) {
+            tableData.metadata.columns.forEach((column, index) => {
+                if (['float', 'double', 'decimal'].includes(column.dataType)) {
+                    colsToRound.push(index);
+                }
+            });
+        }
+        const dateColsToFormat: number[] = [];
+        if (settings.dateFormat !== 'ISO8601') {
+            tableData.metadata.columns.forEach((column, index) => {
+                if (column.dataType === 'date') {
+                    dateColsToFormat.push(index);
+                }
+            });
+        }
+        const datetimeColsToFormat: number[] = [];
+        if (settings.dateFormat !== 'ISO8601') {
+            tableData.metadata.columns.forEach((column, index) => {
+                if (column.dataType === 'datetime') {
+                    datetimeColsToFormat.push(index);
+                }
+            });
+        }
         return tableData.data.map((row, index) => {
             const newRow: ITableRow = {};
             row.forEach((cell, cellIndex) => {
-                newRow[tableData.header[cellIndex].id] = cell;
+                if (
+                    settings.roundNumbers &&
+                    colsToRound.includes(cellIndex) &&
+                    cell
+                ) {
+                    newRow[tableData.header[cellIndex].id] = parseFloat(
+                        Number(cell).toFixed(settings.maxPrecision),
+                    );
+                } else if (
+                    settings.dateFormat !== 'ISO8601' &&
+                    cell &&
+                    dateColsToFormat.includes(cellIndex)
+                ) {
+                    newRow[tableData.header[cellIndex].id] =
+                        formatDateToDDMONYYYY(new Date(cell as string));
+                } else if (
+                    settings.dateFormat !== 'ISO8601' &&
+                    cell &&
+                    datetimeColsToFormat.includes(cellIndex)
+                ) {
+                    newRow[tableData.header[cellIndex].id] =
+                        formatDateToDDMONYYYY(new Date(cell as string), true);
+                } else {
+                    newRow[tableData.header[cellIndex].id] = cell;
+                }
             });
             // Add row number
-            newRow['#'] = index + 1 + currentPage * pageSize;
+            newRow['#'] = index + 1 + currentPage * settings.pageSize;
             return newRow;
         });
-    }, [tableData, currentPage, pageSize]);
+    }, [
+        tableData,
+        currentPage,
+        settings.pageSize,
+        settings.roundNumbers,
+        settings.maxPrecision,
+        settings.dateFormat,
+    ]);
 
     const table = useReactTable({
         data,
@@ -95,7 +178,10 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
         count: rows.length,
         estimateSize: () => 33,
         getScrollElement: () => tableContainerRef.current,
-        measureElement: (element) => element?.getBoundingClientRect().height,
+        ...(settings.dynamicRowHeight && {
+            measureElement: (element) =>
+                element?.getBoundingClientRect().height,
+        }),
         overscan: 15,
     });
 
@@ -250,10 +336,10 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
         // Scroll to the row if it is on the current page, otherwise change will be changed and scroll will not be visible
         if (
             goTo.row !== null &&
-            currentPage === Math.floor(goTo.row / pageSize) &&
+            currentPage === Math.floor(goTo.row / settings.pageSize) &&
             isLoading === false
         ) {
-            const row = (goTo.row - 1) % pageSize;
+            const row = (goTo.row - 1) % settings.pageSize;
             rowVirtualizer.scrollToIndex(row);
             dispatch(setGoTo({ row: null }));
             // Highlight the row number
@@ -263,7 +349,7 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
         goTo.row,
         rowVirtualizer,
         dispatch,
-        pageSize,
+        settings.pageSize,
         currentPage,
         handleCellClick,
         isLoading,
@@ -307,6 +393,7 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
             handleMouseDown={handleMouseDown}
             handleMouseOver={handleMouseOver}
             isLoading={isLoading}
+            dynamicRowHeight={settings.dynamicRowHeight}
             rowVirtualizer={rowVirtualizer}
         />
     );

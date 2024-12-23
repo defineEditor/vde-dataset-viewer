@@ -1,8 +1,23 @@
 import { DatasetJsonMetadata } from 'interfaces/api';
 
 export interface ISettings {
-    pageSize: number;
-    estimateWidthRows: number;
+    viewer: {
+        pageSize: number;
+        estimateWidthRows: number;
+        dynamicRowHeight: boolean;
+        maxColWidth: number;
+        dateFormat: 'ISO8601' | 'DDMONYEAR';
+        roundNumbers: boolean;
+        maxPrecision?: number;
+        copyFormat: 'tab' | 'csv' | 'json';
+    };
+    converter: {
+        threads: number;
+        defaultOutputFormat: 'json' | 'ndjson';
+    };
+    other: {
+        loadingAnimation: 'santa' | 'cat' | 'dog' | 'normal' | 'random';
+    };
 }
 
 export interface IUiModal {

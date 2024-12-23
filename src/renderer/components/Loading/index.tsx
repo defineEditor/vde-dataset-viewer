@@ -1,8 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Box, CircularProgress } from '@mui/material';
 import LoadingSanta from 'renderer/components/Loading/LoadingSanta';
 import LoadingCat from 'renderer/components/Loading/LoadingCat';
 import LoadingDog from 'renderer/components/Loading/LoadingDog';
+import { useAppSelector } from 'renderer/redux/hooks';
 
 const getRandomLoadingComponent = () => {
     const now = new Date();
@@ -17,6 +19,9 @@ const getRandomLoadingComponent = () => {
 
 const Loading: React.FC = () => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
+    const loadingAnimation = useAppSelector(
+        (state) => state.settings.other.loadingAnimation,
+    );
 
     useEffect(() => {
         if (iframeRef.current) {
@@ -34,11 +39,35 @@ const Loading: React.FC = () => {
                 iframeDoc.body.style.overflow = 'hidden'; // Hide scrollbars
                 iframeDoc.body.appendChild(root);
                 const reactRoot = createRoot(root);
-                const RandomLoadingComponent = getRandomLoadingComponent();
-                reactRoot.render(<RandomLoadingComponent />);
+                if (loadingAnimation === 'random') {
+                    const RandomLoadingComponent = getRandomLoadingComponent();
+                    reactRoot.render(<RandomLoadingComponent />);
+                } else if (loadingAnimation === 'cat') {
+                    reactRoot.render(<LoadingCat />);
+                } else if (loadingAnimation === 'dog') {
+                    reactRoot.render(<LoadingDog />);
+                } else if (loadingAnimation === 'santa') {
+                    reactRoot.render(<LoadingSanta />);
+                } else if (loadingAnimation === 'normal') {
+                    reactRoot.render(<CircularProgress />);
+                }
             }
         }
-    }, []);
+    }, [loadingAnimation]);
+
+    if (loadingAnimation === 'normal') {
+        return (
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                }}
+            >
+                <CircularProgress size={64} />
+            </Box>
+        );
+    }
 
     return (
         <iframe
