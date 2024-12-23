@@ -10,6 +10,7 @@ import KeyboardIcon from '@mui/icons-material/Keyboard';
 import { DashboardLayout } from '@toolpad/core/DashboardLayout';
 import SelectDataset from 'renderer/components/SelectDataset';
 import ViewFile from 'renderer/components/ViewFile';
+import Settings from 'renderer/components/Settings';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import { setPathname } from 'renderer/redux/slices/ui';
 import { AllowedPathnames } from 'interfaces/common';
@@ -137,6 +138,7 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                         <SelectDataset />
                     )}
                     {pathname === '/viewer' && isDataLoaded && <ViewFile />}
+                    {pathname === '/settings' && <Settings />}
                 </Stack>
             </DashboardLayout>
         </AppProvider>

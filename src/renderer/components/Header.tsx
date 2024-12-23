@@ -15,6 +15,7 @@ import { Typography } from '@mui/material';
 const styles = {
     main: {
         width: '100%',
+        paddingLeft: 1,
     },
     dataset: {
         color: 'primary.main',
