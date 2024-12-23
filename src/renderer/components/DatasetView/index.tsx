@@ -21,7 +21,7 @@ interface ITableRow {
 }
 
 const formatDateToDDMONYYYY = (date: Date, addTime?: boolean): string => {
-    const day = date.getDate().toString().padStart(2, '0');
+    const day = date.getUTCDate().toString().padStart(2, '0');
     const monthNames = [
         'JAN',
         'FEB',
@@ -36,12 +36,12 @@ const formatDateToDDMONYYYY = (date: Date, addTime?: boolean): string => {
         'NOV',
         'DEC',
     ];
-    const month = monthNames[date.getMonth()];
-    const year = date.getFullYear().toString();
+    const month = monthNames[date.getUTCMonth()];
+    const year = date.getUTCFullYear().toString();
     if (addTime) {
-        const hours = date.getHours().toString().padStart(2, '0');
-        const minutes = date.getMinutes().toString().padStart(2, '0');
-        const seconds = date.getSeconds().toString().padStart(2, '0');
+        const hours = date.getUTCHours().toString().padStart(2, '0');
+        const minutes = date.getUTCMinutes().toString().padStart(2, '0');
+        const seconds = date.getUTCSeconds().toString().padStart(2, '0');
         return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
     }
     return `${day}${month}${year}`;
@@ -109,22 +109,22 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
             row.forEach((cell, cellIndex) => {
                 if (
                     settings.roundNumbers &&
-                    colsToRound.includes(cellIndex) &&
-                    cell
+                    cell != null &&
+                    colsToRound.includes(cellIndex)
                 ) {
                     newRow[tableData.header[cellIndex].id] = parseFloat(
                         Number(cell).toFixed(settings.maxPrecision),
                     );
                 } else if (
                     settings.dateFormat !== 'ISO8601' &&
-                    cell &&
+                    cell != null &&
                     dateColsToFormat.includes(cellIndex)
                 ) {
                     newRow[tableData.header[cellIndex].id] =
                         formatDateToDDMONYYYY(new Date(cell as string));
                 } else if (
                     settings.dateFormat !== 'ISO8601' &&
-                    cell &&
+                    cell != null &&
                     datetimeColsToFormat.includes(cellIndex)
                 ) {
                     newRow[tableData.header[cellIndex].id] =
@@ -283,17 +283,46 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
             rowIndices.sort((a, b) => a - b);
             columnIndices.sort((a, b) => a - b);
 
-            const selectedData = rowIndices
-                .map((rowIndex) => {
+            let selectedData = '';
+            if (settings.copyFormat === 'tab') {
+                selectedData = rowIndices
+                    .map((rowIndex) => {
+                        const row = rows[rowIndex];
+                        return columnIndices
+                            .map((columnIndex) => {
+                                const cell = row.getVisibleCells()[columnIndex];
+                                return cell.getValue();
+                            })
+                            .join('\t');
+                    })
+                    .join('\n');
+            } else if (settings.copyFormat === 'csv') {
+                selectedData = rowIndices
+                    .map((rowIndex) => {
+                        const row = rows[rowIndex];
+                        return columnIndices
+                            .map((columnIndex) => {
+                                const cell = row.getVisibleCells()[columnIndex];
+                                return `"${(cell.getValue() as string).toString().replace(/"/g, '""')}"`;
+                            })
+                            .join(',');
+                    })
+                    .join('\n');
+            } else if (settings.copyFormat === 'json') {
+                const selectedRows = rowIndices.map((rowIndex) => {
                     const row = rows[rowIndex];
-                    return columnIndices
-                        .map((columnIndex) => {
-                            const cell = row.getVisibleCells()[columnIndex];
-                            return cell.getValue();
-                        })
-                        .join('\t');
-                })
-                .join('\n');
+                    const selectedColumns = columnIndices.map((columnIndex) => {
+                        const cell = row.getVisibleCells()[columnIndex];
+                        return {
+                            [visibleColumns[columnIndex].id]: cell.getValue(),
+                        };
+                    });
+                    return selectedColumns.reduce((acc, curr) => {
+                        return { ...acc, ...curr };
+                    }, {});
+                });
+                selectedData = JSON.stringify(selectedRows, null, 2);
+            }
 
             window.electron.writeToClipboard(selectedData);
             dispatch(
@@ -304,7 +333,7 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
                 }),
             );
         }
-    }, [highlightedCells, rows, dispatch]);
+    }, [highlightedCells, rows, dispatch, settings.copyFormat, visibleColumns]);
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {

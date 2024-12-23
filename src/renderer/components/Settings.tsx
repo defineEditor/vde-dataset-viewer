@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Paper,
     Tabs,
@@ -10,10 +10,16 @@ import {
     Checkbox,
     FormControlLabel,
     MenuItem,
+    Typography,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { ISettings } from 'interfaces/common';
-import { setSettings } from 'renderer/redux/slices/settings';
+import { resetSettings, setSettings } from 'renderer/redux/slices/settings';
 
 const styles = {
     main: {
@@ -30,13 +36,18 @@ const styles = {
     },
     paper: {
         height: '100%',
+        backgroundColor: 'grey.50',
+    },
+    helperText: {
+        paddingLeft: 2,
+        margin: 0,
     },
     tab: {
         background:
             'radial-gradient(circle farthest-corner at bottom center,#eeeeee,#e5e4e4)',
     },
     inputField: {
-        maxWidth: '400px',
+        maxWidth: '600px',
     },
 };
 
@@ -47,6 +58,8 @@ const Settings: React.FC = () => {
     const dispatch = useAppDispatch();
 
     const [newSettings, setNewSettings] = useState<ISettings>(initialSettings);
+    const [reloadSettings, setReloadSettings] = useState(false);
+    const [openResetDialog, setOpenResetDialog] = useState(false);
 
     const handleTabChange = (
         _event: React.SyntheticEvent,
@@ -55,14 +68,34 @@ const Settings: React.FC = () => {
         setTabIndex(newValue);
     };
 
-    const handleSave = () => {
+    const handleSave = React.useCallback(() => {
         dispatch(setSettings(newSettings));
-        // Implement save functionality here
-    };
+    }, [dispatch, newSettings]);
 
     const handleCancel = () => {
         setSettings(initialSettings);
     };
+
+    const handleReset = () => {
+        setOpenResetDialog(true);
+    };
+
+    const handleConfirmReset = () => {
+        dispatch(resetSettings());
+        setReloadSettings(true);
+        setOpenResetDialog(false);
+    };
+
+    const handleCloseResetDialog = () => {
+        setOpenResetDialog(false);
+    };
+
+    useEffect(() => {
+        if (reloadSettings) {
+            setNewSettings(initialSettings);
+            setReloadSettings(false);
+        }
+    }, [initialSettings, reloadSettings]);
 
     const handleInputChange = (
         event: React.ChangeEvent<
@@ -93,6 +126,23 @@ const Settings: React.FC = () => {
         });
     };
 
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.ctrlKey && event.key === 's') {
+                event.preventDefault();
+                handleSave();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [newSettings, handleSave]);
+
+    const settingsChanged =
+        JSON.stringify(initialSettings) !== JSON.stringify(newSettings);
+
     return (
         <Paper sx={styles.paper}>
             <Stack sx={styles.main} spacing={2} justifyContent="space-between">
@@ -107,11 +157,15 @@ const Settings: React.FC = () => {
                 </Tabs>
                 <Box hidden={tabIndex !== 0} sx={styles.tabPanel}>
                     <Stack spacing={2}>
+                        <Typography variant="h6">
+                            Table Loading Settings
+                        </Typography>
                         <TextField
                             label="Page Size"
                             name="viewer.pageSize"
                             value={newSettings.viewer.pageSize}
                             type="number"
+                            helperText="Number of rows visible at once, large values may cause performance issues"
                             select
                             onChange={(event) =>
                                 handleInputChange(
@@ -130,6 +184,7 @@ const Settings: React.FC = () => {
                         <TextField
                             label="Number of Rows Used for Width Estimation"
                             name="viewer.estimateWidthRows"
+                            helperText="When table is loaded, this many rows are used to estimate column width"
                             type="number"
                             value={newSettings.viewer.estimateWidthRows}
                             onChange={handleInputChange}
@@ -138,6 +193,7 @@ const Settings: React.FC = () => {
                         />
                         <TextField
                             label="Max Column Width"
+                            helperText="Maximum width of a column in characters"
                             name="viewer.maxColWidth"
                             type="number"
                             value={newSettings.viewer.maxColWidth}
@@ -145,6 +201,9 @@ const Settings: React.FC = () => {
                             sx={styles.inputField}
                             slotProps={{ htmlInput: { min: 1 } }}
                         />
+                        <Typography variant="h6">
+                            Value Representation Settings
+                        </Typography>
                         <FormControlLabel
                             control={
                                 <Checkbox
@@ -155,12 +214,16 @@ const Settings: React.FC = () => {
                                     name="viewer.dynamicRowHeight"
                                 />
                             }
-                            label="Multiline Rows"
+                            label="Wrap Values"
                         />
+                        <Typography variant="caption" sx={styles.helperText}>
+                            When selected, long cell values are wrapper
+                        </Typography>
                         <TextField
                             label="Date Format"
                             name="viewer.dateFormat"
                             value={newSettings.viewer.dateFormat}
+                            helperText="Format used to show date/datetime values"
                             select
                             onChange={(event) =>
                                 handleInputChange(
@@ -170,7 +233,7 @@ const Settings: React.FC = () => {
                             sx={styles.inputField}
                         >
                             <MenuItem value="ISO8601">
-                                ISO8601 (01-01-1992)
+                                ISO8601 (1992-01-01)
                             </MenuItem>
                             <MenuItem value="DDMONYEAR">
                                 DYMONYEAR (01JAN1992)
@@ -186,8 +249,13 @@ const Settings: React.FC = () => {
                             }
                             label="Round Numbers"
                         />
+                        <Typography variant="caption" sx={styles.helperText}>
+                            When selected, float, double and decimal numbers
+                            will be rounded
+                        </Typography>
                         <TextField
                             label="Max Precision"
+                            helperText="Precision used when number rounding is enabled"
                             name="viewer.maxPrecision"
                             type="number"
                             disabled={!newSettings.viewer.roundNumbers}
@@ -196,8 +264,10 @@ const Settings: React.FC = () => {
                             sx={styles.inputField}
                             slotProps={{ htmlInput: { min: 1, max: 32 } }}
                         />
+                        <Typography variant="h6">Miscellaneous</Typography>
                         <TextField
-                            label="Format Copied Fields"
+                            label="Copied Values Format"
+                            helperText="A format used when selected cells are copied into a buffer (Ctrl+C)"
                             name="viewer.copyFormat"
                             value={newSettings.viewer.copyFormat}
                             select
@@ -216,9 +286,11 @@ const Settings: React.FC = () => {
                 </Box>
                 <Box hidden={tabIndex !== 1} sx={styles.tabPanel}>
                     <Stack spacing={2}>
+                        <Typography variant="h6">Converter Settings</Typography>
                         <TextField
                             label="Threads"
                             name="converter.threads"
+                            helperText="Number of processes used during the conversion"
                             type="number"
                             value={newSettings.converter.threads}
                             onChange={handleInputChange}
@@ -244,8 +316,12 @@ const Settings: React.FC = () => {
                 </Box>
                 <Box hidden={tabIndex !== 2} sx={styles.tabPanel}>
                     <Stack spacing={2}>
+                        <Typography variant="h6">
+                            Miscellaneous Settings
+                        </Typography>
                         <TextField
                             label="Loading Animation"
+                            helperText="A loading animation to be displayed when data is being loaded"
                             name="other.loadingAnimation"
                             value={newSettings.other.loadingAnimation}
                             select
@@ -265,14 +341,42 @@ const Settings: React.FC = () => {
                     </Stack>
                 </Box>
                 <Stack direction="row" spacing={2} sx={styles.buttonContainer}>
-                    <Button onClick={handleCancel} color="primary">
+                    <Button onClick={handleReset} color="primary">
+                        Reset to default
+                    </Button>
+                    <Button
+                        onClick={handleCancel}
+                        disabled={!settingsChanged}
+                        color="primary"
+                    >
                         Cancel
                     </Button>
-                    <Button onClick={handleSave} color="primary">
+                    <Button
+                        onClick={handleSave}
+                        disabled={!settingsChanged}
+                        color="primary"
+                    >
                         Save
                     </Button>
                 </Stack>
             </Stack>
+            <Dialog open={openResetDialog} onClose={handleCloseResetDialog}>
+                <DialogTitle>Confirm Reset</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to reset settings to default
+                        values?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseResetDialog} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleConfirmReset} color="primary">
+                        Confirm
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Paper>
     );
 };
