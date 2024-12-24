@@ -91,7 +91,7 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
         const dateColsToFormat: number[] = [];
         if (settings.dateFormat !== 'ISO8601') {
             tableData.metadata.columns.forEach((column, index) => {
-                if (column.dataType === 'date') {
+                if (column.dataType === 'date' && ['integer', 'decimal'].includes(column.targetDataType || '')) {
                     dateColsToFormat.push(index);
                 }
             });
@@ -99,7 +99,7 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
         const datetimeColsToFormat: number[] = [];
         if (settings.dateFormat !== 'ISO8601') {
             tableData.metadata.columns.forEach((column, index) => {
-                if (column.dataType === 'datetime') {
+                if (column.dataType === 'datetime' && ['integer', 'decimal'].includes(column.targetDataType || '')) {
                     datetimeColsToFormat.push(index);
                 }
             });

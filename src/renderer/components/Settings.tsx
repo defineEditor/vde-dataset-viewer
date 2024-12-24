@@ -20,6 +20,7 @@ import {
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { ISettings } from 'interfaces/common';
 import { resetSettings, setSettings } from 'renderer/redux/slices/settings';
+import { openSnackbar } from 'renderer/redux/slices/ui';
 
 const styles = {
     main: {
@@ -70,6 +71,13 @@ const Settings: React.FC = () => {
 
     const handleSave = React.useCallback(() => {
         dispatch(setSettings(newSettings));
+        dispatch(
+            openSnackbar({
+                message: 'Settings saved',
+                type: 'success',
+                props: { duration: 1000 },
+            }),
+        );
     }, [dispatch, newSettings]);
 
     const handleCancel = () => {
