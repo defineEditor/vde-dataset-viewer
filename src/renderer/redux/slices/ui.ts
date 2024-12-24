@@ -6,7 +6,7 @@ export const uiSlice = createSlice({
     name: 'ui',
     initialState: initialUi,
     reducers: {
-        setView: (state, action: PayloadAction<Partial<IUi>>) => {
+        setPathname: (state, action: PayloadAction<Partial<IUi>>) => {
             const newState = { ...state, ...action.payload };
             return newState;
         },
@@ -51,7 +51,7 @@ export const uiSlice = createSlice({
 });
 
 export const {
-    setView,
+    setPathname,
     openSnackbar,
     closeSnackbar,
     closeModal,

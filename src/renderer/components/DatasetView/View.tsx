@@ -53,13 +53,20 @@ const styles = {
         width: '100%',
         textAlign: 'center',
     },
-    tableCell: {
+    tableCellDynamic: {
         border: '1px solid rgba(224, 224, 224, 1)',
         cursor: 'pointer',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         padding: 1,
         maxHeight: '5em',
+    },
+    tableCellFixed: {
+        border: '1px solid rgba(224, 224, 224, 1)',
+        cursor: 'pointer',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        padding: 1,
     },
     resizer: {
         top: 0,
@@ -73,7 +80,7 @@ const styles = {
         touchAction: 'none',
     },
     highlightedCell: {
-        backgroundColor: '#f1fae0',
+        backgroundColor: '#42a5f533',
     },
     headerRowNumberCell: {
         justifyContent: 'center',
@@ -95,9 +102,6 @@ const styles = {
         zIndex: 2,
         maxHeight: '100%',
         textAlign: 'center',
-    },
-    selectingCell: {
-        backgroundColor: '#e0f7fa',
     },
     loading: {
         position: 'absolute',
@@ -129,6 +133,7 @@ const DatasetViewUI: React.FC<{
     handleMouseDown: (_rowIndex: number, _columnIndex: number) => void;
     handleMouseOver: (_rowIndex: number, _columnIndex: number) => void;
     isLoading: boolean;
+    dynamicRowHeight: boolean;
     rowVirtualizer: any;
 }> = ({
     table,
@@ -144,6 +149,7 @@ const DatasetViewUI: React.FC<{
     handleMouseDown,
     handleMouseOver,
     isLoading,
+    dynamicRowHeight,
     rowVirtualizer,
 }) => {
     return (
@@ -256,19 +262,30 @@ const DatasetViewUI: React.FC<{
 
                         return (
                             <TableRow
-                                data-index={virtualRow.index}
+                                data-index={
+                                    dynamicRowHeight
+                                        ? virtualRow.index
+                                        : undefined
+                                }
                                 ref={(node) =>
-                                    rowVirtualizer.measureElement(node)
+                                    dynamicRowHeight
+                                        ? rowVirtualizer.measureElement(node)
+                                        : null
                                 }
                                 key={row.id}
                                 sx={{
                                     ...styles.tableRow,
+                                    ...(dynamicRowHeight
+                                        ? {}
+                                        : { height: `${virtualRow.size}px` }),
                                     transform: `translateY(${virtualRow.start}px)`,
                                 }}
                             >
                                 <TableCell
                                     sx={{
-                                        ...styles.tableCell,
+                                        ...(dynamicRowHeight
+                                            ? styles.tableCellDynamic
+                                            : styles.tableCellFixed),
                                         width: visibleCells[0].column.getSize(),
                                         ...styles.rowNumberCell,
                                     }}
@@ -296,7 +313,7 @@ const DatasetViewUI: React.FC<{
                                     />
                                 ) : null}
                                 {virtualColumns.map((vc) => {
-                                    const cell = visibleCells[vc.index + 1]; // Adjust index
+                                    const cell = visibleCells[vc.index + 1]; // Adjust index for row number
                                     const isHighlighted = highlightedCells.some(
                                         (highlightedCell) =>
                                             highlightedCell.row ===
@@ -308,7 +325,9 @@ const DatasetViewUI: React.FC<{
                                         <TableCell
                                             key={cell.id}
                                             sx={{
-                                                ...styles.tableCell,
+                                                ...(dynamicRowHeight
+                                                    ? styles.tableCellDynamic
+                                                    : styles.tableCellFixed),
                                                 width: cell.column.getSize(),
                                                 ...(isHighlighted
                                                     ? styles.highlightedCell

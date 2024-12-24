@@ -16,7 +16,6 @@ const styles = {
     },
     table: {
         height: '100%',
-        paddingTop: '65px',
     },
     pagination: {
         display: 'flex',
@@ -32,12 +31,12 @@ const DatasetContainer: React.FC = () => {
     const fileId = useAppSelector((state) => state.ui.currentFileId);
 
     const estimateWidthRows = useAppSelector(
-        (state) => state.settings.estimateWidthRows,
+        (state) => state.settings.viewer.estimateWidthRows,
     );
     const name = useAppSelector(
         (state) => state.data.openedFileIds[fileId]?.name,
     );
-    const pageSize = useAppSelector((state) => state.settings.pageSize);
+    const pageSize = useAppSelector((state) => state.settings.viewer.pageSize);
 
     const [isLoading, setIsLoading] = useState(true);
     const [table, setTable] = useState<ITableData | null>(null);
