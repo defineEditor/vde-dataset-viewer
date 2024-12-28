@@ -21,6 +21,8 @@ import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { ISettings } from 'interfaces/common';
 import { resetSettings, setSettings } from 'renderer/redux/slices/settings';
 import { openSnackbar } from 'renderer/redux/slices/ui';
+import AppContext from 'renderer/utils/AppContext';
+import store from 'renderer/redux/store';
 
 const styles = {
     main: {
@@ -69,6 +71,8 @@ const Settings: React.FC = () => {
         setTabIndex(newValue);
     };
 
+    const { apiService } = React.useContext(AppContext);
+
     const handleSave = React.useCallback(() => {
         dispatch(setSettings(newSettings));
         dispatch(
@@ -78,7 +82,9 @@ const Settings: React.FC = () => {
                 props: { duration: 1000 },
             }),
         );
-    }, [dispatch, newSettings]);
+        const state = store.getState();
+        apiService.saveLocalStore({ reduxStore: state });
+    }, [dispatch, newSettings, apiService]);
 
     const handleCancel = () => {
         setSettings(initialSettings);

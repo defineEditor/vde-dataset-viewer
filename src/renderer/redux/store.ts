@@ -1,10 +1,10 @@
 import { configureStore } from '@reduxjs/toolkit';
 import rootReducer from 'renderer/redux/rootReducer';
-import { loadState } from 'renderer/redux/stateUtils';
+import initialState from 'renderer/redux/initialState';
 
 const store = configureStore({
     reducer: rootReducer,
-    preloadedState: loadState(),
+    preloadedState: initialState,
 });
 
 export type RootState = ReturnType<typeof store.getState>;

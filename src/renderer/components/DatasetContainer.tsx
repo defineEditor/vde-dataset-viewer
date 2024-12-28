@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import Stack from '@mui/material/Stack';
 import Paper from '@mui/material/Paper';
 import TablePagination from '@mui/material/TablePagination';
 import { ITableData } from 'interfaces/common';
 import DatasetView from 'renderer/components/DatasetView';
-import ApiService from 'renderer/services/ApiService';
+import AppContext from 'renderer/utils/AppContext';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import { openSnackbar, setPage } from 'renderer/redux/slices/ui';
 import { getData } from 'renderer/utils/readData';
@@ -25,11 +25,10 @@ const styles = {
     },
 };
 
-const apiService = new ApiService('local');
-
 const DatasetContainer: React.FC = () => {
     const dispatch = useAppDispatch();
     const fileId = useAppSelector((state) => state.ui.currentFileId);
+    const { apiService } = useContext(AppContext);
 
     const estimateWidthRows = useAppSelector(
         (state) => state.settings.viewer.estimateWidthRows,
@@ -51,14 +50,20 @@ const DatasetContainer: React.FC = () => {
     useEffect(() => {
         setTable(null);
         const readDataset = async () => {
-            if (fileId === '') {
+            if (fileId === '' || apiService === null) {
                 return;
             }
 
             setIsLoading(true);
             let newData: ITableData | null = null;
             try {
-                newData = await getData(apiService, fileId, 0, pageSize);
+                newData = await getData(
+                    apiService,
+                    'local',
+                    fileId,
+                    0,
+                    pageSize,
+                );
             } catch (error) {
                 dispatch(
                     openSnackbar({
@@ -86,14 +91,14 @@ const DatasetContainer: React.FC = () => {
         };
 
         readDataset();
-    }, [name, dispatch, fileId, pageSize, estimateWidthRows]);
+    }, [name, dispatch, fileId, pageSize, estimateWidthRows, apiService]);
 
     // Pagination
     const page = useAppSelector((state) => state.ui.currentPage);
 
     const handleChangePage = useCallback(
         (_event: any, newPage: number) => {
-            if (table === null) {
+            if (table === null || apiService === null) {
                 return;
             }
 
@@ -106,6 +111,7 @@ const DatasetContainer: React.FC = () => {
             const readNext = async (start: number) => {
                 const newData = await getData(
                     apiService,
+                    'local',
                     fileId,
                     start,
                     pageSize,
@@ -118,7 +124,7 @@ const DatasetContainer: React.FC = () => {
 
             readNext((newPage as number) * pageSize);
         },
-        [fileId, pageSize, table, dispatch],
+        [fileId, pageSize, table, dispatch, apiService],
     );
 
     // Filter change
@@ -127,7 +133,7 @@ const DatasetContainer: React.FC = () => {
         if (page !== 0) {
             dispatch(setPage(0));
         }
-        if (table === null) {
+        if (table === null || apiService === null) {
             return;
         }
         // Check if filter is already applied
@@ -139,6 +145,7 @@ const DatasetContainer: React.FC = () => {
         const readDataset = async () => {
             const newData = await getData(
                 apiService,
+                'local',
                 fileId,
                 0,
                 pageSize,
@@ -151,12 +158,20 @@ const DatasetContainer: React.FC = () => {
                 } else {
                     setTotalRecords(newData.metadata.records);
                 }
+                if (currentFilter !== null) {
+                    dispatch(
+                        openSnackbar({
+                            type: 'success',
+                            message: `${newData.data.length} record${newData.data.length === 1 ? '' : 's'} filtered.`,
+                        }),
+                    );
+                }
                 setTable(newData);
                 setIsLoading(false);
             }
         };
         readDataset();
-    }, [dispatch, fileId, pageSize, table, currentFilter, page]);
+    }, [dispatch, fileId, pageSize, table, currentFilter, page, apiService]);
 
     // GoTo control
     const goToRow = useAppSelector((state) => state.ui.control.goTo.row);

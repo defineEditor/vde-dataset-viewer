@@ -9,6 +9,7 @@ import { setData, addRecent, resetFilter } from 'renderer/redux/slices/data';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { openNewDataset } from 'renderer/utils/readData';
 import AppContext from 'renderer/utils/AppContext';
+import { modals } from 'misc/constants';
 
 const styles = {
     main: {
@@ -40,7 +41,7 @@ const Header: React.FC = () => {
     });
 
     const handleOpenClick = async () => {
-        const newDataInfo = await openNewDataset(apiService);
+        const newDataInfo = await openNewDataset(apiService, 'local');
         if (newDataInfo === null) {
             return;
         }
@@ -65,15 +66,15 @@ const Header: React.FC = () => {
     };
 
     const handleGoToClick = () => {
-        dispatch(openModal({ type: 'GOTO', props: {} }));
+        dispatch(openModal({ type: modals.GOTO, props: {} }));
     };
 
     const handleFilterClick = () => {
-        dispatch(openModal({ type: 'FILTER', props: {} }));
+        dispatch(openModal({ type: modals.FILTER, props: {} }));
     };
 
     const handleDataSetInfoClick = () => {
-        dispatch(openModal({ type: 'DATASETINFO', props: {} }));
+        dispatch(openModal({ type: modals.DATASETINFO, props: {} }));
     };
 
     return (

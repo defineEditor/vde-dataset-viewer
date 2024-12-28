@@ -79,6 +79,7 @@ export interface IData {
     openedFileMetadata: {
         [name: string]: DatasetJsonMetadata;
     };
+    recentFolders: string[];
     recentFiles: IRecentFile[];
     filterData: {
         currentFilter: Filter | null;

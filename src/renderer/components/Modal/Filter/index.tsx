@@ -4,6 +4,7 @@ import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import { closeModal } from 'renderer/redux/slices/ui';
@@ -129,6 +130,7 @@ const GoTo: React.FC<IUiModal> = (props: IUiModal) => {
             onClose={handleClose}
             PaperProps={{ sx: { ...styles.dialog } }}
         >
+            <DialogTitle>Filter Data</DialogTitle>
             <DialogContent>
                 <Stack spacing={2} direction="row">
                     <FilterInput
@@ -158,7 +160,11 @@ const GoTo: React.FC<IUiModal> = (props: IUiModal) => {
                 <Button onClick={handleClose} color="primary">
                     Cancel
                 </Button>
-                <Button onClick={handleSetFilter} color="primary">
+                <Button
+                    onClick={handleSetFilter}
+                    color="primary"
+                    variant="contained"
+                >
                     Apply
                 </Button>
             </DialogActions>

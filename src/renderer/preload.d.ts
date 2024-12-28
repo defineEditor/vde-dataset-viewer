@@ -5,6 +5,7 @@ import {
     DatasetJsonMetadata,
     ItemDataArray,
     Filter,
+    ILocalStore,
 } from 'interfaces/common';
 
 declare global {
@@ -30,6 +31,9 @@ declare global {
                 filterColumns?: string[],
                 filterData?: Filter,
             ) => ItemDataArray[];
+            saveLocalStore: (localStore: ILocalStore) => void;
+            loadLocalStore: () => Promise<ILocalStore>;
+            onSaveStore: (callback: () => Promise<void>) => void;
             ipcRenderer: {
                 sendMessage(channel: Channels, args: unknown[]): void;
                 on(
