@@ -63,6 +63,7 @@ const styles = {
     },
     tableCellFixed: {
         border: '1px solid rgba(224, 224, 224, 1)',
+        whiteSpace: 'nowrap',
         cursor: 'pointer',
         overflow: 'hidden',
         textOverflow: 'ellipsis',

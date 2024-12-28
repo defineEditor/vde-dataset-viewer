@@ -6,3 +6,5 @@ export type DatasetJsonMetadata = Awaited<
 export type DatasetJsonData = Awaited<
     ReturnType<InstanceType<typeof DatasetJson>['getData']>
 >;
+
+export { Filter, Connector, FilterCondition } from 'js-stream-dataset-json';

@@ -6,9 +6,10 @@ import { ITableData } from 'interfaces/common';
 import DatasetView from 'renderer/components/DatasetView';
 import ApiService from 'renderer/services/ApiService';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
-import { setPage } from 'renderer/redux/slices/ui';
+import { openSnackbar, setPage } from 'renderer/redux/slices/ui';
 import { getData } from 'renderer/utils/readData';
 import estimateWidth from 'renderer/utils/estimateWidth';
+import deepEqual from 'renderer/utils/deepEqual';
 
 const styles = {
     main: {
@@ -40,7 +41,13 @@ const DatasetContainer: React.FC = () => {
 
     const [isLoading, setIsLoading] = useState(true);
     const [table, setTable] = useState<ITableData | null>(null);
+    const [totalRecords, setTotalRecords] = useState(0);
 
+    const currentFilter = useAppSelector(
+        (state) => state.data.filterData.currentFilter,
+    );
+
+    // Load initial data
     useEffect(() => {
         setTable(null);
         const readDataset = async () => {
@@ -49,7 +56,17 @@ const DatasetContainer: React.FC = () => {
             }
 
             setIsLoading(true);
-            const newData = await getData(apiService, fileId, 0, pageSize);
+            let newData: ITableData | null = null;
+            try {
+                newData = await getData(apiService, fileId, 0, pageSize);
+            } catch (error) {
+                dispatch(
+                    openSnackbar({
+                        type: 'error',
+                        message: (error as Error).message,
+                    }),
+                );
+            }
             // Get width estimation for columns
             if (newData !== null) {
                 const widths = estimateWidth(newData, estimateWidthRows);
@@ -62,6 +79,7 @@ const DatasetContainer: React.FC = () => {
                     };
                 });
                 newData.header = header;
+                setTotalRecords(newData.metadata.records);
                 setTable(newData);
                 setIsLoading(false);
             }
@@ -83,7 +101,6 @@ const DatasetContainer: React.FC = () => {
                 // Do nothing, as data is loaded;
                 return;
             }
-            setTable({ ...table, data: [] });
             setIsLoading(true);
             dispatch(setPage(newPage));
             const readNext = async (start: number) => {
@@ -103,6 +120,43 @@ const DatasetContainer: React.FC = () => {
         },
         [fileId, pageSize, table, dispatch],
     );
+
+    // Filter change
+    useEffect(() => {
+        // Reset page to 0 when filter changes
+        if (page !== 0) {
+            dispatch(setPage(0));
+        }
+        if (table === null) {
+            return;
+        }
+        // Check if filter is already applied
+        if (deepEqual(currentFilter, table.appliedFilter)) {
+            return;
+        }
+
+        setIsLoading(true);
+        const readDataset = async () => {
+            const newData = await getData(
+                apiService,
+                fileId,
+                0,
+                pageSize,
+                undefined,
+                currentFilter === null ? undefined : currentFilter,
+            );
+            if (newData !== null) {
+                if (currentFilter !== null && newData.data.length < pageSize) {
+                    setTotalRecords(newData.data.length);
+                } else {
+                    setTotalRecords(newData.metadata.records);
+                }
+                setTable(newData);
+                setIsLoading(false);
+            }
+        };
+        readDataset();
+    }, [dispatch, fileId, pageSize, table, currentFilter, page]);
 
     // GoTo control
     const goToRow = useAppSelector((state) => state.ui.control.goTo.row);
@@ -134,7 +188,7 @@ const DatasetContainer: React.FC = () => {
                     <TablePagination
                         sx={{ mr: 2, borderRadius: 0 }}
                         component="div"
-                        count={table.metadata.records}
+                        count={totalRecords}
                         page={page}
                         onPageChange={handleChangePage}
                         rowsPerPage={pageSize}

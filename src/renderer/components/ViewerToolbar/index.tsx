@@ -1,16 +1,14 @@
 import React, { useContext } from 'react';
-import Stack from '@mui/material/Stack';
+import { Typography, Tooltip, IconButton, Stack } from '@mui/material';
 import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
 import ShortcutIcon from '@mui/icons-material/Shortcut';
 import InfoIcon from '@mui/icons-material/Info';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
+import FilterIcon from '@mui/icons-material/FilterAlt';
 import { setPathname, openModal, setPage } from 'renderer/redux/slices/ui';
-import { setData, addRecent } from 'renderer/redux/slices/data';
+import { setData, addRecent, resetFilter } from 'renderer/redux/slices/data';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { openNewDataset } from 'renderer/utils/readData';
 import AppContext from 'renderer/utils/AppContext';
-import { Typography } from '@mui/material';
 
 const styles = {
     main: {
@@ -29,6 +27,9 @@ const Header: React.FC = () => {
     const { apiService } = useContext(AppContext);
 
     const pathname = useAppSelector((state) => state.ui.pathname);
+    const isFilterEnabled = useAppSelector(
+        (state) => state.data.filterData.currentFilter !== null,
+    );
 
     const dsName = useAppSelector((state) => {
         const { currentFileId } = state.ui;
@@ -59,10 +60,16 @@ const Header: React.FC = () => {
         );
         // Reset page for the new dataset
         dispatch(setPage(0));
+        // Reset filter for the new dataset
+        dispatch(resetFilter());
     };
 
     const handleGoToClick = () => {
         dispatch(openModal({ type: 'GOTO', props: {} }));
+    };
+
+    const handleFilterClick = () => {
+        dispatch(openModal({ type: 'FILTER', props: {} }));
     };
 
     const handleDataSetInfoClick = () => {
@@ -80,11 +87,10 @@ const Header: React.FC = () => {
                 {dsName}
             </Typography>
             <Tooltip title="Open New Dataset" enterDelay={1000}>
-                <IconButton onClick={handleOpenClick} id="open" size="medium">
+                <IconButton onClick={handleOpenClick} id="open" size="small">
                     <FileOpenOutlinedIcon
                         sx={{
                             color: 'primary.main',
-                            fontSize: '24px',
                         }}
                     />
                 </IconButton>
@@ -93,13 +99,28 @@ const Header: React.FC = () => {
                 <IconButton
                     onClick={handleGoToClick}
                     id="goto"
-                    size="medium"
+                    size="small"
                     disabled={pathname !== '/viewer'}
                 >
                     <ShortcutIcon
                         sx={{
                             color: 'primary.main',
-                            fontSize: '24px',
+                        }}
+                    />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Filter Records" enterDelay={1000}>
+                <IconButton
+                    onClick={handleFilterClick}
+                    id="filterData"
+                    size="small"
+                    disabled={pathname !== '/viewer'}
+                >
+                    <FilterIcon
+                        sx={{
+                            color: isFilterEnabled
+                                ? 'success.main'
+                                : 'primary.main',
                         }}
                     />
                 </IconButton>
@@ -108,13 +129,12 @@ const Header: React.FC = () => {
                 <IconButton
                     onClick={handleDataSetInfoClick}
                     id="datasetInfo"
-                    size="medium"
+                    size="small"
                     disabled={pathname !== '/viewer'}
                 >
                     <InfoIcon
                         sx={{
                             color: 'primary.main',
-                            fontSize: '24px',
                         }}
                     />
                 </IconButton>

@@ -1,21 +1,23 @@
+import React from 'react';
 import { ItemDataArray } from 'interfaces/datasetJson';
-import { DatasetJsonMetadata } from 'interfaces/api.d';
+import { DatasetJsonMetadata, Filter } from 'interfaces/api.d';
 
 export type SortOrder = 'asc' | 'desc';
 export type AlignType = 'left' | 'center' | 'right' | 'justify';
 export type StyleObject = { [name: string]: string | number };
+
+export interface IGeneralTableDataCell {
+    /** Property containing column value */
+    [name: string]: string | number | boolean | StyleObject;
+}
+
 export type GeneralTableDataCellFormatter = ({
     id,
     row,
 }: {
     id: string;
     row: IGeneralTableDataCell;
-}) => JSX.Element;
-
-export interface IGeneralTableDataCell {
-    /** Property containing column value */
-    [name: string]: string | number | boolean | StyleObject;
-}
+}) => React.JSX.Element;
 
 export interface IGeneralTableHeaderCell {
     /** Property containing column value */
@@ -76,4 +78,5 @@ export interface ITableData {
     header: IGeneralTableHeaderCell[];
     metadata: DatasetJsonMetadata;
     data: ItemDataArray[];
+    appliedFilter: Filter | null;
 }
