@@ -4,12 +4,16 @@ import {
     DatasetType,
     DatasetJsonMetadata,
     ItemDataArray,
+    Filter,
 } from 'interfaces/common';
 
 declare global {
     interface Window {
         electron: {
-            openFile: (mode: 'local' | 'remote') => Promise<{
+            openFile: (
+                mode: 'local' | 'remote',
+                fileSettings?: { encoding: BufferEncoding },
+            ) => Promise<{
                 fileId: string;
                 type: DatasetType;
                 path: string;
@@ -23,7 +27,8 @@ declare global {
                 fileId: string,
                 start: number,
                 length: number,
-                query?: string,
+                filterColumns?: string[],
+                filterData?: Filter,
             ) => ItemDataArray[];
             ipcRenderer: {
                 sendMessage(channel: Channels, args: unknown[]): void;

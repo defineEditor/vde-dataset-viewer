@@ -1,6 +1,6 @@
 import { dialog, IpcMainInvokeEvent } from 'electron';
 import DatasetJson from 'js-stream-dataset-json';
-import { DatasetType } from 'interfaces/common';
+import { DatasetType, Filter } from 'interfaces/common';
 import openFile from './openFile';
 
 class FileManager {
@@ -24,6 +24,7 @@ class FileManager {
     handleFileOpen = async (
         _event: IpcMainInvokeEvent,
         mode: 'local' | 'remote',
+        fileSettings: { encoding: BufferEncoding },
     ): Promise<{ fileId: string; type: DatasetType; path: string } | null> => {
         const newFile = await openFile();
         let type: DatasetType;
@@ -57,7 +58,9 @@ class FileManager {
         }
         let data: DatasetJson;
         try {
-            data = new DatasetJson(newFile.path);
+            data = new DatasetJson(newFile.path, {
+                encoding: fileSettings.encoding,
+            });
         } catch (error) {
             // Show a popup with the error message
             dialog.showErrorBox(
@@ -113,12 +116,16 @@ class FileManager {
         fileId: string,
         start: number,
         length: number,
+        filterColumns?: string[],
+        filterData?: Filter[],
     ) => {
         if (this.openedFiles[fileId]) {
             try {
                 const data = await this.openedFiles[fileId].getData({
                     start,
                     length,
+                    filterColumns,
+                    filterData,
                 });
                 return data;
             } catch (error) {

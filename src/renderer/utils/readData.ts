@@ -3,6 +3,7 @@ import {
     IGeneralTableHeaderCell,
     ITableData,
     DatasetType,
+    Filter,
 } from 'interfaces/common';
 import { ItemDataArray } from 'js-stream-dataset-json';
 import ApiService from 'renderer/services/ApiService';
@@ -12,7 +13,9 @@ const getData = async (
     apiService: ApiService,
     fileId: string,
     start: number,
-    pageSize: number,
+    length: number,
+    filterColumns?: string[],
+    filterData?: Filter,
 ): Promise<ITableData | null> => {
     const metadata = await apiService.getMetadata(fileId);
     if (Object.keys(metadata).length === 0) {
@@ -22,7 +25,9 @@ const getData = async (
     const itemData = (await apiService.getObservations(
         fileId,
         start,
-        pageSize,
+        length,
+        filterColumns,
+        filterData,
     )) as ItemDataArray[];
 
     const rawHeader = metadata.columns;
@@ -34,7 +39,12 @@ const getData = async (
         };
     });
 
-    return { header: newHeader, metadata, data: itemData };
+    return {
+        header: newHeader,
+        metadata,
+        data: itemData,
+        appliedFilter: filterData || null,
+    };
 };
 
 // Open new dataset;

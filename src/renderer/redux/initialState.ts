@@ -16,6 +16,7 @@ export const settings: ISettings = {
     },
     other: {
         loadingAnimation: 'random',
+        inEncoding: 'utf8',
     },
 };
 export const ui: IUi = {
@@ -40,6 +41,12 @@ export const data: IData = {
     openedFileIds: {},
     openedFileMetadata: {},
     recentFiles: [],
+    filterData: {
+        currentFilter: null,
+        recentFilters: [],
+        lastOptions: { caseInsensitive: true },
+        lastType: 'manual',
+    },
 };
 
 const initialState: IStore = {

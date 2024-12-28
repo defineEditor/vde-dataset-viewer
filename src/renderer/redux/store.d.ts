@@ -1,4 +1,4 @@
-import { DatasetJsonMetadata } from 'interfaces/api';
+import { DatasetJsonMetadata, Filter } from 'interfaces/api';
 
 export interface ISettings {
     viewer: {
@@ -17,6 +17,7 @@ export interface ISettings {
     };
     other: {
         loadingAnimation: 'santa' | 'cat' | 'dog' | 'normal' | 'random';
+        inEncoding: 'utf8' | 'utf16le' | 'base64' | 'ucs2' | 'latin1' | 'ascii';
     };
 }
 
@@ -79,6 +80,12 @@ export interface IData {
         [name: string]: DatasetJsonMetadata;
     };
     recentFiles: IRecentFile[];
+    filterData: {
+        currentFilter: Filter | null;
+        recentFilters: { filter: Filter; datasetName: string; date: number }[];
+        lastOptions: Filter['options'];
+        lastType: 'manual' | 'ui';
+    };
 }
 
 export interface IStore {

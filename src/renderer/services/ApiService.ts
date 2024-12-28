@@ -3,8 +3,10 @@ import {
     ItemDataArray,
     DatasetJsonMetadata,
     DatasetType,
+    Filter,
 } from 'interfaces/common';
 import DatasetJson from 'js-stream-dataset-json';
+import store from 'renderer/redux/store';
 
 interface IOpenFile {
     fileId: string;
@@ -29,7 +31,9 @@ class ApiService {
     };
 
     private openFileLocal = async (): Promise<IOpenFile> => {
-        const response = await window.electron.openFile('local');
+        // Read encoding from state
+        const encoding = store.getState().settings.other.inEncoding;
+        const response = await window.electron.openFile('local', { encoding });
         if (response === null) {
             return { fileId: '', type: 'json', path: '' };
         }
@@ -159,7 +163,8 @@ class ApiService {
         fileId: string,
         start: number,
         length: number,
-        query = '',
+        filterColumns?: string[],
+        filterData?: Filter,
     ): Promise<ItemDataArray[]> => {
         if (this.mode === 'remote') {
             return this.getObservationsRemote(
@@ -167,18 +172,33 @@ class ApiService {
                 '',
                 Math.trunc(start / length) + 1,
                 length,
-                query,
+                filterColumns,
+                filterData,
             );
         }
-        return this.getObservationsLocal(fileId, start, length);
+        return this.getObservationsLocal(
+            fileId,
+            start,
+            length,
+            filterColumns,
+            filterData,
+        );
     };
 
     private getObservationsLocal = async (
         fileId: string,
         start: number,
         length: number,
+        filterColumns?: string[],
+        filterData?: Filter,
     ) => {
-        const result = await window.electron.getData(fileId, start, length);
+        const result = await window.electron.getData(
+            fileId,
+            start,
+            length,
+            filterColumns,
+            filterData,
+        );
         return result;
     };
 
@@ -187,7 +207,8 @@ class ApiService {
         datasetName: string,
         page: number,
         pageSize: number,
-        query = '',
+        _filterColumns?: string[],
+        _filterData?: Filter,
     ) => {
         let result;
         try {
@@ -195,7 +216,7 @@ class ApiService {
                 method: 'GET',
             };
             const requestResponse = await fetch(
-                `http://localhost:8000/jsons/${fileId}/datasets/${datasetName}/observations?page=${page}&page_size=${pageSize}&query=${query}`,
+                `http://localhost:8000/jsons/${fileId}/datasets/${datasetName}/observations?page=${page}&page_size=${pageSize}`,
                 requestOptions,
             );
             if ([200, 204].includes(requestResponse.status)) {

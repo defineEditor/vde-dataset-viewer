@@ -14,7 +14,7 @@ import Settings from 'renderer/components/Settings';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import { setPathname } from 'renderer/redux/slices/ui';
 import { AllowedPathnames } from 'interfaces/common';
-import Header from 'renderer/components/Header';
+import ViewerToolbar from 'renderer/components/ViewerToolbar';
 
 const styles = {
     main: {
@@ -29,12 +29,6 @@ const styles = {
         color: '#1976d2',
         background:
             'radial-gradient(circle farthest-corner at right,#eeeeee,#c4c4c4)',
-    },
-    toolbar: {
-        color: 'red',
-        padding: 4,
-        backgroundColor: 'red',
-        justifyContent: 'flex-start',
     },
 };
 
@@ -127,11 +121,10 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                 slots={
                     pathname === '/viewer' && isDataLoaded
                         ? {
-                              appTitle: Header,
+                              appTitle: ViewerToolbar,
                           }
                         : {}
                 }
-                slotProps={{ toolbarActions: { sx: styles.toolbar } }}
             >
                 <Stack sx={styles.main} id="main">
                     {pathname === '/viewer' && !isDataLoaded && (

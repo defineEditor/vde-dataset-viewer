@@ -346,6 +346,35 @@ const Settings: React.FC = () => {
                             <MenuItem value="normal">Normal</MenuItem>
                             <MenuItem value="random">Random</MenuItem>
                         </TextField>
+                        <TextField
+                            label="Input encoding"
+                            helperText={
+                                newSettings.other.inEncoding === 'utf8'
+                                    ? 'Ecoding used when reading files'
+                                    : 'Be sure the correct encoding is specified, in most situations you should use UTF8'
+                            }
+                            name="other.inEncoding"
+                            color={
+                                newSettings.other.inEncoding !== 'utf8'
+                                    ? 'warning'
+                                    : 'primary'
+                            }
+                            value={newSettings.other.inEncoding}
+                            select
+                            onChange={(event) =>
+                                handleInputChange(
+                                    event as React.ChangeEvent<HTMLInputElement>,
+                                )
+                            }
+                            sx={styles.inputField}
+                        >
+                            <MenuItem value="utf8">UTF8</MenuItem>
+                            <MenuItem value="utf16le">UTF16LE</MenuItem>
+                            <MenuItem value="base64">Base64</MenuItem>
+                            <MenuItem value="ucs2">UCS2</MenuItem>
+                            <MenuItem value="latin1">Latin1</MenuItem>
+                            <MenuItem value="ascii">ASCII</MenuItem>
+                        </TextField>
                     </Stack>
                 </Box>
                 <Stack direction="row" spacing={2} sx={styles.buttonContainer}>

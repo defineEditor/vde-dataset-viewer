@@ -34,5 +34,8 @@
         "import/parsers": {
             "@typescript-eslint/parser": [".ts", ".tsx"]
         }
+    },
+    "globals": {
+         "BufferEncoding": "readonly"
     }
 }

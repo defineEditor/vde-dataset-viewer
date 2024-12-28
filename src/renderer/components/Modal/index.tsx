@@ -2,10 +2,12 @@ import React from 'react';
 import { useAppSelector } from 'renderer/redux/hooks';
 import GoTo from 'renderer/components/Modal/GoTo';
 import DatasetInfo from 'renderer/components/Modal/DatasetInfo';
+import Filter from 'renderer/components/Modal/Filter';
 
 const MODAL_COMPONENTS = {
     GOTO: GoTo,
     DATASETINFO: DatasetInfo,
+    FILTER: Filter,
 };
 
 const ModalRoot: React.FC = () => {
