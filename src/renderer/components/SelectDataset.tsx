@@ -28,7 +28,7 @@ const SelectDataset = () => {
     const recentFiles = useAppSelector((state) => state.data.recentFiles);
 
     const handleOpenLocal = async () => {
-        const newDataInfo = await openNewDataset(apiService);
+        const newDataInfo = await openNewDataset(apiService, 'local');
         if (newDataInfo === null) {
             return;
         }

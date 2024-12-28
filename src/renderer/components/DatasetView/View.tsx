@@ -79,6 +79,11 @@ const styles = {
         cursor: 'col-resize',
         userSelect: 'none',
         touchAction: 'none',
+        transition: 'background 0.3s, width 0.3s',
+        '&:hover': {
+            backgroundColor: 'primary.light',
+            width: '5px',
+        },
     },
     highlightedCell: {
         backgroundColor: '#42a5f533',

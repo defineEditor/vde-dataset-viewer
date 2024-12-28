@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
-import { Filter } from 'interfaces/common';
+import { Filter, ILocalStore } from 'interfaces/common';
 
 export type Channels = 'ipc-example';
 
@@ -29,6 +29,16 @@ contextBridge.exposeInMainWorld('electron', {
             filterColumns,
             filterData,
         ),
+    saveLocalStore: (localStore: ILocalStore) =>
+        ipcRenderer.invoke('store:save', localStore),
+    loadLocalStore: (): Promise<ILocalStore> =>
+        ipcRenderer.invoke('store:load'),
+    onSaveStore: (callback: () => Promise<void>) => {
+        ipcRenderer.on('renderer:saveStore', async () => {
+            await callback();
+            ipcRenderer.send('main:storeSaved');
+        });
+    },
     ipcRenderer: {
         sendMessage(channel: Channels, args: unknown[]) {
             ipcRenderer.send(channel, args);

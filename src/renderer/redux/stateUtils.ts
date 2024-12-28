@@ -1,10 +1,10 @@
-import initialState from 'renderer/redux/initialState';
+import initialState, { data, ui } from 'renderer/redux/initialState';
 import { IStore } from 'interfaces/common';
 
 // In case new state slices are added, the previous state will be merged with the new version to add all required attributes
 const mergeDefaults = (
     state: Record<string, unknown>,
-    defaultState: Record<string, unknown>
+    defaultState: Record<string, unknown>,
 ): Record<string, unknown> => {
     if (state === null || state === undefined) {
         return defaultState;
@@ -18,7 +18,7 @@ const mergeDefaults = (
         ) {
             newState[attr] = mergeDefaults(
                 newState[attr] as Record<string, unknown>,
-                defaultState[attr] as Record<string, unknown>
+                defaultState[attr] as Record<string, unknown>,
             );
         } else if (state[attr] === undefined) {
             newState[attr] = defaultState[attr];
@@ -27,25 +27,26 @@ const mergeDefaults = (
     return newState;
 };
 
-export const loadState = (): IStore => {
+export const safeLoadState = (state: IStore): IStore => {
     try {
-        const serializedState = localStorage.getItem('state');
-        if (serializedState === null) {
-            return initialState;
-        }
-        const state: IStore = JSON.parse(serializedState);
         return mergeDefaults(
             state as unknown as Record<string, unknown>,
-            initialState as unknown as Record<string, unknown>
+            initialState as unknown as Record<string, unknown>,
         ) as unknown as IStore;
     } catch (err) {
         return initialState;
     }
 };
 
-export const saveState = (state: IStore): void => {
+export const dehydrateState = (state: IStore): IStore => {
     // Remove some things, which should not be kept between sessions
-    const savedState = { ...state };
-    const serializedState = JSON.stringify(savedState);
-    localStorage.setItem('state', serializedState);
+    const newData = { ...state.data };
+    // Reset opened files
+    newData.openedFileMetadata = data.openedFileMetadata;
+    newData.openedFileIds = data.openedFileIds;
+    // Remove filter if it was applied
+    newData.filterData = { ...newData.filterData, currentFilter: null };
+    const newUi = { ...ui };
+
+    return { ...state, ui: newUi, data: newData };
 };

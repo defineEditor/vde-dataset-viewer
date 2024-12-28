@@ -4,6 +4,8 @@ import {
     DatasetJsonMetadata,
     DatasetType,
     Filter,
+    ILocalStore,
+    IStore,
 } from 'interfaces/common';
 import DatasetJson from 'js-stream-dataset-json';
 import store from 'renderer/redux/store';
@@ -16,15 +18,9 @@ interface IOpenFile {
 }
 
 class ApiService {
-    private mode: 'local' | 'remote';
-
-    constructor(mode: 'local' | 'remote') {
-        this.mode = mode;
-    }
-
     // Open file
-    public openFile = async (): Promise<IOpenFile> => {
-        if (this.mode === 'remote') {
+    public openFile = async (mode: 'local' | 'remote'): Promise<IOpenFile> => {
+        if (mode === 'remote') {
             return this.openFileRemote();
         }
         return this.openFileLocal();
@@ -121,14 +117,13 @@ class ApiService {
 
     // Get dataset metadata
     public getMetadata = async (
+        mode: 'local' | 'remote',
         fileId: string,
     ): Promise<DatasetJsonMetadata> => {
-        let result: DatasetJsonMetadata;
-        if (this.mode === 'remote') {
-            result = await this.getMetadataRemote(fileId, '');
+        if (mode === 'remote') {
+            return this.getMetadataRemote(fileId, '');
         }
-        result = await this.getMetadataLocal(fileId);
-        return result;
+        return this.getMetadataLocal(fileId);
     };
 
     private getMetadataLocal = async (fileId: string) => {
@@ -160,13 +155,14 @@ class ApiService {
 
     // Get dataset data
     public getObservations = async (
+        mode: 'local' | 'remote',
         fileId: string,
         start: number,
         length: number,
         filterColumns?: string[],
         filterData?: Filter,
     ): Promise<ItemDataArray[]> => {
-        if (this.mode === 'remote') {
+        if (mode === 'remote') {
             return this.getObservationsRemote(
                 fileId,
                 '',
@@ -230,8 +226,11 @@ class ApiService {
     };
 
     // Close file
-    public close = async (fileId: string): Promise<boolean> => {
-        if (this.mode === 'remote') {
+    public close = async (
+        mode: 'local' | 'remote',
+        fileId: string,
+    ): Promise<boolean> => {
+        if (mode === 'remote') {
             return this.closeRemote(fileId);
         }
         return this.closeLocal(fileId);
@@ -259,6 +258,17 @@ class ApiService {
             // Handle exception
         }
         return false;
+    };
+
+    // Load local store
+    public loadLocalStore = async (): Promise<ILocalStore> => {
+        const result = await window.electron.loadLocalStore();
+        return result;
+    };
+
+    // Save local store
+    public saveLocalStore = async ({ reduxStore }: { reduxStore: IStore }) => {
+        window.electron.saveLocalStore({ reduxStore });
     };
 }
 

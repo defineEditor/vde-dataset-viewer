@@ -3,8 +3,9 @@ import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
-import { resolveHtmlPath, writeToClipboard } from './util';
-import FileManager from './fileManager';
+import StoreManager from 'main/storeManager';
+import { resolveHtmlPath, writeToClipboard } from 'main/util';
+import FileManager from 'main/fileManager';
 
 class AppUpdater {
     constructor() {
@@ -85,6 +86,18 @@ const createWindow = async () => {
         }
     });
 
+    mainWindow.on('close', async (event) => {
+        event.preventDefault();
+        if (mainWindow) {
+            ipcMain.once('main:storeSaved', () => {
+                if (mainWindow) {
+                    mainWindow.destroy();
+                }
+            });
+            mainWindow.webContents.send('renderer:saveStore');
+        }
+    });
+
     mainWindow.on('closed', () => {
         mainWindow = null;
     });
@@ -115,6 +128,7 @@ app.on('window-all-closed', () => {
 app.whenReady()
     .then(() => {
         const fileManager = new FileManager();
+        const storeManager = new StoreManager();
         ipcMain.handle('main:openFile', fileManager.handleFileOpen);
         ipcMain.handle('main:closeFile', fileManager.handleFileClose);
         ipcMain.handle('main:writeToClipboard', writeToClipboard);
@@ -123,6 +137,8 @@ app.whenReady()
             'read:getObservations',
             fileManager.handleGetObservations,
         );
+        ipcMain.handle('store:save', storeManager.save);
+        ipcMain.handle('store:load', storeManager.load);
         createWindow();
         app.on('activate', () => {
             // On macOS it's common to re-create a window in the app when the

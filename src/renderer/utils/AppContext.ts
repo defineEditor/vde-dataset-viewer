@@ -5,12 +5,10 @@ export interface IAppContext {
     apiService: ApiService;
 }
 
-const apiService = new ApiService('local');
+const defaultApiService = new ApiService();
 
-const defaultAppContext: IAppContext = {
-    apiService,
-};
-
-const AppContext = createContext<IAppContext>(defaultAppContext);
+const AppContext = createContext<IAppContext>({
+    apiService: defaultApiService,
+});
 
 export default AppContext;
