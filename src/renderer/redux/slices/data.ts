@@ -27,6 +27,10 @@ export const dataSlice = createSlice({
                         type: action.payload.type,
                     },
                 },
+                filterData: {
+                    ...state.filterData,
+                    currentFilter: null,
+                },
             };
             return newState;
         },

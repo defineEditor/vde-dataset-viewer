@@ -42,6 +42,10 @@ export interface IGeneralTableHeaderCell {
     searchable?: boolean;
     /** Use that column as an order column, possible values: asc, desc */
     defaultOrder?: SortOrder;
+    /** Size in px */
+    size?: number;
+    /** Type */
+    type?: string;
     /** Style applied to the column */
     style?: StyleObject;
     /** Whether a filter is created for the column in the general toolbar */

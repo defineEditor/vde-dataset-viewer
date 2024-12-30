@@ -63,7 +63,7 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
             return {
                 accessorKey: column.id,
                 header: column.id,
-                size: 120,
+                size: column.size,
                 enableResizing: true,
             };
         });

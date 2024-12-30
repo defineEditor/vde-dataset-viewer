@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useCallback } from 'react';
 import { Typography, Tooltip, IconButton, Stack } from '@mui/material';
 import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
 import ShortcutIcon from '@mui/icons-material/Shortcut';
@@ -10,7 +10,7 @@ import {
     setPage,
     openSnackbar,
 } from 'renderer/redux/slices/ui';
-import { setData, addRecent, resetFilter } from 'renderer/redux/slices/data';
+import { setData, resetFilter } from 'renderer/redux/slices/data';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { openNewDataset } from 'renderer/utils/readData';
 import AppContext from 'renderer/utils/AppContext';
@@ -45,28 +45,30 @@ const Header: React.FC = () => {
         return '';
     });
 
-    const handleOpenClick = async () => {
+    const handleOpenClick = useCallback(async () => {
         const newDataInfo = await openNewDataset(apiService, 'local');
         if (newDataInfo.errorMessage) {
-            dispatch(
-                openSnackbar({
-                    type: 'error',
-                    message: newDataInfo.errorMessage,
-                }),
-            );
+            if (newDataInfo.errorMessage !== 'cancelled') {
+                dispatch(
+                    openSnackbar({
+                        type: 'error',
+                        message: newDataInfo.errorMessage,
+                    }),
+                );
+            }
             return;
         }
-        dispatch(setData({ ...newDataInfo }));
         dispatch(
-            addRecent({
+            setData({
+                fileId: newDataInfo.fileId,
+                type: newDataInfo.type,
                 name: newDataInfo.metadata.name,
                 label: newDataInfo.metadata.label,
-                path: newDataInfo.path,
             }),
         );
         dispatch(
             setPathname({
-                pathname: '/select',
+                pathname: '/viewFile',
                 currentFileId: newDataInfo.fileId,
             }),
         );
@@ -74,19 +76,62 @@ const Header: React.FC = () => {
         dispatch(setPage(0));
         // Reset filter for the new dataset
         dispatch(resetFilter());
-    };
+    }, [apiService, dispatch]);
 
-    const handleGoToClick = () => {
+    const handleGoToClick = useCallback(() => {
         dispatch(openModal({ type: modals.GOTO, props: {} }));
-    };
+    }, [dispatch]);
 
-    const handleFilterClick = () => {
+    const handleFilterClick = useCallback(() => {
         dispatch(openModal({ type: modals.FILTER, props: {} }));
-    };
+    }, [dispatch]);
 
-    const handleDataSetInfoClick = () => {
+    const handleFilterReset = useCallback(() => {
+        dispatch(resetFilter());
+    }, [dispatch]);
+
+    const handleDataSetInfoClick = useCallback(() => {
         dispatch(openModal({ type: modals.DATASETINFO, props: {} }));
-    };
+    }, [dispatch]);
+
+    // Add shortcuts for actions
+    useEffect(() => {
+        const handleViewerToolbarKeyDown = (event: KeyboardEvent) => {
+            if (event.ctrlKey) {
+                switch (event.key) {
+                    case 'g':
+                        handleGoToClick();
+                        break;
+                    case 'o':
+                        handleOpenClick();
+                        break;
+                    case 'f':
+                        handleFilterClick();
+                        break;
+                    case 'i':
+                        handleDataSetInfoClick();
+                        break;
+                    case 'r':
+                        handleFilterReset();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleViewerToolbarKeyDown);
+
+        return () => {
+            window.removeEventListener('keydown', handleViewerToolbarKeyDown);
+        };
+    }, [
+        handleGoToClick,
+        handleOpenClick,
+        handleFilterClick,
+        handleDataSetInfoClick,
+        handleFilterReset,
+    ]);
 
     return (
         <Stack

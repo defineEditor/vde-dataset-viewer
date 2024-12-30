@@ -36,6 +36,7 @@ const getData = async (
         return {
             id: item.name,
             label: item.label,
+            type: item.dataType,
         };
     });
 

@@ -140,9 +140,12 @@ const Settings: React.FC = () => {
         });
     };
 
+    const settingsChanged =
+        JSON.stringify(initialSettings) !== JSON.stringify(newSettings);
+
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.ctrlKey && event.key === 's') {
+            if (event.ctrlKey && event.key === 's' && settingsChanged) {
                 event.preventDefault();
                 handleSave();
             }
@@ -152,10 +155,7 @@ const Settings: React.FC = () => {
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [newSettings, handleSave]);
-
-    const settingsChanged =
-        JSON.stringify(initialSettings) !== JSON.stringify(newSettings);
+    }, [newSettings, handleSave, settingsChanged]);
 
     return (
         <Paper sx={styles.paper}>

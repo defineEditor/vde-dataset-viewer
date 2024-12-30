@@ -33,6 +33,9 @@ const DatasetContainer: React.FC = () => {
     const estimateWidthRows = useAppSelector(
         (state) => state.settings.viewer.estimateWidthRows,
     );
+    const maxColWidth = useAppSelector(
+        (state) => state.settings.viewer.maxColWidth,
+    );
     const name = useAppSelector(
         (state) => state.data.openedFileIds[fileId]?.name,
     );
@@ -75,13 +78,16 @@ const DatasetContainer: React.FC = () => {
             }
             // Get width estimation for columns
             if (newData !== null) {
-                const widths = estimateWidth(newData, estimateWidthRows);
+                const widths = estimateWidth(
+                    newData,
+                    estimateWidthRows,
+                    maxColWidth,
+                );
                 // Update column style with default width
                 const header = newData.header.map((col) => {
-                    const cssWidth = `${Math.max(widths[col.id]) * 16}px`;
                     return {
                         ...col,
-                        style: { width: cssWidth },
+                        size: widths[col.id] * 9 + 18,
                     };
                 });
                 newData.header = header;
@@ -92,7 +98,15 @@ const DatasetContainer: React.FC = () => {
         };
 
         readDataset();
-    }, [name, dispatch, fileId, pageSize, estimateWidthRows, apiService]);
+    }, [
+        name,
+        dispatch,
+        fileId,
+        pageSize,
+        estimateWidthRows,
+        maxColWidth,
+        apiService,
+    ]);
 
     // Pagination
     const page = useAppSelector((state) => state.ui.currentPage);

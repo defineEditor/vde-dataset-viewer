@@ -63,14 +63,20 @@ const Layout: React.FC<{
     const [numberOfElements, setNumberOfElements] = useState<number>(10);
 
     useEffect(() => {
-        if (stackRef.current) {
-            // Forward and Back buttons - 80px
-            // Padding - 16px
-            // Card width - 200px (216 with padding)
-            setNumberOfElements(
-                Math.floor((stackRef.current.offsetWidth - 80 - 16) / 216),
-            );
-        }
+        const updateNumberOfElements = () => {
+            if (stackRef.current) {
+                setNumberOfElements(
+                    Math.floor((stackRef.current.offsetWidth - 80 - 16) / 216),
+                );
+            }
+        };
+
+        updateNumberOfElements();
+        window.addEventListener('resize', updateNumberOfElements);
+
+        return () => {
+            window.removeEventListener('resize', updateNumberOfElements);
+        };
     }, []);
 
     return (
@@ -87,7 +93,7 @@ const Layout: React.FC<{
                 </Typography>
                 <Carousel elementsToShow={numberOfElements}>
                     <OpenNewCard handleOpenLocal={handleOpenLocal} />
-                    {openedFiles.map((file) => (
+                    {openedFiles.reverse().map((file) => (
                         <DatasetCard
                             key={file.fileId}
                             fileId={file.fileId}

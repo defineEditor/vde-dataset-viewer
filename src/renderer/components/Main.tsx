@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AppProvider, Navigation, Router } from '@toolpad/core/AppProvider';
 import { Theme, Stack, Avatar } from '@mui/material';
 import CloudIcon from '@mui/icons-material/Cloud';
@@ -15,6 +15,7 @@ import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import { setPathname } from 'renderer/redux/slices/ui';
 import { AllowedPathnames } from 'interfaces/common';
 import ViewerToolbar from 'renderer/components/ViewerToolbar';
+import Shortcuts from 'renderer/components/Shortcuts';
 
 const styles = {
     main: {
@@ -91,6 +92,9 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
     const title = 'VDE Dataset Viewer';
     const dispatch = useAppDispatch();
     const pathname = useAppSelector((state) => state.ui.pathname);
+
+    const [shortcutsOpen, setShortcutsOpen] = React.useState(false);
+
     const isDataLoaded = useAppSelector(
         (state) => state.ui.currentFileId !== '',
     );
@@ -100,14 +104,74 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
             pathname,
             searchParams: new URLSearchParams(),
             navigate: (path: string | URL) => {
-                dispatch(
-                    setPathname({
-                        pathname: String(path) as AllowedPathnames,
-                    }),
-                );
+                if (path === '/shortcuts') {
+                    setShortcutsOpen(true);
+                } else {
+                    dispatch(
+                        setPathname({
+                            pathname: String(path) as AllowedPathnames,
+                        }),
+                    );
+                }
             },
         };
     };
+    // Add shortcuts for routes
+    useEffect(() => {
+        const handleMainKeyDown = (event: KeyboardEvent) => {
+            if (event.ctrlKey) {
+                switch (event.key) {
+                    case 'F1':
+                        dispatch(
+                            setPathname({
+                                pathname: '/select',
+                            }),
+                        );
+                        break;
+                    case 'F2':
+                        dispatch(
+                            setPathname({
+                                pathname: '/api',
+                            }),
+                        );
+                        break;
+                    case 'F3':
+                        dispatch(
+                            setPathname({
+                                pathname: '/converter',
+                            }),
+                        );
+                        break;
+                    case 'F4':
+                        dispatch(
+                            setPathname({
+                                pathname: '/settings',
+                            }),
+                        );
+                        break;
+                    case 'F5':
+                        dispatch(
+                            setPathname({
+                                pathname: '/about',
+                            }),
+                        );
+                        break;
+                    case '/':
+                        event.preventDefault();
+                        setShortcutsOpen(true);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleMainKeyDown);
+
+        return () => {
+            window.removeEventListener('keydown', handleMainKeyDown);
+        };
+    }, [dispatch]);
 
     return (
         <AppProvider
@@ -131,6 +195,10 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                     {pathname === '/viewFile' && isDataLoaded && <ViewFile />}
                     {pathname === '/settings' && <Settings />}
                 </Stack>
+                <Shortcuts
+                    open={shortcutsOpen}
+                    onClose={() => setShortcutsOpen(false)}
+                />
             </DashboardLayout>
         </AppProvider>
     );

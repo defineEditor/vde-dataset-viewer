@@ -3,11 +3,12 @@ import { ITableData } from 'interfaces/common';
 
 export default function estimateWidth(
     data: ITableData,
-    widthEstimateRows: number
+    widthEstimateRows: number,
+    maxColWidth: number,
 ): { [id: string]: number } {
     const { header, data: tableData } = data;
     const result = {};
-    // For each column get the first 100 rows and calculate the maximum width/longest word
+    // For each column get the first rows and calculate the maximum width/longest word
     const dataSlice = tableData.slice(0, widthEstimateRows);
     header
         .filter((column) => !column.hidden)
@@ -16,7 +17,12 @@ export default function estimateWidth(
             const columnData = dataSlice.map((row) => row[columnIndex]);
             let columnWidth = 0;
             let longestWord = 0;
-            if (typeof columnData[0] === 'string') {
+            if (
+                !['integer', 'float', 'boolean', 'double'].includes(
+                    column.type || '',
+                )
+            ) {
+                // String
                 // Get the maximum width of the column
                 columnWidth = Math.max(
                     ...columnData.map((value) => {
@@ -24,7 +30,7 @@ export default function estimateWidth(
                             return value.length;
                         }
                         return 0;
-                    })
+                    }),
                 );
                 // Get the longest word in the column
                 longestWord = Math.max(
@@ -32,17 +38,26 @@ export default function estimateWidth(
                         if (typeof value === 'string') {
                             const words = value.split(' ');
                             return Math.max(
-                                ...words.map((word) => word.length)
+                                ...words.map((word) => word.length),
                             );
                         }
                         return 0;
-                    })
+                    }),
                 );
+            } else if (
+                ['integer', 'float', 'double'].includes(column.type || '')
+            ) {
+                // Number
+                columnWidth = 8;
+                longestWord = 8;
+            } else {
+                // Boolean
+                columnWidth = 4;
+                longestWord = 4;
             }
-            result[id] = Math.max(
-                columnWidth / 3,
-                longestWord,
-                id.length * 1.5
+            result[id] = Math.min(
+                Math.round(Math.max(columnWidth, longestWord, id.length * 1.3)),
+                maxColWidth,
             );
         });
 
