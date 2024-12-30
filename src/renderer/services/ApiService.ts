@@ -3,35 +3,98 @@ import {
     ItemDataArray,
     DatasetJsonMetadata,
     DatasetType,
+    IOpenFile,
     Filter,
     ILocalStore,
     IStore,
+    IOpenFileWithMetadata,
 } from 'interfaces/common';
 import DatasetJson from 'js-stream-dataset-json';
 import store from 'renderer/redux/store';
 
-interface IOpenFile {
-    fileId: string;
-    type: DatasetType;
-    path: string;
-    datasetNames?: string[];
-}
-
 class ApiService {
+    // List of opened files with basic information
+    private openedFiles: {
+        fileId: string;
+        name: string;
+        mode: 'local' | 'remote';
+        path: string;
+        type: DatasetType;
+    }[] = [];
+
+    // List of opened files metadata
+    private openedFilesMetadata: {
+        [fileId: string]: DatasetJsonMetadata;
+    } = {};
+
     // Open file
-    public openFile = async (mode: 'local' | 'remote'): Promise<IOpenFile> => {
-        if (mode === 'remote') {
-            return this.openFileRemote();
+    public openFile = async (
+        mode: 'local' | 'remote',
+        filePath?: string,
+        folderPath?: string,
+    ): Promise<IOpenFileWithMetadata> => {
+        let fileData: IOpenFile;
+        // Check if the file is already open
+        if (filePath !== undefined) {
+            let foundFileData: IOpenFile | undefined;
+            this.openedFiles.forEach((file) => {
+                if (file.path === filePath) {
+                    foundFileData = {
+                        fileId: file.fileId,
+                        type: file.type,
+                        path: file.path,
+                    };
+                }
+            });
+            if (foundFileData !== undefined) {
+                // Get metadata
+                const metadata = await this.getMetadata(foundFileData.fileId);
+                return { ...foundFileData, metadata };
+            }
         }
-        return this.openFileLocal();
+        if (mode === 'remote') {
+            fileData = await this.openFileRemote();
+        } else {
+            fileData = await this.openFileLocal(filePath, folderPath);
+        }
+
+        if (fileData.errorMessage) {
+            // If error was found do not add it to the list of opened files
+            return { ...fileData, metadata: {} as DatasetJsonMetadata };
+        }
+
+        this.openedFiles.push({
+            fileId: fileData.fileId,
+            path: fileData.path,
+            type: fileData.type,
+            mode,
+            name: fileData.path,
+        });
+
+        // Get metadata
+        const metadata = await this.getMetadata(fileData.fileId);
+
+        return { ...fileData, metadata };
     };
 
-    private openFileLocal = async (): Promise<IOpenFile> => {
+    private openFileLocal = async (
+        filePath?: string,
+        folderPath?: string,
+    ): Promise<IOpenFile> => {
         // Read encoding from state
         const encoding = store.getState().settings.other.inEncoding;
-        const response = await window.electron.openFile('local', { encoding });
+        const response = await window.electron.openFile('local', {
+            encoding,
+            filePath,
+            folderPath,
+        });
         if (response === null) {
-            return { fileId: '', type: 'json', path: '' };
+            return {
+                fileId: '',
+                type: 'json',
+                path: '',
+                errorMessage: 'Failed to open the file',
+            };
         }
         return response;
     };
@@ -117,13 +180,31 @@ class ApiService {
 
     // Get dataset metadata
     public getMetadata = async (
-        mode: 'local' | 'remote',
         fileId: string,
     ): Promise<DatasetJsonMetadata> => {
-        if (mode === 'remote') {
-            return this.getMetadataRemote(fileId, '');
+        const file = this.openedFiles.find(
+            (fileItem) => fileItem.fileId === fileId,
+        );
+        if (file === undefined) {
+            throw new Error(
+                'Trying to read metadata from the file which is not opened',
+            );
         }
-        return this.getMetadataLocal(fileId);
+        // Check if the metadata is already loaded
+        if (this.openedFilesMetadata[fileId] !== undefined) {
+            return this.openedFilesMetadata[fileId];
+        }
+        let metadata: DatasetJsonMetadata;
+        if (file.mode === 'remote') {
+            metadata = await this.getMetadataRemote(fileId, '');
+        } else {
+            metadata = await this.getMetadataLocal(fileId);
+        }
+
+        // Save metadata
+        this.openedFilesMetadata[fileId] = metadata;
+
+        return metadata;
     };
 
     private getMetadataLocal = async (fileId: string) => {
@@ -155,14 +236,21 @@ class ApiService {
 
     // Get dataset data
     public getObservations = async (
-        mode: 'local' | 'remote',
         fileId: string,
         start: number,
         length: number,
         filterColumns?: string[],
         filterData?: Filter,
     ): Promise<ItemDataArray[]> => {
-        if (mode === 'remote') {
+        const file = this.openedFiles.find(
+            (fileItem) => fileItem.fileId === fileId,
+        );
+        if (file === undefined) {
+            throw new Error(
+                'Trying to read metadata from the file which is not opened',
+            );
+        }
+        if (file.mode === 'remote') {
             return this.getObservationsRemote(
                 fileId,
                 '',
@@ -230,6 +318,15 @@ class ApiService {
         mode: 'local' | 'remote',
         fileId: string,
     ): Promise<boolean> => {
+        if (this.openedFilesMetadata[fileId] !== undefined) {
+            delete this.openedFilesMetadata[fileId];
+        }
+        const fileIndex = this.openedFiles.findIndex(
+            (file) => file.fileId === fileId,
+        );
+        if (fileIndex !== -1) {
+            this.openedFiles.splice(fileIndex, 1);
+        }
         if (mode === 'remote') {
             return this.closeRemote(fileId);
         }
@@ -258,6 +355,30 @@ class ApiService {
             // Handle exception
         }
         return false;
+    };
+
+    // Get all opened files
+    public getOpenedFiles = (): {
+        fileId: string;
+        name: string;
+        label: string;
+        nCols: number;
+        records: number;
+    }[] => {
+        return this.openedFiles.map((file) => {
+            const metadata = this.openedFilesMetadata[file.fileId];
+            return {
+                fileId: file.fileId,
+                name: metadata?.name,
+                label: metadata?.label || '',
+                nCols: metadata?.columns.length || 0,
+                records: metadata?.records || 0,
+            };
+        });
+    };
+
+    public getOpenedFileMetadata = (fileId: string): DatasetJsonMetadata => {
+        return this.openedFilesMetadata[fileId];
     };
 
     // Load local store

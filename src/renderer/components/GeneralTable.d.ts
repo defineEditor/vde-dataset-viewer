@@ -12,7 +12,9 @@ export interface IGeneralTableDataCell {
 }
 
 export type GeneralTableDataCellFormatter = ({
+    // eslint-disable-next-line no-unused-vars
     id,
+    // eslint-disable-next-line no-unused-vars
     row,
 }: {
     id: string;
@@ -48,7 +50,7 @@ export interface IGeneralTableHeaderCell {
 
 export interface ISearchInTableProps {
     header: Array<IGeneralTableHeaderCell>;
-    onSearchUpdate?: (text: string) => void;
+    onSearchUpdate?: (_text: string) => void;
     searchStyles?: {
         searchField?: {
             [name: string]:

@@ -1,7 +1,8 @@
 import { dialog, IpcMainInvokeEvent } from 'electron';
 import DatasetJson from 'js-stream-dataset-json';
-import { DatasetType, Filter } from 'interfaces/common';
-import openFile from './openFile';
+import { DatasetType, Filter, IOpenFile } from 'interfaces/common';
+import openFile from 'main/openFile';
+import fs from 'fs';
 
 class FileManager {
     private openedFiles: { [key: string]: DatasetJson } = {};
@@ -24,13 +25,51 @@ class FileManager {
     handleFileOpen = async (
         _event: IpcMainInvokeEvent,
         mode: 'local' | 'remote',
-        fileSettings: { encoding: BufferEncoding },
-    ): Promise<{ fileId: string; type: DatasetType; path: string } | null> => {
-        const newFile = await openFile();
+        fileSettings: {
+            encoding: BufferEncoding;
+            filePath?: string;
+            folderPath?: string;
+        },
+    ): Promise<IOpenFile> => {
+        const { encoding, filePath, folderPath } = fileSettings;
+
+        if (folderPath) {
+            // Check if specified folder exists;
+            if (fs.existsSync(folderPath) === false) {
+                return {
+                    fileId: '',
+                    type: 'json',
+                    path: '',
+                    errorMessage: 'Folder not found',
+                };
+            }
+        }
+
+        let newFile: Record<string, string> | undefined;
+        if (filePath) {
+            // Check file exists;
+            if (fs.existsSync(filePath) === false) {
+                return {
+                    fileId: '',
+                    type: 'json',
+                    path: '',
+                    errorMessage: 'File not found',
+                };
+            }
+            newFile = { path: filePath };
+        } else {
+            newFile = await openFile(folderPath);
+        }
+
         let type: DatasetType;
 
         if (newFile === undefined) {
-            return null;
+            return {
+                fileId: '',
+                type: 'json',
+                path: '',
+                errorMessage: 'cancelled',
+            };
         }
 
         if (mode === 'remote') {
@@ -50,24 +89,25 @@ class FileManager {
                 type = 'xpt';
                 break;
             default:
-                dialog.showErrorBox(
-                    'File Open Error',
-                    `File extension not supported: ${newFile.path}`,
-                );
-                return null;
+                return {
+                    fileId: '',
+                    type: 'json',
+                    path: '',
+                    errorMessage: 'File extension not supported',
+                };
         }
         let data: DatasetJson;
         try {
             data = new DatasetJson(newFile.path, {
-                encoding: fileSettings.encoding,
+                encoding,
             });
         } catch (error) {
-            // Show a popup with the error message
-            dialog.showErrorBox(
-                'File Open Error',
-                `An error occurred while opening the file: ${newFile.path}`,
-            );
-            return null;
+            return {
+                fileId: '',
+                type: 'json',
+                path: '',
+                errorMessage: `An error occurred while opening the file ${newFile.path}: ${(error as Error).message}`,
+            };
         }
         this.openedFiles[fileId] = data;
 

@@ -38,7 +38,7 @@ const NAVIGATION: Navigation = [
         title: 'Viewer',
     },
     {
-        segment: 'viewer',
+        segment: 'select',
         title: 'Viewer',
         icon: <WysiwygIcon />,
     },
@@ -119,7 +119,7 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
             <DashboardLayout
                 defaultSidebarCollapsed
                 slots={
-                    pathname === '/viewer' && isDataLoaded
+                    pathname === '/viewFile' && isDataLoaded
                         ? {
                               appTitle: ViewerToolbar,
                           }
@@ -127,10 +127,8 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                 }
             >
                 <Stack sx={styles.main} id="main">
-                    {pathname === '/viewer' && !isDataLoaded && (
-                        <SelectDataset />
-                    )}
-                    {pathname === '/viewer' && isDataLoaded && <ViewFile />}
+                    {pathname === '/select' && <SelectDataset />}
+                    {pathname === '/viewFile' && isDataLoaded && <ViewFile />}
                     {pathname === '/settings' && <Settings />}
                 </Stack>
             </DashboardLayout>

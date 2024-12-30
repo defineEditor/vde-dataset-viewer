@@ -1,4 +1,4 @@
-import { DatasetJsonMetadata, Filter } from 'interfaces/api';
+import { Filter, DatasetType } from 'interfaces/api';
 
 export interface ISettings {
     viewer: {
@@ -45,7 +45,7 @@ export interface IUiControl {
 
 export type AllowedPathnames =
     | '/select'
-    | '/viewer'
+    | '/viewFile'
     | '/api'
     | '/settings'
     | '/about'
@@ -66,8 +66,6 @@ export interface IRecentFile {
     path: string;
 }
 
-export type DatasetType = 'json' | 'xpt';
-
 export interface IData {
     openedFileIds: {
         [name: string]: {
@@ -75,9 +73,6 @@ export interface IData {
             label: string;
             type: DatasetType;
         };
-    };
-    openedFileMetadata: {
-        [name: string]: DatasetJsonMetadata;
     };
     recentFolders: string[];
     recentFiles: IRecentFile[];

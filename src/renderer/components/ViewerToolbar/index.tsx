@@ -4,7 +4,12 @@ import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
 import ShortcutIcon from '@mui/icons-material/Shortcut';
 import InfoIcon from '@mui/icons-material/Info';
 import FilterIcon from '@mui/icons-material/FilterAlt';
-import { setPathname, openModal, setPage } from 'renderer/redux/slices/ui';
+import {
+    setPathname,
+    openModal,
+    setPage,
+    openSnackbar,
+} from 'renderer/redux/slices/ui';
 import { setData, addRecent, resetFilter } from 'renderer/redux/slices/data';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { openNewDataset } from 'renderer/utils/readData';
@@ -42,7 +47,13 @@ const Header: React.FC = () => {
 
     const handleOpenClick = async () => {
         const newDataInfo = await openNewDataset(apiService, 'local');
-        if (newDataInfo === null) {
+        if (newDataInfo.errorMessage) {
+            dispatch(
+                openSnackbar({
+                    type: 'error',
+                    message: newDataInfo.errorMessage,
+                }),
+            );
             return;
         }
         dispatch(setData({ ...newDataInfo }));
@@ -55,7 +66,7 @@ const Header: React.FC = () => {
         );
         dispatch(
             setPathname({
-                pathname: '/viewer',
+                pathname: '/select',
                 currentFileId: newDataInfo.fileId,
             }),
         );
@@ -101,7 +112,7 @@ const Header: React.FC = () => {
                     onClick={handleGoToClick}
                     id="goto"
                     size="small"
-                    disabled={pathname !== '/viewer'}
+                    disabled={pathname !== '/viewFile'}
                 >
                     <ShortcutIcon
                         sx={{
@@ -115,7 +126,7 @@ const Header: React.FC = () => {
                     onClick={handleFilterClick}
                     id="filterData"
                     size="small"
-                    disabled={pathname !== '/viewer'}
+                    disabled={pathname !== '/viewFile'}
                 >
                     <FilterIcon
                         sx={{
@@ -131,7 +142,7 @@ const Header: React.FC = () => {
                     onClick={handleDataSetInfoClick}
                     id="datasetInfo"
                     size="small"
-                    disabled={pathname !== '/viewer'}
+                    disabled={pathname !== '/viewFile'}
                 >
                     <InfoIcon
                         sx={{

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
@@ -6,6 +6,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
+import AppContext from 'renderer/utils/AppContext';
 import Autocomplete, {
     AutocompleteChangeReason,
 } from '@mui/material/Autocomplete';
@@ -21,9 +22,9 @@ const styles = {
 const GoTo: React.FC<IUiModal> = (props: IUiModal) => {
     const { type } = props;
     const dispatch = useAppDispatch();
-    const currentMetadata = useAppSelector(
-        (state) => state.data.openedFileMetadata[state.ui.currentFileId],
-    );
+    const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+    const { apiService } = useContext(AppContext);
+    const currentMetadata = apiService.getOpenedFileMetadata(currentFileId);
     const [inputValue, setInputValue] = useState('');
     const [helperText, setHelperText] = useState('');
     const [goToType, setGoToType] = useState('Row');

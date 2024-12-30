@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
+import AppContext from 'renderer/utils/AppContext';
 import { closeModal, setGoTo } from 'renderer/redux/slices/ui';
 import {
     DatasetJsonMetadata,
@@ -273,9 +274,9 @@ const ColumnsTab: React.FC<{
 const DatasetInfo: React.FC<IUiModal> = (props: IUiModal) => {
     const { type } = props;
     const dispatch = useAppDispatch();
-    const currentMetadata = useAppSelector(
-        (state) => state.data.openedFileMetadata[state.ui.currentFileId],
-    );
+    const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+    const { apiService } = useContext(AppContext);
+    const currentMetadata = apiService.getOpenedFileMetadata(currentFileId);
 
     const [tabIndex, setTabIndex] = useState(0);
 
