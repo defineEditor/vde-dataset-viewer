@@ -13,7 +13,11 @@ declare global {
         electron: {
             openFile: (
                 mode: 'local' | 'remote',
-                fileSettings?: { encoding: BufferEncoding },
+                fileSettings?: {
+                    encoding: BufferEncoding;
+                    filePath?: string;
+                    folderPath?: string;
+                },
             ) => Promise<{
                 fileId: string;
                 type: DatasetType;
@@ -34,6 +38,7 @@ declare global {
             saveLocalStore: (localStore: ILocalStore) => void;
             loadLocalStore: () => Promise<ILocalStore>;
             onSaveStore: (callback: () => Promise<void>) => void;
+            isWindows: boolean;
             ipcRenderer: {
                 sendMessage(channel: Channels, args: unknown[]): void;
                 on(

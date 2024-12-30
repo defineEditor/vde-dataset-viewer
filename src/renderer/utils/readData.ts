@@ -2,8 +2,8 @@ import {
     DatasetJsonMetadata,
     IGeneralTableHeaderCell,
     ITableData,
-    DatasetType,
     Filter,
+    IOpenFileWithMetadata,
 } from 'interfaces/common';
 import { ItemDataArray } from 'js-stream-dataset-json';
 import ApiService from 'renderer/services/ApiService';
@@ -11,20 +11,18 @@ import ApiService from 'renderer/services/ApiService';
 // Get dataset records;
 const getData = async (
     apiService: ApiService,
-    mode: 'local' | 'remote',
     fileId: string,
     start: number,
     length: number,
     filterColumns?: string[],
     filterData?: Filter,
 ): Promise<ITableData | null> => {
-    const metadata = await apiService.getMetadata(mode, fileId);
+    const metadata = await apiService.getMetadata(fileId);
     if (Object.keys(metadata).length === 0) {
         return null;
     }
 
     const itemData = (await apiService.getObservations(
-        mode,
         fileId,
         start,
         length,
@@ -53,20 +51,22 @@ const getData = async (
 const openNewDataset = async (
     apiService: ApiService,
     mode: 'local' | 'remote',
-): Promise<{
-    fileId: string;
-    metadata: DatasetJsonMetadata;
-    type: DatasetType;
-    path: string;
-} | null> => {
-    const result = await apiService.openFile(mode);
+    filePath?: string,
+    folderPath?: string,
+): Promise<IOpenFileWithMetadata> => {
+    const result = await apiService.openFile(mode, filePath, folderPath);
     // There was an error reading the file or the operation was cancelled
-    if (result === null || result.fileId === '') {
-        return null;
+    const { fileId, type, path, errorMessage } = result;
+    if (errorMessage) {
+        return {
+            fileId,
+            metadata: {} as DatasetJsonMetadata,
+            type,
+            path,
+            errorMessage,
+        };
     }
-    const { fileId, type, path } = result;
-    const metadata = await apiService.getMetadata(mode, fileId);
-    return { fileId, metadata, type, path };
+    return result;
 };
 
 export { getData, openNewDataset };

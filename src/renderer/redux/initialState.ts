@@ -39,7 +39,6 @@ export const ui: IUi = {
 
 export const data: IData = {
     openedFileIds: {},
-    openedFileMetadata: {},
     recentFolders: [],
     recentFiles: [],
     filterData: {

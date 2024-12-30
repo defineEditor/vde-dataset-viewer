@@ -6,7 +6,7 @@ import { ITableData } from 'interfaces/common';
 import DatasetView from 'renderer/components/DatasetView';
 import AppContext from 'renderer/utils/AppContext';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
-import { openSnackbar, setPage } from 'renderer/redux/slices/ui';
+import { openSnackbar, setPage, setPathname } from 'renderer/redux/slices/ui';
 import { getData } from 'renderer/utils/readData';
 import estimateWidth from 'renderer/utils/estimateWidth';
 import deepEqual from 'renderer/utils/deepEqual';
@@ -57,14 +57,15 @@ const DatasetContainer: React.FC = () => {
             setIsLoading(true);
             let newData: ITableData | null = null;
             try {
-                newData = await getData(
-                    apiService,
-                    'local',
-                    fileId,
-                    0,
-                    pageSize,
-                );
+                newData = await getData(apiService, fileId, 0, pageSize);
             } catch (error) {
+                // Remove current fileId as something is wrong with itj
+                dispatch(
+                    setPathname({
+                        pathname: '/select',
+                        currentFileId: '',
+                    }),
+                );
                 dispatch(
                     openSnackbar({
                         type: 'error',
@@ -111,7 +112,6 @@ const DatasetContainer: React.FC = () => {
             const readNext = async (start: number) => {
                 const newData = await getData(
                     apiService,
-                    'local',
                     fileId,
                     start,
                     pageSize,
@@ -145,7 +145,6 @@ const DatasetContainer: React.FC = () => {
         const readDataset = async () => {
             const newData = await getData(
                 apiService,
-                'local',
                 fileId,
                 0,
                 pageSize,

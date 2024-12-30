@@ -6,7 +6,11 @@ export type Channels = 'ipc-example';
 contextBridge.exposeInMainWorld('electron', {
     openFile: (
         mode: 'local' | 'remote',
-        fileSettings: { encoding: BufferEncoding } = { encoding: 'utf8' },
+        fileSettings: {
+            encoding: BufferEncoding;
+            filePath?: string;
+            folderPath?: string;
+        } = { encoding: 'utf8' },
     ) => ipcRenderer.invoke('main:openFile', mode, fileSettings),
     writeToClipboard: (text: string) =>
         ipcRenderer.invoke('main:writeToClipboard', text),
@@ -39,6 +43,7 @@ contextBridge.exposeInMainWorld('electron', {
             ipcRenderer.send('main:storeSaved');
         });
     },
+    isWindows: process.platform === 'win32',
     ipcRenderer: {
         sendMessage(channel: Channels, args: unknown[]) {
             ipcRenderer.send(channel, args);
