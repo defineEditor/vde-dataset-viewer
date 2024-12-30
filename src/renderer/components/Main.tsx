@@ -15,6 +15,7 @@ import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import { setPathname } from 'renderer/redux/slices/ui';
 import { AllowedPathnames } from 'interfaces/common';
 import ViewerToolbar from 'renderer/components/ViewerToolbar';
+import Shortcuts from 'renderer/components/Shortcuts';
 
 const styles = {
     main: {
@@ -91,6 +92,9 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
     const title = 'VDE Dataset Viewer';
     const dispatch = useAppDispatch();
     const pathname = useAppSelector((state) => state.ui.pathname);
+
+    const [shortcutsOpen, setShortcutsOpen] = React.useState(false);
+
     const isDataLoaded = useAppSelector(
         (state) => state.ui.currentFileId !== '',
     );
@@ -100,11 +104,15 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
             pathname,
             searchParams: new URLSearchParams(),
             navigate: (path: string | URL) => {
-                dispatch(
-                    setPathname({
-                        pathname: String(path) as AllowedPathnames,
-                    }),
-                );
+                if (path === '/shortcuts') {
+                    setShortcutsOpen(true);
+                } else {
+                    dispatch(
+                        setPathname({
+                            pathname: String(path) as AllowedPathnames,
+                        }),
+                    );
+                }
             },
         };
     };
@@ -144,16 +152,13 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                     case 'F5':
                         dispatch(
                             setPathname({
-                                pathname: '/shortcuts',
-                            }),
-                        );
-                        break;
-                    case 'F6':
-                        dispatch(
-                            setPathname({
                                 pathname: '/about',
                             }),
                         );
+                        break;
+                    case '/':
+                        event.preventDefault();
+                        setShortcutsOpen(true);
                         break;
                     default:
                         break;
@@ -190,6 +195,10 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                     {pathname === '/viewFile' && isDataLoaded && <ViewFile />}
                     {pathname === '/settings' && <Settings />}
                 </Stack>
+                <Shortcuts
+                    open={shortcutsOpen}
+                    onClose={() => setShortcutsOpen(false)}
+                />
             </DashboardLayout>
         </AppProvider>
     );
