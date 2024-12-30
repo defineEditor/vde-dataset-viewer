@@ -48,6 +48,7 @@ export type AllowedPathnames =
     | '/viewFile'
     | '/api'
     | '/settings'
+    | '/shortcuts'
     | '/about'
     | '/converter';
 

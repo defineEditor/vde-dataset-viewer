@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AppProvider, Navigation, Router } from '@toolpad/core/AppProvider';
 import { Theme, Stack, Avatar } from '@mui/material';
 import CloudIcon from '@mui/icons-material/Cloud';
@@ -108,6 +108,65 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
             },
         };
     };
+    // Add shortcuts for routes
+    useEffect(() => {
+        const handleMainKeyDown = (event: KeyboardEvent) => {
+            if (event.ctrlKey) {
+                switch (event.key) {
+                    case 'F1':
+                        dispatch(
+                            setPathname({
+                                pathname: '/select',
+                            }),
+                        );
+                        break;
+                    case 'F2':
+                        dispatch(
+                            setPathname({
+                                pathname: '/api',
+                            }),
+                        );
+                        break;
+                    case 'F3':
+                        dispatch(
+                            setPathname({
+                                pathname: '/converter',
+                            }),
+                        );
+                        break;
+                    case 'F4':
+                        dispatch(
+                            setPathname({
+                                pathname: '/settings',
+                            }),
+                        );
+                        break;
+                    case 'F5':
+                        dispatch(
+                            setPathname({
+                                pathname: '/shortcuts',
+                            }),
+                        );
+                        break;
+                    case 'F6':
+                        dispatch(
+                            setPathname({
+                                pathname: '/about',
+                            }),
+                        );
+                        break;
+                    default:
+                        break;
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleMainKeyDown);
+
+        return () => {
+            window.removeEventListener('keydown', handleMainKeyDown);
+        };
+    }, [dispatch]);
 
     return (
         <AppProvider

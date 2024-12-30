@@ -5,7 +5,7 @@ export const settings: ISettings = {
         pageSize: 10000,
         estimateWidthRows: 500,
         dynamicRowHeight: true,
-        maxColWidth: 200,
+        maxColWidth: 50,
         dateFormat: 'ISO8601',
         roundNumbers: false,
         copyFormat: 'tab',

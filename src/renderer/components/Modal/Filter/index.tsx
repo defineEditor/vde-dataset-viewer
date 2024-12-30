@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, {
+    useState,
+    useEffect,
+    useCallback,
+    useMemo,
+    useContext,
+} from 'react';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
@@ -12,8 +18,9 @@ import FilterInput from 'renderer/components/Modal/Filter/FilterInput';
 import validateFilterString from 'renderer/components/Modal/Filter/validateFilterString';
 import stringToFilter from 'renderer/components/Modal/Filter/stringToFilter';
 import filterToString from 'renderer/components/Modal/Filter/filterToString';
+import AppContext from 'renderer/utils/AppContext';
 import { setFilter, resetFilter } from 'renderer/redux/slices/data';
-import { IUiModal, DatasetJsonMetadata } from 'interfaces/common';
+import { IUiModal } from 'interfaces/common';
 import { Stack } from '@mui/material';
 
 const styles = {
@@ -29,6 +36,7 @@ const styles = {
 const GoTo: React.FC<IUiModal> = (props: IUiModal) => {
     const { type } = props;
     const dispatch = useAppDispatch();
+    const { apiService } = useContext(AppContext);
     const currentFilter = useAppSelector(
         (state) => state.data.filterData.currentFilter,
     );
@@ -44,12 +52,10 @@ const GoTo: React.FC<IUiModal> = (props: IUiModal) => {
         lastOptions?.caseInsensitive ?? true,
     );
 
-    const metadata = useAppSelector(
-        (state) =>
-            state.data.openedFileMetadata[
-                state.ui.currentFileId
-            ] as DatasetJsonMetadata,
-    );
+    const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+
+    const metadata = apiService.getOpenedFileMetadata(currentFileId);
+
     const columnNames = metadata.columns.map((column) =>
         column.name.toLowerCase(),
     );

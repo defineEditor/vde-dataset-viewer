@@ -46,6 +46,7 @@ const styles = {
     },
     tableHeaderCell: {
         padding: 1,
+        fontFamily: 'Roboto Mono',
         display: 'flex',
         position: 'relative',
     },
@@ -55,6 +56,7 @@ const styles = {
     },
     tableCellDynamic: {
         border: '1px solid rgba(224, 224, 224, 1)',
+        fontFamily: 'Roboto Mono',
         cursor: 'pointer',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
@@ -63,6 +65,7 @@ const styles = {
     },
     tableCellFixed: {
         border: '1px solid rgba(224, 224, 224, 1)',
+        fontFamily: 'Roboto Mono',
         whiteSpace: 'nowrap',
         cursor: 'pointer',
         overflow: 'hidden',

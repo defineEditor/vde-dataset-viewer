@@ -82,6 +82,8 @@
     "dependencies": {
         "@emotion/react": "^11.10.4",
         "@emotion/styled": "^11.10.4",
+        "@fontsource/roboto": "^5.1.1",
+        "@fontsource/roboto-mono": "^5.1.1",
         "@mui/icons-material": "^6.0.0",
         "@mui/material": "^6.2.1",
         "@reduxjs/toolkit": "^1.8.5",
@@ -147,6 +149,7 @@
         "react-refresh": "^0.14.0",
         "react-test-renderer": "^18.2.0",
         "rimraf": "^5.0.1",
+        "style-loader": "^4.0.0",
         "terser-webpack-plugin": "^5.3.9",
         "ts-jest": "^29.1.1",
         "ts-loader": "^9.4.4",
