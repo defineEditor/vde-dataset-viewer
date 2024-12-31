@@ -375,7 +375,19 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
             isLoading === false
         ) {
             const row = (goTo.row - 1) % settings.pageSize;
-            rowVirtualizer.scrollToIndex(row);
+            // Get current index of the row
+            const range = rowVirtualizer.range || {
+                startIndex: 0,
+                endIndex: 0,
+            };
+            const { options } = rowVirtualizer;
+            if (row < range.startIndex) {
+                rowVirtualizer.scrollToIndex(Math.max(row - 10, 0));
+            } else if (row > range.endIndex) {
+                rowVirtualizer.scrollToIndex(
+                    Math.min(row + 10, options.count - 1),
+                );
+            }
             dispatch(setGoTo({ row: null }));
             // Highlight the row number
             handleCellClick(row, 0);

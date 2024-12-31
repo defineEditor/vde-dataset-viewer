@@ -391,6 +391,12 @@ class ApiService {
     public saveLocalStore = async ({ reduxStore }: { reduxStore: IStore }) => {
         window.electron.saveLocalStore({ reduxStore });
     };
+
+    // Check for updates
+    public checkUpdates = async () => {
+        const result = await window.electron.checkForUpdates();
+        return result;
+    };
 }
 
 export default ApiService;

@@ -37,6 +37,7 @@ contextBridge.exposeInMainWorld('electron', {
         ipcRenderer.invoke('store:save', localStore),
     loadLocalStore: (): Promise<ILocalStore> =>
         ipcRenderer.invoke('store:load'),
+    checkForUpdates: () => ipcRenderer.invoke('main:checkForUpdates'),
     onSaveStore: (callback: () => Promise<void>) => {
         ipcRenderer.on('renderer:saveStore', async () => {
             await callback();

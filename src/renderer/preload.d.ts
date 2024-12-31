@@ -6,6 +6,7 @@ import {
     ItemDataArray,
     Filter,
     ILocalStore,
+    ICheckUpdateResult,
 } from 'interfaces/common';
 
 declare global {
@@ -27,7 +28,7 @@ declare global {
                 fileId: string,
                 mode: 'local' | 'remote',
             ) => Promise<boolean>;
-            getMetadata: (fileId: string) => DatasetJsonMetadata;
+            getMetadata: (fileId: string) => Promise<DatasetJsonMetadata>;
             getData: (
                 fileId: string,
                 start: number,
@@ -39,6 +40,7 @@ declare global {
             loadLocalStore: () => Promise<ILocalStore>;
             onSaveStore: (callback: () => Promise<void>) => void;
             isWindows: boolean;
+            checkForUpdates: () => Promise<ICheckUpdateResult>;
             ipcRenderer: {
                 sendMessage(channel: Channels, args: unknown[]): void;
                 on(

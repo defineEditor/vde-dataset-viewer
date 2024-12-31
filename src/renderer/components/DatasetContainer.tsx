@@ -143,16 +143,16 @@ const DatasetContainer: React.FC = () => {
 
     // Filter change
     useEffect(() => {
-        // Reset page to 0 when filter changes
-        if (page !== 0) {
-            dispatch(setPage(0));
-        }
         if (table === null || apiService === null) {
             return;
         }
         // Check if filter is already applied
         if (deepEqual(currentFilter, table.appliedFilter)) {
             return;
+        }
+        // Reset page to 0 when filter changes
+        if (page !== 0) {
+            dispatch(setPage(0));
         }
 
         setIsLoading(true);
