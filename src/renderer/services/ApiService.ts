@@ -397,6 +397,12 @@ class ApiService {
         const result = await window.electron.checkForUpdates();
         return result;
     };
+
+    // Download update
+    public downloadUpdate = async () => {
+        const result = await window.electron.downloadUpdate();
+        return result;
+    };
 }
 
 export default ApiService;

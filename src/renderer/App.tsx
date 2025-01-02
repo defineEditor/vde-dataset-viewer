@@ -9,14 +9,18 @@ import { Provider } from 'react-redux';
 import store from 'renderer/redux/store';
 import AppContext from 'renderer/utils/AppContext';
 import AppContextProvider from 'renderer/utils/AppContextProvider';
-import { useAppDispatch } from 'renderer/redux/hooks';
+import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { dehydrateState, safeLoadState } from 'renderer/redux/stateUtils';
-import { openSnackbar } from './redux/slices/ui';
+import { openModal } from 'renderer/redux/slices/ui';
+import { modals } from 'misc/constants';
 
 const AppWithContext: React.FC = () => {
     // Get the store from the context
     const { apiService } = React.useContext(AppContext);
     const dispatch = useAppDispatch();
+    const checkForUpdates = useAppSelector(
+        (state) => state.settings.other.checkForUpdates,
+    );
 
     useEffect(() => {
         // At app startup load the saved state
@@ -26,21 +30,18 @@ const AppWithContext: React.FC = () => {
             dispatch({ type: 'LOAD_STATE', payload: { store: safeStore } });
         };
         loadStore();
+    }, [apiService, dispatch]);
+
+    useEffect(() => {
         // Check for updates
         const checkUpdates = async () => {
             const result = await apiService.checkUpdates();
-            console.log('checkUpdates', result);
             if (result.newUpdated) {
-                dispatch(
-                    openSnackbar({
-                        type: 'info',
-                        message: 'New update available',
-                    }),
-                );
+                dispatch(openModal({ type: modals.APPUPDATE, data: result }));
             }
         };
         checkUpdates();
-    }, [apiService, dispatch]);
+    }, [apiService, dispatch, checkForUpdates]);
 
     // Add listener to save the store when the app is closed
     window.electron.onSaveStore(async () => {

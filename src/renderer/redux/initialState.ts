@@ -15,6 +15,7 @@ export const settings: ISettings = {
         defaultOutputFormat: 'json',
     },
     other: {
+        checkForUpdates: true,
         loadingAnimation: 'random',
         inEncoding: 'utf8',
     },

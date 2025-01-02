@@ -18,8 +18,8 @@ export const uiSlice = createSlice({
             state.snackbar = { type: null, message: null, props: {} };
         },
         openModal: (state, action: PayloadAction<IUiModal>) => {
-            const { type, props } = action.payload;
-            state.modals.push({ type, props });
+            const { type, data } = action.payload;
+            state.modals.push({ type, data });
         },
         setGoTo: (
             state,
