@@ -47,6 +47,9 @@ export const uiSlice = createSlice({
         setPage: (state, action: PayloadAction<number>) => {
             state.currentPage = action.payload;
         },
+        setDatasetInfoTab: (state, action: PayloadAction<number>) => {
+            state.viewer.datasetInfoTab = action.payload;
+        },
     },
 });
 
@@ -58,6 +61,7 @@ export const {
     openModal,
     setGoTo,
     setPage,
+    setDatasetInfoTab,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

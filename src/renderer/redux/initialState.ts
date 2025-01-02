@@ -24,6 +24,9 @@ export const ui: IUi = {
     pathname: '/select',
     currentFileId: '',
     currentPage: 0,
+    viewer: {
+        datasetInfoTab: 0,
+    },
     modals: [],
     snackbar: {
         type: null,

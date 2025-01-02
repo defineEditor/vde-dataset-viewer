@@ -31,9 +31,17 @@ const styles = {
     caseInsensitive: {
         minWidth: '170px',
     },
+    title: {
+        marginBottom: 2,
+        backgroundColor: 'primary.main',
+        color: 'grey.100',
+    },
+    actions: {
+        m: 2,
+    },
 };
 
-const GoTo: React.FC<IUiModal> = (props: IUiModal) => {
+const Filter: React.FC<IUiModal> = (props: IUiModal) => {
     const { type } = props;
     const dispatch = useAppDispatch();
     const { apiService } = useContext(AppContext);
@@ -136,7 +144,7 @@ const GoTo: React.FC<IUiModal> = (props: IUiModal) => {
             onClose={handleClose}
             PaperProps={{ sx: { ...styles.dialog } }}
         >
-            <DialogTitle>Filter Data</DialogTitle>
+            <DialogTitle sx={styles.title}>Filter Data</DialogTitle>
             <DialogContent>
                 <Stack spacing={2} direction="row">
                     <FilterInput
@@ -159,7 +167,7 @@ const GoTo: React.FC<IUiModal> = (props: IUiModal) => {
                     />
                 </Stack>
             </DialogContent>
-            <DialogActions>
+            <DialogActions sx={styles.actions}>
                 <Button onClick={handleResetFilter} color="primary">
                     Reset
                 </Button>
@@ -178,4 +186,4 @@ const GoTo: React.FC<IUiModal> = (props: IUiModal) => {
     );
 };
 
-export default GoTo;
+export default Filter;

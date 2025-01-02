@@ -6,15 +6,23 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import AppContext from 'renderer/utils/AppContext';
-import { closeModal } from 'renderer/redux/slices/ui';
-import { sanitize } from 'dompurify';
+import { closeModal, openSnackbar } from 'renderer/redux/slices/ui';
+import DOMPurify from 'dompurify';
 import { ICheckUpdateResult } from 'interfaces/common';
 import { Typography } from '@mui/material';
 
 const styles = {
     dialog: {
-        minWidth: '80%',
-        height: '80%',
+        minWidth: '30%',
+        maxHeight: '80%',
+    },
+    title: {
+        marginBottom: 2,
+        backgroundColor: 'primary.main',
+        color: 'grey.100',
+    },
+    actions: {
+        m: 2,
     },
 };
 
@@ -46,14 +54,41 @@ const AppUpdate: React.FC<{ type: string; data: ICheckUpdateResult }> = ({
     }, [handleClose]);
 
     const handleUpdate = useCallback(() => {
-        apiService.downloadUpdate();
-    }, [apiService]);
+        const downloadUpdate = async () => {
+            dispatch(
+                openSnackbar({
+                    type: 'info',
+                    message: 'Downloading update...',
+                }),
+            );
+            const result = await apiService.downloadUpdate();
+            if (result === true) {
+                dispatch(
+                    openSnackbar({
+                        type: 'success',
+                        message:
+                            'Update downloaded successfully and will be installed after the restart',
+                    }),
+                );
+            } else if (result === false) {
+                dispatch(
+                    openSnackbar({
+                        type: 'error',
+                        message: 'Error downloading update',
+                    }),
+                );
+            }
+        };
+
+        downloadUpdate();
+        handleClose();
+    }, [apiService, dispatch, handleClose]);
 
     if (!updateInfo) {
         return null;
     }
 
-    let releaseNotes = sanitize(updateInfo.releaseNotes as string);
+    let releaseNotes = DOMPurify.sanitize(updateInfo.releaseNotes as string);
     releaseNotes = releaseNotes.replace(/<a.*?>/g, '');
     releaseNotes = releaseNotes.replace(/<\/a.*?>/g, '');
 
@@ -63,21 +98,16 @@ const AppUpdate: React.FC<{ type: string; data: ICheckUpdateResult }> = ({
             onClose={handleClose}
             PaperProps={{ sx: { ...styles.dialog } }}
         >
-            <DialogTitle>Application Update</DialogTitle>
+            <DialogTitle sx={styles.title}>Application Update</DialogTitle>
             <DialogContent sx={{ display: 'flex', flexDirection: 'column' }}>
-                <Typography variant="h5" gutterBottom>
-                    New Version Available: {updateInfo.version}
+                <Typography variant="body1" gutterBottom>
+                    New Version Available: {`${updateInfo.version}`}
                 </Typography>
-                <Typography variant="h6" gutterBottom>
-                    Release notes:
-                </Typography>
-                <Typography variant="h6" gutterBottom>
-                    Release notes:
-                </Typography>
+                <br />
                 {/* eslint-disable-next-line react/no-danger */}
                 <div dangerouslySetInnerHTML={{ __html: releaseNotes }} />
             </DialogContent>
-            <DialogActions>
+            <DialogActions sx={styles.actions}>
                 <Button onClick={handleClose} color="primary">
                     Close
                 </Button>

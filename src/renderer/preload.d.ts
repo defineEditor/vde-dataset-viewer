@@ -41,7 +41,7 @@ declare global {
             onSaveStore: (callback: () => Promise<void>) => void;
             isWindows: boolean;
             checkForUpdates: () => Promise<ICheckUpdateResult>;
-            downloadUpdate: () => Promise<void>;
+            downloadUpdate: () => Promise<boolean>;
             ipcRenderer: {
                 sendMessage(channel: Channels, args: unknown[]): void;
                 on(

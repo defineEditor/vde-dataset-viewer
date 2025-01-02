@@ -55,10 +55,15 @@ export type AllowedPathnames =
     | '/about'
     | '/converter';
 
+export interface IUiViewer {
+    datasetInfoTab: 0 | 1;
+}
+
 export interface IUi {
     pathname: AllowedPathnames;
     currentFileId: string;
     currentPage: number;
+    viewer: IUiViewer;
     modals: IUiModal[];
     snackbar: IUiSnackbar;
     control: IUiControl;

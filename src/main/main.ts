@@ -1,8 +1,6 @@
 /* eslint global-require: off, no-console: off, promise/always-return: off */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
-import { autoUpdater } from 'electron-updater';
-import log from 'electron-log';
 import StoreManager from 'main/storeManager';
 import { resolveHtmlPath, writeToClipboard } from 'main/util';
 import {
@@ -12,14 +10,6 @@ import {
 } from 'electron-devtools-installer';
 import { checkForUpdates, downloadUpdate } from 'main/appUpdate';
 import FileManager from 'main/fileManager';
-
-class AppUpdater {
-    constructor() {
-        log.transports.file.level = 'info';
-        autoUpdater.logger = log;
-        autoUpdater.checkForUpdatesAndNotify();
-    }
-}
 
 let mainWindow: BrowserWindow | null = null;
 
