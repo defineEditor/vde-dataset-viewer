@@ -40,7 +40,9 @@ const AppWithContext: React.FC = () => {
                 dispatch(openModal({ type: modals.APPUPDATE, data: result }));
             }
         };
-        checkUpdates();
+        if (checkForUpdates) {
+            checkUpdates();
+        }
     }, [apiService, dispatch, checkForUpdates]);
 
     // Add listener to save the store when the app is closed
