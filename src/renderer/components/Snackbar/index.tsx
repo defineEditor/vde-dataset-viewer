@@ -41,42 +41,40 @@ const variantIcon = {
 };
 
 const SnackbarRoot: React.FC = () => {
-
     const snackbar = useAppSelector((state) => state.ui.snackbar);
     const dispatch = useAppDispatch();
 
     const handleClose = () => {
         dispatch(closeSnackbar());
-    }
+    };
 
     if (snackbar.type === null) {
         return null;
-    } else {
-        const duration = snackbar?.props?.duration || 3000;
-        const Icon = variantIcon[snackbar.type];
-        return (
-            <Snackbar
-                anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'center',
-                }}
-                open
-                autoHideDuration={duration}
-                onClose={handleClose}
-                sx={styles.snackbar}
-            >
-                <SnackbarContent
-                    message={
-                        <Box aria-label = "snackbarroot" sx = {styles.message} >
-                            <Icon sx={styles.icon} />
-                            {snackbar.message}
-                        </Box>
-                    }
-                    sx={styles[snackbar.type]}
-                />
-            </Snackbar>
-        );
     }
+    const duration = snackbar?.props?.duration || 3000;
+    const Icon = variantIcon[snackbar.type];
+    return (
+        <Snackbar
+            anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'center',
+            }}
+            open
+            autoHideDuration={duration}
+            onClose={handleClose}
+            sx={styles.snackbar}
+        >
+            <SnackbarContent
+                message={
+                    <Box aria-label="snackbarroot" sx={styles.message}>
+                        <Icon sx={styles.icon} />
+                        {snackbar.message}
+                    </Box>
+                }
+                sx={styles[snackbar.type]}
+            />
+        </Snackbar>
+    );
 };
 
 export default SnackbarRoot;

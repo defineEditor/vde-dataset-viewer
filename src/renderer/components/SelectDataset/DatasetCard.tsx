@@ -1,7 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import CloseIcon from '@mui/icons-material/Close';
 
 const styles = {
     card: (theme) => ({
@@ -12,6 +17,7 @@ const styles = {
         '&:hover': {
             backgroundColor: `${theme.palette.primary.main}10`,
         },
+        position: 'relative',
     }),
     cardContent: {
         color: 'text.secondary',
@@ -30,6 +36,11 @@ const styles = {
     name: {
         marginBottom: 1,
     },
+    menuButton: {
+        position: 'absolute',
+        bottom: 24,
+        right: 5,
+    },
 };
 
 const DatasetCard: React.FC<{
@@ -39,7 +50,33 @@ const DatasetCard: React.FC<{
     nCols: number;
     records: number;
     handleSelectFileClick: (_file: { fileId: string }) => void;
-}> = ({ fileId, name, label, nCols, records, handleSelectFileClick }) => {
+    handleDatasetClose: (_fileId: string) => void;
+}> = ({
+    fileId,
+    name,
+    label,
+    nCols,
+    records,
+    handleSelectFileClick,
+    handleDatasetClose,
+}) => {
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+    const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+        event.stopPropagation();
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleCloseClick = (event: React.MouseEvent<HTMLElement>) => {
+        event.stopPropagation();
+        handleDatasetClose(fileId);
+        handleMenuClose();
+    };
+
     return (
         <Card sx={styles.card}>
             <CardContent onClick={() => handleSelectFileClick({ fileId })}>
@@ -55,6 +92,19 @@ const DatasetCard: React.FC<{
                 <Typography variant="body2" sx={styles.attrs}>
                     {records} records
                 </Typography>
+                <IconButton sx={styles.menuButton} onClick={handleMenuOpen}>
+                    <MoreVertIcon />
+                </IconButton>
+                <Menu
+                    anchorEl={anchorEl}
+                    open={Boolean(anchorEl)}
+                    onClose={handleMenuClose}
+                >
+                    <MenuItem onClick={handleCloseClick}>
+                        <CloseIcon fontSize="small" sx={{ marginRight: 1 }} />
+                        Close
+                    </MenuItem>
+                </Menu>
             </CardContent>
         </Card>
     );

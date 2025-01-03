@@ -44,6 +44,7 @@ const styles = {
     helperText: {
         paddingLeft: 2,
         margin: 0,
+        mt: 0,
     },
     tab: {
         background:
@@ -218,21 +219,26 @@ const Settings: React.FC = () => {
                         <Typography variant="h6">
                             Value Representation Settings
                         </Typography>
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={
-                                        newSettings.viewer.dynamicRowHeight
-                                    }
-                                    onChange={handleInputChange}
-                                    name="viewer.dynamicRowHeight"
-                                />
-                            }
-                            label="Wrap Values"
-                        />
-                        <Typography variant="caption" sx={styles.helperText}>
-                            When selected, long cell values are wrapper
-                        </Typography>
+                        <Stack spacing={0}>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={
+                                            newSettings.viewer.dynamicRowHeight
+                                        }
+                                        onChange={handleInputChange}
+                                        name="viewer.dynamicRowHeight"
+                                    />
+                                }
+                                label="Wrap Values"
+                            />
+                            <Typography
+                                variant="caption"
+                                sx={styles.helperText}
+                            >
+                                When selected, long cell values are wrapper
+                            </Typography>
+                        </Stack>
                         <TextField
                             label="Date Format"
                             name="viewer.dateFormat"
@@ -253,20 +259,27 @@ const Settings: React.FC = () => {
                                 DYMONYEAR (01JAN1992)
                             </MenuItem>
                         </TextField>
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={newSettings.viewer.roundNumbers}
-                                    onChange={handleInputChange}
-                                    name="viewer.roundNumbers"
-                                />
-                            }
-                            label="Round Numbers"
-                        />
-                        <Typography variant="caption" sx={styles.helperText}>
-                            When selected, float, double and decimal numbers
-                            will be rounded
-                        </Typography>
+                        <Stack spacing={0}>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={
+                                            newSettings.viewer.roundNumbers
+                                        }
+                                        onChange={handleInputChange}
+                                        name="viewer.roundNumbers"
+                                    />
+                                }
+                                label="Round Numbers"
+                            />
+                            <Typography
+                                variant="caption"
+                                sx={styles.helperText}
+                            >
+                                When selected, float, double and decimal numbers
+                                will be rounded
+                            </Typography>
+                        </Stack>
                         <TextField
                             label="Max Precision"
                             helperText="Precision used when number rounding is enabled"
@@ -381,6 +394,27 @@ const Settings: React.FC = () => {
                             <MenuItem value="latin1">Latin1</MenuItem>
                             <MenuItem value="ascii">ASCII</MenuItem>
                         </TextField>
+                        <Stack spacing={0}>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={
+                                            newSettings.other.checkForUpdates
+                                        }
+                                        onChange={handleInputChange}
+                                        name="other.checkForUpdates"
+                                    />
+                                }
+                                label="Check for updates on startup"
+                            />
+                            <Typography
+                                variant="caption"
+                                sx={styles.helperText}
+                            >
+                                Check for new versions of the application on
+                                startup
+                            </Typography>
+                        </Stack>
                     </Stack>
                 </Box>
                 <Stack direction="row" spacing={2} sx={styles.buttonContainer}>

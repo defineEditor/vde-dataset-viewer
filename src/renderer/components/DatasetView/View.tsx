@@ -265,120 +265,127 @@ const DatasetViewUI: React.FC<{
                         height: `${rowVirtualizer.getTotalSize()}px`,
                     }}
                 >
-                    {virtualRows.map((virtualRow) => {
-                        const row = rows[virtualRow.index];
-                        const visibleCells = row.getVisibleCells();
+                    {!isLoading &&
+                        virtualRows.map((virtualRow) => {
+                            const row = rows[virtualRow.index];
+                            const visibleCells = row.getVisibleCells();
 
-                        return (
-                            <TableRow
-                                data-index={
-                                    dynamicRowHeight
-                                        ? virtualRow.index
-                                        : undefined
-                                }
-                                ref={(node) =>
-                                    dynamicRowHeight
-                                        ? rowVirtualizer.measureElement(node)
-                                        : null
-                                }
-                                key={row.id}
-                                sx={{
-                                    ...styles.tableRow,
-                                    ...(dynamicRowHeight
-                                        ? {}
-                                        : { height: `${virtualRow.size}px` }),
-                                    transform: `translateY(${virtualRow.start}px)`,
-                                }}
-                            >
-                                <TableCell
+                            return (
+                                <TableRow
+                                    data-index={
+                                        dynamicRowHeight
+                                            ? virtualRow.index
+                                            : undefined
+                                    }
+                                    ref={(node) =>
+                                        dynamicRowHeight
+                                            ? rowVirtualizer.measureElement(
+                                                  node,
+                                              )
+                                            : null
+                                    }
+                                    key={row.id}
                                     sx={{
+                                        ...styles.tableRow,
                                         ...(dynamicRowHeight
-                                            ? styles.tableCellDynamic
-                                            : styles.tableCellFixed),
-                                        width: visibleCells[0].column.getSize(),
-                                        ...styles.rowNumberCell,
+                                            ? {}
+                                            : {
+                                                  height: `${virtualRow.size}px`,
+                                              }),
+                                        transform: `translateY(${virtualRow.start}px)`,
                                     }}
-                                    onClick={() =>
-                                        handleCellClick(virtualRow.index, 0)
-                                    }
-                                    onMouseDown={() =>
-                                        handleMouseDown(virtualRow.index, 0)
-                                    }
-                                    onMouseOver={() =>
-                                        handleMouseOver(virtualRow.index, 0)
-                                    }
                                 >
-                                    {flexRender(
-                                        visibleCells[0].column.columnDef.cell,
-                                        visibleCells[0].getContext(),
-                                    )}
-                                </TableCell>
-                                {virtualPaddingLeft ? (
                                     <TableCell
                                         sx={{
-                                            display: 'flex',
-                                            width: virtualPaddingLeft,
+                                            ...(dynamicRowHeight
+                                                ? styles.tableCellDynamic
+                                                : styles.tableCellFixed),
+                                            width: visibleCells[0].column.getSize(),
+                                            ...styles.rowNumberCell,
                                         }}
-                                    />
-                                ) : null}
-                                {virtualColumns.map((vc) => {
-                                    const cell = visibleCells[vc.index + 1]; // Adjust index for row number
-                                    const isHighlighted = highlightedCells.some(
-                                        (highlightedCell) =>
-                                            highlightedCell.row ===
-                                                virtualRow.index &&
-                                            highlightedCell.column ===
-                                                vc.index + 1,
-                                    );
-                                    return (
+                                        onClick={() =>
+                                            handleCellClick(virtualRow.index, 0)
+                                        }
+                                        onMouseDown={() =>
+                                            handleMouseDown(virtualRow.index, 0)
+                                        }
+                                        onMouseOver={() =>
+                                            handleMouseOver(virtualRow.index, 0)
+                                        }
+                                    >
+                                        {flexRender(
+                                            visibleCells[0].column.columnDef
+                                                .cell,
+                                            visibleCells[0].getContext(),
+                                        )}
+                                    </TableCell>
+                                    {virtualPaddingLeft ? (
                                         <TableCell
-                                            key={cell.id}
                                             sx={{
-                                                ...(dynamicRowHeight
-                                                    ? styles.tableCellDynamic
-                                                    : styles.tableCellFixed),
-                                                width: cell.column.getSize(),
-                                                ...(isHighlighted
-                                                    ? styles.highlightedCell
-                                                    : {}),
+                                                display: 'flex',
+                                                width: virtualPaddingLeft,
                                             }}
-                                            onClick={() =>
-                                                handleCellClick(
-                                                    virtualRow.index,
-                                                    vc.index + 1,
-                                                )
-                                            }
-                                            onMouseDown={() =>
-                                                handleMouseDown(
-                                                    virtualRow.index,
-                                                    vc.index + 1,
-                                                )
-                                            }
-                                            onMouseOver={() =>
-                                                handleMouseOver(
-                                                    virtualRow.index,
-                                                    vc.index + 1,
-                                                )
-                                            }
-                                        >
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext(),
-                                            )}
-                                        </TableCell>
-                                    );
-                                })}
-                                {virtualPaddingRight ? (
-                                    <TableCell
-                                        style={{
-                                            display: 'flex',
-                                            width: virtualPaddingRight,
-                                        }}
-                                    />
-                                ) : null}
-                            </TableRow>
-                        );
-                    })}
+                                        />
+                                    ) : null}
+                                    {virtualColumns.map((vc) => {
+                                        const cell = visibleCells[vc.index + 1]; // Adjust index for row number
+                                        const isHighlighted =
+                                            highlightedCells.some(
+                                                (highlightedCell) =>
+                                                    highlightedCell.row ===
+                                                        virtualRow.index &&
+                                                    highlightedCell.column ===
+                                                        vc.index + 1,
+                                            );
+                                        return (
+                                            <TableCell
+                                                key={cell.id}
+                                                sx={{
+                                                    ...(dynamicRowHeight
+                                                        ? styles.tableCellDynamic
+                                                        : styles.tableCellFixed),
+                                                    width: cell.column.getSize(),
+                                                    ...(isHighlighted
+                                                        ? styles.highlightedCell
+                                                        : {}),
+                                                }}
+                                                onClick={() =>
+                                                    handleCellClick(
+                                                        virtualRow.index,
+                                                        vc.index + 1,
+                                                    )
+                                                }
+                                                onMouseDown={() =>
+                                                    handleMouseDown(
+                                                        virtualRow.index,
+                                                        vc.index + 1,
+                                                    )
+                                                }
+                                                onMouseOver={() =>
+                                                    handleMouseOver(
+                                                        virtualRow.index,
+                                                        vc.index + 1,
+                                                    )
+                                                }
+                                            >
+                                                {flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext(),
+                                                )}
+                                            </TableCell>
+                                        );
+                                    })}
+                                    {virtualPaddingRight ? (
+                                        <TableCell
+                                            style={{
+                                                display: 'flex',
+                                                width: virtualPaddingRight,
+                                            }}
+                                        />
+                                    ) : null}
+                                </TableRow>
+                            );
+                        })}
                 </TableBody>
             </Table>
             {isLoading && (

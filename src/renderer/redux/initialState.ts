@@ -1,4 +1,5 @@
 import { IData, IStore, IUi, ISettings } from 'interfaces/common';
+import { paths } from 'misc/constants';
 
 export const settings: ISettings = {
     viewer: {
@@ -15,14 +16,18 @@ export const settings: ISettings = {
         defaultOutputFormat: 'json',
     },
     other: {
+        checkForUpdates: true,
         loadingAnimation: 'random',
         inEncoding: 'utf8',
     },
 };
 export const ui: IUi = {
-    pathname: '/select',
+    pathname: paths.SELECT,
     currentFileId: '',
     currentPage: 0,
+    viewer: {
+        datasetInfoTab: 0,
+    },
     modals: [],
     snackbar: {
         type: null,

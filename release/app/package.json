@@ -1,10 +1,11 @@
 {
   "name": "vde-dataset-viewer",
-  "version": "1.0.0",
+  "version": "0.1.1",
   "description": "VDE Dataset Viewer",
   "license": "MIT",
   "author": {
-    "name": "Dmitry Kolosov"
+    "name": "Dmitry Kolosov",
+    "email": "support@defineeditor.com"
   },
   "main": "./dist/main/main.js",
   "scripts": {

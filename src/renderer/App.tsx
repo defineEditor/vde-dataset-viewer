@@ -9,16 +9,21 @@ import { Provider } from 'react-redux';
 import store from 'renderer/redux/store';
 import AppContext from 'renderer/utils/AppContext';
 import AppContextProvider from 'renderer/utils/AppContextProvider';
-import { useAppDispatch } from 'renderer/redux/hooks';
+import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { dehydrateState, safeLoadState } from 'renderer/redux/stateUtils';
+import { openModal } from 'renderer/redux/slices/ui';
+import { modals } from 'misc/constants';
 
 const AppWithContext: React.FC = () => {
     // Get the store from the context
     const { apiService } = React.useContext(AppContext);
     const dispatch = useAppDispatch();
+    const checkForUpdates = useAppSelector(
+        (state) => state.settings.other.checkForUpdates,
+    );
 
-    // At app startup load the saved state
     useEffect(() => {
+        // At app startup load the saved state
         const loadStore = async () => {
             const { reduxStore } = await apiService.loadLocalStore();
             const safeStore = safeLoadState(reduxStore);
@@ -26,6 +31,19 @@ const AppWithContext: React.FC = () => {
         };
         loadStore();
     }, [apiService, dispatch]);
+
+    useEffect(() => {
+        // Check for updates
+        const checkUpdates = async () => {
+            const result = await apiService.checkUpdates();
+            if (result.newUpdated) {
+                dispatch(openModal({ type: modals.APPUPDATE, data: result }));
+            }
+        };
+        if (checkForUpdates) {
+            checkUpdates();
+        }
+    }, [apiService, dispatch, checkForUpdates]);
 
     // Add listener to save the store when the app is closed
     window.electron.onSaveStore(async () => {

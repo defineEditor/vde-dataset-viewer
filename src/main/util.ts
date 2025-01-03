@@ -1,6 +1,6 @@
 /* eslint import/prefer-default-export: off */
 import { URL } from 'url';
-import { clipboard } from 'electron';
+import { clipboard, IpcMainInvokeEvent } from 'electron';
 import path from 'path';
 
 const resolveHtmlPath = (htmlFileName: string) => {
@@ -11,11 +11,11 @@ const resolveHtmlPath = (htmlFileName: string) => {
         return url.href;
     }
     return `file://${path.resolve(__dirname, '../renderer/', htmlFileName)}`;
-}
+};
 
-const writeToClipboard = (_event: Electron.IpcMainInvokeEvent, text: string) => {
+const writeToClipboard = (_event: IpcMainInvokeEvent, text: string) => {
     clipboard.writeText(text);
     return true;
-}
+};
 
 export { writeToClipboard, resolveHtmlPath };

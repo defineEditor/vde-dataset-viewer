@@ -17,6 +17,13 @@ const styles = {
     dialog: {
         minWidth: '400px',
     },
+    title: {
+        backgroundColor: 'primary.main',
+        color: 'grey.100',
+    },
+    actions: {
+        m: 1,
+    },
 };
 
 const GoTo: React.FC<IUiModal> = (props: IUiModal) => {
@@ -115,7 +122,7 @@ const GoTo: React.FC<IUiModal> = (props: IUiModal) => {
             onClose={handleClose}
             PaperProps={{ sx: { ...styles.dialog } }}
         >
-            <DialogTitle>Go To</DialogTitle>
+            <DialogTitle sx={styles.title}>Go To</DialogTitle>
             <DialogContent>
                 <Autocomplete
                     freeSolo
@@ -147,7 +154,7 @@ const GoTo: React.FC<IUiModal> = (props: IUiModal) => {
                     )}
                 />
             </DialogContent>
-            <DialogActions>
+            <DialogActions sx={styles.actions}>
                 <Button onClick={handleClose} color="primary">
                     Cancel
                 </Button>

@@ -1,4 +1,5 @@
 import { Filter, DatasetType } from 'interfaces/api';
+import { ICheckUpdateResult } from 'interfaces/main';
 
 export interface ISettings {
     viewer: {
@@ -16,6 +17,7 @@ export interface ISettings {
         defaultOutputFormat: 'json' | 'ndjson';
     };
     other: {
+        checkForUpdates: boolean;
         loadingAnimation: 'santa' | 'cat' | 'dog' | 'normal' | 'random';
         inEncoding: 'utf8' | 'utf16le' | 'base64' | 'ucs2' | 'latin1' | 'ascii';
     };
@@ -23,9 +25,11 @@ export interface ISettings {
 
 export interface IUiModal {
     type: string;
-    props: {
-        [key: string]: any;
-    };
+    data:
+        | {
+              [key: string]: any;
+          }
+        | ICheckUpdateResult;
 }
 
 export interface IUiSnackbar {
@@ -51,10 +55,15 @@ export type AllowedPathnames =
     | '/about'
     | '/converter';
 
+export interface IUiViewer {
+    datasetInfoTab: 0 | 1;
+}
+
 export interface IUi {
     pathname: AllowedPathnames;
     currentFileId: string;
     currentPage: number;
+    viewer: IUiViewer;
     modals: IUiModal[];
     snackbar: IUiSnackbar;
     control: IUiControl;

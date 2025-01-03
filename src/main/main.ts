@@ -1,19 +1,15 @@
 /* eslint global-require: off, no-console: off, promise/always-return: off */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
-import { autoUpdater } from 'electron-updater';
-import log from 'electron-log';
 import StoreManager from 'main/storeManager';
 import { resolveHtmlPath, writeToClipboard } from 'main/util';
+import {
+    installExtension,
+    REDUX_DEVTOOLS,
+    REACT_DEVELOPER_TOOLS,
+} from 'electron-devtools-installer';
+import { checkForUpdates, downloadUpdate } from 'main/appUpdate';
 import FileManager from 'main/fileManager';
-
-class AppUpdater {
-    constructor() {
-        log.transports.file.level = 'info';
-        autoUpdater.logger = log;
-        autoUpdater.checkForUpdatesAndNotify();
-    }
-}
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -31,24 +27,25 @@ if (isDebug) {
     sourceMapSupport.install();
 }
 
-const installExtensions = async () => {
-    const installer = require('electron-devtools-installer');
-    const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
-    const extensions = ['REACT_DEVELOPER_TOOLS', 'REDUX_DEVTOOLS'];
-
-    return installer
-        .default(
-            extensions.map((name) => installer[name]),
-            forceDownload,
-        )
-        .catch(console.log);
-};
+app.whenReady()
+    .then(async () => {
+        if (isDebug) {
+            try {
+                const [redux, react] = await installExtension([
+                    REDUX_DEVTOOLS,
+                    REACT_DEVELOPER_TOOLS,
+                ]);
+                console.log(`Added Extensions:  ${redux.name}, ${react.name}`);
+            } catch (err) {
+                console.log('An error occurred: ', err);
+            }
+        }
+    })
+    .catch((err) => {
+        console.log('An error occurred: ', err);
+    });
 
 const createWindow = async () => {
-    if (isDebug) {
-        await installExtensions();
-    }
-
     const RESOURCES_PATH = app.isPackaged
         ? path.join(process.resourcesPath, 'assets')
         : path.join(__dirname, '../../assets');
@@ -79,9 +76,8 @@ const createWindow = async () => {
         }
         if (process.env.START_MINIMIZED) {
             mainWindow.minimize();
-        } else if (process.env.NODE_ENV !== 'development') {
-            mainWindow.show();
         } else {
+            mainWindow.maximize();
             mainWindow.showInactive();
         }
     });
@@ -110,7 +106,7 @@ const createWindow = async () => {
 
     // Remove this if your app does not use auto updates
     // eslint-disable-next-line
-    new AppUpdater();
+    // new AppUpdater();
 };
 
 /**
@@ -132,6 +128,8 @@ app.whenReady()
         ipcMain.handle('main:openFile', fileManager.handleFileOpen);
         ipcMain.handle('main:closeFile', fileManager.handleFileClose);
         ipcMain.handle('main:writeToClipboard', writeToClipboard);
+        ipcMain.handle('main:checkForUpdates', checkForUpdates);
+        ipcMain.handle('main:downloadUpdate', downloadUpdate);
         ipcMain.handle('read:getMetadata', fileManager.handleGetMetadata);
         ipcMain.handle(
             'read:getObservations',

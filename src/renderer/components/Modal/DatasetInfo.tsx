@@ -6,7 +6,11 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import AppContext from 'renderer/utils/AppContext';
-import { closeModal, setGoTo } from 'renderer/redux/slices/ui';
+import {
+    closeModal,
+    setDatasetInfoTab,
+    setGoTo,
+} from 'renderer/redux/slices/ui';
 import {
     DatasetJsonMetadata,
     IUiModal,
@@ -57,6 +61,18 @@ const styles = {
     headerRow: {
         background:
             'radial-gradient(circle farthest-corner at bottom center,#eeeeee,#e5e4e4)',
+    },
+    title: {
+        backgroundColor: 'primary.main',
+        color: 'grey.100',
+    },
+    actions: {
+        m: 1,
+    },
+    content: {
+        display: 'flex',
+        flexDirection: 'column',
+        p: 0,
     },
 };
 
@@ -275,10 +291,11 @@ const DatasetInfo: React.FC<IUiModal> = (props: IUiModal) => {
     const { type } = props;
     const dispatch = useAppDispatch();
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+    const datasetInfoTab = useAppSelector(
+        (state) => state.ui.viewer.datasetInfoTab,
+    );
     const { apiService } = useContext(AppContext);
     const currentMetadata = apiService.getOpenedFileMetadata(currentFileId);
-
-    const [tabIndex, setTabIndex] = useState(0);
 
     const handleClose = useCallback(() => {
         dispatch(closeModal({ type }));
@@ -288,7 +305,7 @@ const DatasetInfo: React.FC<IUiModal> = (props: IUiModal) => {
         _event: React.SyntheticEvent,
         newValue: number,
     ) => {
-        setTabIndex(newValue);
+        dispatch(setDatasetInfoTab(newValue));
     };
 
     useEffect(() => {
@@ -310,10 +327,10 @@ const DatasetInfo: React.FC<IUiModal> = (props: IUiModal) => {
             onClose={handleClose}
             PaperProps={{ sx: { ...styles.dialog } }}
         >
-            <DialogTitle>Dataset Information</DialogTitle>
-            <DialogContent sx={{ display: 'flex', flexDirection: 'column' }}>
+            <DialogTitle sx={styles.title}>Dataset Information</DialogTitle>
+            <DialogContent sx={styles.content}>
                 <Tabs
-                    value={tabIndex}
+                    value={datasetInfoTab}
                     onChange={handleTabChange}
                     sx={styles.tabs}
                     variant="fullWidth"
@@ -321,18 +338,18 @@ const DatasetInfo: React.FC<IUiModal> = (props: IUiModal) => {
                     <Tab label="Metadata" sx={styles.tab} />
                     <Tab label="Columns" sx={styles.tab} />
                 </Tabs>
-                <Box hidden={tabIndex !== 0} sx={styles.tabPanel}>
+                <Box hidden={datasetInfoTab !== 0} sx={styles.tabPanel}>
                     <MetadataTab metadata={currentMetadata} />
                 </Box>
-                <Box hidden={tabIndex !== 1} sx={styles.tabPanel}>
+                <Box hidden={datasetInfoTab !== 1} sx={styles.tabPanel}>
                     <ColumnsTab
                         metadata={currentMetadata}
                         onClose={handleClose}
-                        active={tabIndex !== 1}
+                        active={datasetInfoTab !== 1}
                     />
                 </Box>
             </DialogContent>
-            <DialogActions>
+            <DialogActions sx={styles.actions}>
                 <Button onClick={handleClose} color="primary">
                     Close
                 </Button>

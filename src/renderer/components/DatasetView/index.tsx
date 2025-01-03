@@ -165,7 +165,12 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
         },
     });
 
-    const { rows } = table.getRowModel();
+    const rows = useMemo(() => {
+        if (isLoading === false && data.length > 0) {
+            return table.getRowModel().rows;
+        }
+        return [];
+    }, [table, data, isLoading]);
 
     const visibleColumns = table.getVisibleLeafColumns();
 
@@ -238,7 +243,7 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
             }
             setHighlightedCells(newHighlightedCells);
         },
-        [rows],
+        [rows.length],
     );
 
     const handleMouseDown = (rowIndex: number, columnIndex: number) => {
@@ -371,11 +376,24 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
         // Scroll to the row if it is on the current page, otherwise change will be changed and scroll will not be visible
         if (
             goTo.row !== null &&
-            currentPage === Math.floor(goTo.row / settings.pageSize) &&
+            currentPage ===
+                Math.floor(Math.max(goTo.row - 1, 0) / settings.pageSize) &&
             isLoading === false
         ) {
             const row = (goTo.row - 1) % settings.pageSize;
-            rowVirtualizer.scrollToIndex(row);
+            // Get current index of the row
+            const range = rowVirtualizer.range || {
+                startIndex: 0,
+                endIndex: 0,
+            };
+            const { options } = rowVirtualizer;
+            if (row < range.startIndex) {
+                rowVirtualizer.scrollToIndex(Math.max(row - 10, 0));
+            } else if (row > range.endIndex) {
+                rowVirtualizer.scrollToIndex(
+                    Math.min(row + 10, options.count - 1),
+                );
+            }
             dispatch(setGoTo({ row: null }));
             // Highlight the row number
             handleCellClick(row, 0);
