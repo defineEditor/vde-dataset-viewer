@@ -16,6 +16,7 @@ import { setPathname } from 'renderer/redux/slices/ui';
 import { AllowedPathnames } from 'interfaces/common';
 import ViewerToolbar from 'renderer/components/ViewerToolbar';
 import Shortcuts from 'renderer/components/Shortcuts';
+import { paths } from 'misc/constants';
 
 const styles = {
     main: {
@@ -27,6 +28,7 @@ const styles = {
         height: 32,
         marginTop: '3px',
         fontSize: 16,
+        fontWeight: 500,
         color: '#1976d2',
         background:
             'radial-gradient(circle farthest-corner at right,#eeeeee,#c4c4c4)',
@@ -85,7 +87,7 @@ const NAVIGATION: Navigation = [
 ];
 
 const Logo: React.FC = () => {
-    return <Avatar sx={styles.logo}>{'{ ; }'}</Avatar>;
+    return <Avatar sx={styles.logo}>{'{ : }'}</Avatar>;
 };
 
 const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
@@ -124,35 +126,35 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                     case 'F1':
                         dispatch(
                             setPathname({
-                                pathname: '/select',
+                                pathname: paths.SELECT,
                             }),
                         );
                         break;
                     case 'F2':
                         dispatch(
                             setPathname({
-                                pathname: '/api',
+                                pathname: paths.API,
                             }),
                         );
                         break;
                     case 'F3':
                         dispatch(
                             setPathname({
-                                pathname: '/converter',
+                                pathname: paths.CONVERTER,
                             }),
                         );
                         break;
                     case 'F4':
                         dispatch(
                             setPathname({
-                                pathname: '/settings',
+                                pathname: paths.SETTINGS,
                             }),
                         );
                         break;
                     case 'F5':
                         dispatch(
                             setPathname({
-                                pathname: '/about',
+                                pathname: paths.ABOUT,
                             }),
                         );
                         break;
@@ -183,7 +185,7 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
             <DashboardLayout
                 defaultSidebarCollapsed
                 slots={
-                    pathname === '/viewFile' && isDataLoaded
+                    pathname === paths.VIEWFILE && isDataLoaded
                         ? {
                               appTitle: ViewerToolbar,
                           }
@@ -191,9 +193,11 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                 }
             >
                 <Stack sx={styles.main} id="main">
-                    {pathname === '/select' && <SelectDataset />}
-                    {pathname === '/viewFile' && isDataLoaded && <ViewFile />}
-                    {pathname === '/settings' && <Settings />}
+                    {pathname === paths.SELECT && <SelectDataset />}
+                    {pathname === paths.VIEWFILE && isDataLoaded && (
+                        <ViewFile />
+                    )}
+                    {pathname === paths.SETTINGS && <Settings />}
                 </Stack>
                 <Shortcuts
                     open={shortcutsOpen}

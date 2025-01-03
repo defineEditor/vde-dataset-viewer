@@ -6,7 +6,7 @@ import { ITableData } from 'interfaces/common';
 import DatasetView from 'renderer/components/DatasetView';
 import AppContext from 'renderer/utils/AppContext';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
-import { openSnackbar, setPage, setPathname } from 'renderer/redux/slices/ui';
+import { openSnackbar, setPage, closeDataset } from 'renderer/redux/slices/ui';
 import { getData } from 'renderer/utils/readData';
 import estimateWidth from 'renderer/utils/estimateWidth';
 import deepEqual from 'renderer/utils/deepEqual';
@@ -64,9 +64,8 @@ const DatasetContainer: React.FC = () => {
             } catch (error) {
                 // Remove current fileId as something is wrong with itj
                 dispatch(
-                    setPathname({
-                        pathname: '/select',
-                        currentFileId: '',
+                    closeDataset({
+                        fileId,
                     }),
                 );
                 dispatch(
@@ -122,7 +121,6 @@ const DatasetContainer: React.FC = () => {
                 return;
             }
             setIsLoading(true);
-            dispatch(setPage(newPage));
             const readNext = async (start: number) => {
                 const newData = await getData(
                     apiService,
@@ -132,6 +130,7 @@ const DatasetContainer: React.FC = () => {
                 );
                 if (newData !== null) {
                     setTable(newData);
+                    dispatch(setPage(newPage));
                     setIsLoading(false);
                 }
             };
@@ -191,7 +190,7 @@ const DatasetContainer: React.FC = () => {
 
     useEffect(() => {
         if (goToRow !== null) {
-            const newPage = Math.floor(goToRow / pageSize);
+            const newPage = Math.floor(Math.max(goToRow - 1, 0) / pageSize);
             if (newPage !== page) {
                 handleChangePage(null, newPage);
             }

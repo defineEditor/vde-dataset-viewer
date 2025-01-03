@@ -314,20 +314,23 @@ class ApiService {
     };
 
     // Close file
-    public close = async (
-        mode: 'local' | 'remote',
-        fileId: string,
-    ): Promise<boolean> => {
+    public close = async (fileId: string): Promise<boolean> => {
+        const file = this.openedFiles.find(
+            (fileItem) => fileItem.fileId === fileId,
+        );
+        if (file === undefined) {
+            throw new Error('Trying to close file which is not opened');
+        }
         if (this.openedFilesMetadata[fileId] !== undefined) {
             delete this.openedFilesMetadata[fileId];
         }
         const fileIndex = this.openedFiles.findIndex(
-            (file) => file.fileId === fileId,
+            (openFile) => openFile.fileId === fileId,
         );
         if (fileIndex !== -1) {
             this.openedFiles.splice(fileIndex, 1);
         }
-        if (mode === 'remote') {
+        if (file.mode === 'remote') {
             return this.closeRemote(fileId);
         }
         return this.closeLocal(fileId);

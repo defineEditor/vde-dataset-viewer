@@ -50,6 +50,7 @@ const Layout: React.FC<{
         label: string;
     }) => void;
     handleRecentFolderClick: (_folder: string) => void;
+    handleDatasetClose: (_fileId: string) => void;
 }> = ({
     openedFiles,
     recentFiles,
@@ -58,6 +59,7 @@ const Layout: React.FC<{
     handleSelectFileClick,
     handleRecentFileClick,
     handleRecentFolderClick,
+    handleDatasetClose,
 }) => {
     const stackRef = useRef<HTMLDivElement>(null);
     const [numberOfElements, setNumberOfElements] = useState<number>(10);
@@ -101,6 +103,7 @@ const Layout: React.FC<{
                             label={file.label}
                             nCols={file.nCols}
                             records={file.records}
+                            handleDatasetClose={handleDatasetClose}
                             handleSelectFileClick={handleSelectFileClick}
                         />
                     ))}

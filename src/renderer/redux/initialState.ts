@@ -1,4 +1,5 @@
 import { IData, IStore, IUi, ISettings } from 'interfaces/common';
+import { paths } from 'misc/constants';
 
 export const settings: ISettings = {
     viewer: {
@@ -21,7 +22,7 @@ export const settings: ISettings = {
     },
 };
 export const ui: IUi = {
-    pathname: '/select',
+    pathname: paths.SELECT,
     currentFileId: '',
     currentPage: 0,
     viewer: {

@@ -24,6 +24,7 @@
         "postinstall": "ts-node .erb/scripts/check-native-dep.js && electron-builder install-app-deps && npm run build:dll",
         "lint": "cross-env NODE_ENV=development eslint . --ext .js,.jsx,.ts,.tsx",
         "lint:fix": "cross-env NODE_ENV=development eslint . --ext .js,.jsx,.ts,.tsx --fix",
+        "bp-linux": "npm run build && electron-builder build --linux --publish never && ts-node ./.erb/scripts/moveFiles.ts",
         "package-linux": "electron-builder build --linux --publish never && ts-node ./.erb/scripts/moveFiles.ts",
         "package-win": "electron-builder build --win --x64 --publish never && ts-node ./.erb/scripts/moveFiles.ts",
         "package-all": "ts-node ./.erb/scripts/clean.js dist && npm run build && npm run package-linux && npm run package-win && npm run build:dll",

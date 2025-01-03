@@ -1,7 +1,11 @@
-import { useContext, useEffect, useCallback } from 'react';
+import { useContext, useState, useEffect, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
-import { openSnackbar, setPathname } from 'renderer/redux/slices/ui';
-import { setData, addRecent, resetFilter } from 'renderer/redux/slices/data';
+import {
+    closeDataset,
+    openDataset,
+    openSnackbar,
+} from 'renderer/redux/slices/ui';
+import { addRecent, resetFilter } from 'renderer/redux/slices/data';
 import { openNewDataset } from 'renderer/utils/readData';
 import Layout from 'renderer/components/SelectDataset/Layout';
 import AppContext from 'renderer/utils/AppContext';
@@ -12,7 +16,7 @@ const SelectDataset = () => {
     const recentFiles = useAppSelector((state) => state.data.recentFiles);
     const recentFolders = useAppSelector((state) => state.data.recentFolders);
 
-    const openedFiles = apiService.getOpenedFiles();
+    const [openedFiles, setOpenedFiles] = useState(apiService.getOpenedFiles());
 
     const handleOpenLocal = useCallback(
         async (filePath?: string, folderPath?: string) => {
@@ -34,14 +38,6 @@ const SelectDataset = () => {
                 return;
             }
             dispatch(
-                setData({
-                    fileId: newDataInfo.fileId,
-                    type: newDataInfo.type,
-                    name: newDataInfo.metadata.name,
-                    label: newDataInfo.metadata.label,
-                }),
-            );
-            dispatch(
                 addRecent({
                     name: newDataInfo.metadata.name,
                     label: newDataInfo.metadata.label,
@@ -49,9 +45,11 @@ const SelectDataset = () => {
                 }),
             );
             dispatch(
-                setPathname({
-                    pathname: '/viewFile',
-                    currentFileId: newDataInfo.fileId,
+                openDataset({
+                    fileId: newDataInfo.fileId,
+                    type: newDataInfo.type,
+                    name: newDataInfo.metadata.name,
+                    label: newDataInfo.metadata.label,
                 }),
             );
         },
@@ -73,11 +71,20 @@ const SelectDataset = () => {
     const handleSelectFileClick = (file: { fileId: string }) => {
         dispatch(resetFilter());
         dispatch(
-            setPathname({
-                pathname: '/viewFile',
-                currentFileId: file.fileId,
+            openDataset({
+                fileId: file.fileId,
             }),
         );
+    };
+
+    const handleDatasetClose = (fileId: string) => {
+        dispatch(
+            closeDataset({
+                fileId,
+            }),
+        );
+        apiService.close(fileId);
+        setOpenedFiles(apiService.getOpenedFiles());
     };
 
     // Add shortcuts for open new
@@ -110,6 +117,7 @@ const SelectDataset = () => {
             handleRecentFileClick={handleRecentFileClick}
             handleRecentFolderClick={handleRecentFolderClick}
             handleSelectFileClick={handleSelectFileClick}
+            handleDatasetClose={handleDatasetClose}
         />
     );
 };

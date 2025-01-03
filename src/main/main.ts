@@ -76,9 +76,8 @@ const createWindow = async () => {
         }
         if (process.env.START_MINIMIZED) {
             mainWindow.minimize();
-        } else if (process.env.NODE_ENV !== 'development') {
-            mainWindow.show();
         } else {
+            mainWindow.maximize();
             mainWindow.showInactive();
         }
     });

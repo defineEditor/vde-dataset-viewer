@@ -50,6 +50,7 @@ const shortcuts = {
         'Ctrl + /': 'Open Shortcuts',
         Escape: 'Escape/Cancel/Close',
         'Ctrl + S': 'Save Settings/Filter/etc.',
+        F11: 'Toggle Fullscreen',
     },
     Viewer: {
         'Ctrl + O': 'Open a new file',

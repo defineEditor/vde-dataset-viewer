@@ -38,5 +38,6 @@
     },
     "globals": {
          "BufferEncoding": "readonly"
-    }
+    },
+    "ignorePatterns": [".erb/**/*"]
 }

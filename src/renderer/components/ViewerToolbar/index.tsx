@@ -5,16 +5,16 @@ import ShortcutIcon from '@mui/icons-material/Shortcut';
 import InfoIcon from '@mui/icons-material/Info';
 import FilterIcon from '@mui/icons-material/FilterAlt';
 import {
-    setPathname,
+    openDataset,
     openModal,
     setPage,
     openSnackbar,
 } from 'renderer/redux/slices/ui';
-import { setData, resetFilter } from 'renderer/redux/slices/data';
+import { resetFilter } from 'renderer/redux/slices/data';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { openNewDataset } from 'renderer/utils/readData';
 import AppContext from 'renderer/utils/AppContext';
-import { modals } from 'misc/constants';
+import { modals, paths } from 'misc/constants';
 
 const styles = {
     main: {
@@ -59,17 +59,11 @@ const Header: React.FC = () => {
             return;
         }
         dispatch(
-            setData({
+            openDataset({
                 fileId: newDataInfo.fileId,
                 type: newDataInfo.type,
                 name: newDataInfo.metadata.name,
                 label: newDataInfo.metadata.label,
-            }),
-        );
-        dispatch(
-            setPathname({
-                pathname: '/viewFile',
-                currentFileId: newDataInfo.fileId,
             }),
         );
         // Reset page for the new dataset
@@ -79,11 +73,11 @@ const Header: React.FC = () => {
     }, [apiService, dispatch]);
 
     const handleGoToClick = useCallback(() => {
-        dispatch(openModal({ type: modals.GOTO, props: {} }));
+        dispatch(openModal({ type: modals.GOTO, data: {} }));
     }, [dispatch]);
 
     const handleFilterClick = useCallback(() => {
-        dispatch(openModal({ type: modals.FILTER, props: {} }));
+        dispatch(openModal({ type: modals.FILTER, data: {} }));
     }, [dispatch]);
 
     const handleFilterReset = useCallback(() => {
@@ -91,7 +85,7 @@ const Header: React.FC = () => {
     }, [dispatch]);
 
     const handleDataSetInfoClick = useCallback(() => {
-        dispatch(openModal({ type: modals.DATASETINFO, props: {} }));
+        dispatch(openModal({ type: modals.DATASETINFO, data: {} }));
     }, [dispatch]);
 
     // Add shortcuts for actions
@@ -157,7 +151,7 @@ const Header: React.FC = () => {
                     onClick={handleGoToClick}
                     id="goto"
                     size="small"
-                    disabled={pathname !== '/viewFile'}
+                    disabled={pathname !== paths.VIEWFILE}
                 >
                     <ShortcutIcon
                         sx={{
@@ -171,7 +165,7 @@ const Header: React.FC = () => {
                     onClick={handleFilterClick}
                     id="filterData"
                     size="small"
-                    disabled={pathname !== '/viewFile'}
+                    disabled={pathname !== paths.VIEWFILE}
                 >
                     <FilterIcon
                         sx={{
@@ -187,7 +181,7 @@ const Header: React.FC = () => {
                     onClick={handleDataSetInfoClick}
                     id="datasetInfo"
                     size="small"
-                    disabled={pathname !== '/viewFile'}
+                    disabled={pathname !== paths.VIEWFILE}
                 >
                     <InfoIcon
                         sx={{

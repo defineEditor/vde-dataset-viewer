@@ -1,5 +1,5 @@
 import { Filter, DatasetType } from 'interfaces/api';
-import { ICheckUpdateResult } from './main';
+import { ICheckUpdateResult } from 'interfaces/main';
 
 export interface ISettings {
     viewer: {

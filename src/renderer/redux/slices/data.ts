@@ -1,39 +1,14 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { data as initialData } from 'renderer/redux/initialState';
-import { IRecentFile, DatasetType, Filter } from 'interfaces/common';
+import { IRecentFile, Filter } from 'interfaces/common';
 import deepEqual from 'renderer/utils/deepEqual';
 import getFolderName from 'renderer/utils/getFolderName';
+import { closeDataset, openDataset } from 'renderer/redux/slices/ui';
 
 export const dataSlice = createSlice({
     name: 'data',
     initialState: initialData,
     reducers: {
-        setData: (
-            state,
-            action: PayloadAction<{
-                fileId: string;
-                type: DatasetType;
-                name: string;
-                label: string;
-            }>,
-        ) => {
-            const newState = {
-                ...state,
-                openedFileIds: {
-                    ...state.openedFileIds,
-                    [action.payload.fileId]: {
-                        name: action.payload.name,
-                        label: action.payload.label,
-                        type: action.payload.type,
-                    },
-                },
-                filterData: {
-                    ...state.filterData,
-                    currentFilter: null,
-                },
-            };
-            return newState;
-        },
         cleanData: (state, action: PayloadAction<{ fileId: string }>) => {
             const newOpenedFileIds = { ...state.openedFileIds };
             delete newOpenedFileIds[action.payload.fileId];
@@ -116,9 +91,41 @@ export const dataSlice = createSlice({
             return newState;
         },
     },
+    extraReducers: (builder) => {
+        builder.addCase(openDataset, (state, action) => {
+            if (action.payload.fileId in state.openedFileIds) {
+                return state;
+            }
+            const newState = {
+                ...state,
+                openedFileIds: {
+                    ...state.openedFileIds,
+                    [action.payload.fileId]: {
+                        name: action.payload.name || '',
+                        label: action.payload.label || '',
+                        type: action.payload.type || 'json',
+                    },
+                },
+                filterData: {
+                    ...state.filterData,
+                    currentFilter: null,
+                },
+            };
+            return newState;
+        });
+        builder.addCase(closeDataset, (state, action) => {
+            // Remove file from the opened files
+            const { fileId } = action.payload;
+            const newOpenedFileIds = { ...state.openedFileIds };
+            delete newOpenedFileIds[fileId];
+            state.openedFileIds = newOpenedFileIds;
+            // Reset any filters
+            state.filterData.currentFilter = null;
+        });
+    },
 });
 
-export const { setData, cleanData, addRecent, setFilter, resetFilter } =
+export const { cleanData, addRecent, setFilter, resetFilter } =
     dataSlice.actions;
 
 export default dataSlice.reducer;
