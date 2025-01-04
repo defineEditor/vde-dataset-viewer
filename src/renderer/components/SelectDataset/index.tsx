@@ -5,7 +5,7 @@ import {
     openDataset,
     openSnackbar,
 } from 'renderer/redux/slices/ui';
-import { addRecent, resetFilter } from 'renderer/redux/slices/data';
+import { addRecent } from 'renderer/redux/slices/data';
 import { openNewDataset } from 'renderer/utils/readData';
 import Layout from 'renderer/components/SelectDataset/Layout';
 import AppContext from 'renderer/utils/AppContext';
@@ -14,6 +14,7 @@ const SelectDataset = () => {
     const dispatch = useAppDispatch();
     const { apiService } = useContext(AppContext);
     const recentFiles = useAppSelector((state) => state.data.recentFiles);
+    const currentFileId = useAppSelector((state) => state.ui.currentFileId);
     const recentFolders = useAppSelector((state) => state.data.recentFolders);
 
     const [openedFiles, setOpenedFiles] = useState(apiService.getOpenedFiles());
@@ -50,10 +51,12 @@ const SelectDataset = () => {
                     type: newDataInfo.type,
                     name: newDataInfo.metadata.name,
                     label: newDataInfo.metadata.label,
+                    totalRecords: newDataInfo.metadata.records,
+                    currentFileId,
                 }),
             );
         },
-        [apiService, dispatch],
+        [apiService, dispatch, currentFileId],
     );
 
     const handleRecentFileClick = (file: {
@@ -69,10 +72,10 @@ const SelectDataset = () => {
     };
 
     const handleSelectFileClick = (file: { fileId: string }) => {
-        dispatch(resetFilter());
         dispatch(
             openDataset({
                 fileId: file.fileId,
+                currentFileId,
             }),
         );
     };

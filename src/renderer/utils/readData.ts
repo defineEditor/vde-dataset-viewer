@@ -1,11 +1,12 @@
 import {
     DatasetJsonMetadata,
-    IGeneralTableHeaderCell,
+    IHeaderCell,
     ITableData,
     Filter,
     IOpenFileWithMetadata,
+    ISettings,
+    ITableRow,
 } from 'interfaces/common';
-import { ItemDataArray } from 'js-stream-dataset-json';
 import ApiService from 'renderer/services/ApiService';
 
 // Get dataset records;
@@ -14,6 +15,7 @@ const getData = async (
     fileId: string,
     start: number,
     length: number,
+    settings: ISettings['viewer'],
     filterColumns?: string[],
     filterData?: Filter,
 ): Promise<ITableData | null> => {
@@ -26,13 +28,14 @@ const getData = async (
         fileId,
         start,
         length,
+        settings,
         filterColumns,
         filterData,
-    )) as ItemDataArray[];
+    )) as ITableRow[];
 
     const rawHeader = metadata.columns;
 
-    const newHeader: IGeneralTableHeaderCell[] = rawHeader.map((item) => {
+    const newHeader: IHeaderCell[] = rawHeader.map((item) => {
         return {
             id: item.name,
             label: item.label,
@@ -56,9 +59,9 @@ const openNewDataset = async (
     folderPath?: string,
 ): Promise<IOpenFileWithMetadata> => {
     const result = await apiService.openFile(mode, filePath, folderPath);
-    // There was an error reading the file or the operation was cancelled
     const { fileId, type, path, errorMessage } = result;
     if (errorMessage) {
+        // There was an error reading the file or the operation was cancelled
         return {
             fileId,
             metadata: {} as DatasetJsonMetadata,

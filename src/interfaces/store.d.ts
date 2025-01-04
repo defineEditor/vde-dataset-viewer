@@ -27,7 +27,7 @@ export interface IUiModal {
     type: string;
     data:
         | {
-              [key: string]: any;
+              [key: string]: string;
           }
         | ICheckUpdateResult;
 }
@@ -57,6 +57,7 @@ export type AllowedPathnames =
 
 export interface IUiViewer {
     datasetInfoTab: 0 | 1;
+    filterInputMode: 'manual' | 'interactive';
 }
 
 export interface IUi {
@@ -81,7 +82,11 @@ export interface IData {
             name: string;
             label: string;
             type: DatasetType;
+            totalRecords: number;
         };
+    };
+    loadedRecords: {
+        [name: string]: number;
     };
     recentFolders: string[];
     recentFiles: IRecentFile[];

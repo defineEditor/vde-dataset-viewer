@@ -10,7 +10,7 @@ const styles = {
     },
 };
 
-const FilterInput: React.FC<{
+const ManualInput: React.FC<{
     inputValue: string;
     handleSetInputValue: (_value: string) => void;
     columnNames: string[];
@@ -114,4 +114,4 @@ const FilterInput: React.FC<{
     );
 };
 
-export default FilterInput;
+export default ManualInput;

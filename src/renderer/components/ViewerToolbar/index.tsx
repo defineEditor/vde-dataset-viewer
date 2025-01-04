@@ -64,6 +64,7 @@ const Header: React.FC = () => {
                 type: newDataInfo.type,
                 name: newDataInfo.metadata.name,
                 label: newDataInfo.metadata.label,
+                totalRecords: newDataInfo.metadata.records,
             }),
         );
         // Reset page for the new dataset

@@ -19,6 +19,8 @@ export const uiSlice = createSlice({
                 type?: DatasetType;
                 name?: string;
                 label?: string;
+                currentFileId?: string;
+                totalRecords?: number;
             }>,
         ) => {
             const { fileId } = action.payload;
@@ -31,6 +33,9 @@ export const uiSlice = createSlice({
                 // Reset the control.goTo object
                 state.control = initialUi.control;
                 // Open dataset view
+                state.pathname = paths.VIEWFILE;
+            } else if (state.pathname !== paths.VIEWFILE) {
+                // Open the view page
                 state.pathname = paths.VIEWFILE;
             }
         },
@@ -102,11 +107,19 @@ export const uiSlice = createSlice({
         setDatasetInfoTab: (state, action: PayloadAction<0 | 1>) => {
             state.viewer.datasetInfoTab = action.payload;
         },
+        setFilterInputMode: (
+            state,
+            action: PayloadAction<'manual' | 'interactive'>,
+        ) => {
+            state.viewer.filterInputMode = action.payload;
+        },
     },
 });
 
 export const {
     setPathname,
+    openDataset,
+    closeDataset,
     openSnackbar,
     closeSnackbar,
     closeModal,
@@ -114,8 +127,7 @@ export const {
     setGoTo,
     setPage,
     setDatasetInfoTab,
-    openDataset,
-    closeDataset,
+    setFilterInputMode,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

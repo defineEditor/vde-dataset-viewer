@@ -13,20 +13,22 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
-import { closeModal } from 'renderer/redux/slices/ui';
-import FilterInput from 'renderer/components/Modal/Filter/FilterInput';
+import IconButton from '@mui/material/IconButton';
+import { closeModal, setFilterInputMode } from 'renderer/redux/slices/ui';
+import ManualInput from 'renderer/components/Modal/Filter/ManualInput';
 import validateFilterString from 'renderer/components/Modal/Filter/validateFilterString';
 import stringToFilter from 'renderer/components/Modal/Filter/stringToFilter';
 import filterToString from 'renderer/components/Modal/Filter/filterToString';
 import AppContext from 'renderer/utils/AppContext';
 import { setFilter, resetFilter } from 'renderer/redux/slices/data';
-import { IUiModal } from 'interfaces/common';
-import { Stack } from '@mui/material';
+import { Filter as IFilter, IUiModal } from 'interfaces/common';
+import { Stack, Switch, Typography } from '@mui/material';
+import InteractiveInput from 'renderer/components/Modal/Filter/InteractiveInput';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 const styles = {
     dialog: {
-        minWidth: '600px',
-        width: '60%',
+        minWidth: '50%',
     },
     caseInsensitive: {
         minWidth: '170px',
@@ -45,6 +47,7 @@ const Filter: React.FC<IUiModal> = (props: IUiModal) => {
     const { type } = props;
     const dispatch = useAppDispatch();
     const { apiService } = useContext(AppContext);
+
     const currentFilter = useAppSelector(
         (state) => state.data.filterData.currentFilter,
     );
@@ -52,6 +55,7 @@ const Filter: React.FC<IUiModal> = (props: IUiModal) => {
         return currentFilter ? filterToString(currentFilter) : '';
     }, [currentFilter]);
     const [inputValue, setInputValue] = useState(currentFilterString);
+    const [interactiveFilter, setInteractiveFilter] = useState(currentFilter);
 
     const lastOptions = useAppSelector(
         (state) => state.data.filterData.lastOptions,
@@ -61,12 +65,11 @@ const Filter: React.FC<IUiModal> = (props: IUiModal) => {
     );
 
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+    const data = apiService.getOpenedFileData(currentFileId);
 
     const metadata = apiService.getOpenedFileMetadata(currentFileId);
 
-    const columnNames = metadata.columns.map((column) =>
-        column.name.toLowerCase(),
-    );
+    const columnNames = metadata.columns.map((column) => column.name);
 
     const columnTypes = useMemo(() => {
         const types = {};
@@ -100,13 +103,111 @@ const Filter: React.FC<IUiModal> = (props: IUiModal) => {
         dispatch(resetFilter());
         handleClose();
     };
+
+    // Unique values used for autocomplete
+    const [uniqueValues, setUniqueValues] = useState<{
+        [key: string]: Array<string | boolean | number>;
+    }>({});
+
+    const getUniqueValues = useCallback(
+        (columns: string[]) => {
+            const newValues = {};
+            columns.forEach((column) => {
+                if (
+                    data.length > 0 &&
+                    Object.prototype.hasOwnProperty.call(data[0], column)
+                ) {
+                    const columnValues = [
+                        ...new Set(data.map((row) => row[column])),
+                    ];
+                    newValues[column] = columnValues;
+                }
+            });
+            setUniqueValues((prev) => ({
+                ...prev,
+                ...newValues,
+            }));
+        },
+        [data],
+    );
+
+    // Update unique values when filter is loaded or data is updated
+    const loadedRecords = useAppSelector(
+        (state) => state.data.loadedRecords[currentFileId],
+    );
+    const filterColumns = interactiveFilter
+        ? Object.values(interactiveFilter.conditions)
+              .map((value) => value.variable)
+              .filter((value) => value !== '')
+              .filter((value) =>
+                  metadata.columns
+                      .map((column) => column.name.toLowerCase())
+                      .includes(value.toLowerCase()),
+              )
+              .sort()
+              .join('#$%')
+        : '';
+    useEffect(() => {
+        if (filterColumns !== '' && loadedRecords > 0) {
+            const columns = filterColumns.split('#$%');
+            // Use proper column names from metadata
+            const properColumnNames = metadata.columns
+                .map((column) => column.name)
+                .filter((column) =>
+                    columns
+                        .map((value) => value.toLowerCase())
+                        .includes(column.toLowerCase()),
+                );
+            getUniqueValues(properColumnNames);
+        }
+    }, [getUniqueValues, filterColumns, loadedRecords, metadata.columns]);
+
+    const inputType = useAppSelector(
+        (state) => state.ui.viewer.filterInputMode,
+    );
+
+    const toggleInputType = () => {
+        if (inputType === 'interactive') {
+            if (interactiveFilter === null) {
+                setInputValue('');
+            } else {
+                const newString = filterToString(interactiveFilter);
+                setInputValue(newString);
+            }
+        } else {
+            const newFilter = stringToFilter(inputValue, columnTypes);
+            setInteractiveFilter(newFilter);
+        }
+        dispatch(
+            setFilterInputMode(
+                inputType === 'interactive' ? 'manual' : 'interactive',
+            ),
+        );
+    };
+
+    const handleChangeInteractive = (filter: IFilter) => {
+        setInteractiveFilter(filter);
+    };
+
     const handleSetFilter = useCallback(() => {
-        if (inputValue === '') {
+        let finalFilter: string;
+        if (inputType === 'interactive') {
+            if (interactiveFilter === null) {
+                finalFilter = '';
+            } else {
+                finalFilter = filterToString(interactiveFilter);
+            }
+        } else {
+            finalFilter = inputValue;
+        }
+        if (finalFilter === '') {
             dispatch(resetFilter());
             handleClose();
-        } else if (validateFilterString(inputValue, columnNames, columnTypes)) {
+        } else if (
+            validateFilterString(finalFilter, columnNames, columnTypes)
+        ) {
             const filter = {
-                ...stringToFilter(inputValue, columnTypes),
+                ...stringToFilter(finalFilter, columnTypes),
                 options: { caseInsensitive },
             };
             dispatch(setFilter({ filter, datasetName: dataset.name }));
@@ -120,7 +221,13 @@ const Filter: React.FC<IUiModal> = (props: IUiModal) => {
         handleClose,
         inputValue,
         caseInsensitive,
+        interactiveFilter,
+        inputType,
     ]);
+
+    const handleReloadData = () => {
+        dispatch(resetFilter());
+    };
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -138,6 +245,12 @@ const Filter: React.FC<IUiModal> = (props: IUiModal) => {
         };
     }, [handleClose, handleSetFilter]);
 
+    const isValidFilter = validateFilterString(
+        inputValue,
+        columnNames,
+        columnTypes,
+    );
+
     return (
         <Dialog
             open
@@ -146,25 +259,74 @@ const Filter: React.FC<IUiModal> = (props: IUiModal) => {
         >
             <DialogTitle sx={styles.title}>Filter Data</DialogTitle>
             <DialogContent>
-                <Stack spacing={2} direction="row">
-                    <FilterInput
-                        inputValue={inputValue}
-                        handleSetInputValue={setInputValue}
-                        columnNames={columnNames}
-                        columnTypes={columnTypes}
-                        datasetName={dataset.name}
-                    />
-                    <FormControlLabel
-                        sx={styles.caseInsensitive}
-                        control={
-                            <Checkbox
-                                checked={caseInsensitive}
-                                onChange={toggleCaseInsensitive}
-                                name="caseInsensitive"
-                            />
-                        }
-                        label="Case Insensitive"
-                    />
+                <Stack spacing={2} direction="column">
+                    <Stack spacing={2} direction="row">
+                        <FormControlLabel
+                            sx={styles.caseInsensitive}
+                            control={
+                                <Switch
+                                    checked={inputType === 'interactive'}
+                                    onChange={toggleInputType}
+                                    disabled={!isValidFilter}
+                                    name="inputType"
+                                    color="primary"
+                                />
+                            }
+                            label={`${
+                                inputType === 'interactive'
+                                    ? 'Interactive'
+                                    : 'Manual'
+                            } Input`}
+                        />
+                        <FormControlLabel
+                            sx={styles.caseInsensitive}
+                            control={
+                                <Checkbox
+                                    checked={caseInsensitive}
+                                    onChange={toggleCaseInsensitive}
+                                    name="caseInsensitive"
+                                />
+                            }
+                            label="Case Insensitive"
+                        />
+                        {currentFilter !== null &&
+                            inputType === 'interactive' && (
+                                <Stack
+                                    direction="row"
+                                    alignItems="center"
+                                    spacing={1}
+                                >
+                                    <Typography variant="caption" color="info">
+                                        Value selection is limited to filtered
+                                        data
+                                    </Typography>
+                                    <IconButton
+                                        size="small"
+                                        onClick={handleReloadData}
+                                        color="primary"
+                                    >
+                                        <RefreshIcon />
+                                    </IconButton>
+                                </Stack>
+                            )}
+                    </Stack>
+                    {inputType === 'interactive' ? (
+                        <InteractiveInput
+                            filter={interactiveFilter}
+                            onChange={handleChangeInteractive}
+                            columnNames={columnNames}
+                            columnTypes={columnTypes}
+                            uniqueValues={uniqueValues}
+                        />
+                    ) : (
+                        <ManualInput
+                            inputValue={inputValue}
+                            handleSetInputValue={setInputValue}
+                            columnNames={columnNames}
+                            columnTypes={columnTypes}
+                            datasetName={dataset.name}
+                        />
+                    )}
                 </Stack>
             </DialogContent>
             <DialogActions sx={styles.actions}>
@@ -176,6 +338,7 @@ const Filter: React.FC<IUiModal> = (props: IUiModal) => {
                 </Button>
                 <Button
                     onClick={handleSetFilter}
+                    disabled={!isValidFilter}
                     color="primary"
                     variant="contained"
                 >

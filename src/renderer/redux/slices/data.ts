@@ -90,42 +90,57 @@ export const dataSlice = createSlice({
             };
             return newState;
         },
+        setLoadedRecords: (
+            state,
+            action: PayloadAction<{ fileId: string; records: number }>,
+        ) => {
+            state.loadedRecords[action.payload.fileId] = action.payload.records;
+        },
     },
     extraReducers: (builder) => {
         builder.addCase(openDataset, (state, action) => {
-            if (action.payload.fileId in state.openedFileIds) {
+            const { fileId } = action.payload;
+            if (
+                fileId in state.openedFileIds &&
+                action.payload.currentFileId === fileId
+            ) {
                 return state;
             }
-            const newState = {
-                ...state,
-                openedFileIds: {
-                    ...state.openedFileIds,
-                    [action.payload.fileId]: {
-                        name: action.payload.name || '',
-                        label: action.payload.label || '',
-                        type: action.payload.type || 'json',
-                    },
-                },
-                filterData: {
-                    ...state.filterData,
-                    currentFilter: null,
-                },
-            };
-            return newState;
+            if (!state.openedFileIds[fileId]) {
+                state.openedFileIds[fileId] = {
+                    name: action.payload.name || '',
+                    label: action.payload.label || '',
+                    type: action.payload.type || 'json',
+                    totalRecords: action.payload.totalRecords || 0,
+                };
+            }
+            if (action.payload.currentFileId !== fileId) {
+                state.filterData.currentFilter = null;
+            }
+
+            return state;
         });
         builder.addCase(closeDataset, (state, action) => {
             // Remove file from the opened files
             const { fileId } = action.payload;
-            const newOpenedFileIds = { ...state.openedFileIds };
-            delete newOpenedFileIds[fileId];
-            state.openedFileIds = newOpenedFileIds;
+            if (state.openedFileIds[fileId]) {
+                delete state.openedFileIds[fileId];
+            }
+            if (state.loadedRecords[fileId]) {
+                delete state.loadedRecords[fileId];
+            }
             // Reset any filters
             state.filterData.currentFilter = null;
         });
     },
 });
 
-export const { cleanData, addRecent, setFilter, resetFilter } =
-    dataSlice.actions;
+export const {
+    cleanData,
+    addRecent,
+    setFilter,
+    resetFilter,
+    setLoadedRecords,
+} = dataSlice.actions;
 
 export default dataSlice.reducer;
