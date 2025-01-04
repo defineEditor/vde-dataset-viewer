@@ -49,6 +49,8 @@ const DatasetContainer: React.FC = () => {
         (state) => state.data.filterData.currentFilter,
     );
 
+    const viewerSettings = useAppSelector((state) => state.settings.viewer);
+
     // Load initial data
     useEffect(() => {
         setTable(null);
@@ -60,7 +62,13 @@ const DatasetContainer: React.FC = () => {
             setIsLoading(true);
             let newData: ITableData | null = null;
             try {
-                newData = await getData(apiService, fileId, 0, pageSize);
+                newData = await getData(
+                    apiService,
+                    fileId,
+                    0,
+                    pageSize,
+                    viewerSettings,
+                );
             } catch (error) {
                 // Remove current fileId as something is wrong with itj
                 dispatch(
@@ -105,13 +113,14 @@ const DatasetContainer: React.FC = () => {
         estimateWidthRows,
         maxColWidth,
         apiService,
+        viewerSettings,
     ]);
 
     // Pagination
     const page = useAppSelector((state) => state.ui.currentPage);
 
     const handleChangePage = useCallback(
-        (_event: any, newPage: number) => {
+        (_event, newPage: number) => {
             if (table === null || apiService === null) {
                 return;
             }
@@ -127,6 +136,7 @@ const DatasetContainer: React.FC = () => {
                     fileId,
                     start,
                     pageSize,
+                    viewerSettings,
                 );
                 if (newData !== null) {
                     setTable(newData);
@@ -137,7 +147,7 @@ const DatasetContainer: React.FC = () => {
 
             readNext((newPage as number) * pageSize);
         },
-        [fileId, pageSize, table, dispatch, apiService],
+        [fileId, pageSize, table, dispatch, apiService, viewerSettings],
     );
 
     // Filter change
@@ -161,6 +171,7 @@ const DatasetContainer: React.FC = () => {
                 fileId,
                 0,
                 pageSize,
+                viewerSettings,
                 undefined,
                 currentFilter === null ? undefined : currentFilter,
             );
@@ -183,7 +194,16 @@ const DatasetContainer: React.FC = () => {
             }
         };
         readDataset();
-    }, [dispatch, fileId, pageSize, table, currentFilter, page, apiService]);
+    }, [
+        dispatch,
+        fileId,
+        pageSize,
+        table,
+        currentFilter,
+        page,
+        apiService,
+        viewerSettings,
+    ]);
 
     // GoTo control
     const goToRow = useAppSelector((state) => state.ui.control.goTo.row);
@@ -217,6 +237,7 @@ const DatasetContainer: React.FC = () => {
                         component="div"
                         count={totalRecords}
                         page={page}
+                        disabled={currentFilter !== null}
                         onPageChange={handleChangePage}
                         rowsPerPage={pageSize}
                         rowsPerPageOptions={[-1]}

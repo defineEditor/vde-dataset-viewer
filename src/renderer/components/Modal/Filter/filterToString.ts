@@ -1,5 +1,5 @@
 import { Filter } from 'interfaces/common';
-import { operatorLabelsInverse } from 'renderer/components/Modal/Filter/constants';
+import { operatorLabels } from 'renderer/components/Modal/Filter/constants';
 
 // Convert a filter object to a string
 const filterToString = (filter: Filter): string => {
@@ -11,7 +11,13 @@ const filterToString = (filter: Filter): string => {
         let valueString = '';
 
         if (Array.isArray(value)) {
-            valueString = `(${value.join(', ')})`;
+            if (value.length === 0) {
+                valueString = '()';
+            } else if (typeof value[0] === 'string') {
+                valueString = `("${value.join('", "')}")`;
+            } else {
+                valueString = `(${value.join(', ')})`;
+            }
         } else if (typeof value === 'string') {
             valueString = `"${value}"`;
         } else {
@@ -19,13 +25,8 @@ const filterToString = (filter: Filter): string => {
         }
 
         let comparator = 'eq';
-        if (
-            Object.prototype.hasOwnProperty.call(
-                operatorLabelsInverse,
-                operator,
-            )
-        ) {
-            comparator = operatorLabelsInverse[operator];
+        if (Object.prototype.hasOwnProperty.call(operatorLabels, operator)) {
+            comparator = operatorLabels[operator];
         }
 
         filterString += `${variable} ${comparator} ${valueString}`;

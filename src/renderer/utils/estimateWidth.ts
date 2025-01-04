@@ -12,9 +12,9 @@ export default function estimateWidth(
     const dataSlice = tableData.slice(0, widthEstimateRows);
     header
         .filter((column) => !column.hidden)
-        .forEach((column, columnIndex) => {
+        .forEach((column) => {
             const { id } = column;
-            const columnData = dataSlice.map((row) => row[columnIndex]);
+            const columnData = dataSlice.map((row) => row[column.id]);
             let columnWidth = 0;
             let longestWord = 0;
             if (

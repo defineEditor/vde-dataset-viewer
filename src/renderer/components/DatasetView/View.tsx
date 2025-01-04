@@ -8,7 +8,14 @@ import {
     Paper,
     Box,
 } from '@mui/material';
-import { flexRender } from '@tanstack/react-table';
+import {
+    flexRender,
+    Table as ITable,
+    Column as IColumn,
+    Row as IRow,
+} from '@tanstack/react-table';
+import { VirtualItem, Virtualizer } from '@tanstack/react-virtual';
+import { ITableRow } from 'interfaces/common';
 import Loading from 'renderer/components/Loading';
 
 const styles = {
@@ -129,21 +136,21 @@ const styles = {
 };
 
 const DatasetViewUI: React.FC<{
-    table: any;
+    table: ITable<ITableRow>;
     tableContainerRef: React.RefObject<HTMLDivElement>;
-    visibleColumns: any[];
+    visibleColumns: IColumn<ITableRow, unknown>[];
     virtualPaddingLeft: number | undefined;
     virtualPaddingRight: number | undefined;
-    virtualColumns: any[];
-    virtualRows: any[];
-    rows: any[];
+    virtualColumns: VirtualItem[];
+    virtualRows: VirtualItem[];
+    rows: IRow<ITableRow>[];
     highlightedCells: { row: number; column: number }[];
     handleCellClick: (_rowIndex: number, _columnIndex: number) => void;
     handleMouseDown: (_rowIndex: number, _columnIndex: number) => void;
     handleMouseOver: (_rowIndex: number, _columnIndex: number) => void;
     isLoading: boolean;
     dynamicRowHeight: boolean;
-    rowVirtualizer: any;
+    rowVirtualizer: Virtualizer<HTMLDivElement, Element>;
 }> = ({
     table,
     tableContainerRef,

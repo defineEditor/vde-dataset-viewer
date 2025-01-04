@@ -35,7 +35,7 @@ declare global {
                 length: number,
                 filterColumns?: string[],
                 filterData?: Filter,
-            ) => ItemDataArray[];
+            ) => Promise<ItemDataArray[] | null>;
             saveLocalStore: (localStore: ILocalStore) => void;
             loadLocalStore: () => Promise<ILocalStore>;
             onSaveStore: (callback: () => Promise<void>) => void;

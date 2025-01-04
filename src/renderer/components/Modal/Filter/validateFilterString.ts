@@ -69,7 +69,11 @@ const validateFilterString = (
             const comparator = conditionElements[1].toLowerCase();
             const value = conditionElements[2];
 
-            if (columnNames.includes(columnName)) {
+            if (
+                columnNames
+                    .map((name) => name.toLowerCase())
+                    .includes(columnName)
+            ) {
                 // Get type of the variable
                 const type = colTypes[columnName];
                 if (type === 'number') {

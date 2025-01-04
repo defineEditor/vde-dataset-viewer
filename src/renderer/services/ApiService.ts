@@ -8,9 +8,13 @@ import {
     ILocalStore,
     IStore,
     IOpenFileWithMetadata,
+    ISettings,
+    ITableRow,
 } from 'interfaces/common';
 import DatasetJson from 'js-stream-dataset-json';
 import store from 'renderer/redux/store';
+import transformData from 'renderer/services/transformData';
+import { setLoadedRecords } from 'renderer/redux/slices/data';
 
 class ApiService {
     // List of opened files with basic information
@@ -26,6 +30,8 @@ class ApiService {
     private openedFilesMetadata: {
         [fileId: string]: DatasetJsonMetadata;
     } = {};
+
+    private openedFilesData: { [fileId: string]: ITableRow[] } = {};
 
     // Open file
     public openFile = async (
@@ -239,9 +245,10 @@ class ApiService {
         fileId: string,
         start: number,
         length: number,
+        settings: ISettings['viewer'],
         filterColumns?: string[],
         filterData?: Filter,
-    ): Promise<ItemDataArray[]> => {
+    ): Promise<ITableRow[]> => {
         const file = this.openedFiles.find(
             (fileItem) => fileItem.fileId === fileId,
         );
@@ -250,8 +257,9 @@ class ApiService {
                 'Trying to read metadata from the file which is not opened',
             );
         }
+        let result: ItemDataArray[] | null;
         if (file.mode === 'remote') {
-            return this.getObservationsRemote(
+            result = await this.getObservationsRemote(
                 fileId,
                 '',
                 Math.trunc(start / length) + 1,
@@ -259,14 +267,40 @@ class ApiService {
                 filterColumns,
                 filterData,
             );
+        } else {
+            result = await this.getObservationsLocal(
+                fileId,
+                start,
+                length,
+                filterColumns,
+                filterData,
+            );
         }
-        return this.getObservationsLocal(
-            fileId,
+
+        // Get metadata
+        const metadata = await this.getMetadata(fileId);
+
+        if (result === null) {
+            return [];
+        }
+
+        // Transform data
+        const transformedData = transformData(
+            result,
+            metadata,
+            settings,
             start,
-            length,
-            filterColumns,
-            filterData,
         );
+
+        // TODO: small datasets can be kept without resettings
+        this.openedFilesData = {};
+        this.openedFilesData[fileId] = transformedData;
+
+        store.dispatch(
+            setLoadedRecords({ fileId, records: transformedData.length }),
+        );
+
+        return this.openedFilesData[fileId];
     };
 
     private getObservationsLocal = async (
@@ -293,6 +327,7 @@ class ApiService {
         pageSize: number,
         _filterColumns?: string[],
         _filterData?: Filter,
+        _fsilterData?: Filter,
     ) => {
         let result;
         try {
@@ -323,6 +358,9 @@ class ApiService {
         }
         if (this.openedFilesMetadata[fileId] !== undefined) {
             delete this.openedFilesMetadata[fileId];
+        }
+        if (this.openedFilesData[fileId] !== undefined) {
+            delete this.openedFilesData[fileId];
         }
         const fileIndex = this.openedFiles.findIndex(
             (openFile) => openFile.fileId === fileId,
@@ -381,7 +419,21 @@ class ApiService {
     };
 
     public getOpenedFileMetadata = (fileId: string): DatasetJsonMetadata => {
+        if (this.openedFilesMetadata[fileId] === undefined) {
+            throw new Error(
+                'Trying to read metadata from the file which is not opened',
+            );
+        }
         return this.openedFilesMetadata[fileId];
+    };
+
+    public getOpenedFileData = (fileId: string): ITableRow[] => {
+        if (this.openedFilesData[fileId] === undefined) {
+            throw new Error(
+                'Trying to read data from the file which is not opened',
+            );
+        }
+        return this.openedFilesData[fileId];
     };
 
     // Load local store

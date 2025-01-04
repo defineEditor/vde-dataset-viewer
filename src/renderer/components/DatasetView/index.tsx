@@ -20,33 +20,6 @@ interface ITableRow {
     [key: string]: string | number | boolean | null;
 }
 
-const formatDateToDDMONYYYY = (date: Date, addTime?: boolean): string => {
-    const day = date.getUTCDate().toString().padStart(2, '0');
-    const monthNames = [
-        'JAN',
-        'FEB',
-        'MAR',
-        'APR',
-        'MAY',
-        'JUN',
-        'JUL',
-        'AUG',
-        'SEP',
-        'OCT',
-        'NOV',
-        'DEC',
-    ];
-    const month = monthNames[date.getUTCMonth()];
-    const year = date.getUTCFullYear().toString();
-    if (addTime) {
-        const hours = date.getUTCHours().toString().padStart(2, '0');
-        const minutes = date.getUTCMinutes().toString().padStart(2, '0');
-        const seconds = date.getUTCSeconds().toString().padStart(2, '0');
-        return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
-    }
-    return `${day}${month}${year}`;
-};
-
 const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
     tableData,
     isLoading,
@@ -78,80 +51,7 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
     }, [tableData.header]);
 
     // Inital rows;
-    const data = useMemo(() => {
-        // If the data is rounded, round the numbers
-        const colsToRound: number[] = [];
-        if (settings.roundNumbers) {
-            tableData.metadata.columns.forEach((column, index) => {
-                if (['float', 'double', 'decimal'].includes(column.dataType)) {
-                    colsToRound.push(index);
-                }
-            });
-        }
-        const dateColsToFormat: number[] = [];
-        if (settings.dateFormat !== 'ISO8601') {
-            tableData.metadata.columns.forEach((column, index) => {
-                if (
-                    column.dataType === 'date' &&
-                    ['integer', 'decimal'].includes(column.targetDataType || '')
-                ) {
-                    dateColsToFormat.push(index);
-                }
-            });
-        }
-        const datetimeColsToFormat: number[] = [];
-        if (settings.dateFormat !== 'ISO8601') {
-            tableData.metadata.columns.forEach((column, index) => {
-                if (
-                    column.dataType === 'datetime' &&
-                    ['integer', 'decimal'].includes(column.targetDataType || '')
-                ) {
-                    datetimeColsToFormat.push(index);
-                }
-            });
-        }
-        return tableData.data.map((row, index) => {
-            const newRow: ITableRow = {};
-            row.forEach((cell, cellIndex) => {
-                if (
-                    settings.roundNumbers &&
-                    cell != null &&
-                    colsToRound.includes(cellIndex)
-                ) {
-                    newRow[tableData.header[cellIndex].id] = parseFloat(
-                        Number(cell).toFixed(settings.maxPrecision),
-                    );
-                } else if (
-                    settings.dateFormat !== 'ISO8601' &&
-                    cell != null &&
-                    dateColsToFormat.includes(cellIndex)
-                ) {
-                    newRow[tableData.header[cellIndex].id] =
-                        formatDateToDDMONYYYY(new Date(cell as string));
-                } else if (
-                    settings.dateFormat !== 'ISO8601' &&
-                    cell != null &&
-                    datetimeColsToFormat.includes(cellIndex)
-                ) {
-                    newRow[tableData.header[cellIndex].id] =
-                        formatDateToDDMONYYYY(new Date(cell as string), true);
-                } else {
-                    newRow[tableData.header[cellIndex].id] = cell;
-                }
-            });
-            // Add row number
-            newRow['#'] = index + 1 + currentPage * settings.pageSize;
-            return newRow;
-        });
-    }, [
-        tableData,
-        currentPage,
-        settings.pageSize,
-        settings.roundNumbers,
-        settings.maxPrecision,
-        settings.dateFormat,
-    ]);
-
+    const { data } = tableData;
     const table = useReactTable({
         data: isLoading ? [] : data,
         columns,

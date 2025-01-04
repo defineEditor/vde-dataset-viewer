@@ -1,7 +1,7 @@
 import filterRegex from 'renderer/components/Modal/Filter/filterRegex';
 import makeRegexStrict from 'renderer/components/Modal/Filter/makeRegexStrict';
 import { FilterCondition, Filter, Connector } from 'interfaces/common';
-import { operatorLabels } from 'renderer/components/Modal/Filter/constants';
+import { operatorLabelsInverse } from 'renderer/components/Modal/Filter/constants';
 
 // Conver filter string to filter object
 const stringToFilter = (
@@ -74,9 +74,12 @@ const stringToFilter = (
             let operator: FilterCondition['operator'] = 'eq';
 
             if (
-                Object.prototype.hasOwnProperty.call(operatorLabels, comparator)
+                Object.prototype.hasOwnProperty.call(
+                    operatorLabelsInverse,
+                    comparator,
+                )
             ) {
-                operator = operatorLabels[comparator];
+                operator = operatorLabelsInverse[comparator];
             }
 
             let isMultipleValue = false;

@@ -27,6 +27,7 @@ export const ui: IUi = {
     currentPage: 0,
     viewer: {
         datasetInfoTab: 0,
+        filterInputMode: 'manual',
     },
     modals: [],
     snackbar: {
@@ -44,6 +45,7 @@ export const ui: IUi = {
 
 export const data: IData = {
     openedFileIds: {},
+    loadedRecords: {},
     recentFolders: [],
     recentFiles: [],
     filterData: {
