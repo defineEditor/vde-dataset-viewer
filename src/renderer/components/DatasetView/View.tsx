@@ -220,21 +220,22 @@ const DatasetViewUI: React.FC<{
                                             width: header.getSize(),
                                             cursor: 'pointer',
                                         }}
-                                        onClick={() => {
-                                            const isSorted = sorting.find(
-                                                (sort) => sort.id === header.id,
-                                            );
-                                            onSortingChange([
-                                                {
-                                                    id: header.id,
-                                                    desc: isSorted
-                                                        ? !isSorted.desc
-                                                        : false,
-                                                },
-                                            ]);
-                                        }}
                                     >
                                         <TableSortLabel
+                                            onClick={() => {
+                                                const isSorted = sorting.find(
+                                                    (sort) =>
+                                                        sort.id === header.id,
+                                                );
+                                                onSortingChange([
+                                                    {
+                                                        id: header.id,
+                                                        desc: isSorted
+                                                            ? !isSorted.desc
+                                                            : false,
+                                                    },
+                                                ]);
+                                            }}
                                             active={
                                                 !!sorting.find(
                                                     (sort) =>
