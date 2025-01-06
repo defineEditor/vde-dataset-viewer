@@ -9,6 +9,21 @@ Supported Formats:
 
 API Specification: [DataExchange-DatasetJson-API](https://github.com/cdisc-org/DataExchange-DatasetJson-API)
 
+## Features
+* API access
+* Filtering with value autocomplete
+* Sorting
+* Row and column navigation
+* Cell selection
+
+## Viewing Customization Settings
+* Numeric date format
+* Number rounding
+* Dynamic cell height
+* Automatic width estimation
+* Encoding control
+* Automatic updates
+
 ## Development
 To install the VDE Dataset Viewer, follow these steps:
 1. Clone the repository: `git clone https://github.com/defineEditor/vde-dataset-viewer.git`
