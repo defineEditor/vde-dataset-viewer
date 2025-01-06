@@ -10,11 +10,13 @@ Supported Formats:
 API Specification: [DataExchange-DatasetJson-API](https://github.com/cdisc-org/DataExchange-DatasetJson-API)
 
 ## Features
-* API access
+* Reading large size datasets
 * Filtering with value autocomplete
 * Sorting
 * Row and column navigation
+* Metadata info
 * Cell selection
+* API access
 
 ## Viewing Customization Settings
 * Numeric date format
