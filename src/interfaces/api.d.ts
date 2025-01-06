@@ -22,3 +22,41 @@ export interface IOpenFile {
 export interface IOpenFileWithMetadata extends IOpenFile {
     metadata: DatasetJsonMetadata;
 }
+
+export interface IApiStudyDataset {
+    itemGroupOID: string;
+    name: string;
+    label: string;
+    standard: string;
+    records: number;
+    href: string;
+    datasetJSONCreationDateTime: string;
+    filename: string;
+}
+
+export interface IApiStudy {
+    studyOID: string;
+    name: string;
+    label: string;
+    standards: string[];
+    href: string;
+    path: string;
+    studyCreationDateTime: string;
+    datasets?: IApiStudyDataset[];
+}
+
+export interface IApiAbout {
+    lastUpdated: string;
+    author: string;
+    repo: string;
+    links: {
+        name: string;
+        href: string;
+    }[];
+}
+
+export interface IFetchResponse {
+    status: number;
+    response: Record<string, unknown>;
+    errorMessage: string | null;
+}

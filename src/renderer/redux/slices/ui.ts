@@ -5,6 +5,8 @@ import {
     IUiModal,
     AllowedPathnames,
     DatasetType,
+    ModalType,
+    DatasetMode,
 } from 'interfaces/common';
 import { paths } from 'misc/constants';
 
@@ -19,6 +21,7 @@ export const uiSlice = createSlice({
                 type?: DatasetType;
                 name?: string;
                 label?: string;
+                mode?: DatasetMode;
                 currentFileId?: string;
                 totalRecords?: number;
             }>,
@@ -75,8 +78,7 @@ export const uiSlice = createSlice({
             state.snackbar = { type: null, message: null, props: {} };
         },
         openModal: (state, action: PayloadAction<IUiModal>) => {
-            const { type, data } = action.payload;
-            state.modals.push({ type, data });
+            state.modals.push(action.payload);
         },
         setGoTo: (
             state,
@@ -93,7 +95,7 @@ export const uiSlice = createSlice({
                 state.control.goTo.column = column;
             }
         },
-        closeModal: (state, action: PayloadAction<{ type: string }>) => {
+        closeModal: (state, action: PayloadAction<{ type: ModalType }>) => {
             const { type } = action.payload;
             // Find the last opened modal of the given type and remove it
             const index = state.modals.map((m) => m.type).lastIndexOf(type);

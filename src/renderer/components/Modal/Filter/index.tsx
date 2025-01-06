@@ -304,6 +304,7 @@ const Filter: React.FC<IUiModal> = (props: IUiModal) => {
                                         size="small"
                                         onClick={handleReloadData}
                                         color="primary"
+                                        aria-label="refresh-data"
                                     >
                                         <RefreshIcon />
                                     </IconButton>

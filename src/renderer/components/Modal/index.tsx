@@ -4,12 +4,16 @@ import GoTo from 'renderer/components/Modal/GoTo';
 import DatasetInfo from 'renderer/components/Modal/DatasetInfo';
 import Filter from 'renderer/components/Modal/Filter';
 import AppUpdate from 'renderer/components/Modal/AppUpdate';
+import EditApi from 'renderer/components/Modal/EditApi';
+import { modals as modalNames } from 'misc/constants';
+import { IUiModal } from 'interfaces/store';
 
 const MODAL_COMPONENTS = {
-    GOTO: GoTo,
-    DATASETINFO: DatasetInfo,
-    FILTER: Filter,
-    APPUPDATE: AppUpdate,
+    [modalNames.GOTO]: GoTo,
+    [modalNames.DATASETINFO]: DatasetInfo,
+    [modalNames.FILTER]: Filter,
+    [modalNames.APPUPDATE]: AppUpdate,
+    [modalNames.EDITAPI]: EditApi,
 };
 
 const ModalRoot: React.FC = () => {
@@ -20,7 +24,7 @@ const ModalRoot: React.FC = () => {
 
     const result: React.JSX.Element[] = [];
     modals.forEach((modal) => {
-        const Modal = MODAL_COMPONENTS[modal.type];
+        const Modal = MODAL_COMPONENTS[modal.type] as React.FC<IUiModal>;
         result.push(<Modal key={modal.type} {...modal} />);
     });
     return result;

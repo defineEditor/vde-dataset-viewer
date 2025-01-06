@@ -1,5 +1,7 @@
-import initialState, { data, ui } from 'renderer/redux/initialState';
+import initialState, { data, ui, api } from 'renderer/redux/initialState';
 import { IStore } from 'interfaces/common';
+import store from 'renderer/redux/store';
+import ApiService from 'renderer/services/ApiService';
 
 // In case new state slices are added, the previous state will be merged with the new version to add all required attributes
 const mergeDefaults = (
@@ -47,6 +49,17 @@ export const dehydrateState = (state: IStore): IStore => {
     // Remove filter if it was applied
     newData.filterData = { ...newData.filterData, currentFilter: null };
     const newUi = { ...ui };
+    // Remove all but API records
+    const newApi = { ...api, apiRecords: state.api.apiRecords };
 
-    return { ...state, ui: newUi, data: newData };
+    return { ...state, ui: newUi, data: newData, api: newApi };
+};
+
+export const saveStore = async (apiService: ApiService) => {
+    const state = dehydrateState(store.getState());
+    if (state) {
+        await apiService.saveLocalStore({
+            reduxStore: state,
+        });
+    }
 };

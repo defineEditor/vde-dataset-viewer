@@ -25,21 +25,30 @@ const styles = {
     },
 };
 
+const updateWidth = (
+    data: ITableData,
+    estimateWidthRows: number,
+    maxColWidth: number,
+) => {
+    const widths = estimateWidth(data, estimateWidthRows, maxColWidth);
+    // Update column style with default width
+    return data.header.map((col) => {
+        // 9px per character + 18px padding
+        return {
+            ...col,
+            size: widths[col.id] * 9 + 18,
+        };
+    });
+};
+
 const DatasetContainer: React.FC = () => {
     const dispatch = useAppDispatch();
-    const fileId = useAppSelector((state) => state.ui.currentFileId);
-    const { apiService } = useContext(AppContext);
 
-    const estimateWidthRows = useAppSelector(
-        (state) => state.settings.viewer.estimateWidthRows,
-    );
-    const maxColWidth = useAppSelector(
-        (state) => state.settings.viewer.maxColWidth,
-    );
-    const name = useAppSelector(
-        (state) => state.data.openedFileIds[fileId]?.name,
-    );
+    const fileId = useAppSelector((state) => state.ui.currentFileId);
     const pageSize = useAppSelector((state) => state.settings.viewer.pageSize);
+    const viewerSettings = useAppSelector((state) => state.settings.viewer);
+
+    const { apiService } = useContext(AppContext);
 
     const [isLoading, setIsLoading] = useState(true);
     const [table, setTable] = useState<ITableData | null>(null);
@@ -48,8 +57,6 @@ const DatasetContainer: React.FC = () => {
     const currentFilter = useAppSelector(
         (state) => state.data.filterData.currentFilter,
     );
-
-    const viewerSettings = useAppSelector((state) => state.settings.viewer);
 
     // Load initial data
     useEffect(() => {
@@ -85,19 +92,11 @@ const DatasetContainer: React.FC = () => {
             }
             // Get width estimation for columns
             if (newData !== null) {
-                const widths = estimateWidth(
+                newData.header = updateWidth(
                     newData,
-                    estimateWidthRows,
-                    maxColWidth,
+                    viewerSettings.estimateWidthRows,
+                    viewerSettings.maxColWidth,
                 );
-                // Update column style with default width
-                const header = newData.header.map((col) => {
-                    return {
-                        ...col,
-                        size: widths[col.id] * 9 + 18,
-                    };
-                });
-                newData.header = header;
                 setTotalRecords(newData.metadata.records);
                 setTable(newData);
                 setIsLoading(false);
@@ -105,16 +104,7 @@ const DatasetContainer: React.FC = () => {
         };
 
         readDataset();
-    }, [
-        name,
-        dispatch,
-        fileId,
-        pageSize,
-        estimateWidthRows,
-        maxColWidth,
-        apiService,
-        viewerSettings,
-    ]);
+    }, [dispatch, fileId, pageSize, apiService, viewerSettings]);
 
     // Pagination
     const page = useAppSelector((state) => state.ui.currentPage);
@@ -139,6 +129,11 @@ const DatasetContainer: React.FC = () => {
                     viewerSettings,
                 );
                 if (newData !== null) {
+                    newData.header = updateWidth(
+                        newData,
+                        viewerSettings.estimateWidthRows,
+                        viewerSettings.maxColWidth,
+                    );
                     setTable(newData);
                     dispatch(setPage(newPage));
                     setIsLoading(false);
@@ -176,6 +171,11 @@ const DatasetContainer: React.FC = () => {
                 currentFilter === null ? undefined : currentFilter,
             );
             if (newData !== null) {
+                newData.header = updateWidth(
+                    newData,
+                    viewerSettings.estimateWidthRows,
+                    viewerSettings.maxColWidth,
+                );
                 if (currentFilter !== null && newData.data.length < pageSize) {
                     setTotalRecords(newData.data.length);
                 } else {

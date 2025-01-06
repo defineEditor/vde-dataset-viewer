@@ -17,7 +17,9 @@ const SelectDataset = () => {
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
     const recentFolders = useAppSelector((state) => state.data.recentFolders);
 
-    const [openedFiles, setOpenedFiles] = useState(apiService.getOpenedFiles());
+    const [openedFiles, setOpenedFiles] = useState(
+        apiService.getOpenedFiles().filter((file) => file.mode === 'local'),
+    );
 
     const handleOpenLocal = useCallback(
         async (filePath?: string, folderPath?: string) => {
@@ -51,6 +53,7 @@ const SelectDataset = () => {
                     type: newDataInfo.type,
                     name: newDataInfo.metadata.name,
                     label: newDataInfo.metadata.label,
+                    mode: 'local',
                     totalRecords: newDataInfo.metadata.records,
                     currentFileId,
                 }),
@@ -87,7 +90,9 @@ const SelectDataset = () => {
             }),
         );
         apiService.close(fileId);
-        setOpenedFiles(apiService.getOpenedFiles());
+        setOpenedFiles(
+            apiService.getOpenedFiles().filter((file) => file.mode === 'local'),
+        );
     };
 
     // Add shortcuts for open new

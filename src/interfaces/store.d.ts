@@ -1,5 +1,11 @@
-import { Filter, DatasetType } from 'interfaces/api';
+import {
+    Filter,
+    DatasetType,
+    IApiStudy,
+    IApiStudyDataset,
+} from 'interfaces/api';
 import { ICheckUpdateResult } from 'interfaces/main';
+import { modals, ModalType, AllowedPathnames } from 'misc/constants';
 
 export interface ISettings {
     viewer: {
@@ -23,14 +29,28 @@ export interface ISettings {
     };
 }
 
-export interface IUiModal {
-    type: string;
-    data:
-        | {
-              [key: string]: string;
-          }
-        | ICheckUpdateResult;
+export interface IUiModalBase {
+    type: ModalType;
 }
+
+export interface IUiModalAppUpdate extends IUiModalBase {
+    type: typeof modals.APPUPDATE;
+    data: ICheckUpdateResult;
+}
+
+export interface IUiModalGeneral extends IUiModalBase {
+    type: typeof modals.GOTO | typeof modals.DATASETINFO | typeof modals.FILTER;
+    data: {};
+}
+
+export interface IUiModalEditApi extends IUiModalBase {
+    type: typeof modals.EDITAPI;
+    data: {
+        apiId: string;
+    };
+}
+
+export type IUiModal = IUiModalAppUpdate | IUiModalGeneral | IUiModalEditApi;
 
 export interface IUiSnackbar {
     type: 'success' | 'error' | 'info' | 'warning' | null;
@@ -46,14 +66,6 @@ export interface IUiControl {
         column: string | null;
     };
 }
-
-export type AllowedPathnames =
-    | '/select'
-    | '/viewFile'
-    | '/api'
-    | '/settings'
-    | '/about'
-    | '/converter';
 
 export interface IUiViewer {
     datasetInfoTab: 0 | 1;
@@ -76,12 +88,15 @@ export interface IRecentFile {
     path: string;
 }
 
+export type DatasetMode = 'local' | 'remote';
+
 export interface IData {
     openedFileIds: {
         [name: string]: {
             name: string;
             label: string;
             type: DatasetType;
+            mode: DatasetMode;
             totalRecords: number;
         };
     };
@@ -98,8 +113,26 @@ export interface IData {
     };
 }
 
+export interface IApiRecord {
+    id: string;
+    address: string;
+    key: string;
+    name: string;
+    lastAccessDate: number;
+}
+
+export interface IApi {
+    apiRecords: { [key: string]: IApiRecord };
+    currentApiId: string | null;
+    currentStudyId: string | null;
+    currentDatasetId: string | null;
+    studies: { [key: string]: IApiStudy };
+    datasets: { [key: string]: IApiStudyDataset };
+}
+
 export interface IStore {
     ui: IUi;
     data: IData;
+    api: IApi;
     settings: ISettings;
 }
