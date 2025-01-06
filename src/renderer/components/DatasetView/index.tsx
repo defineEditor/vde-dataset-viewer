@@ -14,6 +14,8 @@ import {
     ColumnDef,
     getCoreRowModel,
     useReactTable,
+    getSortedRowModel,
+    SortingState as ISortingState,
 } from '@tanstack/react-table';
 
 interface ITableRow {
@@ -30,6 +32,7 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
     const dispatch = useAppDispatch();
     const settings = useAppSelector((state) => state.settings.viewer);
     const currentPage = useAppSelector((state) => state.ui.currentPage);
+    const [sorting, setSorting] = useState<ISortingState>([]);
 
     const columns = useMemo<ColumnDef<ITableRow>[]>(() => {
         const result = tableData.header.map((column) => {
@@ -56,6 +59,7 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
         data: isLoading ? [] : data,
         columns,
         getCoreRowModel: getCoreRowModel(),
+        getSortedRowModel: getSortedRowModel(),
         debugTable: true,
         columnResizeMode: 'onEnd',
         initialState: {
@@ -63,14 +67,18 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
                 left: ['#'],
             },
         },
+        state: {
+            sorting,
+        },
+        onSortingChange: setSorting,
     });
 
     const rows = useMemo(() => {
-        if (isLoading === false && data.length > 0) {
+        if (isLoading === false && data.length > 0 && sorting !== undefined) {
             return table.getRowModel().rows;
         }
         return [];
-    }, [table, data, isLoading]);
+    }, [table, data, isLoading, sorting]);
 
     const visibleColumns = table.getVisibleLeafColumns();
 
@@ -348,6 +356,8 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
             isLoading={isLoading}
             dynamicRowHeight={settings.dynamicRowHeight}
             rowVirtualizer={rowVirtualizer}
+            sorting={sorting}
+            onSortingChange={setSorting}
         />
     );
 };

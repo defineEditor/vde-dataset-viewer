@@ -18,7 +18,7 @@ export default function estimateWidth(
             let columnWidth = 0;
             let longestWord = 0;
             if (
-                !['integer', 'float', 'boolean', 'double'].includes(
+                !['integer', 'float', 'boolean', 'double', 'decimal'].includes(
                     column.type || '',
                 )
             ) {
@@ -45,7 +45,9 @@ export default function estimateWidth(
                     }),
                 );
             } else if (
-                ['integer', 'float', 'double'].includes(column.type || '')
+                ['integer', 'float', 'double', 'decimal'].includes(
+                    column.type || '',
+                )
             ) {
                 // Number
                 columnWidth = 8;
@@ -55,8 +57,11 @@ export default function estimateWidth(
                 columnWidth = 4;
                 longestWord = 4;
             }
+            // Id.length - label length + 2 characters for sorting icon
             result[id] = Math.min(
-                Math.round(Math.max(columnWidth, longestWord, id.length * 1.3)),
+                Math.round(
+                    Math.max(columnWidth, longestWord, id.length * 1.3 + 2),
+                ),
                 maxColWidth,
             );
         });
