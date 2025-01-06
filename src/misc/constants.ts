@@ -1,17 +1,19 @@
-import { AllowedPathnames } from 'interfaces/store';
-
 export const modals = {
     GOTO: 'GOTO',
     DATASETINFO: 'DATASETINFO',
     FILTER: 'FILTER',
     APPUPDATE: 'APPUPDATE',
-};
+    EDITAPI: 'EDITAPI',
+} as const;
 
-export const paths: { [name: string]: AllowedPathnames } = {
+export const paths = {
     SELECT: '/select',
     VIEWFILE: '/viewFile',
     API: '/api',
     SETTINGS: '/settings',
     ABOUT: '/about',
     CONVERTER: '/converter',
-};
+} as const;
+
+export type ModalType = (typeof modals)[keyof typeof modals];
+export type AllowedPathnames = (typeof paths)[keyof typeof paths];

@@ -10,6 +10,7 @@ import {
 } from 'electron-devtools-installer';
 import { checkForUpdates, downloadUpdate } from 'main/appUpdate';
 import FileManager from 'main/fileManager';
+import NetManager from 'main/netManager';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -103,10 +104,6 @@ const createWindow = async () => {
         shell.openExternal(edata.url);
         return { action: 'deny' };
     });
-
-    // Remove this if your app does not use auto updates
-    // eslint-disable-next-line
-    // new AppUpdater();
 };
 
 /**
@@ -125,7 +122,9 @@ app.whenReady()
     .then(() => {
         const fileManager = new FileManager();
         const storeManager = new StoreManager();
+        const netManager = new NetManager();
         ipcMain.handle('main:openFile', fileManager.handleFileOpen);
+        ipcMain.handle('main:fetch', netManager.fetch);
         ipcMain.handle('main:closeFile', fileManager.handleFileClose);
         ipcMain.handle('main:writeToClipboard', writeToClipboard);
         ipcMain.handle('main:checkForUpdates', checkForUpdates);

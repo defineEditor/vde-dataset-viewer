@@ -1,11 +1,12 @@
 import validateFilterString from 'renderer/components/Modal/Filter/validateFilterString';
 
 describe('validateFilterString', () => {
-    const columnNames = ['name', 'age', 'isActive'];
+    const columnNames = ['name', 'age', 'isActive', 'RACe'];
     const colTypes: Record<string, 'string' | 'number' | 'boolean'> = {
         name: 'string',
         age: 'number',
         isActive: 'boolean',
+        RACe: 'string',
     };
 
     it('should return true for a valid filter string', () => {
@@ -33,6 +34,13 @@ describe('validateFilterString', () => {
         const filterString = 'unknown = "value"';
         expect(validateFilterString(filterString, columnNames, colTypes)).toBe(
             false,
+        );
+    });
+
+    it('should return true for a valid filter string with IN clause', () => {
+        const filterString = 'RACE in ("WHITE", "BLACKOR AFRICAN AMERICAN")';
+        expect(validateFilterString(filterString, columnNames, colTypes)).toBe(
+            true,
         );
     });
 });

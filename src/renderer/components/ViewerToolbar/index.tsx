@@ -37,6 +37,14 @@ const Header: React.FC = () => {
         (state) => state.data.filterData.currentFilter !== null,
     );
 
+    const currentFileMode = useAppSelector((state) => {
+        const { currentFileId } = state.ui;
+        if (state.data.openedFileIds[currentFileId]) {
+            return state.data.openedFileIds[currentFileId].mode;
+        }
+        return '';
+    });
+
     const dsName = useAppSelector((state) => {
         const { currentFileId } = state.ui;
         if (state.data.openedFileIds[currentFileId]) {
@@ -64,6 +72,7 @@ const Header: React.FC = () => {
                 type: newDataInfo.type,
                 name: newDataInfo.metadata.name,
                 label: newDataInfo.metadata.label,
+                mode: 'local',
                 totalRecords: newDataInfo.metadata.records,
             }),
         );
@@ -139,10 +148,18 @@ const Header: React.FC = () => {
                 {dsName}
             </Typography>
             <Tooltip title="Open New Dataset" enterDelay={1000}>
-                <IconButton onClick={handleOpenClick} id="open" size="small">
+                <IconButton
+                    onClick={handleOpenClick}
+                    id="open"
+                    size="small"
+                    disabled={currentFileMode === 'remote'}
+                >
                     <FileOpenOutlinedIcon
                         sx={{
-                            color: 'primary.main',
+                            color:
+                                currentFileMode === 'remote'
+                                    ? 'grey.500'
+                                    : 'primary.main',
                         }}
                     />
                 </IconButton>
@@ -166,14 +183,21 @@ const Header: React.FC = () => {
                     onClick={handleFilterClick}
                     id="filterData"
                     size="small"
-                    disabled={pathname !== paths.VIEWFILE}
+                    disabled={
+                        pathname !== paths.VIEWFILE ||
+                        currentFileMode === 'remote'
+                    }
                 >
                     <FilterIcon
-                        sx={{
-                            color: isFilterEnabled
-                                ? 'success.main'
-                                : 'primary.main',
-                        }}
+                        sx={
+                            currentFileMode === 'remote'
+                                ? { color: 'grey.500' }
+                                : {
+                                      color: isFilterEnabled
+                                          ? 'success.main'
+                                          : 'primary.main',
+                                  }
+                        }
                     />
                 </IconButton>
             </Tooltip>

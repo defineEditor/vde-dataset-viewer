@@ -7,6 +7,7 @@ import {
     Filter,
     ILocalStore,
     ICheckUpdateResult,
+    IFetchResponse,
 } from 'interfaces/common';
 
 declare global {
@@ -28,7 +29,9 @@ declare global {
                 fileId: string,
                 mode: 'local' | 'remote',
             ) => Promise<boolean>;
-            getMetadata: (fileId: string) => Promise<DatasetJsonMetadata>;
+            getMetadata: (
+                fileId: string,
+            ) => Promise<DatasetJsonMetadata | null>;
             getData: (
                 fileId: string,
                 start: number,
@@ -36,6 +39,10 @@ declare global {
                 filterColumns?: string[],
                 filterData?: Filter,
             ) => Promise<ItemDataArray[] | null>;
+            fetch: (
+                input: RequestInfo | URL,
+                init?: RequestInit,
+            ) => Promise<IFetchResponse>;
             saveLocalStore: (localStore: ILocalStore) => void;
             loadLocalStore: () => Promise<ILocalStore>;
             onSaveStore: (callback: () => Promise<void>) => void;

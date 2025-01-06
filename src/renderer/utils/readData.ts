@@ -20,7 +20,7 @@ const getData = async (
     filterData?: Filter,
 ): Promise<ITableData | null> => {
     const metadata = await apiService.getMetadata(fileId);
-    if (Object.keys(metadata).length === 0) {
+    if (metadata === null || Object.keys(metadata).length === 0) {
         return null;
     }
 

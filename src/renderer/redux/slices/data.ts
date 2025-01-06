@@ -111,6 +111,7 @@ export const dataSlice = createSlice({
                     name: action.payload.name || '',
                     label: action.payload.label || '',
                     type: action.payload.type || 'json',
+                    mode: action.payload.mode || 'local',
                     totalRecords: action.payload.totalRecords || 0,
                 };
             }

@@ -9,6 +9,8 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import KeyboardIcon from '@mui/icons-material/Keyboard';
 import { DashboardLayout } from '@toolpad/core/DashboardLayout';
 import SelectDataset from 'renderer/components/SelectDataset';
+import Api from 'renderer/components/Api';
+import AppContext from 'renderer/utils/AppContext';
 import ViewFile from 'renderer/components/ViewFile';
 import Settings from 'renderer/components/Settings';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
@@ -16,7 +18,10 @@ import { setPathname } from 'renderer/redux/slices/ui';
 import { AllowedPathnames } from 'interfaces/common';
 import ViewerToolbar from 'renderer/components/ViewerToolbar';
 import Shortcuts from 'renderer/components/Shortcuts';
+import Converter from 'renderer/components/Converter';
+import About from 'renderer/components/About';
 import { paths } from 'misc/constants';
+import { saveStore } from 'renderer/redux/stateUtils';
 
 const styles = {
     main: {
@@ -87,12 +92,13 @@ const NAVIGATION: Navigation = [
 ];
 
 const Logo: React.FC = () => {
-    return <Avatar sx={styles.logo}>{'{ : }'}</Avatar>;
+    return <Avatar sx={styles.logo}>{'{ ; }'}</Avatar>;
 };
 
 const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
     const title = 'VDE Dataset Viewer';
     const dispatch = useAppDispatch();
+    const { apiService } = React.useContext(AppContext);
     const pathname = useAppSelector((state) => state.ui.pathname);
 
     const [shortcutsOpen, setShortcutsOpen] = React.useState(false);
@@ -106,12 +112,15 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
             pathname,
             searchParams: new URLSearchParams(),
             navigate: (path: string | URL) => {
-                if (path === '/shortcuts') {
+                // Remove basePath from the path
+                const updatedPath = String(path).replace(/^.*(\/\w+)$/, '$1');
+
+                if (updatedPath === '/shortcuts') {
                     setShortcutsOpen(true);
                 } else {
                     dispatch(
                         setPathname({
-                            pathname: String(path) as AllowedPathnames,
+                            pathname: updatedPath as AllowedPathnames,
                         }),
                     );
                 }
@@ -158,6 +167,10 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                             }),
                         );
                         break;
+                    case 'F12':
+                        saveStore(apiService);
+                        break;
+
                     case '/':
                         event.preventDefault();
                         setShortcutsOpen(true);
@@ -173,7 +186,7 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
         return () => {
             window.removeEventListener('keydown', handleMainKeyDown);
         };
-    }, [dispatch]);
+    }, [dispatch, apiService]);
 
     return (
         <AppProvider
@@ -198,6 +211,9 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                         <ViewFile />
                     )}
                     {pathname === paths.SETTINGS && <Settings />}
+                    {pathname === paths.API && <Api />}
+                    {pathname === paths.CONVERTER && <Converter />}
+                    {pathname === paths.ABOUT && <About />}
                 </Stack>
                 <Shortcuts
                     open={shortcutsOpen}

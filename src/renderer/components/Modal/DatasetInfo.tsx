@@ -301,10 +301,7 @@ const DatasetInfo: React.FC<IUiModal> = (props: IUiModal) => {
         dispatch(closeModal({ type }));
     }, [dispatch, type]);
 
-    const handleTabChange = (
-        _event: React.SyntheticEvent,
-        newValue: number,
-    ) => {
+    const handleTabChange = (_event: React.SyntheticEvent, newValue: 0 | 1) => {
         dispatch(setDatasetInfoTab(newValue));
     };
 

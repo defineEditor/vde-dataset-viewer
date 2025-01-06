@@ -1,4 +1,4 @@
-import { IData, IStore, IUi, ISettings } from 'interfaces/common';
+import { IData, IStore, IUi, ISettings, IApi } from 'interfaces/common';
 import { paths } from 'misc/constants';
 
 export const settings: ISettings = {
@@ -56,10 +56,20 @@ export const data: IData = {
     },
 };
 
+export const api: IApi = {
+    apiRecords: {},
+    currentApiId: null,
+    currentStudyId: null,
+    currentDatasetId: null,
+    studies: {},
+    datasets: {},
+};
+
 const initialState: IStore = {
     ui,
     data,
     settings,
+    api,
 };
 
 export default initialState;

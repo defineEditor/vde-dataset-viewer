@@ -30,7 +30,7 @@ filterRegex.item = new RegExp(
 filterRegex.itemParse = new RegExp(`(${filterRegex.item.source})`, 'i');
 
 filterRegex.itemMultiple = new RegExp(
-    `\\(\\s*${filterRegex.item.source}\\s*(?:,${filterRegex.item.source})*\\s*\\)`,
+    `\\(\\s*${filterRegex.item.source}\\s*(?:,\\s*${filterRegex.item.source})*\\s*\\)`,
     'i',
 );
 

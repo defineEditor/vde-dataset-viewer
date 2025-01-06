@@ -1,5 +1,4 @@
 import {
-    ItemGroupData,
     ItemDataArray,
     DatasetJsonMetadata,
     DatasetType,
@@ -10,8 +9,12 @@ import {
     IOpenFileWithMetadata,
     ISettings,
     ITableRow,
+    IApiAbout,
+    IApiRecord,
+    IApiStudy,
+    IApiStudyDataset,
+    DatasetMode,
 } from 'interfaces/common';
-import DatasetJson from 'js-stream-dataset-json';
 import store from 'renderer/redux/store';
 import transformData from 'renderer/services/transformData';
 import { setLoadedRecords } from 'renderer/redux/slices/data';
@@ -38,6 +41,11 @@ class ApiService {
         mode: 'local' | 'remote',
         filePath?: string,
         folderPath?: string,
+        apiInfo?: {
+            api: IApiRecord;
+            study: IApiStudy;
+            dataset: IApiStudyDataset;
+        },
     ): Promise<IOpenFileWithMetadata> => {
         let fileData: IOpenFile;
         // Check if the file is already open
@@ -55,18 +63,39 @@ class ApiService {
             if (foundFileData !== undefined) {
                 // Get metadata
                 const metadata = await this.getMetadata(foundFileData.fileId);
+                if (metadata === null) {
+                    // Error reading metadata
+                    return {
+                        ...foundFileData,
+                        metadata: {} as DatasetJsonMetadata,
+                        errorMessage: 'Error reading metadata',
+                    };
+                }
                 return { ...foundFileData, metadata };
             }
         }
         if (mode === 'remote') {
-            fileData = await this.openFileRemote();
+            if (apiInfo === undefined) {
+                return {
+                    fileId: '',
+                    type: 'json',
+                    path: '',
+                    metadata: {} as DatasetJsonMetadata,
+                    errorMessage: 'API info not provided reading metadata',
+                };
+            }
+            fileData = await this.openFileRemote(apiInfo);
         } else {
             fileData = await this.openFileLocal(filePath, folderPath);
         }
 
         if (fileData.errorMessage) {
             // If error was found do not add it to the list of opened files
-            return { ...fileData, metadata: {} as DatasetJsonMetadata };
+            return {
+                ...fileData,
+                metadata: {} as DatasetJsonMetadata,
+                errorMessage: fileData.errorMessage,
+            };
         }
 
         this.openedFiles.push({
@@ -79,6 +108,14 @@ class ApiService {
 
         // Get metadata
         const metadata = await this.getMetadata(fileData.fileId);
+        if (metadata === null) {
+            // Error reading metadata
+            return {
+                ...fileData,
+                metadata: {} as DatasetJsonMetadata,
+                errorMessage: 'Error reading metadata',
+            };
+        }
 
         return { ...fileData, metadata };
     };
@@ -105,89 +142,24 @@ class ApiService {
         return response;
     };
 
-    private openFileRemote = async (): Promise<IOpenFile> => {
-        let result: IOpenFile = {
-            fileId: '',
+    private openFileRemote = async (apiInfo: {
+        api: IApiRecord;
+        study: IApiStudy;
+        dataset: IApiStudyDataset;
+    }): Promise<IOpenFile> => {
+        // At this stage it is already know that the dataset exists
+        const result: IOpenFile = {
+            fileId: `${apiInfo.api.id}-${apiInfo.study.studyOID}-${apiInfo.dataset.itemGroupOID}`,
             type: 'json',
-            path: '',
-            datasetNames: [],
+            path: `${apiInfo.api.address}${apiInfo.dataset.href}`,
         };
-        try {
-            // Get the file path
-            let fileId = '';
-            let datasetNames = [];
-            const response = await window.electron.openFile('remote');
-            if (response === null) {
-                throw new Error('Error opening the file');
-            }
-            const filePath = response.fileId;
-            // Request to open the file
-            if (filePath !== undefined) {
-                // Check if the dataset is already open
-                let openFiles: {
-                    [name: string]: { name: string; path: string };
-                } = {};
-                const openFilesResp = await fetch(
-                    'http://localhost:8000/jsons',
-                );
-                if ([200, 204].includes(openFilesResp.status)) {
-                    openFiles = (await openFilesResp.json()) as unknown as {
-                        [name: string]: { name: string; path: string };
-                    };
-                }
-
-                const isOpened = Object.keys(openFiles).some((id) => {
-                    const file = openFiles[id];
-                    if (file.path === filePath) {
-                        fileId = id;
-                        return true;
-                    }
-                    return false;
-                });
-
-                if (!isOpened) {
-                    const requestOptions = {
-                        method: 'POST',
-                        body: JSON.stringify({ path: filePath }),
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                    };
-                    const requestResponse = await fetch(
-                        'http://localhost:8000/jsons',
-                        requestOptions,
-                    );
-                    if ([200, 204].includes(requestResponse.status)) {
-                        fileId = await requestResponse.text();
-                    }
-                }
-                if (fileId !== '') {
-                    // Get the list of datasets
-                    const requestResponseGet = await fetch(
-                        `http://localhost:8000/jsons/${fileId}/datasets`,
-                        { method: 'GET' },
-                    );
-                    if ([200, 204].includes(requestResponseGet.status)) {
-                        datasetNames = await requestResponseGet.json();
-                    }
-                    result = {
-                        fileId,
-                        type: 'json',
-                        datasetNames,
-                        path: filePath,
-                    };
-                }
-            }
-        } catch {
-            // Handle exception
-        }
         return result;
     };
 
     // Get dataset metadata
     public getMetadata = async (
         fileId: string,
-    ): Promise<DatasetJsonMetadata> => {
+    ): Promise<DatasetJsonMetadata | null> => {
         const file = this.openedFiles.find(
             (fileItem) => fileItem.fileId === fileId,
         );
@@ -200,11 +172,14 @@ class ApiService {
         if (this.openedFilesMetadata[fileId] !== undefined) {
             return this.openedFilesMetadata[fileId];
         }
-        let metadata: DatasetJsonMetadata;
+        let metadata: DatasetJsonMetadata | null;
         if (file.mode === 'remote') {
-            metadata = await this.getMetadataRemote(fileId, '');
+            metadata = await this.getMetadataRemote(fileId);
         } else {
             metadata = await this.getMetadataLocal(fileId);
+        }
+        if (metadata === null) {
+            return null;
         }
 
         // Save metadata
@@ -213,31 +188,40 @@ class ApiService {
         return metadata;
     };
 
-    private getMetadataLocal = async (fileId: string) => {
+    private getMetadataLocal = async (
+        fileId: string,
+    ): Promise<DatasetJsonMetadata | null> => {
         const result = await window.electron.getMetadata(fileId);
         return result;
     };
 
-    private getMetadataRemote = async (fileId: string, datasetName: string) => {
-        let result;
-        try {
-            const requestResponse = await fetch(
-                `http://localhost:8000/jsons/${fileId}/datasets/${datasetName}/metadata`,
-                { method: 'GET' },
-            );
-            if ([200, 204].includes(requestResponse.status)) {
-                result =
-                    (await requestResponse.json()) as unknown as ItemGroupData;
-            }
-        } catch {
-            // Handle exception
+    private getMetadataRemote = async (
+        fileId: string,
+    ): Promise<DatasetJsonMetadata | null> => {
+        let result: DatasetJsonMetadata | null;
+        const file = this.openedFiles.find((item) => item.fileId === fileId);
+
+        if (file === undefined) {
+            return null;
         }
-        return {
-            itemGroupMetadata: result,
-            dataMetadata: {},
-        } as unknown as ReturnType<
-            InstanceType<typeof DatasetJson>['getMetadata']
-        >;
+
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                Accept: 'application/json',
+            },
+        };
+        const requestResponse = await window.electron.fetch(
+            `${file.path}?metadata=true`,
+            requestOptions,
+        );
+
+        if ([200, 204].includes(requestResponse.status)) {
+            result = requestResponse.response as unknown as DatasetJsonMetadata;
+        } else {
+            result = null;
+        }
+        return result;
     };
 
     // Get dataset data
@@ -259,14 +243,7 @@ class ApiService {
         }
         let result: ItemDataArray[] | null;
         if (file.mode === 'remote') {
-            result = await this.getObservationsRemote(
-                fileId,
-                '',
-                Math.trunc(start / length) + 1,
-                length,
-                filterColumns,
-                filterData,
-            );
+            result = await this.getObservationsRemote(fileId, start, length);
         } else {
             result = await this.getObservationsLocal(
                 fileId,
@@ -279,6 +256,9 @@ class ApiService {
 
         // Get metadata
         const metadata = await this.getMetadata(fileId);
+        if (metadata === null) {
+            return [];
+        }
 
         if (result === null) {
             return [];
@@ -322,30 +302,47 @@ class ApiService {
 
     private getObservationsRemote = async (
         fileId: string,
-        datasetName: string,
-        page: number,
-        pageSize: number,
-        _filterColumns?: string[],
-        _filterData?: Filter,
-        _fsilterData?: Filter,
-    ) => {
-        let result;
-        try {
-            const requestOptions = {
-                method: 'GET',
-            };
-            const requestResponse = await fetch(
-                `http://localhost:8000/jsons/${fileId}/datasets/${datasetName}/observations?page=${page}&page_size=${pageSize}`,
-                requestOptions,
-            );
-            if ([200, 204].includes(requestResponse.status)) {
-                result =
-                    (await requestResponse.json()) as unknown as Array<ItemDataArray>;
-            }
-        } catch (error) {
-            // Handle exception
+        offset?: number,
+        limit?: number,
+    ): Promise<ItemDataArray[] | null> => {
+        let result: ItemDataArray[] | null;
+        const file = this.openedFiles.find((item) => item.fileId === fileId);
+
+        if (file === undefined) {
+            return null;
         }
-        return result as ItemDataArray[];
+
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                Accept: 'application/json',
+            },
+        };
+
+        let url: string = `${file.path}`;
+        const params: string[] = [];
+        if (limit !== undefined) {
+            params.push(`limit=${limit}`);
+        }
+        if (offset !== undefined) {
+            params.push(`offset=${offset}`);
+        }
+        if (params.length > 0) {
+            url += `?${params.join('&')}`;
+        }
+
+        const requestResponse = await window.electron.fetch(
+            url,
+            requestOptions,
+        );
+
+        if ([200, 204].includes(requestResponse.status)) {
+            result = requestResponse.response
+                .rows as unknown as ItemDataArray[];
+        } else {
+            result = null;
+        }
+        return result;
     };
 
     // Close file
@@ -403,6 +400,7 @@ class ApiService {
         fileId: string;
         name: string;
         label: string;
+        mode: DatasetMode;
         nCols: number;
         records: number;
     }[] => {
@@ -412,6 +410,7 @@ class ApiService {
                 fileId: file.fileId,
                 name: metadata?.name,
                 label: metadata?.label || '',
+                mode: file.mode,
                 nCols: metadata?.columns.length || 0,
                 records: metadata?.records || 0,
             };
@@ -456,6 +455,92 @@ class ApiService {
     // Download update
     public downloadUpdate = async () => {
         const result = await window.electron.downloadUpdate();
+        return result;
+    };
+
+    public getApiAbout = async (
+        apiRecord: IApiRecord,
+    ): Promise<IApiAbout | null> => {
+        let result: IApiAbout | null;
+
+        try {
+            const requestOptions = {
+                method: 'GET',
+                headers: {
+                    Accept: 'application/json',
+                },
+            };
+            const requestResponse = await window.electron.fetch(
+                `${apiRecord.address}/about`,
+                requestOptions,
+            );
+
+            if ([200, 204].includes(requestResponse.status)) {
+                result = requestResponse.response as unknown as IApiAbout;
+            } else {
+                result = null;
+            }
+        } catch (error) {
+            result = null;
+        }
+        return result;
+    };
+
+    public getApiStudies = async (
+        apiRecord: IApiRecord,
+    ): Promise<IApiStudy[] | null> => {
+        let result: IApiStudy[] | null;
+
+        try {
+            const requestOptions = {
+                method: 'GET',
+                headers: {
+                    Accept: 'application/json',
+                },
+            };
+            const requestResponse = await window.electron.fetch(
+                `${apiRecord.address}/studies`,
+                requestOptions,
+            );
+
+            if ([200, 204].includes(requestResponse.status)) {
+                result = requestResponse.response as unknown as IApiStudy[];
+            } else {
+                result = null;
+            }
+        } catch (error) {
+            result = null;
+        }
+        return result;
+    };
+
+    public getApiDatasets = async (
+        api: IApiRecord,
+        study: IApiStudy,
+    ): Promise<IApiStudyDataset[] | null> => {
+        let result: IApiStudyDataset[] | null;
+
+        try {
+            const requestOptions = {
+                method: 'GET',
+                headers: {
+                    Accept: 'application/json',
+                },
+            };
+            const requestResponse = await window.electron.fetch(
+                `${api.address}${study.href}/datasets`,
+                requestOptions,
+            );
+
+            if ([200, 204].includes(requestResponse.status)) {
+                result = requestResponse.response
+                    .datasets as unknown as IApiStudyDataset[];
+            } else {
+                result = null;
+            }
+        } catch (error) {
+            result = null;
+        }
         return result;
     };
 }

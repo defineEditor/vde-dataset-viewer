@@ -45,6 +45,8 @@ contextBridge.exposeInMainWorld('electron', {
             ipcRenderer.send('main:storeSaved');
         });
     },
+    fetch: (input: RequestInfo | URL, init?: RequestInit) =>
+        ipcRenderer.invoke('main:fetch', input, init),
     isWindows: process.platform === 'win32',
     ipcRenderer: {
         sendMessage(channel: Channels, args: unknown[]) {
