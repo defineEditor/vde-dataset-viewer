@@ -7,12 +7,15 @@ import {
     TableCell,
     Paper,
     Box,
+    TableSortLabel,
 } from '@mui/material';
 import {
     flexRender,
     Table as ITable,
     Column as IColumn,
     Row as IRow,
+    SortingState as ISortingState,
+    Updater as IUpdater,
 } from '@tanstack/react-table';
 import { VirtualItem, Virtualizer } from '@tanstack/react-virtual';
 import { ITableRow } from 'interfaces/common';
@@ -56,6 +59,8 @@ const styles = {
         fontFamily: 'Roboto Mono',
         display: 'flex',
         position: 'relative',
+        justifyContent: 'center',
+        width: '100%',
     },
     tableHeaderLabel: {
         width: '100%',
@@ -151,6 +156,8 @@ const DatasetViewUI: React.FC<{
     isLoading: boolean;
     dynamicRowHeight: boolean;
     rowVirtualizer: Virtualizer<HTMLDivElement, Element>;
+    sorting: ISortingState;
+    onSortingChange: (updater: IUpdater<ISortingState>) => void;
 }> = ({
     table,
     tableContainerRef,
@@ -167,6 +174,8 @@ const DatasetViewUI: React.FC<{
     isLoading,
     dynamicRowHeight,
     rowVirtualizer,
+    sorting,
+    onSortingChange,
 }) => {
     return (
         <Paper ref={tableContainerRef} sx={styles.container}>
@@ -209,14 +218,43 @@ const DatasetViewUI: React.FC<{
                                         sx={{
                                             ...styles.tableHeaderCell,
                                             width: header.getSize(),
+                                            cursor: 'pointer',
+                                        }}
+                                        onClick={() => {
+                                            const isSorted = sorting.find(
+                                                (sort) => sort.id === header.id,
+                                            );
+                                            onSortingChange([
+                                                {
+                                                    id: header.id,
+                                                    desc: isSorted
+                                                        ? !isSorted.desc
+                                                        : false,
+                                                },
+                                            ]);
                                         }}
                                     >
-                                        <Box sx={styles.tableHeaderLabel}>
+                                        <TableSortLabel
+                                            active={
+                                                !!sorting.find(
+                                                    (sort) =>
+                                                        sort.id === header.id,
+                                                )
+                                            }
+                                            direction={
+                                                sorting.find(
+                                                    (sort) =>
+                                                        sort.id === header.id,
+                                                )?.desc
+                                                    ? 'desc'
+                                                    : 'asc'
+                                            }
+                                        >
                                             {flexRender(
                                                 header.column.columnDef.header,
                                                 header.getContext(),
                                             )}
-                                        </Box>
+                                        </TableSortLabel>
                                         <Box
                                             sx={styles.resizer}
                                             {...{

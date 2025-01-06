@@ -55,8 +55,11 @@ export default function estimateWidth(
                 columnWidth = 4;
                 longestWord = 4;
             }
+            // Id.length - label length + 2 characters for sorting icon
             result[id] = Math.min(
-                Math.round(Math.max(columnWidth, longestWord, id.length * 1.3)),
+                Math.round(
+                    Math.max(columnWidth, longestWord, id.length * 1.3 + 2),
+                ),
                 maxColWidth,
             );
         });
