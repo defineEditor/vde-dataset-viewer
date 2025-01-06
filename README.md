@@ -19,6 +19,7 @@ API Specification: [DataExchange-DatasetJson-API](https://github.com/cdisc-org/D
 * Row and column navigation
 * Metadata info
 * Cell selection
+* Automated testing
 * API access
 
 ## Viewing Customization Settings
@@ -34,7 +35,11 @@ To install the VDE Dataset Viewer, follow these steps:
 1. Clone the repository: `git clone https://github.com/defineEditor/vde-dataset-viewer.git`
 2. Navigate to the project directory: `cd vde-dataset-viewer`
 3. Install the dependencies: `npm install`
-4. Start the application: `npm start`
+
+## Testing
+The VDE Dataset Viewer uses Jest for testing. Tests are located in the `__tests__` folder. To run the tests, use:
+1. Execute all tests : `npm test`
+2. Run specific tests: `npm test -- <test-file-name>`
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
