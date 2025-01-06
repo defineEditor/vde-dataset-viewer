@@ -18,7 +18,7 @@ export default function estimateWidth(
             let columnWidth = 0;
             let longestWord = 0;
             if (
-                !['integer', 'float', 'boolean', 'double'].includes(
+                !['integer', 'float', 'boolean', 'double', 'decimal'].includes(
                     column.type || '',
                 )
             ) {
@@ -45,7 +45,9 @@ export default function estimateWidth(
                     }),
                 );
             } else if (
-                ['integer', 'float', 'double'].includes(column.type || '')
+                ['integer', 'float', 'double', 'decimal'].includes(
+                    column.type || '',
+                )
             ) {
                 // Number
                 columnWidth = 8;
