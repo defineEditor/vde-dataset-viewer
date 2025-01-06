@@ -27,6 +27,7 @@ import store from 'renderer/redux/store';
 const styles = {
     main: {
         height: '100%',
+        overflow: 'overlay',
     },
     tabPanel: {
         padding: 4,

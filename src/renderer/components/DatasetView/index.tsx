@@ -358,6 +358,7 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
             rowVirtualizer={rowVirtualizer}
             sorting={sorting}
             onSortingChange={setSorting}
+            hasPagination={tableData?.metadata?.records > settings.pageSize}
         />
     );
 };
