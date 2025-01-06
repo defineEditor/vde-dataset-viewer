@@ -1,5 +1,7 @@
 VDE Dataset Viewer
 
+![VDE Dataset Viewer](./assets/datasetView.png)
+
 ## Description
 The VDE Dataset Viewer is a tool designed to help users visualize and explore datasets.
 
@@ -11,6 +13,7 @@ API Specification: [DataExchange-DatasetJson-API](https://github.com/cdisc-org/D
 
 ## Features
 * Reading large size datasets
+* Multiplatform: Windows, Linux (and MacOS if someone with packages it)
 * Filtering with value autocomplete
 * Sorting
 * Row and column navigation
