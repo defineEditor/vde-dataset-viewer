@@ -33,10 +33,16 @@ const styles = {
         display: 'flex',
         width: '100%',
     },
-    container: {
+    containerWithPage: {
         overflow: 'auto',
         position: 'relative',
-        height: '91vh',
+        height: 'calc(100vh - 116px)', // 116px - toolbar + pagination
+        userSelect: 'none',
+    },
+    containerWithoutPage: {
+        overflow: 'auto',
+        position: 'relative',
+        height: 'calc(100vh - 64px)', // 64 - toolbar
         userSelect: 'none',
     },
     table: {
@@ -158,6 +164,7 @@ const DatasetViewUI: React.FC<{
     rowVirtualizer: Virtualizer<HTMLDivElement, Element>;
     sorting: ISortingState;
     onSortingChange: (updater: IUpdater<ISortingState>) => void;
+    hasPagination: boolean;
 }> = ({
     table,
     tableContainerRef,
@@ -176,9 +183,17 @@ const DatasetViewUI: React.FC<{
     rowVirtualizer,
     sorting,
     onSortingChange,
+    hasPagination,
 }) => {
     return (
-        <Paper ref={tableContainerRef} sx={styles.container}>
+        <Paper
+            ref={tableContainerRef}
+            sx={
+                hasPagination
+                    ? styles.containerWithPage
+                    : styles.containerWithoutPage
+            }
+        >
             <Table sx={styles.table}>
                 <TableHead sx={styles.header}>
                     {table.getHeaderGroups().map((headerGroup) => (
