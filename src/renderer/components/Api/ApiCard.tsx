@@ -6,6 +6,7 @@ import IconButton from '@mui/material/IconButton';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
 import { IApiRecord } from 'interfaces/store';
 import Dialog from '@mui/material/Dialog';
@@ -29,7 +30,7 @@ const styles = {
     cardSelected: (theme) => ({
         width: 200,
         height: 150,
-        backgroundColor: 'grey.400',
+        backgroundColor: `${theme.palette.primary.main}50`,
         transition: 'background-color 0.3s',
         '&:hover': {
             backgroundColor: `${theme.palette.primary.main}10`,
@@ -123,7 +124,7 @@ const ApiCard: React.FC<{
                         onClose={handleMenuClose}
                     >
                         <MenuItem onClick={handleEditClick}>
-                            <CloseIcon
+                            <EditIcon
                                 fontSize="small"
                                 sx={{ marginRight: 1 }}
                             />

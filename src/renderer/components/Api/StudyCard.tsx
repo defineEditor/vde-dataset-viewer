@@ -15,6 +15,16 @@ const styles = {
         },
         position: 'relative',
     }),
+    cardSelected: (theme) => ({
+        width: 200,
+        height: 150,
+        backgroundColor: `${theme.palette.primary.main}50`,
+        transition: 'background-color 0.3s',
+        '&:hover': {
+            backgroundColor: `${theme.palette.primary.main}10`,
+        },
+        position: 'relative',
+    }),
     label: {
         color: 'text.secondary',
         overflow: 'hidden',
@@ -44,10 +54,12 @@ const styles = {
 
 const StudyCard: React.FC<{
     study: IApiStudy;
+    currentStudyId: string | null;
     handleSelectStudy: (study: IApiStudy) => void;
-}> = ({ study, handleSelectStudy }) => {
+}> = ({ study, handleSelectStudy, currentStudyId }) => {
+    const selected = currentStudyId === study.studyOID;
     return (
-        <Card sx={styles.card}>
+        <Card sx={selected ? styles.cardSelected : styles.card}>
             <CardContent onClick={() => handleSelectStudy(study)}>
                 <Typography gutterBottom sx={styles.label}>
                     {study.label}

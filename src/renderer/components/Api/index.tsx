@@ -136,6 +136,7 @@ const SelectDataset = () => {
             studies={studies}
             datasets={datasets}
             currentApiId={currentApiId}
+            currentStudyId={currentStudyId}
             handleNewApi={handleNewApi}
             handleEditApi={handleEditApi}
             handleDeleteApi={handleDeleteApi}

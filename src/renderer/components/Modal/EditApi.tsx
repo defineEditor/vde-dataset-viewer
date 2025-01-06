@@ -38,7 +38,7 @@ const EditApi: React.FC<IUiModalEditApi> = ({ type, data }) => {
     } else {
         initialApiRecord = {
             id: '',
-            address: 'http://localhost:8000',
+            address: '',
             name: '',
             key: '',
             lastAccessDate: 0,

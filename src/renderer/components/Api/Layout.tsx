@@ -36,6 +36,7 @@ const Layout: React.FC<{
     studies: IApiStudy[];
     datasets: IApiStudyDataset[];
     currentApiId: string | null;
+    currentStudyId: string | null;
     handleNewApi: () => void;
     handleEditApi: (apiId: string) => void;
     handleDeleteApi: (apiId: string) => void;
@@ -47,6 +48,7 @@ const Layout: React.FC<{
     studies,
     datasets,
     currentApiId,
+    currentStudyId,
     handleNewApi,
     handleEditApi,
     handleDeleteApi,
@@ -112,6 +114,7 @@ const Layout: React.FC<{
                     {studies.map((study) => (
                         <StudyCard
                             key={study.studyOID}
+                            currentStudyId={currentStudyId}
                             study={study}
                             handleSelectStudy={handleSelectStudy}
                         />
