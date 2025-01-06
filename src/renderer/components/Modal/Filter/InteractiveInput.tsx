@@ -165,7 +165,7 @@ const ValueAutocomplete: React.FC<{
 
     if (columnName !== undefined && uniqueValues[columnName]) {
         valueOptions = uniqueValues[columnName].map((value) =>
-            value.toString(),
+            value === null ? 'null' : value.toString(),
         );
     }
 
