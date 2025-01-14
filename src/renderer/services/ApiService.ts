@@ -3,7 +3,8 @@ import {
     DatasetJsonMetadata,
     DatasetType,
     IOpenFile,
-    Filter,
+    BasicFilter,
+    ColumnMetadata,
     ILocalStore,
     IStore,
     IOpenFileWithMetadata,
@@ -17,6 +18,7 @@ import {
 } from 'interfaces/common';
 import store from 'renderer/redux/store';
 import transformData from 'renderer/services/transformData';
+import Filter from 'js-array-filter';
 import { setLoadedRecords } from 'renderer/redux/slices/data';
 
 class ApiService {
@@ -98,13 +100,33 @@ class ApiService {
             };
         }
 
-        this.openedFiles.push({
-            fileId: fileData.fileId,
-            path: fileData.path,
-            type: fileData.type,
-            mode,
-            name: fileData.path,
-        });
+        // Check if the file is already open
+        const fileIndex = this.openedFiles.findIndex(
+            (file) => file.path === fileData.path,
+        );
+        if (fileIndex !== -1) {
+            // Check that fileId is the same (it must be)
+            if (this.openedFiles[fileIndex].fileId !== fileData.fileId) {
+                throw new Error(
+                    'Internal error: New File ID is not matching the old file id',
+                );
+            }
+            this.openedFiles[fileIndex] = {
+                fileId: fileData.fileId,
+                path: fileData.path,
+                type: fileData.type,
+                mode,
+                name: fileData.path,
+            };
+        } else {
+            this.openedFiles.push({
+                fileId: fileData.fileId,
+                path: fileData.path,
+                type: fileData.type,
+                mode,
+                name: fileData.path,
+            });
+        }
 
         // Get metadata
         const metadata = await this.getMetadata(fileData.fileId);
@@ -231,7 +253,7 @@ class ApiService {
         length: number,
         settings: ISettings['viewer'],
         filterColumns?: string[],
-        filterData?: Filter,
+        filterData?: BasicFilter,
     ): Promise<ITableRow[]> => {
         const file = this.openedFiles.find(
             (fileItem) => fileItem.fileId === fileId,
@@ -241,9 +263,22 @@ class ApiService {
                 'Trying to read metadata from the file which is not opened',
             );
         }
+
+        // Get metadata
+        const metadata = await this.getMetadata(fileId);
+        if (metadata === null) {
+            return [];
+        }
+
         let result: ItemDataArray[] | null;
         if (file.mode === 'remote') {
-            result = await this.getObservationsRemote(fileId, start, length);
+            result = await this.getObservationsRemote(
+                fileId,
+                start,
+                length,
+                filterData,
+                metadata.columns,
+            );
         } else {
             result = await this.getObservationsLocal(
                 fileId,
@@ -251,13 +286,8 @@ class ApiService {
                 length,
                 filterColumns,
                 filterData,
+                metadata.columns,
             );
-        }
-
-        // Get metadata
-        const metadata = await this.getMetadata(fileId);
-        if (metadata === null) {
-            return [];
         }
 
         if (result === null) {
@@ -288,7 +318,8 @@ class ApiService {
         start: number,
         length: number,
         filterColumns?: string[],
-        filterData?: Filter,
+        filterData?: BasicFilter,
+        columns?: ColumnMetadata[],
     ) => {
         const result = await window.electron.getData(
             fileId,
@@ -296,6 +327,7 @@ class ApiService {
             length,
             filterColumns,
             filterData,
+            columns,
         );
         return result;
     };
@@ -304,6 +336,8 @@ class ApiService {
         fileId: string,
         offset?: number,
         limit?: number,
+        filterData?: BasicFilter,
+        columns?: ColumnMetadata[],
     ): Promise<ItemDataArray[] | null> => {
         let result: ItemDataArray[] | null;
         const file = this.openedFiles.find((item) => item.fileId === fileId);
@@ -341,6 +375,15 @@ class ApiService {
                 .rows as unknown as ItemDataArray[];
         } else {
             result = null;
+        }
+
+        if (
+            filterData !== undefined &&
+            columns !== undefined &&
+            result !== null
+        ) {
+            const filter = new Filter('dataset-json1.1', columns, filterData);
+            result = filter.filterDataframe(result);
         }
         return result;
     };
@@ -396,25 +439,32 @@ class ApiService {
     };
 
     // Get all opened files
-    public getOpenedFiles = (): {
+    public getOpenedFiles = (
+        fileId?: string,
+    ): {
         fileId: string;
         name: string;
         label: string;
         mode: DatasetMode;
         nCols: number;
         records: number;
+        type: DatasetType;
     }[] => {
-        return this.openedFiles.map((file) => {
-            const metadata = this.openedFilesMetadata[file.fileId];
-            return {
-                fileId: file.fileId,
-                name: metadata?.name,
-                label: metadata?.label || '',
-                mode: file.mode,
-                nCols: metadata?.columns.length || 0,
-                records: metadata?.records || 0,
-            };
-        });
+        // If fileId is not specified return all opened files
+        return this.openedFiles
+            .filter((file) => (fileId ? file.fileId === fileId : true))
+            .map((file) => {
+                const metadata = this.openedFilesMetadata[file.fileId];
+                return {
+                    fileId: file.fileId,
+                    name: metadata?.name,
+                    label: metadata?.label || '',
+                    mode: file.mode,
+                    nCols: metadata?.columns.length || 0,
+                    records: metadata?.records || 0,
+                    type: file.type,
+                };
+            });
     };
 
     public getOpenedFileMetadata = (fileId: string): DatasetJsonMetadata => {

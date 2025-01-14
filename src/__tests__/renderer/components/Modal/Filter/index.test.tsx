@@ -35,14 +35,6 @@ const updatedInitialState = {
             currentFilter: null,
             lastOptions: { caseInsensitive: true },
         },
-        openedFileIds: {
-            file1: {
-                name: 'dataset1',
-                type: 'json',
-                label: 'dataset1',
-                totalRecords: 100,
-            },
-        },
         loadedRecords: {
             file1: 100,
         },
@@ -53,7 +45,7 @@ const renderComponent = (store) =>
     render(
         <Provider store={store}>
             <AppContext.Provider value={{ apiService: mockApiService }}>
-                <Filter type="filter" data={{}} />
+                <Filter type="FILTER" data={{}} />
             </AppContext.Provider>
         </Provider>,
     );
@@ -74,7 +66,7 @@ describe('Filter Component', () => {
         (mockApiService.getOpenedFileMetadata as jest.Mock).mockReturnValue({
             columns: [
                 { name: 'column1', dataType: 'string' },
-                { name: 'column2', dataType: 'number' },
+                { name: 'column2', dataType: 'integer' },
             ],
         });
     });

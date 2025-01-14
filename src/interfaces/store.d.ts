@@ -1,9 +1,4 @@
-import {
-    Filter,
-    DatasetType,
-    IApiStudy,
-    IApiStudyDataset,
-} from 'interfaces/api';
+import { BasicFilter, IApiStudy, IApiStudyDataset } from 'interfaces/api';
 import { ICheckUpdateResult } from 'interfaces/main';
 import { modals, ModalType, AllowedPathnames } from 'misc/constants';
 
@@ -50,7 +45,16 @@ export interface IUiModalEditApi extends IUiModalBase {
     };
 }
 
-export type IUiModal = IUiModalAppUpdate | IUiModalGeneral | IUiModalEditApi;
+export interface IUiModalMessage extends IUiModalBase {
+    type: typeof modals.ERROR;
+    data: { message: string };
+}
+
+export type IUiModal =
+    | IUiModalAppUpdate
+    | IUiModalGeneral
+    | IUiModalEditApi
+    | IUiModalMessage;
 
 export interface IUiSnackbar {
     type: 'success' | 'error' | 'info' | 'warning' | null;
@@ -91,24 +95,19 @@ export interface IRecentFile {
 export type DatasetMode = 'local' | 'remote';
 
 export interface IData {
-    openedFileIds: {
-        [name: string]: {
-            name: string;
-            label: string;
-            type: DatasetType;
-            mode: DatasetMode;
-            totalRecords: number;
-        };
-    };
     loadedRecords: {
         [name: string]: number;
     };
     recentFolders: string[];
     recentFiles: IRecentFile[];
     filterData: {
-        currentFilter: Filter | null;
-        recentFilters: { filter: Filter; datasetName: string; date: number }[];
-        lastOptions: Filter['options'];
+        currentFilter: BasicFilter | null;
+        recentFilters: {
+            filter: BasicFilter;
+            datasetName: string;
+            date: number;
+        }[];
+        lastOptions: BasicFilter['options'];
         lastType: 'manual' | 'ui';
     };
 }

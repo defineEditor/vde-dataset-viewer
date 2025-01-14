@@ -11,8 +11,47 @@ import AppContext from 'renderer/utils/AppContext';
 import AppContextProvider from 'renderer/utils/AppContextProvider';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { dehydrateState, safeLoadState } from 'renderer/redux/stateUtils';
-import { openModal } from 'renderer/redux/slices/ui';
-import { modals } from 'misc/constants';
+import {
+    closeAllModals,
+    openModal,
+    setPathname,
+} from 'renderer/redux/slices/ui';
+import { modals, paths } from 'misc/constants';
+
+class ErrorBoundary extends React.Component<
+    { children: React.ReactNode },
+    { hasError: boolean }
+> {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false };
+    }
+
+    static getDerivedStateFromError(error: Error) {
+        return { hasError: true, error };
+    }
+
+    componentDidCatch(error: Error) {
+        store.dispatch(closeAllModals());
+        store.dispatch(setPathname({ pathname: paths.SELECT }));
+        store.dispatch(
+            openModal({
+                type: modals.ERROR,
+                data: { message: error.stack || 'Unknown error' },
+            }),
+        );
+        this.setState({ hasError: false });
+    }
+
+    render() {
+        const { hasError } = this.state;
+        const { children } = this.props;
+        if (hasError) {
+            return null;
+        }
+        return children;
+    }
+}
 
 const AppWithContext: React.FC = () => {
     // Get the store from the context
@@ -56,9 +95,11 @@ const AppWithContext: React.FC = () => {
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
-            <Main theme={theme} />
-            <Snackbar />
-            <Modal />
+            <ErrorBoundary>
+                <Main theme={theme} />
+                <Snackbar />
+                <Modal />
+            </ErrorBoundary>
         </ThemeProvider>
     );
 };

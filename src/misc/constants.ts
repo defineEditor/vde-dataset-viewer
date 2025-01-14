@@ -4,6 +4,7 @@ export const modals = {
     FILTER: 'FILTER',
     APPUPDATE: 'APPUPDATE',
     EDITAPI: 'EDITAPI',
+    ERROR: 'ERROR',
 } as const;
 
 export const paths = {

@@ -14,14 +14,12 @@ import DialogTitle from '@mui/material/DialogTitle';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
+import Filter from 'js-array-filter';
 import { closeModal, setFilterInputMode } from 'renderer/redux/slices/ui';
 import ManualInput from 'renderer/components/Modal/Filter/ManualInput';
-import validateFilterString from 'renderer/components/Modal/Filter/validateFilterString';
-import stringToFilter from 'renderer/components/Modal/Filter/stringToFilter';
-import filterToString from 'renderer/components/Modal/Filter/filterToString';
 import AppContext from 'renderer/utils/AppContext';
 import { setFilter, resetFilter } from 'renderer/redux/slices/data';
-import { Filter as IFilter, IUiModal } from 'interfaces/common';
+import { BasicFilter as IBasicFilter, IUiModal } from 'interfaces/common';
 import { Stack, Switch, Typography } from '@mui/material';
 import InteractiveInput from 'renderer/components/Modal/Filter/InteractiveInput';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -43,28 +41,17 @@ const styles = {
     },
 };
 
-const Filter: React.FC<IUiModal> = (props: IUiModal) => {
+const FilterComponent: React.FC<IUiModal> = (props: IUiModal) => {
     const { type } = props;
     const dispatch = useAppDispatch();
     const { apiService } = useContext(AppContext);
 
-    const currentFilter = useAppSelector(
+    const currentBasicFilter = useAppSelector(
         (state) => state.data.filterData.currentFilter,
-    );
-    const currentFilterString = useMemo(() => {
-        return currentFilter ? filterToString(currentFilter) : '';
-    }, [currentFilter]);
-    const [inputValue, setInputValue] = useState(currentFilterString);
-    const [interactiveFilter, setInteractiveFilter] = useState(currentFilter);
-
-    const lastOptions = useAppSelector(
-        (state) => state.data.filterData.lastOptions,
-    );
-    const [caseInsensitive, setCaseInsensitive] = useState(
-        lastOptions?.caseInsensitive ?? true,
     );
 
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+
     const data = apiService.getOpenedFileData(currentFileId);
 
     const metadata = apiService.getOpenedFileMetadata(currentFileId);
@@ -87,9 +74,48 @@ const Filter: React.FC<IUiModal> = (props: IUiModal) => {
         return types;
     }, [metadata.columns]);
 
-    const dataset = useAppSelector(
-        (state) => state.data.openedFileIds[state.ui.currentFileId],
+    const filterForValidation = useMemo(() => {
+        return new Filter('dataset-json1.1', metadata.columns, '');
+    }, [metadata.columns]);
+
+    const currentFilterString = useMemo(() => {
+        if (currentBasicFilter === null) {
+            return '';
+        }
+        return new Filter(
+            'dataset-json1.1',
+            metadata.columns,
+            currentBasicFilter,
+        ).toString();
+    }, [currentBasicFilter, metadata.columns]);
+
+    const [inputValue, setInputValue] = useState(currentFilterString);
+    const [interactiveFilter, setInteractiveFilter] =
+        useState(currentBasicFilter);
+
+    const lastOptions = useAppSelector(
+        (state) => state.data.filterData.lastOptions,
     );
+    const [caseInsensitive, setCaseInsensitive] = useState(
+        lastOptions?.caseInsensitive ?? true,
+    );
+
+    const openedFiles = apiService.getOpenedFiles();
+    let dataset: { name: string; label: string };
+    if (
+        openedFiles.length > 0 &&
+        openedFiles.some((file) => file.fileId === currentFileId)
+    ) {
+        dataset = openedFiles.find((file) => file.fileId === currentFileId) as {
+            name: string;
+            label: string;
+        };
+    } else {
+        dataset = {
+            name: '',
+            label: '',
+        };
+    }
 
     const toggleCaseInsensitive = () => {
         setCaseInsensitive(!caseInsensitive);
@@ -171,12 +197,20 @@ const Filter: React.FC<IUiModal> = (props: IUiModal) => {
             if (interactiveFilter === null) {
                 setInputValue('');
             } else {
-                const newString = filterToString(interactiveFilter);
-                setInputValue(newString);
+                const filter = new Filter(
+                    'dataset-json1.1',
+                    metadata.columns,
+                    interactiveFilter,
+                );
+                setInputValue(filter.toString());
             }
         } else {
-            const newFilter = stringToFilter(inputValue, columnTypes);
-            setInteractiveFilter(newFilter);
+            const filter = new Filter(
+                'dataset-json1.1',
+                metadata.columns,
+                inputValue,
+            );
+            setInteractiveFilter(filter.toBasicFilter());
         }
         dispatch(
             setFilterInputMode(
@@ -185,17 +219,19 @@ const Filter: React.FC<IUiModal> = (props: IUiModal) => {
         );
     };
 
-    const handleChangeInteractive = (filter: IFilter) => {
+    const handleChangeInteractive = (filter: IBasicFilter) => {
         setInteractiveFilter(filter);
     };
 
     const handleSetFilter = useCallback(() => {
         let finalFilter: string;
+        const filter = new Filter('dataset-json1.1', metadata.columns, '');
         if (inputType === 'interactive') {
             if (interactiveFilter === null) {
                 finalFilter = '';
             } else {
-                finalFilter = filterToString(interactiveFilter);
+                filter.update(interactiveFilter);
+                finalFilter = filter.toString();
             }
         } else {
             finalFilter = inputValue;
@@ -203,19 +239,19 @@ const Filter: React.FC<IUiModal> = (props: IUiModal) => {
         if (finalFilter === '') {
             dispatch(resetFilter());
             handleClose();
-        } else if (
-            validateFilterString(finalFilter, columnNames, columnTypes)
-        ) {
-            const filter = {
-                ...stringToFilter(finalFilter, columnTypes),
+        } else if (filter.validateFilterString(finalFilter)) {
+            filter.update(finalFilter);
+            const basicFilter = {
+                ...filter.toBasicFilter(),
                 options: { caseInsensitive },
             };
-            dispatch(setFilter({ filter, datasetName: dataset.name }));
+            dispatch(
+                setFilter({ filter: basicFilter, datasetName: dataset.name }),
+            );
             handleClose();
         }
     }, [
-        columnNames,
-        columnTypes,
+        metadata.columns,
         dataset.name,
         dispatch,
         handleClose,
@@ -245,11 +281,7 @@ const Filter: React.FC<IUiModal> = (props: IUiModal) => {
         };
     }, [handleClose, handleSetFilter]);
 
-    const isValidFilter = validateFilterString(
-        inputValue,
-        columnNames,
-        columnTypes,
-    );
+    const isValidFilter = filterForValidation.validateFilterString(inputValue);
 
     return (
         <Dialog
@@ -289,7 +321,7 @@ const Filter: React.FC<IUiModal> = (props: IUiModal) => {
                             }
                             label="Case Insensitive"
                         />
-                        {currentFilter !== null &&
+                        {currentBasicFilter !== null &&
                             inputType === 'interactive' && (
                                 <Stack
                                     direction="row"
@@ -323,8 +355,7 @@ const Filter: React.FC<IUiModal> = (props: IUiModal) => {
                         <ManualInput
                             inputValue={inputValue}
                             handleSetInputValue={setInputValue}
-                            columnNames={columnNames}
-                            columnTypes={columnTypes}
+                            columns={metadata.columns}
                             datasetName={dataset.name}
                         />
                     )}
@@ -350,4 +381,4 @@ const Filter: React.FC<IUiModal> = (props: IUiModal) => {
     );
 };
 
-export default Filter;
+export default FilterComponent;

@@ -8,7 +8,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import AppContext from 'renderer/utils/AppContext';
 import { closeModal, openSnackbar } from 'renderer/redux/slices/ui';
 import DOMPurify from 'dompurify';
-import { ICheckUpdateResult } from 'interfaces/common';
+import { ICheckUpdateResult, IUiModalAppUpdate } from 'interfaces/common';
 import { Typography } from '@mui/material';
 
 const styles = {
@@ -26,10 +26,7 @@ const styles = {
     },
 };
 
-const AppUpdate: React.FC<{ type: string; data: ICheckUpdateResult }> = ({
-    type,
-    data,
-}) => {
+const AppUpdate: React.FC<IUiModalAppUpdate> = ({ type, data }) => {
     const dispatch = useAppDispatch();
     const { apiService } = useContext(AppContext);
 

@@ -3,7 +3,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Carousel from 'renderer/components/SelectDataset/Carousel';
 import Box from '@mui/material/Box';
-import { IRecentFile } from 'interfaces/common';
+import { DatasetType, IRecentFile } from 'interfaces/common';
 import FileCard from 'renderer/components/SelectDataset/FileCard';
 import FolderCard from 'renderer/components/SelectDataset/FolderCard';
 import DatasetCard from './DatasetCard';
@@ -38,6 +38,7 @@ const Layout: React.FC<{
         label: string;
         nCols: number;
         records: number;
+        type: DatasetType;
     }[];
     recentFiles: IRecentFile[];
     recentFolders: string[];
@@ -98,11 +99,7 @@ const Layout: React.FC<{
                     {openedFiles.reverse().map((file) => (
                         <DatasetCard
                             key={file.fileId}
-                            fileId={file.fileId}
-                            name={file.name}
-                            label={file.label}
-                            nCols={file.nCols}
-                            records={file.records}
+                            file={file}
                             handleDatasetClose={handleDatasetClose}
                             handleSelectFileClick={handleSelectFileClick}
                         />

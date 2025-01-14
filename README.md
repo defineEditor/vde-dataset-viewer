@@ -19,6 +19,7 @@ API Specification: [DataExchange-DatasetJson-API](https://github.com/cdisc-org/D
 * Row and column navigation
 * Metadata info
 * Cell selection
+* Automatic updates
 * Automated testing
 * API access
 
@@ -28,13 +29,13 @@ API Specification: [DataExchange-DatasetJson-API](https://github.com/cdisc-org/D
 * Dynamic cell height
 * Automatic width estimation
 * Encoding control
-* Automatic updates
 
 ## Development
-To install the VDE Dataset Viewer, follow these steps:
+To develop the VDE Dataset Viewer, follow these steps:
 1. Clone the repository: `git clone https://github.com/defineEditor/vde-dataset-viewer.git`
 2. Navigate to the project directory: `cd vde-dataset-viewer`
 3. Install the dependencies: `npm install`
+4. Start the development mode: `npm run start`
 
 ## Testing
 The VDE Dataset Viewer uses Jest for testing. Tests are located in the `__tests__` folder. To run the tests, use:

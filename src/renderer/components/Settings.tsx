@@ -16,6 +16,7 @@ import {
     DialogContent,
     DialogContentText,
     DialogTitle,
+    Alert,
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { ISettings } from 'interfaces/common';
@@ -53,6 +54,10 @@ const styles = {
     },
     inputField: {
         maxWidth: '600px',
+    },
+    alert: {
+        mt: 1,
+        mb: 2,
     },
 };
 
@@ -209,7 +214,7 @@ const Settings: React.FC = () => {
                         />
                         <TextField
                             label="Max Column Width"
-                            helperText="Maximum width of a column in characters"
+                            helperText="Maximum width in characters used for column width estimation"
                             name="viewer.maxColWidth"
                             type="number"
                             value={newSettings.viewer.maxColWidth}
@@ -239,6 +244,13 @@ const Settings: React.FC = () => {
                             >
                                 When selected, long cell values are wrapper
                             </Typography>
+                            {newSettings.viewer.dynamicRowHeight && (
+                                <Alert severity="warning" sx={styles.alert}>
+                                    Warning: Value wrapping functionality is
+                                    currently unstable and may cause errors when
+                                    scrolling with scrollbar
+                                </Alert>
+                            )}
                         </Stack>
                         <TextField
                             label="Date Format"

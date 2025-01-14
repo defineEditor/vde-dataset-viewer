@@ -18,8 +18,9 @@ import {
     numberOperators,
     booleanOperators,
     operatorHumanFriendlyLabels,
-} from 'renderer/components/Modal/Filter/constants';
-import { Filter, Connector, FilterCondition } from 'interfaces/common';
+    filterRegex,
+} from 'js-array-filter';
+import { BasicFilter, Connector, FilterCondition } from 'interfaces/common';
 
 const styles = {
     columnSelect: {
@@ -211,13 +212,13 @@ const ValueAutocomplete: React.FC<{
 };
 
 const InteractiveInput: React.FC<{
-    filter: Filter | null;
-    onChange: (_filter: Filter) => void;
+    filter: BasicFilter | null;
+    onChange: (_filter: BasicFilter) => void;
     columnNames: string[];
     columnTypes: Record<string, 'string' | 'number' | 'boolean'>;
     uniqueValues: { [key: string]: Array<string | boolean | number> };
 }> = ({ columnNames, columnTypes, filter, onChange, uniqueValues }) => {
-    let nonNullFilter: Filter;
+    let nonNullFilter: BasicFilter;
     if (filter === null || filter.conditions.length === 0) {
         nonNullFilter = {
             conditions: [{ variable: '', operator: 'eq', value: '' }],
@@ -296,9 +297,15 @@ const InteractiveInput: React.FC<{
 
     const handleOperatorChange =
         (index: number) => (event: React.ChangeEvent<HTMLInputElement>) => {
-            const newCondition = conditions[index];
+            const newCondition = { ...conditions[index] };
             newCondition.operator = event.target
                 .value as FilterCondition['operator'];
+            if (filterRegex.function.test(newCondition.operator)) {
+                newCondition.isFunction = true;
+                newCondition.value = null;
+            } else if (newCondition.isFunction) {
+                delete newCondition.isFunction;
+            }
             const newConditions = [...conditions];
             newConditions[index] = newCondition;
             const newFilter = {
@@ -442,7 +449,7 @@ const InteractiveInput: React.FC<{
                             fullWidth
                             sx={styles.operator}
                             margin="normal"
-                            value={condition.operator.toLowerCase()}
+                            value={condition.operator}
                             onChange={handleOperatorChange(index)}
                             autoFocus
                         >
@@ -480,14 +487,16 @@ const InteractiveInput: React.FC<{
                                 ))}
                         </TextField>
                     </Box>
-                    <ValueAutocomplete
-                        condition={condition}
-                        columnTypes={columnTypes}
-                        columnNames={columnNames}
-                        uniqueValues={uniqueValues}
-                        onSelectChange={handleValueSelect(index)}
-                        onInputChange={handleValueChange(index)}
-                    />
+                    {condition.isFunction !== true && (
+                        <ValueAutocomplete
+                            condition={condition}
+                            columnTypes={columnTypes}
+                            columnNames={columnNames}
+                            uniqueValues={uniqueValues}
+                            onSelectChange={handleValueSelect(index)}
+                            onInputChange={handleValueChange(index)}
+                        />
+                    )}
                     {index > 0 && (
                         <IconButton
                             onClick={() => handleRemoveCondition(index)}

@@ -4,7 +4,8 @@ import {
     DatasetType,
     DatasetJsonMetadata,
     ItemDataArray,
-    Filter,
+    BasicFilter,
+    ColumnMetadata,
     ILocalStore,
     ICheckUpdateResult,
     IFetchResponse,
@@ -37,7 +38,8 @@ declare global {
                 start: number,
                 length: number,
                 filterColumns?: string[],
-                filterData?: Filter,
+                filterData?: BasicFilter,
+                columns?: ColumnMetadata[],
             ) => Promise<ItemDataArray[] | null>;
             fetch: (
                 input: RequestInfo | URL,

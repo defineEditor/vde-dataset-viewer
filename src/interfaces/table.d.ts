@@ -1,4 +1,5 @@
-import { DatasetJsonMetadata, Filter } from 'interfaces/api.d';
+import { DatasetJsonMetadata } from 'interfaces/api.d';
+import { BasicFilter } from 'js-array-filter';
 
 export type SortOrder = 'asc' | 'desc';
 export type AlignType = 'left' | 'center' | 'right' | 'justify';
@@ -42,5 +43,5 @@ export interface ITableData {
     header: IHeaderCell[];
     metadata: DatasetJsonMetadata;
     data: ITableRow[];
-    appliedFilter: Filter | null;
+    appliedFilter: BasicFilter | null;
 }

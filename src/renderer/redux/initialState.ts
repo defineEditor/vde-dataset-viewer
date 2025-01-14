@@ -4,9 +4,9 @@ import { paths } from 'misc/constants';
 export const settings: ISettings = {
     viewer: {
         pageSize: 10000,
-        estimateWidthRows: 500,
-        dynamicRowHeight: true,
-        maxColWidth: 50,
+        estimateWidthRows: 1000,
+        dynamicRowHeight: false,
+        maxColWidth: 100,
         dateFormat: 'ISO8601',
         roundNumbers: false,
         copyFormat: 'tab',
@@ -44,7 +44,6 @@ export const ui: IUi = {
 };
 
 export const data: IData = {
-    openedFileIds: {},
     loadedRecords: {},
     recentFolders: [],
     recentFiles: [],
