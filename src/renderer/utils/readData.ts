@@ -2,7 +2,7 @@ import {
     DatasetJsonMetadata,
     IHeaderCell,
     ITableData,
-    Filter,
+    BasicFilter,
     IOpenFileWithMetadata,
     ISettings,
     ITableRow,
@@ -17,7 +17,7 @@ const getData = async (
     length: number,
     settings: ISettings['viewer'],
     filterColumns?: string[],
-    filterData?: Filter,
+    filterData?: BasicFilter,
 ): Promise<ITableData | null> => {
     const metadata = await apiService.getMetadata(fileId);
     if (metadata === null || Object.keys(metadata).length === 0) {

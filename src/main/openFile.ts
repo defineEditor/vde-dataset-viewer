@@ -6,7 +6,9 @@ const openFile = async (
     const { canceled, filePaths } = await dialog.showOpenDialog({
         title: 'Open Dataset-JSON file',
         defaultPath: folderPath,
-        filters: [{ name: 'JSON Files', extensions: ['json', 'ndjson'] }],
+        filters: [
+            { name: 'JSON Files', extensions: ['json', 'ndjson', 'xpt'] },
+        ],
     });
     if (!canceled) {
         return { path: filePaths[0] };

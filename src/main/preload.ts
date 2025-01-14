@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
-import { Filter, ILocalStore } from 'interfaces/common';
+import { BasicFilter, ColumnMetadata, ILocalStore } from 'interfaces/common';
 
 export type Channels = 'ipc-example';
 
@@ -23,7 +23,8 @@ contextBridge.exposeInMainWorld('electron', {
         start: number,
         length: number,
         filterColumns?: string[],
-        filterData?: Filter,
+        filterData?: BasicFilter,
+        columns?: ColumnMetadata[],
     ) =>
         ipcRenderer.invoke(
             'read:getObservations',
@@ -32,6 +33,7 @@ contextBridge.exposeInMainWorld('electron', {
             length,
             filterColumns,
             filterData,
+            columns,
         ),
     saveLocalStore: (localStore: ILocalStore) =>
         ipcRenderer.invoke('store:save', localStore),

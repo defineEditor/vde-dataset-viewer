@@ -95,7 +95,7 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
 
     const rowVirtualizer = useVirtualizer({
         count: rows.length,
-        estimateSize: () => 33,
+        estimateSize: () => 38,
         getScrollElement: () => tableContainerRef.current,
         ...(settings.dynamicRowHeight && {
             measureElement: (element) =>
@@ -289,19 +289,7 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
             isLoading === false
         ) {
             const row = (goTo.row - 1) % settings.pageSize;
-            // Get current index of the row
-            const range = rowVirtualizer.range || {
-                startIndex: 0,
-                endIndex: 0,
-            };
-            const { options } = rowVirtualizer;
-            if (row < range.startIndex) {
-                rowVirtualizer.scrollToIndex(Math.max(row - 10, 0));
-            } else if (row > range.endIndex) {
-                rowVirtualizer.scrollToIndex(
-                    Math.min(row + 10, options.count - 1),
-                );
-            }
+            rowVirtualizer.scrollToIndex(row, { align: 'center' });
             dispatch(setGoTo({ row: null }));
             // Highlight the row number
             handleCellClick(row, 0);
@@ -325,7 +313,9 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
                         item.id.toLowerCase() === goTo.column?.toLowerCase(),
                 ) + 1;
             if (columnIndex !== -1) {
-                columnVirtualizer.scrollToIndex(columnIndex);
+                columnVirtualizer.scrollToIndex(columnIndex, {
+                    align: 'center',
+                });
             }
             dispatch(setGoTo({ column: null }));
             // Highlight the column

@@ -5,6 +5,7 @@ import DatasetInfo from 'renderer/components/Modal/DatasetInfo';
 import Filter from 'renderer/components/Modal/Filter';
 import AppUpdate from 'renderer/components/Modal/AppUpdate';
 import EditApi from 'renderer/components/Modal/EditApi';
+import ErrorModal from 'renderer/components/Modal/ErrorModal';
 import { modals as modalNames } from 'misc/constants';
 import { IUiModal } from 'interfaces/store';
 
@@ -14,6 +15,7 @@ const MODAL_COMPONENTS = {
     [modalNames.FILTER]: Filter,
     [modalNames.APPUPDATE]: AppUpdate,
     [modalNames.EDITAPI]: EditApi,
+    [modalNames.ERROR]: ErrorModal,
 };
 
 const ModalRoot: React.FC = () => {

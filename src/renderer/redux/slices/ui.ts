@@ -103,6 +103,10 @@ export const uiSlice = createSlice({
                 state.modals.splice(index, 1);
             }
         },
+        closeAllModals: (state) => {
+            // Find the last opened modal of the given type and remove it
+            state.modals = [];
+        },
         setPage: (state, action: PayloadAction<number>) => {
             state.currentPage = action.payload;
         },
@@ -125,6 +129,7 @@ export const {
     openSnackbar,
     closeSnackbar,
     closeModal,
+    closeAllModals,
     openModal,
     setGoTo,
     setPage,

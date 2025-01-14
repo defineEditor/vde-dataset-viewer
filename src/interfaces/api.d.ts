@@ -7,7 +7,12 @@ export type DatasetJsonData = Awaited<
     ReturnType<InstanceType<typeof DatasetJson>['getData']>
 >;
 
-export { Filter, Connector, FilterCondition } from 'js-stream-dataset-json';
+export {
+    BasicFilter,
+    Connector,
+    FilterCondition,
+    ColumnMetadata,
+} from 'js-array-filter';
 
 export type DatasetType = 'json' | 'xpt';
 

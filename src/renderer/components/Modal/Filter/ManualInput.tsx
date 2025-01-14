@@ -1,8 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { TextField, Autocomplete } from '@mui/material';
+import Filter, { ColumnMetadata } from 'js-array-filter';
 import { useAppSelector } from 'renderer/redux/hooks';
-import validateFilterString from 'renderer/components/Modal/Filter/validateFilterString';
-import filterToString from 'renderer/components/Modal/Filter/filterToString';
 
 const styles = {
     input: {
@@ -12,19 +11,16 @@ const styles = {
 
 const ManualInput: React.FC<{
     inputValue: string;
+    columns: ColumnMetadata[];
     handleSetInputValue: (_value: string) => void;
-    columnNames: string[];
-    columnTypes: Record<string, 'string' | 'number' | 'boolean'>;
     datasetName: string;
-}> = ({
-    inputValue,
-    handleSetInputValue,
-    columnNames,
-    columnTypes,
-    datasetName,
-}) => {
+}> = ({ inputValue, handleSetInputValue, datasetName, columns }) => {
     const [error, setError] = useState(false);
     const [warning, setWarning] = useState(false);
+
+    const filterForValidation = useMemo(() => {
+        return new Filter('dataset-json1.1', columns, '');
+    }, [columns]);
 
     const recentFilters = useAppSelector(
         (state) => state.data.filterData.recentFilters,
@@ -39,16 +35,16 @@ const ManualInput: React.FC<{
                     b.date * (b.datasetName === datasetName ? 10000 : 1) -
                     a.date / (a.datasetName === datasetName ? 10000 : 1),
             )
-            .map(({ filter }) => filterToString(filter));
+            .map(({ filter }) => filterForValidation.toString(filter));
         return result;
-    }, [recentFilters, datasetName]);
+    }, [recentFilters, datasetName, filterForValidation]);
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = event.target;
         if (error) {
             setError(false);
         }
-        if (validateFilterString(value, columnNames, columnTypes)) {
+        if (filterForValidation.validateFilterString(value)) {
             setWarning(false);
         } else {
             setWarning(true);
@@ -71,6 +67,16 @@ const ManualInput: React.FC<{
     ) => {
         if (reason === 'selectOption') {
             handleSetInputValue(value || '');
+            // Check if the selected filter is valid
+            if (value && !filterForValidation.validateFilterString(value)) {
+                setWarning(true);
+            } else if (warning) {
+                setWarning(false);
+            }
+            // It can be both error and warning, so check error separately
+            if (error) {
+                setError(false);
+            }
             // Prevent the Enter from activating the filter
             event.stopPropagation();
         }

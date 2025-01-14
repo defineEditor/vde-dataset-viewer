@@ -10,7 +10,7 @@ import {
     setPage,
     openSnackbar,
 } from 'renderer/redux/slices/ui';
-import { resetFilter } from 'renderer/redux/slices/data';
+import { resetFilter, addRecent } from 'renderer/redux/slices/data';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { openNewDataset } from 'renderer/utils/readData';
 import AppContext from 'renderer/utils/AppContext';
@@ -37,21 +37,15 @@ const Header: React.FC = () => {
         (state) => state.data.filterData.currentFilter !== null,
     );
 
-    const currentFileMode = useAppSelector((state) => {
-        const { currentFileId } = state.ui;
-        if (state.data.openedFileIds[currentFileId]) {
-            return state.data.openedFileIds[currentFileId].mode;
-        }
-        return '';
-    });
+    const currentFileId = useAppSelector((state) => state.ui.currentFileId);
 
-    const dsName = useAppSelector((state) => {
-        const { currentFileId } = state.ui;
-        if (state.data.openedFileIds[currentFileId]) {
-            return state.data.openedFileIds[currentFileId].name;
-        }
-        return '';
-    });
+    const openFiles = apiService.getOpenedFiles(currentFileId);
+
+    const dataset = openFiles.length === 1 ? openFiles[0] : null;
+
+    const currentFileMode = dataset?.mode;
+
+    const dsName = dataset?.name || '';
 
     const handleOpenClick = useCallback(async () => {
         const newDataInfo = await openNewDataset(apiService, 'local');
@@ -66,6 +60,13 @@ const Header: React.FC = () => {
             }
             return;
         }
+        dispatch(
+            addRecent({
+                name: newDataInfo.metadata.name,
+                label: newDataInfo.metadata.label,
+                path: newDataInfo.path,
+            }),
+        );
         dispatch(
             openDataset({
                 fileId: newDataInfo.fileId,
@@ -183,21 +184,14 @@ const Header: React.FC = () => {
                     onClick={handleFilterClick}
                     id="filterData"
                     size="small"
-                    disabled={
-                        pathname !== paths.VIEWFILE ||
-                        currentFileMode === 'remote'
-                    }
+                    disabled={pathname !== paths.VIEWFILE}
                 >
                     <FilterIcon
-                        sx={
-                            currentFileMode === 'remote'
-                                ? { color: 'grey.500' }
-                                : {
-                                      color: isFilterEnabled
-                                          ? 'success.main'
-                                          : 'primary.main',
-                                  }
-                        }
+                        sx={{
+                            color: isFilterEnabled
+                                ? 'success.main'
+                                : 'primary.main',
+                        }}
                     />
                 </IconButton>
             </Tooltip>

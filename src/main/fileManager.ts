@@ -1,28 +1,62 @@
 import { dialog, IpcMainInvokeEvent } from 'electron';
 import DatasetJson from 'js-stream-dataset-json';
-import { DatasetType, Filter, IOpenFile } from 'interfaces/common';
+import DatasetXpt from 'xport-js';
+import {
+    DatasetType,
+    BasicFilter,
+    IOpenFile,
+    ColumnMetadata,
+    DatasetJsonMetadata,
+} from 'interfaces/common';
 import openFile from 'main/openFile';
 import fs from 'fs';
+import Filter from 'js-array-filter';
+import crypto from 'crypto';
+import path from 'path';
+
+const getHash = (str: string): string => {
+    const timestamp = Date.now();
+    const hash = crypto
+        .createHash('md5')
+        .update(`${str}${timestamp}`)
+        .digest('hex');
+    return hash;
+};
 
 class FileManager {
-    private openedFiles: { [key: string]: DatasetJson } = {};
+    private openedFiles: { [key: string]: DatasetJson | DatasetXpt } = {};
 
     constructor() {
         this.openedFiles = {};
     }
 
-    getFileId(): string {
-        const allIds = Object.keys(this.openedFiles);
-        for (let i = 0; i <= allIds.length; i += 1) {
-            const id = i.toString();
-            if (allIds.includes(id) === false) {
-                return id;
+    public getFileId = (pathToFile: string): string => {
+        // Check if the file is already opened
+        const foundFileIds = Object.keys(this.openedFiles).filter((fileId) => {
+            const file = this.openedFiles[fileId];
+            if (file instanceof DatasetJson) {
+                return file.filePath === pathToFile;
             }
-        }
-        return '';
-    }
+            if (file instanceof DatasetXpt) {
+                return file.pathToFile === pathToFile;
+            }
+            return false;
+        });
 
-    handleFileOpen = async (
+        if (foundFileIds.length > 0) {
+            return foundFileIds[0];
+        }
+        // Craete a new ID
+        const allIds = Object.keys(this.openedFiles);
+        let hash: string;
+        do {
+            const filename = path.parse(pathToFile).name;
+            hash = `${filename}_${getHash(path.normalize(pathToFile))}`;
+        } while (allIds.includes(hash));
+        return hash;
+    };
+
+    public handleFileOpen = async (
         _event: IpcMainInvokeEvent,
         mode: 'local' | 'remote',
         fileSettings: {
@@ -76,7 +110,7 @@ class FileManager {
             return { fileId: newFile.path, type: 'json', path: newFile.path };
         }
 
-        const fileId = this.getFileId();
+        const fileId = this.getFileId(newFile.path);
         const extension = newFile.path.split('.').pop()?.toLowerCase();
         switch (extension) {
             case 'json':
@@ -96,11 +130,15 @@ class FileManager {
                     errorMessage: 'File extension not supported',
                 };
         }
-        let data: DatasetJson;
+        let data: DatasetJson | DatasetXpt;
         try {
-            data = new DatasetJson(newFile.path, {
-                encoding,
-            });
+            if (type === 'xpt') {
+                data = new DatasetXpt(newFile.path);
+            } else {
+                data = new DatasetJson(newFile.path, {
+                    encoding,
+                });
+            }
         } catch (error) {
             return {
                 fileId: '',
@@ -114,7 +152,7 @@ class FileManager {
         return { fileId, type, path: newFile.path };
     };
 
-    handleFileClose = async (
+    public handleFileClose = async (
         _event: IpcMainInvokeEvent,
         fileId: string,
         mode: 'local' | 'remote',
@@ -135,10 +173,21 @@ class FileManager {
         return false;
     };
 
-    handleGetMetadata = async (_event: IpcMainInvokeEvent, fileId: string) => {
+    public handleGetMetadata = async (
+        _event: IpcMainInvokeEvent,
+        fileId: string,
+    ) => {
         if (this.openedFiles[fileId]) {
             try {
-                const metadata = await this.openedFiles[fileId].getMetadata();
+                let metadata: DatasetJsonMetadata;
+                if (this.openedFiles[fileId] instanceof DatasetXpt) {
+                    metadata =
+                        await this.openedFiles[fileId].getMetadata(
+                            'dataset-json1.1',
+                        );
+                } else {
+                    metadata = await this.openedFiles[fileId].getMetadata();
+                }
                 return metadata;
             } catch (error) {
                 dialog.showErrorBox(
@@ -151,23 +200,39 @@ class FileManager {
         return null;
     };
 
-    handleGetObservations = async (
+    public handleGetObservations = async (
         _event: IpcMainInvokeEvent,
         fileId: string,
         start: number,
         length: number,
         filterColumns?: string[],
-        filterData?: Filter[],
+        filterData?: BasicFilter,
+        columns?: ColumnMetadata[],
     ) => {
         if (this.openedFiles[fileId]) {
             try {
-                const data = await this.openedFiles[fileId].getData({
+                let filter: Filter | undefined;
+                if (filterData !== undefined && columns !== undefined) {
+                    filter = new Filter('dataset-json1.1', columns, filterData);
+                } else {
+                    filter = undefined;
+                }
+                if (this.openedFiles[fileId] instanceof DatasetXpt) {
+                    return await this.openedFiles[fileId].getData({
+                        start,
+                        length,
+                        filterColumns,
+                        filter,
+                        roundPrecision: 12,
+                    });
+                }
+                // TODO: strange TS issue, it requires filter to be undefined
+                return await this.openedFiles[fileId].getData({
                     start,
                     length,
                     filterColumns,
-                    filterData,
+                    filter: filter as undefined,
                 });
-                return data;
             } catch (error) {
                 dialog.showErrorBox(
                     'Data Error',

@@ -41,8 +41,19 @@ const styles = {
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
         fontSize: 14,
+        height: 21,
     },
-    extension: {
+    extensionXpt: {
+        display: 'inline-block',
+        backgroundColor: 'warning.dark',
+        fontFamily: 'monospace',
+        fontWeight: '500',
+        color: 'grey.300',
+        borderRadius: 8,
+        pl: 1,
+        pr: 1,
+    },
+    extensionOther: {
         display: 'inline-block',
         backgroundColor: 'primary.main',
         fontFamily: 'monospace',
@@ -65,6 +76,9 @@ const FileCard: React.FC<{
     }) => void;
 }> = ({ name, path, label, handleRecentFileClick }) => {
     const extension = path.split('.').pop()?.toUpperCase();
+    const extensionStyle =
+        extension === 'XPT' ? styles.extensionXpt : styles.extensionOther;
+
     return (
         <Card sx={styles.card}>
             <CardContent
@@ -81,7 +95,7 @@ const FileCard: React.FC<{
                         {path}
                     </Typography>
                 </Tooltip>
-                <Typography variant="body2" sx={styles.extension}>
+                <Typography variant="body2" sx={extensionStyle}>
                     {extension}
                 </Typography>
             </CardContent>

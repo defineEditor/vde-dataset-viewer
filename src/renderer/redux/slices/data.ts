@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { data as initialData } from 'renderer/redux/initialState';
-import { IRecentFile, Filter } from 'interfaces/common';
+import { IRecentFile, BasicFilter } from 'interfaces/common';
 import deepEqual from 'renderer/utils/deepEqual';
 import getFolderName from 'renderer/utils/getFolderName';
 import { closeDataset, openDataset } from 'renderer/redux/slices/ui';
@@ -9,15 +9,6 @@ export const dataSlice = createSlice({
     name: 'data',
     initialState: initialData,
     reducers: {
-        cleanData: (state, action: PayloadAction<{ fileId: string }>) => {
-            const newOpenedFileIds = { ...state.openedFileIds };
-            delete newOpenedFileIds[action.payload.fileId];
-            const newState = {
-                ...state,
-                openedFileIds: newOpenedFileIds,
-            };
-            return newState;
-        },
         addRecent: (state, action: PayloadAction<IRecentFile>) => {
             // Check if the new file is already present in the recent files
             const index = state.recentFiles.findIndex(
@@ -50,9 +41,9 @@ export const dataSlice = createSlice({
         },
         setFilter: (
             state,
-            action: PayloadAction<{ filter: Filter; datasetName: string }>,
+            action: PayloadAction<{ filter: BasicFilter; datasetName: string }>,
         ) => {
-            // If there are more than 20 recent filters, remove the oldest one
+            // If there are more than 100 recent filters, remove the oldest one
             const newRecentFilters = state.filterData.recentFilters.slice();
             // Check if the new filter is already present in the recent filters
             const index = newRecentFilters.findIndex((recentFilter) =>
@@ -61,7 +52,7 @@ export const dataSlice = createSlice({
             if (index !== -1) {
                 // If it is, remove the old entry
                 newRecentFilters.splice(index, 1);
-            } else if (newRecentFilters.length >= 20) {
+            } else if (newRecentFilters.length >= 100) {
                 newRecentFilters.pop();
             }
             newRecentFilters.unshift({
@@ -100,21 +91,6 @@ export const dataSlice = createSlice({
     extraReducers: (builder) => {
         builder.addCase(openDataset, (state, action) => {
             const { fileId } = action.payload;
-            if (
-                fileId in state.openedFileIds &&
-                action.payload.currentFileId === fileId
-            ) {
-                return state;
-            }
-            if (!state.openedFileIds[fileId]) {
-                state.openedFileIds[fileId] = {
-                    name: action.payload.name || '',
-                    label: action.payload.label || '',
-                    type: action.payload.type || 'json',
-                    mode: action.payload.mode || 'local',
-                    totalRecords: action.payload.totalRecords || 0,
-                };
-            }
             if (action.payload.currentFileId !== fileId) {
                 state.filterData.currentFilter = null;
             }
@@ -122,11 +98,8 @@ export const dataSlice = createSlice({
             return state;
         });
         builder.addCase(closeDataset, (state, action) => {
-            // Remove file from the opened files
+            // Remove file from the loaded records
             const { fileId } = action.payload;
-            if (state.openedFileIds[fileId]) {
-                delete state.openedFileIds[fileId];
-            }
             if (state.loadedRecords[fileId]) {
                 delete state.loadedRecords[fileId];
             }
@@ -136,12 +109,7 @@ export const dataSlice = createSlice({
     },
 });
 
-export const {
-    cleanData,
-    addRecent,
-    setFilter,
-    resetFilter,
-    setLoadedRecords,
-} = dataSlice.actions;
+export const { addRecent, setFilter, resetFilter, setLoadedRecords } =
+    dataSlice.actions;
 
 export default dataSlice.reducer;

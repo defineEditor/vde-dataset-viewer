@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Card from '@mui/material/Card';
+import Stack from '@mui/material/Stack';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
@@ -7,6 +8,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import CloseIcon from '@mui/icons-material/Close';
+import { DatasetType } from 'interfaces/api';
 
 const styles = {
     card: (theme) => ({
@@ -19,12 +21,37 @@ const styles = {
         },
         position: 'relative',
     }),
-    cardContent: {
+    label: {
         color: 'text.secondary',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
         fontSize: 14,
+        height: 21,
+    },
+    typeXpt: {
+        display: 'inline-block',
+        height: 20,
+        backgroundColor: 'warning.dark',
+        fontFamily: 'monospace',
+        fontWeight: '500',
+        color: 'grey.300',
+        borderRadius: 8,
+        pl: 1,
+        pr: 1,
+        mb: 1,
+    },
+    typeOther: {
+        display: 'inline-block',
+        backgroundColor: 'primary.main',
+        fontFamily: 'monospace',
+        fontWeight: '500',
+        color: 'grey.300',
+        borderRadius: 8,
+        height: 20,
+        pl: 1,
+        pr: 1,
+        mb: 1,
     },
     cardTitle: {
         color: 'text.secondary',
@@ -44,23 +71,21 @@ const styles = {
 };
 
 const DatasetCard: React.FC<{
-    fileId: string;
-    name: string;
-    label: string;
-    nCols: number;
-    records: number;
+    file: {
+        fileId: string;
+        name: string;
+        label: string;
+        nCols: number;
+        records: number;
+        type: DatasetType;
+    };
     handleSelectFileClick: (_file: { fileId: string }) => void;
     handleDatasetClose: (_fileId: string) => void;
-}> = ({
-    fileId,
-    name,
-    label,
-    nCols,
-    records,
-    handleSelectFileClick,
-    handleDatasetClose,
-}) => {
+}> = ({ file, handleSelectFileClick, handleDatasetClose }) => {
+    const { fileId, name, label, nCols, records, type } = file;
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+    const typeStyle = type === 'xpt' ? styles.typeXpt : styles.typeOther;
 
     const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
         event.stopPropagation();
@@ -80,12 +105,21 @@ const DatasetCard: React.FC<{
     return (
         <Card sx={styles.card}>
             <CardContent onClick={() => handleSelectFileClick({ fileId })}>
-                <Typography gutterBottom sx={styles.cardContent}>
+                <Typography gutterBottom sx={styles.label}>
                     {label}
                 </Typography>
-                <Typography variant="h5" component="div" sx={styles.name}>
-                    {name}
-                </Typography>
+                <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="center"
+                >
+                    <Typography variant="h5" component="div" sx={styles.name}>
+                        {name}
+                    </Typography>
+                    <Typography variant="body2" sx={typeStyle}>
+                        {type.toUpperCase()}
+                    </Typography>
+                </Stack>
                 <Typography variant="body2" sx={styles.attrs}>
                     {nCols} columns
                 </Typography>

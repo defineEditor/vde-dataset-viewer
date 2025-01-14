@@ -44,7 +44,6 @@ export const dehydrateState = (state: IStore): IStore => {
     // Remove some things, which should not be kept between sessions
     const newData = { ...state.data };
     // Reset opened files
-    newData.openedFileIds = data.openedFileIds;
     newData.loadedRecords = data.loadedRecords;
     // Remove filter if it was applied
     newData.filterData = { ...newData.filterData, currentFilter: null };
