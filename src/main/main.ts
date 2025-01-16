@@ -136,6 +136,11 @@ app.whenReady()
         );
         ipcMain.handle('store:save', storeManager.save);
         ipcMain.handle('store:load', storeManager.load);
+        ipcMain.handle('main:openFileDialog', fileManager.openFileDialog);
+        ipcMain.handle(
+            'main:openDirectoryDialog',
+            fileManager.openDirectoryDialog,
+        );
         createWindow();
         app.on('activate', () => {
             // On macOS it's common to re-create a window in the app when the

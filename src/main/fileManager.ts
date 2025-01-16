@@ -7,6 +7,7 @@ import {
     IOpenFile,
     ColumnMetadata,
     DatasetJsonMetadata,
+    FileInfo,
 } from 'interfaces/common';
 import openFile from 'main/openFile';
 import fs from 'fs';
@@ -242,6 +243,83 @@ class FileManager {
             }
         }
         return null;
+    };
+
+    public openFileDialog = async (
+        _event: IpcMainInvokeEvent,
+        options: {
+            multiple?: boolean;
+            initialFolder?: string;
+            filters?: { name: string; extensions: string[] }[];
+        },
+    ): Promise<FileInfo[] | null> => {
+        try {
+            const { multiple, initialFolder, filters } = options;
+            let startFolder = initialFolder;
+            // Check if initialFolder exists;
+            if (initialFolder !== undefined) {
+                if (fs.existsSync(initialFolder) === false) {
+                    startFolder = undefined;
+                }
+            }
+
+            const properties: Array<'openFile' | 'multiSelections'> = [
+                'openFile',
+            ];
+            if (multiple) {
+                properties.push('multiSelections');
+            }
+            const result = await dialog.showOpenDialog({
+                properties,
+                defaultPath: startFolder,
+                filters,
+            });
+            if (result.canceled) {
+                return [];
+            }
+            return result.filePaths.map((filePath) => {
+                const parsedPath = path.parse(filePath);
+                // Get data of the last modification and size of the file
+                const stats = fs.statSync(filePath);
+                return {
+                    filename: parsedPath.base,
+                    fullPath: filePath,
+                    folder: parsedPath.dir,
+                    format: parsedPath.ext.toUpperCase(),
+                    size: stats.size,
+                    lastModified: stats.mtime.getTime(),
+                };
+            });
+        } catch (error) {
+            return null;
+        }
+    };
+
+    public openDirectoryDialog = async (
+        _event: IpcMainInvokeEvent,
+        initialFolder: string | null,
+    ): Promise<string | null> => {
+        try {
+            let startFolder =
+                initialFolder === null ? undefined : initialFolder;
+            // Check if initialFolder exists;
+            if (initialFolder !== null) {
+                if (fs.existsSync(initialFolder) === false) {
+                    startFolder = undefined;
+                }
+            }
+
+            const result = await dialog.showOpenDialog({
+                properties: ['openDirectory'],
+                defaultPath: startFolder,
+            });
+            if (result.canceled) {
+                return '';
+            }
+            return result.filePaths[0];
+        } catch (error) {
+            return null;
+        }
     };
 }
 

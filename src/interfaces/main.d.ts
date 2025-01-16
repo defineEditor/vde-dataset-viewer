@@ -1,9 +1,19 @@
 import { UpdateCheckResult } from 'electron-updater';
 
-interface ICheckUpdateResult {
+export interface ICheckUpdateResult {
     newUpdated: boolean;
     update?: UpdateCheckResult['updateInfo'];
     errorMessage?: string;
 }
 
-export { ICheckUpdateResult, UpdateCheckResult };
+export interface FileInfo {
+    fullPath: string;
+    folder: string;
+    filename: string;
+    format: string;
+    size: number;
+    lastModified: number;
+    datasetJsonVersion?: string;
+}
+
+export { UpdateCheckResult };

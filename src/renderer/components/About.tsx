@@ -17,7 +17,7 @@ const styles = {
     root: {
         width: '100%',
         height: '100%',
-        m: 4,
+        backgroundColor: 'grey.100',
     },
     main: {
         mt: 4,

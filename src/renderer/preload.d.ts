@@ -9,6 +9,7 @@ import {
     ILocalStore,
     ICheckUpdateResult,
     IFetchResponse,
+    FileInfo,
 } from 'interfaces/common';
 
 declare global {
@@ -61,6 +62,14 @@ declare global {
                 once(channel: string, func: (...args: unknown[]) => void): void;
             };
             writeToClipboard: (text: string) => Promise<boolean>;
+            openFileDialog: (options: {
+                multiple?: boolean;
+                initialFolder?: string;
+                filters?: { name: string; extensions: string[] }[];
+            }) => Promise<FileInfo[] | null>;
+            openDirectoryDialog: (
+                initialFolder: string | null,
+            ) => Promise<string>;
         };
     }
 }

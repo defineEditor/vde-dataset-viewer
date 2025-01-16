@@ -4,7 +4,12 @@ import {
     IpcRendererEvent,
     webUtils,
 } from 'electron';
-import { BasicFilter, ColumnMetadata, ILocalStore } from 'interfaces/common';
+import {
+    BasicFilter,
+    ColumnMetadata,
+    ILocalStore,
+    FileInfo,
+} from 'interfaces/common';
 
 export type Channels = 'ipc-example';
 
@@ -55,6 +60,16 @@ contextBridge.exposeInMainWorld('electron', {
     pathForFile: (file: File) => webUtils.getPathForFile(file),
     fetch: (input: RequestInfo | URL, init?: RequestInit) =>
         ipcRenderer.invoke('main:fetch', input, init),
+    openFileDialog: (options: {
+        multiple?: boolean;
+        initialFolder?: string;
+        filters?: { name: string; extensions: string[] }[];
+    }): Promise<FileInfo[] | null> =>
+        ipcRenderer.invoke('main:openFileDialog', options),
+    openDirectoryDialog: (
+        initialFolder: string | null,
+    ): Promise<string | null> =>
+        ipcRenderer.invoke('main:openDirectoryDialog', initialFolder),
     isWindows: process.platform === 'win32',
     ipcRenderer: {
         sendMessage(channel: Channels, args: unknown[]) {

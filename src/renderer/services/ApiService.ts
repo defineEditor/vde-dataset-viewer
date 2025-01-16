@@ -508,6 +508,32 @@ class ApiService {
         return result;
     };
 
+    // Select files
+    public openFileDialog = async (options?: {
+        multiple?: boolean;
+        initialFolder?: string;
+        filters?: Array<{ name: string; extensions: string[] }>;
+    }) => {
+        const {
+            multiple = false,
+            initialFolder,
+            filters = [{ name: 'All Files', extensions: ['*'] }],
+        } = options || {};
+        const result = await window.electron.openFileDialog({
+            multiple,
+            initialFolder,
+            filters,
+        });
+        return result;
+    };
+
+    public openDirectoryDialog = async (
+        initialFolder: string | null = null,
+    ) => {
+        const result = await window.electron.openDirectoryDialog(initialFolder);
+        return result;
+    };
+
     public getApiAbout = async (
         apiRecord: IApiRecord,
     ): Promise<IApiAbout | null> => {
