@@ -17,6 +17,7 @@ import {
     setPathname,
 } from 'renderer/redux/slices/ui';
 import { modals, paths } from 'misc/constants';
+import DragAndDrop from 'renderer/components/DragAndDrop';
 
 class ErrorBoundary extends React.Component<
     { children: React.ReactNode },
@@ -96,9 +97,11 @@ const AppWithContext: React.FC = () => {
         <ThemeProvider theme={theme}>
             <CssBaseline />
             <ErrorBoundary>
-                <Main theme={theme} />
-                <Snackbar />
-                <Modal />
+                <DragAndDrop>
+                    <Main theme={theme} />
+                    <Snackbar />
+                    <Modal />
+                </DragAndDrop>
             </ErrorBoundary>
         </ThemeProvider>
     );

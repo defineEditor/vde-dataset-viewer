@@ -41,6 +41,7 @@ declare global {
                 filterData?: BasicFilter,
                 columns?: ColumnMetadata[],
             ) => Promise<ItemDataArray[] | null>;
+            pathForFile: (file: File) => string;
             fetch: (
                 input: RequestInfo | URL,
                 init?: RequestInit,

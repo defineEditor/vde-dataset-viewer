@@ -427,6 +427,25 @@ const Settings: React.FC = () => {
                                 Check for new versions of the application on
                                 startup
                             </Typography>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={
+                                            newSettings.other.dragoverAnimation
+                                        }
+                                        onChange={handleInputChange}
+                                        name="other.dragoverAnimation"
+                                    />
+                                }
+                                label="File dragging animation"
+                            />
+                            <Typography
+                                variant="caption"
+                                sx={styles.helperText}
+                            >
+                                Show an animation when dragging files over the
+                                application window
+                            </Typography>
                         </Stack>
                     </Stack>
                 </Box>

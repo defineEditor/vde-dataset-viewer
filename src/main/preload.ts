@@ -1,4 +1,9 @@
-import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+import {
+    contextBridge,
+    ipcRenderer,
+    IpcRendererEvent,
+    webUtils,
+} from 'electron';
 import { BasicFilter, ColumnMetadata, ILocalStore } from 'interfaces/common';
 
 export type Channels = 'ipc-example';
@@ -47,6 +52,7 @@ contextBridge.exposeInMainWorld('electron', {
             ipcRenderer.send('main:storeSaved');
         });
     },
+    pathForFile: (file: File) => webUtils.getPathForFile(file),
     fetch: (input: RequestInfo | URL, init?: RequestInit) =>
         ipcRenderer.invoke('main:fetch', input, init),
     isWindows: process.platform === 'win32',

@@ -21,6 +21,7 @@ export interface ISettings {
         checkForUpdates: boolean;
         loadingAnimation: 'santa' | 'cat' | 'dog' | 'normal' | 'random';
         inEncoding: 'utf8' | 'utf16le' | 'base64' | 'ucs2' | 'latin1' | 'ascii';
+        dragoverAnimation: boolean;
     };
 }
 

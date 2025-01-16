@@ -19,6 +19,7 @@ export const settings: ISettings = {
         checkForUpdates: true,
         loadingAnimation: 'random',
         inEncoding: 'utf8',
+        dragoverAnimation: true,
     },
 };
 export const ui: IUi = {
