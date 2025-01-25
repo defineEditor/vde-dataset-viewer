@@ -17,8 +17,6 @@ export interface IHeaderCell {
     /** Custom formatter for the column */
     /** Disable sorting for the column */
     disableSort?: boolean;
-    /** Controls whether padding is enabled */
-    disablePadding?: boolean;
     /** Align column: right, left, ... */
     align?: AlignType;
     /** Controls whether the column should be searchable */
@@ -29,10 +27,8 @@ export interface IHeaderCell {
     size?: number;
     /** Type */
     type?: string;
-    /** Style applied to the column */
-    style?: StyleObject;
-    /** Whether a filter is created for the column in the general toolbar */
-    filter?: boolean;
+    /** Filter is applied to the column */
+    isFiltered?: boolean;
 }
 
 export interface ITableRow {

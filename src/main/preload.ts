@@ -4,11 +4,13 @@ import {
     IpcRendererEvent,
     webUtils,
 } from 'electron';
+import { ProgressInfo } from 'electron-updater';
 import {
     BasicFilter,
     ColumnMetadata,
     ILocalStore,
     FileInfo,
+    MainTask,
 } from 'interfaces/common';
 
 export type Channels = 'ipc-example';
@@ -71,6 +73,18 @@ contextBridge.exposeInMainWorld('electron', {
     ): Promise<string | null> =>
         ipcRenderer.invoke('main:openDirectoryDialog', initialFolder),
     isWindows: process.platform === 'win32',
+    startTask: (task: MainTask) => ipcRenderer.invoke('main:startTask', task),
+    onTaskProgress: (callback: (info: ProgressInfo) => void) => {
+        ipcRenderer.on(
+            'renderer:taskProgress',
+            async (_event: IpcRendererEvent, info: ProgressInfo) => {
+                callback(info);
+            },
+        );
+    },
+    cleanTaskProgressListeners: () => {
+        ipcRenderer.removeAllListeners('renderer:taskProgress');
+    },
     ipcRenderer: {
         sendMessage(channel: Channels, args: unknown[]) {
             ipcRenderer.send(channel, args);

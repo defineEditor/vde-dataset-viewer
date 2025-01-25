@@ -15,6 +15,8 @@ import {
     IApiStudy,
     IApiStudyDataset,
     DatasetMode,
+    MainTask,
+    ProgressInfo,
 } from 'interfaces/common';
 import store from 'renderer/redux/store';
 import transformData from 'renderer/services/transformData';
@@ -618,6 +620,21 @@ class ApiService {
             result = null;
         }
         return result;
+    };
+
+    public startTask = async (task: MainTask) => {
+        const result = await window.electron.startTask(task);
+        return result;
+    };
+
+    public subscriteToTaskProgress = (
+        callback: (info: ProgressInfo) => void,
+    ) => {
+        window.electron.onTaskProgress(callback);
+    };
+
+    public cleanTaskProgressListeners = () => {
+        window.electron.cleanTaskProgressListeners();
     };
 }
 

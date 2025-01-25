@@ -285,7 +285,7 @@ class FileManager {
                     filename: parsedPath.base,
                     fullPath: filePath,
                     folder: parsedPath.dir,
-                    format: parsedPath.ext.toUpperCase(),
+                    format: parsedPath.ext.toUpperCase().replace('.', ''),
                     size: stats.size,
                     lastModified: stats.mtime.getTime(),
                 };

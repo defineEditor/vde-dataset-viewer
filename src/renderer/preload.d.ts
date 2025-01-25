@@ -10,6 +10,8 @@ import {
     ICheckUpdateResult,
     IFetchResponse,
     FileInfo,
+    MainTask,
+    ProgressInfo,
 } from 'interfaces/common';
 
 declare global {
@@ -62,6 +64,9 @@ declare global {
                 once(channel: string, func: (...args: unknown[]) => void): void;
             };
             writeToClipboard: (text: string) => Promise<boolean>;
+            startTask: (task: MainTask) => Promise<boolean>;
+            onTaskProgress: (callback: (info: ProgressInfo) => void) => void;
+            cleanTaskProgressListeners: () => void;
             openFileDialog: (options: {
                 multiple?: boolean;
                 initialFolder?: string;
