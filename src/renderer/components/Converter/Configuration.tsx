@@ -67,16 +67,19 @@ const Converter: React.FC<{
     const [outputFormat, setOutputFormat] = useState<OutputFormat>('DJ1.1');
     const [files, setFiles] = useState<ConvertedFileInfo[]>([
         {
-            filename: 'test.xpt',
-            folder: '/home/users/nogi/',
-            format: 'XPT',
+            filename: 'adsl.xpt',
+            folder: '/home/nogi/nogi/DataExchange-DatasetJson/examples/adam/',
+            format: 'xpt',
             size: 1024 * 1024 * 5,
             lastModified: Date.now(),
-            fullPath: '/home/users/nogi/test.xpt',
+            fullPath:
+                '/home/nogi/nogi/DataExchange-DatasetJson/examples/adam/adsl.xpt',
             outputName: 'test.json',
         },
     ]);
-    const [destinationDir, setDestinationDir] = useState('/home/users/nogi/');
+    const [destinationDir, setDestinationDir] = useState(
+        '/home/nogi/nogi/DataExchange-DatasetJson/examples/adam/converted/',
+    );
     const [prettyPrint, setPrettyPrint] = useState(false);
     const [renameFiles, setRenameFiles] = useState(false);
     const [renamePattern, setRenamePattern] = useState('');
@@ -267,9 +270,10 @@ const Converter: React.FC<{
             type: mainTaskTypes.CONVERT,
             files,
             options: {
-                threads: settings.threads,
                 prettyPrint,
                 outputFormat,
+                destinationDir,
+                ...settings,
             },
         };
 

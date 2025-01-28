@@ -1,5 +1,6 @@
 import { UpdateCheckResult } from 'electron-updater';
 import { mainTaskTypes } from 'misc/constants';
+import { SettingsConverter } from 'interfaces/common';
 
 export interface ICheckUpdateResult {
     newUpdated: boolean;
@@ -13,7 +14,7 @@ export interface FileInfo {
     fullPath: string;
     folder: string;
     filename: string;
-    format: string;
+    format: 'xpt' | 'json';
     size: number;
     lastModified: number;
     datasetJsonVersion?: string;
@@ -23,14 +24,16 @@ export interface ConvertedFileInfo extends FileInfo {
     outputName: string;
 }
 
+export interface ConvertTaskOptions extends SettingsConverter {
+    prettyPrint: boolean;
+    outputFormat: OutputFormat;
+    destinationDir: string;
+}
+
 export interface ConvertTask {
     type: typeof mainTaskTypes.CONVERT;
     files: ConvertedFileInfo[];
-    options: {
-        threads: number;
-        prettyPrint: boolean;
-        outputFormat: OutputFormat;
-    };
+    options: ConvertTaskOptions;
 }
 
 export interface ProgressInfo {

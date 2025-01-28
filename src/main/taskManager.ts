@@ -1,6 +1,6 @@
 import { UtilityProcess, utilityProcess, app, BrowserWindow } from 'electron';
 import path from 'path';
-import { ConvertedFileInfo, MainTask } from 'interfaces/common';
+import { ConvertedFileInfo, ConvertTask, MainTask } from 'interfaces/common';
 import { MainTaskType } from 'misc/constants';
 
 class TaskManager {
@@ -10,6 +10,7 @@ class TaskManager {
         type: MainTaskType;
         index: number;
         file: ConvertedFileInfo;
+        options: ConvertTask['options'];
     }[];
 
     private running: number;
@@ -32,7 +33,12 @@ class TaskManager {
             if (next) {
                 // We need to wait for the process to increate the counter before starting the next one
                 // eslint-disable-next-line no-await-in-loop
-                await this.startProcess(next.type, next.index, next.file);
+                await this.startProcess(
+                    next.type,
+                    next.index,
+                    next.file,
+                    next.options,
+                );
             }
         }
     }
@@ -41,12 +47,13 @@ class TaskManager {
         type: MainTaskType,
         index: number,
         file: ConvertedFileInfo,
+        options: ConvertTask['options'],
     ): Promise<void> {
         this.running++;
         const process = this.createProcess(type);
         const processId = `${type}-${index.toString()}`;
         this.processes.set(processId, process);
-        process.postMessage({ processId, file });
+        process.postMessage({ processId, file, options });
 
         return new Promise((resolve) => {
             process.on('message', (progressResult) => {
@@ -81,7 +88,12 @@ class TaskManager {
             this.maxThreads = task.options?.threads || 1;
 
             task.files.forEach((file, index) => {
-                this.taskQueue.push({ type: task.type, index, file });
+                this.taskQueue.push({
+                    type: task.type,
+                    index,
+                    file,
+                    options: task.options,
+                });
             });
 
             await this.processQueue();
@@ -97,7 +109,7 @@ class TaskManager {
             return path.join(
                 process.resourcesPath,
                 'app.asar',
-                'src',
+                'dist',
                 'main',
                 'workers',
                 `${taskType}Worker.js`,
@@ -106,8 +118,8 @@ class TaskManager {
         // For development
         return path.join(
             app.getAppPath(),
-            'src',
-            'main',
+            '.erb',
+            'dll',
             'workers',
             `${taskType}Worker.js`,
         );

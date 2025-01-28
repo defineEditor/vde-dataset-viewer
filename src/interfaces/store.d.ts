@@ -2,6 +2,16 @@ import { BasicFilter, IApiStudy, IApiStudyDataset } from 'interfaces/api';
 import { ICheckUpdateResult } from 'interfaces/main';
 import { modals, ModalType, AllowedPathnames } from 'misc/constants';
 
+export interface SettingsConverter {
+    threads: number;
+    dateFormats: string[];
+    timeFormats: string[];
+    datetimeFormats: string[];
+    convertSuffixDt: boolean;
+    convertSuffixTm: boolean;
+    convertSuffixDtTm: boolean;
+}
+
 export interface ISettings {
     viewer: {
         pageSize: number;
@@ -13,10 +23,7 @@ export interface ISettings {
         maxPrecision?: number;
         copyFormat: 'tab' | 'csv' | 'json';
     };
-    converter: {
-        threads: number;
-        defaultOutputFormat: 'json' | 'ndjson';
-    };
+    converter: SettingsConverter;
     other: {
         checkForUpdates: boolean;
         loadingAnimation: 'santa' | 'cat' | 'dog' | 'normal' | 'random';

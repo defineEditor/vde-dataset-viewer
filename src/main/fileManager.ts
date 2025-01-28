@@ -281,11 +281,19 @@ class FileManager {
                 const parsedPath = path.parse(filePath);
                 // Get data of the last modification and size of the file
                 const stats = fs.statSync(filePath);
+                let format: 'xpt' | 'json';
+                if (parsedPath.ext.toLowerCase() === '.xpt') {
+                    format = 'xpt';
+                } else if (parsedPath.ext.toLowerCase() === '.json') {
+                    format = 'json';
+                } else {
+                    throw new Error('File extension not supported');
+                }
                 return {
                     filename: parsedPath.base,
                     fullPath: filePath,
                     folder: parsedPath.dir,
-                    format: parsedPath.ext.toUpperCase().replace('.', ''),
+                    format,
                     size: stats.size,
                     lastModified: stats.mtime.getTime(),
                 };
