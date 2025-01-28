@@ -9,33 +9,74 @@ const processXptMetadata = (
     options: ConvertTask['options'],
 ): DatasetJsonMetadata => {
     const newColumns = metadata.columns.map((column) => {
-        // Remove display format like $12.
         const newColumn = { ...column };
+
+        // Make ItemOID more unique
+        if (newColumn.itemOID === newColumn.name) {
+            newColumn.itemOID = `IT.${metadata.name.toUpperCase()}.${newColumn.name}`;
+        }
+
+        // Remove display format like $12.
         if (
             newColumn.displayFormat &&
-            /^\\$\d+\.?$/.test(newColumn.displayFormat)
+            /^\$\d+\.?$/.test(newColumn.displayFormat)
         ) {
-            newColumn.displayFormat = '';
+            delete newColumn.displayFormat;
         }
         // Remove length for numeric datatypes
         if (['integer', 'float', 'double'].includes(newColumn.dataType)) {
             delete newColumn.length;
         }
         // Identify numeric columns which should be converted to datetime;
+        // Identify using displayFormat
         const { dateFormats, timeFormats, datetimeFormats } = options;
-        if (newColumn.dataType === 'integer' && newColumn.displayFormat) {
-            if (dateFormats.includes(newColumn.displayFormat)) {
+        if (
+            ['double', 'integer'].includes(newColumn.dataType) &&
+            newColumn.displayFormat
+        ) {
+            // Remove w.d part from display format
+            const updatedDisplayFormat = newColumn.displayFormat.replace(
+                /^(.*?)\d+\.?\d*$/,
+                '$1',
+            );
+            if (dateFormats.includes(updatedDisplayFormat)) {
                 newColumn.dataType = 'date';
                 newColumn.targetDataType = 'integer';
                 newColumn.displayFormat = '';
-            } else if (timeFormats.includes(newColumn.displayFormat)) {
+            } else if (timeFormats.includes(updatedDisplayFormat)) {
                 newColumn.dataType = 'time';
                 newColumn.targetDataType = 'integer';
                 newColumn.displayFormat = '';
-            } else if (datetimeFormats.includes(newColumn.displayFormat)) {
+            } else if (datetimeFormats.includes(updatedDisplayFormat)) {
                 newColumn.dataType = 'datetime';
                 newColumn.targetDataType = 'integer';
                 newColumn.displayFormat = '';
+            }
+        }
+        // Indeentify using column name suffix
+        const { convertSuffixDt, convertSuffixDtTm, convertSuffixTm } = options;
+        if (
+            ['double', 'integer'].includes(newColumn.dataType) &&
+            (convertSuffixDt || convertSuffixTm || convertSuffixDtTm)
+        ) {
+            if (
+                convertSuffixDt &&
+                newColumn.name.toLowerCase().endsWith('dt')
+            ) {
+                newColumn.dataType = 'date';
+                newColumn.targetDataType = 'integer';
+            } else if (
+                convertSuffixTm &&
+                newColumn.name.toLowerCase().endsWith('tm')
+            ) {
+                newColumn.dataType = 'time';
+                newColumn.targetDataType = 'integer';
+            } else if (
+                convertSuffixDtTm &&
+                newColumn.name.toLowerCase().endsWith('dtm')
+            ) {
+                newColumn.dataType = 'datetime';
+                newColumn.targetDataType = 'integer';
             }
         }
         return newColumn;
@@ -43,6 +84,30 @@ const processXptMetadata = (
 
     const newMetadata = { ...metadata, columns: newColumns };
     return newMetadata;
+};
+
+const convertXptDateTime = (value: number, type: ItemType): string => {
+    if (value === null || Number.isNaN(value)) return '';
+
+    const xptEpoch = new Date('1960-01-01T00:00:00.000Z');
+    let date: Date;
+
+    switch (type) {
+        case 'date':
+            // XPT dates are days since 1960-01-01
+            date = new Date(xptEpoch.getTime() + value * 24 * 60 * 60 * 1000);
+            return date.toISOString().split('T')[0];
+        case 'time':
+            // XPT times are seconds since midnight
+            date = new Date(value * 1000);
+            return date.toISOString().split('T')[1].split('.')[0];
+        case 'datetime':
+            // XPT datetimes are seconds since 1960-01-01
+            date = new Date(xptEpoch.getTime() + value * 1000);
+            return date.toISOString();
+        default:
+            return String(value);
+    }
 };
 
 const convertXpt = async (
@@ -84,6 +149,16 @@ const convertXpt = async (
         let buffer: ItemDataArray[] = [];
         // Read blocks of 10k records
         for await (const obs of datasetXpt.read({ skipHeader: true })) {
+            // Convert datetime values if needed
+            if (dtIndexes.length > 0) {
+                const row = obs as ItemDataArray;
+                dtIndexes.forEach(({ index, dataType }) => {
+                    row[index] = convertXptDateTime(
+                        row[index] as number,
+                        dataType,
+                    );
+                });
+            }
             buffer.push(obs as ItemDataArray);
             currentRecord++;
             if (currentRecord % 10000 === 0) {

@@ -67,14 +67,14 @@ const Converter: React.FC<{
     const [outputFormat, setOutputFormat] = useState<OutputFormat>('DJ1.1');
     const [files, setFiles] = useState<ConvertedFileInfo[]>([
         {
-            filename: 'adsl.xpt',
+            filename: 'adtte.xpt',
             folder: '/home/nogi/nogi/DataExchange-DatasetJson/examples/adam/',
             format: 'xpt',
             size: 1024 * 1024 * 5,
             lastModified: Date.now(),
             fullPath:
-                '/home/nogi/nogi/DataExchange-DatasetJson/examples/adam/adsl.xpt',
-            outputName: 'test.json',
+                '/home/nogi/nogi/DataExchange-DatasetJson/examples/adam/adtte.xpt',
+            outputName: 'adtte.json',
         },
     ]);
     const [destinationDir, setDestinationDir] = useState(
