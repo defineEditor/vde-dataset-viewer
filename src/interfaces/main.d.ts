@@ -1,6 +1,16 @@
 import { UpdateCheckResult } from 'electron-updater';
+import { DatasetMetadata } from 'interfaces/datasetJson';
 import { mainTaskTypes } from 'misc/constants';
-import { SettingsConverter } from 'interfaces/common';
+
+export interface SettingsConverter {
+    threads: number;
+    dateFormats: string[];
+    timeFormats: string[];
+    datetimeFormats: string[];
+    convertSuffixDt: boolean;
+    convertSuffixTm: boolean;
+    convertSuffixDtTm: boolean;
+}
 
 export interface ICheckUpdateResult {
     newUpdated: boolean;
@@ -14,7 +24,7 @@ export interface FileInfo {
     fullPath: string;
     folder: string;
     filename: string;
-    format: 'xpt' | 'json';
+    format: 'xpt' | 'json' | 'ndjson';
     size: number;
     lastModified: number;
     datasetJsonVersion?: string;
@@ -28,6 +38,7 @@ export interface ConvertTaskOptions extends SettingsConverter {
     prettyPrint: boolean;
     outputFormat: OutputFormat;
     destinationDir: string;
+    metadata: Partial<DatasetMetadata>;
 }
 
 export interface ConvertTask {

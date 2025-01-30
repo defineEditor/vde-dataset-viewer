@@ -337,21 +337,6 @@ const Settings: React.FC = () => {
                             slotProps={{ htmlInput: { min: 1, max: 16 } }}
                             sx={styles.inputField}
                         />
-                        <TextField
-                            label="Default Output Format"
-                            name="converter.defaultOutputFormat"
-                            value={newSettings.converter.defaultOutputFormat}
-                            select
-                            onChange={(event) =>
-                                handleInputChange(
-                                    event as React.ChangeEvent<HTMLInputElement>,
-                                )
-                            }
-                            sx={styles.inputField}
-                        >
-                            <MenuItem value="json">JSON</MenuItem>
-                            <MenuItem value="ndjson">NDJSON</MenuItem>
-                        </TextField>
                     </Stack>
                 </Box>
                 <Box hidden={tabIndex !== 2} sx={styles.tabPanel}>

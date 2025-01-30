@@ -31,9 +31,8 @@ class TaskManager {
         while (this.taskQueue.length > 0 && this.running < this.maxThreads) {
             const next = this.taskQueue.shift();
             if (next) {
-                // We need to wait for the process to increate the counter before starting the next one
-                // eslint-disable-next-line no-await-in-loop
-                await this.startProcess(
+                this.running++;
+                this.startProcess(
                     next.type,
                     next.index,
                     next.file,
@@ -49,7 +48,6 @@ class TaskManager {
         file: ConvertedFileInfo,
         options: ConvertTask['options'],
     ): Promise<void> {
-        this.running++;
         const process = this.createProcess(type);
         const processId = `${type}-${index.toString()}`;
         this.processes.set(processId, process);

@@ -13,10 +13,10 @@ import {
     TableRow,
     Paper,
     IconButton,
-    Checkbox,
     FormControlLabel,
     InputAdornment,
     Typography,
+    Switch,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
@@ -29,8 +29,11 @@ import {
     ConvertedFileInfo,
     OutputFormat,
     ConvertTask,
+    DatasetMetadata,
 } from 'interfaces/common';
 import { mainTaskTypes } from 'misc/constants';
+import Metadata from 'renderer/components/Converter/Metadata';
+import Options from 'renderer/components/Converter/Options';
 
 const getFormattedDate = (timestamp: number): string => {
     return new Date(timestamp).toISOString().split('.')[0].replace('T', ' ');
@@ -59,35 +62,34 @@ const styles = {
     destinationField: {
         backgroundColor: 'background.paper',
     },
+    buttonGroup: {
+        marginLeft: 'auto',
+    },
+    noSelect: {
+        userSelect: 'none',
+    },
 };
 
 const Converter: React.FC<{
     onConvert: (task: ConvertTask) => void;
 }> = ({ onConvert }) => {
     const [outputFormat, setOutputFormat] = useState<OutputFormat>('DJ1.1');
-    const [files, setFiles] = useState<ConvertedFileInfo[]>([
-        {
-            filename: 'adtte.xpt',
-            folder: '/home/nogi/nogi/DataExchange-DatasetJson/examples/adam/',
-            format: 'xpt',
-            size: 1024 * 1024 * 5,
-            lastModified: Date.now(),
-            fullPath:
-                '/home/nogi/nogi/DataExchange-DatasetJson/examples/adam/adtte.xpt',
-            outputName: 'adtte.json',
-        },
-    ]);
-    const [destinationDir, setDestinationDir] = useState(
-        '/home/nogi/nogi/DataExchange-DatasetJson/examples/adam/converted/',
-    );
-    const [prettyPrint, setPrettyPrint] = useState(false);
-    const [renameFiles, setRenameFiles] = useState(false);
-    const [renamePattern, setRenamePattern] = useState('');
-    const [renameReplacement, setRenameReplacement] = useState('');
+    const [files, setFiles] = useState<ConvertedFileInfo[]>([]);
+    const [destinationDir, setDestinationDir] = useState('');
+    const [isOptionsOpen, setIsOptionsOpen] = useState(false);
+    const [options, setOptions] = useState({
+        prettyPrint: false,
+        renameFiles: false,
+        renamePattern: '',
+        renameReplacement: '',
+    });
     const { apiService } = useContext(AppContext);
     const dispatch = useAppDispatch();
     const [order, setOrder] = useState<'asc' | 'desc'>('asc');
     const [orderBy, setOrderBy] = useState<keyof ConvertedFileInfo>('filename');
+    const [isMetadataOpen, setIsMetadataOpen] = useState(false);
+    const [metadata, setMetadata] = useState<Partial<DatasetMetadata>>({});
+    const [updateMetadata, setUpdateMetadata] = useState(false);
 
     const settings = useAppSelector((state) => state.settings.converter);
 
@@ -109,10 +111,6 @@ const Converter: React.FC<{
                 ),
             })),
         );
-    };
-
-    const handleRenameFiles = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setRenameFiles(event.target.checked);
     };
 
     const handleAddFiles = () => {
@@ -196,9 +194,9 @@ const Converter: React.FC<{
 
     // Rename files when rename pattern or replacement changes
     useEffect(() => {
-        if (renameFiles && renamePattern) {
+        if (options.renameFiles && options.renamePattern) {
             try {
-                const regex = new RegExp(renamePattern);
+                const regex = new RegExp(options.renamePattern);
                 let extension: 'json' | 'ndjson';
                 if (outputFormat === 'DJ1.1') {
                     extension = 'json';
@@ -210,14 +208,19 @@ const Converter: React.FC<{
                         ...file,
                         outputName: file.filename
                             .replace(/(.*\.)\w+$/, `$1${extension}`)
-                            .replace(regex, renameReplacement || ''),
+                            .replace(regex, options.renameReplacement || ''),
                     })),
                 );
             } catch (error) {
                 // Ignore invalid regex patterns
             }
         }
-    }, [renameFiles, renamePattern, renameReplacement, outputFormat]);
+    }, [
+        options.renameFiles,
+        options.renamePattern,
+        options.renameReplacement,
+        outputFormat,
+    ]);
 
     // Reset output names to original filenames when renaming is disabled
     useEffect(() => {
@@ -227,7 +230,7 @@ const Converter: React.FC<{
         } else {
             extension = 'ndjson';
         }
-        if (renameFiles === false) {
+        if (options.renameFiles === false) {
             setFiles((prev) =>
                 prev.map((file) => ({
                     ...file,
@@ -238,7 +241,7 @@ const Converter: React.FC<{
                 })),
             );
         }
-    }, [renameFiles, outputFormat]);
+    }, [options.renameFiles, outputFormat]);
 
     const handleRequestSort = (property: keyof ConvertedFileInfo) => {
         const isAsc = orderBy === property && order === 'asc';
@@ -270,14 +273,44 @@ const Converter: React.FC<{
             type: mainTaskTypes.CONVERT,
             files,
             options: {
-                prettyPrint,
+                prettyPrint: options.prettyPrint,
                 outputFormat,
                 destinationDir,
+                metadata: updateMetadata ? metadata : {},
                 ...settings,
             },
         };
 
         onConvert(task);
+    };
+
+    const handleMetadataOpen = () => {
+        setIsMetadataOpen(true);
+    };
+
+    const handleMetadataClose = () => {
+        setIsMetadataOpen(false);
+    };
+
+    const handleMetadataChange = (newMetadata: Partial<DatasetMetadata>) => {
+        setMetadata(newMetadata);
+    };
+
+    const handleOptionsOpen = () => {
+        setIsOptionsOpen(true);
+    };
+
+    const handleOptionsClose = () => {
+        setIsOptionsOpen(false);
+    };
+
+    const handleOptionsChange = (newOptions: {
+        prettyPrint: boolean;
+        renameFiles: boolean;
+        renamePattern: string;
+        renameReplacement: string;
+    }) => {
+        setOptions(newOptions);
     };
 
     return (
@@ -296,48 +329,28 @@ const Converter: React.FC<{
                     <MenuItem value="DJ1.1">Dataset-JSON v1.1</MenuItem>
                     <MenuItem value="DNJ1.1">Dataset-NDJSON v1.1</MenuItem>
                 </TextField>
+                <Button variant="contained" onClick={handleOptionsOpen}>
+                    Options
+                </Button>
                 <FormControlLabel
+                    sx={styles.noSelect}
                     control={
-                        <Checkbox
-                            checked={prettyPrint}
-                            onChange={(e) => setPrettyPrint(e.target.checked)}
+                        <Switch
+                            checked={updateMetadata}
+                            onChange={(e) =>
+                                setUpdateMetadata(e.target.checked)
+                            }
                         />
                     }
-                    label="Pretty Print"
+                    label="Update Metadata"
                 />
-                <Stack direction="row" spacing={2} alignItems="center">
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                checked={renameFiles}
-                                onChange={handleRenameFiles}
-                            />
-                        }
-                        label="Rename Files"
-                    />
-                    {renameFiles && (
-                        <>
-                            <TextField
-                                size="medium"
-                                label="Pattern (regex)"
-                                value={renamePattern}
-                                onChange={(e) =>
-                                    setRenamePattern(e.target.value)
-                                }
-                                placeholder="e.g. ^(.+)$"
-                            />
-                            <TextField
-                                size="medium"
-                                label="Replacement"
-                                value={renameReplacement}
-                                onChange={(e) =>
-                                    setRenameReplacement(e.target.value)
-                                }
-                                placeholder="e.g. prefix_$1"
-                            />
-                        </>
-                    )}
-                </Stack>
+                <Button
+                    variant="contained"
+                    onClick={handleMetadataOpen}
+                    disabled={!updateMetadata}
+                >
+                    Metadata
+                </Button>
             </Stack>
 
             <Typography variant="h6">Files</Typography>
@@ -505,6 +518,20 @@ const Converter: React.FC<{
                     Convert
                 </Button>
             </Stack>
+
+            {/* Add OptionsDialog */}
+            <Options
+                open={isOptionsOpen}
+                onClose={handleOptionsClose}
+                options={options}
+                onOptionsChange={handleOptionsChange}
+            />
+            <Metadata
+                open={isMetadataOpen}
+                onClose={handleMetadataClose}
+                metadata={metadata}
+                onMetadataChange={handleMetadataChange}
+            />
         </Stack>
     );
 };

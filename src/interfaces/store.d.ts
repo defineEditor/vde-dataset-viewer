@@ -1,16 +1,6 @@
 import { BasicFilter, IApiStudy, IApiStudyDataset } from 'interfaces/api';
-import { ICheckUpdateResult } from 'interfaces/main';
+import { ICheckUpdateResult, SettingsConverter } from 'interfaces/main';
 import { modals, ModalType, AllowedPathnames } from 'misc/constants';
-
-export interface SettingsConverter {
-    threads: number;
-    dateFormats: string[];
-    timeFormats: string[];
-    datetimeFormats: string[];
-    convertSuffixDt: boolean;
-    convertSuffixTm: boolean;
-    convertSuffixDtTm: boolean;
-}
 
 export interface ISettings {
     viewer: {

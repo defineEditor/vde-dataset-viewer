@@ -42,18 +42,15 @@ const processXptMetadata = (
             if (dateFormats.includes(updatedDisplayFormat)) {
                 newColumn.dataType = 'date';
                 newColumn.targetDataType = 'integer';
-                newColumn.displayFormat = '';
             } else if (timeFormats.includes(updatedDisplayFormat)) {
                 newColumn.dataType = 'time';
                 newColumn.targetDataType = 'integer';
-                newColumn.displayFormat = '';
             } else if (datetimeFormats.includes(updatedDisplayFormat)) {
                 newColumn.dataType = 'datetime';
                 newColumn.targetDataType = 'integer';
-                newColumn.displayFormat = '';
             }
         }
-        // Indeentify using column name suffix
+        // Identify using column name suffix
         const { convertSuffixDt, convertSuffixDtTm, convertSuffixTm } = options;
         if (
             ['double', 'integer'].includes(newColumn.dataType) &&
@@ -83,6 +80,23 @@ const processXptMetadata = (
     });
 
     const newMetadata = { ...metadata, columns: newColumns };
+
+    // sourceSystem.name can contain '\u0000' symbols, remove them
+    if (newMetadata.sourceSystem?.name) {
+        newMetadata.sourceSystem.name = newMetadata.sourceSystem.name.replace(
+            // eslint-disable-next-line no-control-regex
+            /\u0000/g,
+            '',
+        );
+    }
+    // Set Dataset-JSON version
+    if (options.outputFormat === 'DJ1.1' || options.outputFormat === 'NDJ1.1') {
+        newMetadata.datasetJSONVersion = '1.1';
+    }
+
+    // ItemOID;
+    newMetadata.itemGroupOID = `IG.${newMetadata.name.toUpperCase()}`;
+
     return newMetadata;
 };
 
@@ -189,6 +203,65 @@ const convertXpt = async (
     }
 };
 
+const convertJson = async (
+    file: ConvertedFileInfo,
+    options: ConvertTask['options'],
+    sendMessage: (progress: number) => void,
+): Promise<boolean> => {
+    try {
+        const { destinationDir, prettyPrint } = options;
+        const { outputName, fullPath } = file;
+        const datasetInput = new DatasetJson(fullPath);
+        const datasetOutput = new DatasetJson(
+            path.join(destinationDir, outputName),
+        );
+
+        const metadata = await datasetInput.getMetadata();
+
+        await datasetOutput.write({
+            metadata,
+            action: 'create',
+            options: { prettify: prettyPrint },
+        });
+
+        const { records } = metadata;
+        let currentRecord = 0;
+
+        let buffer: ItemDataArray[] = [];
+        // Read blocks of 10k records
+        for await (const obs of datasetInput.readRecords({
+            bufferLength: 10000,
+        })) {
+            buffer.push(obs as ItemDataArray);
+            currentRecord++;
+            if (currentRecord % 10000 === 0) {
+                await datasetOutput.write({
+                    data: buffer,
+                    action: 'write',
+                    options: { prettify: prettyPrint },
+                });
+                buffer = [];
+
+                sendMessage(currentRecord / records);
+            }
+        }
+
+        // Write the remaining records
+        await datasetOutput.write({
+            data: buffer,
+            action: 'finalize',
+            options: { prettify: prettyPrint },
+        });
+
+        // Send the final message informing that the conversion is done
+        sendMessage(1);
+
+        return true;
+    } catch (error) {
+        return false;
+    }
+};
+
 process.parentPort.once(
     'message',
     async (messageData: {
@@ -210,6 +283,9 @@ process.parentPort.once(
 
         if (file.format === 'xpt') {
             await convertXpt(file, options, sendMessage);
+        }
+        if (file.format === 'json' || file.format === 'ndjson') {
+            await convertJson(file, options, sendMessage);
         }
         process.exit();
     },
