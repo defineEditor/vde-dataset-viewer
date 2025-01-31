@@ -36,9 +36,27 @@ export interface ConvertedFileInfo extends FileInfo {
 
 export interface ConvertTaskOptions extends SettingsConverter {
     prettyPrint: boolean;
+    inEncoding:
+        | 'default'
+        | 'utf8'
+        | 'utf16le'
+        | 'base64'
+        | 'ucs2'
+        | 'latin1'
+        | 'ascii';
+    outEncoding:
+        | 'default'
+        | 'utf8'
+        | 'utf16le'
+        | 'base64'
+        | 'ucs2'
+        | 'latin1'
+        | 'ascii';
     outputFormat: OutputFormat;
     destinationDir: string;
+    updateMetadata: boolean;
     metadata: Partial<DatasetMetadata>;
+    appVersion?: string;
 }
 
 export interface ConvertTask {

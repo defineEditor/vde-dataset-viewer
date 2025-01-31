@@ -51,7 +51,12 @@ class TaskManager {
         const process = this.createProcess(type);
         const processId = `${type}-${index.toString()}`;
         this.processes.set(processId, process);
-        process.postMessage({ processId, file, options });
+        // Version to the options object
+        process.postMessage({
+            processId,
+            file,
+            options: { ...options, appVersion: app.getVersion() },
+        });
 
         return new Promise((resolve) => {
             process.on('message', (progressResult) => {

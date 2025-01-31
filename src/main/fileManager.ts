@@ -61,7 +61,7 @@ class FileManager {
         _event: IpcMainInvokeEvent,
         mode: 'local' | 'remote',
         fileSettings: {
-            encoding: BufferEncoding;
+            encoding: BufferEncoding | 'default';
             filePath?: string;
             folderPath?: string;
         },
@@ -133,7 +133,7 @@ class FileManager {
         }
         let data: DatasetJson | DatasetXpt;
         try {
-            if (type === 'xpt') {
+            if (type === 'xpt' || encoding === 'default') {
                 data = new DatasetXpt(newFile.path);
             } else {
                 data = new DatasetJson(newFile.path, {

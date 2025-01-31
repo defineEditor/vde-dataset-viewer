@@ -7,6 +7,7 @@ import { DatasetJsonMetadata, ItemType } from 'interfaces/common';
 const processXptMetadata = (
     metadata: DatasetJsonMetadata,
     options: ConvertTask['options'],
+    outputName: string,
 ): DatasetJsonMetadata => {
     const newColumns = metadata.columns.map((column) => {
         const newColumn = { ...column };
@@ -97,7 +98,86 @@ const processXptMetadata = (
     // ItemOID;
     newMetadata.itemGroupOID = `IG.${newMetadata.name.toUpperCase()}`;
 
+    // FileOID;
+    newMetadata.fileOID = outputName;
+
     return newMetadata;
+};
+
+const updateMetadata = (
+    currentMetadata: DatasetJsonMetadata,
+    options: ConvertTask['options'],
+): DatasetJsonMetadata => {
+    const { metadata } = options;
+
+    const newMetadata = { ...currentMetadata, ...metadata };
+
+    // Set attributes which are updated in any case;
+    newMetadata.datasetJSONCreationDateTime = new Date().toISOString();
+
+    if (options.outputFormat === 'DJ1.1' || options.outputFormat === 'NDJ1.1') {
+        newMetadata.datasetJSONVersion = '1.1';
+    }
+
+    newMetadata.sourceSystem = {
+        name: 'VDE Dataset Converter',
+        version: options.appVersion || '',
+    };
+
+    // If it was not requested to update the metadata, no further processing is needed
+    if (!options.updateMetadata) {
+        // Force columns to be the last attribute
+        const { columns } = newMetadata;
+        const properMetadata: { columns?: object } = { ...newMetadata };
+        delete properMetadata.columns;
+        properMetadata.columns = columns;
+        return properMetadata as DatasetJsonMetadata;
+    }
+
+    if (metadata.sourceSystem?.name || metadata.sourceSystem?.version) {
+        newMetadata.sourceSystem = {
+            ...currentMetadata.sourceSystem,
+            ...metadata.sourceSystem,
+        };
+    }
+
+    // FileOID and ItemGroupOID values are used as prefixes
+    if (metadata.fileOID) {
+        newMetadata.fileOID = `${metadata.fileOID}.${currentMetadata.fileOID}`;
+    }
+
+    if (metadata.itemGroupOID && currentMetadata.itemGroupOID) {
+        // Remove default IG prefix
+        newMetadata.itemGroupOID = `${currentMetadata.itemGroupOID.replace(/^IG\./, `${metadata.itemGroupOID}.`)}`;
+    }
+
+    // The rest of the attributes are just replaced
+    if (metadata.studyOID) {
+        newMetadata.studyOID = metadata.studyOID;
+    }
+
+    if (metadata.originator) {
+        newMetadata.originator = metadata.originator;
+    }
+
+    if (metadata.metaDataVersionOID) {
+        newMetadata.metaDataVersionOID = metadata.metaDataVersionOID;
+    }
+
+    if (metadata.metaDataRef) {
+        newMetadata.metaDataRef = metadata.metaDataRef;
+    }
+
+    if (metadata.dbLastModifiedDateTime) {
+        newMetadata.dbLastModifiedDateTime = metadata.dbLastModifiedDateTime;
+    }
+
+    // Force columns to be the last attribute
+    const { columns } = newMetadata;
+    const properMetadata: { columns?: object } = { ...newMetadata };
+    delete properMetadata.columns;
+    properMetadata.columns = columns;
+    return properMetadata as DatasetJsonMetadata;
 };
 
 const convertXptDateTime = (value: number, type: ItemType): string => {
@@ -135,10 +215,19 @@ const convertXpt = async (
         const datasetXpt = new DatasetXpt(fullPath);
         const datasetJson = new DatasetJson(
             path.join(destinationDir, outputName),
+            {
+                encoding:
+                    options.outEncoding === 'default'
+                        ? undefined
+                        : options.outEncoding,
+            },
         );
 
         const metadata = await datasetXpt.getMetadata('dataset-json1.1');
-        const updatedMetadata = processXptMetadata(metadata, options);
+        let updatedMetadata = processXptMetadata(metadata, options, outputName);
+
+        // Standard metadata updates;
+        updatedMetadata = updateMetadata(updatedMetadata, options);
 
         await datasetJson.write({
             metadata: updatedMetadata,
@@ -162,7 +251,13 @@ const convertXpt = async (
 
         let buffer: ItemDataArray[] = [];
         // Read blocks of 10k records
-        for await (const obs of datasetXpt.read({ skipHeader: true })) {
+        for await (const obs of datasetXpt.read({
+            skipHeader: true,
+            encoding:
+                options.inEncoding === 'default'
+                    ? undefined
+                    : options.inEncoding,
+        })) {
             // Convert datetime values if needed
             if (dtIndexes.length > 0) {
                 const row = obs as ItemDataArray;
@@ -211,20 +306,34 @@ const convertJson = async (
     try {
         const { destinationDir, prettyPrint } = options;
         const { outputName, fullPath } = file;
-        const datasetInput = new DatasetJson(fullPath);
+        const datasetInput = new DatasetJson(fullPath, {
+            encoding:
+                options.inEncoding === 'default'
+                    ? undefined
+                    : options.inEncoding,
+        });
         const datasetOutput = new DatasetJson(
             path.join(destinationDir, outputName),
+            {
+                encoding:
+                    options.outEncoding === 'default'
+                        ? undefined
+                        : options.outEncoding,
+            },
         );
 
         const metadata = await datasetInput.getMetadata();
 
+        // Standard metadata updates
+        const updatedMetadata = updateMetadata(metadata, options);
+
         await datasetOutput.write({
-            metadata,
+            metadata: updatedMetadata,
             action: 'create',
             options: { prettify: prettyPrint },
         });
 
-        const { records } = metadata;
+        const { records } = updatedMetadata;
         let currentRecord = 0;
 
         let buffer: ItemDataArray[] = [];

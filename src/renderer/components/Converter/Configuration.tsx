@@ -30,6 +30,7 @@ import {
     OutputFormat,
     ConvertTask,
     DatasetMetadata,
+    ConversionOptions,
 } from 'interfaces/common';
 import { mainTaskTypes } from 'misc/constants';
 import Metadata from 'renderer/components/Converter/Metadata';
@@ -77,8 +78,10 @@ const Converter: React.FC<{
     const [files, setFiles] = useState<ConvertedFileInfo[]>([]);
     const [destinationDir, setDestinationDir] = useState('');
     const [isOptionsOpen, setIsOptionsOpen] = useState(false);
-    const [options, setOptions] = useState({
+    const [options, setOptions] = useState<ConversionOptions>({
         prettyPrint: false,
+        inEncoding: 'default',
+        outEncoding: 'default',
         renameFiles: false,
         renamePattern: '',
         renameReplacement: '',
@@ -274,8 +277,11 @@ const Converter: React.FC<{
             files,
             options: {
                 prettyPrint: options.prettyPrint,
+                inEncoding: options.inEncoding,
+                outEncoding: options.outEncoding,
                 outputFormat,
                 destinationDir,
+                updateMetadata,
                 metadata: updateMetadata ? metadata : {},
                 ...settings,
             },
@@ -304,12 +310,7 @@ const Converter: React.FC<{
         setIsOptionsOpen(false);
     };
 
-    const handleOptionsChange = (newOptions: {
-        prettyPrint: boolean;
-        renameFiles: boolean;
-        renamePattern: string;
-        renameReplacement: string;
-    }) => {
+    const handleOptionsChange = (newOptions: ConversionOptions) => {
         setOptions(newOptions);
     };
 

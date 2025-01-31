@@ -25,7 +25,7 @@ export const Other: React.FC<OtherProps> = ({ settings, onSettingChange }) => (
         <TextField
             label="Input encoding"
             helperText={
-                settings.other.inEncoding === 'utf8'
+                settings.other.inEncoding === 'default'
                     ? 'Ecoding used when reading files'
                     : 'Be sure the correct encoding is specified, in most situations you should use UTF8'
             }
@@ -38,6 +38,7 @@ export const Other: React.FC<OtherProps> = ({ settings, onSettingChange }) => (
             }
             sx={styles.inputField}
         >
+            <MenuItem value="default">Default</MenuItem>
             <MenuItem value="utf8">UTF8</MenuItem>
             <MenuItem value="utf16le">UTF16LE</MenuItem>
             <MenuItem value="base64">Base64</MenuItem>

@@ -11,14 +11,9 @@ import {
     FormControlLabel,
     Typography,
     Alert,
+    MenuItem,
 } from '@mui/material';
-
-interface ConversionOptions {
-    prettyPrint: boolean;
-    renameFiles: boolean;
-    renamePattern: string;
-    renameReplacement: string;
-}
+import { ConversionOptions } from 'interfaces/common';
 
 interface OptionsDialogProps {
     open: boolean;
@@ -44,11 +39,10 @@ const styles = {
     },
     helperText: {
         paddingLeft: 2,
-        margin: 0,
-        mt: 0,
+        m: 0,
     },
     alert: {
-        margin: 2,
+        m: 2,
     },
     actions: {
         m: 2,
@@ -118,6 +112,42 @@ const Options: React.FC<OptionsDialogProps> = ({
                             size
                         </Alert>
                     )}
+                    <Stack direction="row" spacing={2}>
+                        <TextField
+                            fullWidth
+                            select
+                            label="Input Encoding"
+                            value={localOptions.inEncoding}
+                            onChange={(e) =>
+                                handleChange('inEncoding', e.target.value)
+                            }
+                        >
+                            <MenuItem value="default">Default</MenuItem>
+                            <MenuItem value="utf8">UTF-8</MenuItem>
+                            <MenuItem value="utf16le">UTF-16 LE</MenuItem>
+                            <MenuItem value="base64">Base64</MenuItem>
+                            <MenuItem value="ucs2">UCS-2</MenuItem>
+                            <MenuItem value="latin1">Latin-1</MenuItem>
+                            <MenuItem value="ascii">ASCII</MenuItem>
+                        </TextField>
+                        <TextField
+                            fullWidth
+                            select
+                            label="Output Encoding"
+                            value={localOptions.outEncoding}
+                            onChange={(e) =>
+                                handleChange('outEncoding', e.target.value)
+                            }
+                        >
+                            <MenuItem value="default">Default</MenuItem>
+                            <MenuItem value="utf8">UTF-8</MenuItem>
+                            <MenuItem value="utf16le">UTF-16 LE</MenuItem>
+                            <MenuItem value="base64">Base64</MenuItem>
+                            <MenuItem value="ucs2">UCS-2</MenuItem>
+                            <MenuItem value="latin1">Latin-1</MenuItem>
+                            <MenuItem value="ascii">ASCII</MenuItem>
+                        </TextField>
+                    </Stack>
                     <FormControlLabel
                         sx={styles.noSelect}
                         control={
@@ -131,10 +161,11 @@ const Options: React.FC<OptionsDialogProps> = ({
                                 }
                             />
                         }
-                        label="Rename Files"
+                        label="Rename Output Files"
                     />
-                    <>
+                    <Stack direction="row" spacing={2}>
                         <TextField
+                            fullWidth
                             label="Pattern (regex)"
                             value={localOptions.renamePattern}
                             onChange={(e) =>
@@ -144,6 +175,7 @@ const Options: React.FC<OptionsDialogProps> = ({
                             disabled={!localOptions.renameFiles}
                         />
                         <TextField
+                            fullWidth
                             label="Replacement"
                             value={localOptions.renameReplacement}
                             onChange={(e) =>
@@ -155,7 +187,7 @@ const Options: React.FC<OptionsDialogProps> = ({
                             placeholder="e.g. prefix_$1"
                             disabled={!localOptions.renameFiles}
                         />
-                    </>
+                    </Stack>
                 </Stack>
             </DialogContent>
             <DialogActions sx={styles.actions}>
