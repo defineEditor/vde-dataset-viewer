@@ -9,7 +9,7 @@ export interface SettingsConverter {
     datetimeFormats: string[];
     convertSuffixDt: boolean;
     convertSuffixTm: boolean;
-    convertSuffixDtTm: boolean;
+    convertSuffixDtm: boolean;
 }
 
 export interface ICheckUpdateResult {

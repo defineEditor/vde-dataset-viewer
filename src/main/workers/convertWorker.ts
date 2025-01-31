@@ -51,10 +51,10 @@ const processXptMetadata = (
             }
         }
         // Identify using column name suffix
-        const { convertSuffixDt, convertSuffixDtTm, convertSuffixTm } = options;
+        const { convertSuffixDt, convertSuffixDtm, convertSuffixTm } = options;
         if (
             ['double', 'integer'].includes(newColumn.dataType) &&
-            (convertSuffixDt || convertSuffixTm || convertSuffixDtTm)
+            (convertSuffixDt || convertSuffixTm || convertSuffixDtm)
         ) {
             if (
                 convertSuffixDt &&
@@ -69,7 +69,7 @@ const processXptMetadata = (
                 newColumn.dataType = 'time';
                 newColumn.targetDataType = 'integer';
             } else if (
-                convertSuffixDtTm &&
+                convertSuffixDtm &&
                 newColumn.name.toLowerCase().endsWith('dtm')
             ) {
                 newColumn.dataType = 'datetime';

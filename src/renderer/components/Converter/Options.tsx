@@ -50,6 +50,9 @@ const styles = {
     alert: {
         margin: 2,
     },
+    actions: {
+        m: 2,
+    },
 };
 
 const Options: React.FC<OptionsDialogProps> = ({
@@ -155,7 +158,7 @@ const Options: React.FC<OptionsDialogProps> = ({
                     </>
                 </Stack>
             </DialogContent>
-            <DialogActions>
+            <DialogActions sx={styles.actions}>
                 <Button onClick={handleClose}>Cancel</Button>
                 <Button onClick={handleSave} variant="contained">
                     Save

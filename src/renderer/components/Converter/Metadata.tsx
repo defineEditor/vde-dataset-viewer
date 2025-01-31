@@ -41,6 +41,9 @@ const styles = {
     alert: {
         margin: 2,
     },
+    actions: {
+        m: 2,
+    },
 };
 
 const Metadata: React.FC<MetadataDialogProps> = ({
@@ -180,14 +183,16 @@ const Metadata: React.FC<MetadataDialogProps> = ({
                                     : '',
                             });
                         }}
-                        InputLabelProps={{
-                            shrink: true,
+                        slotProps={{
+                            inputLabel: {
+                                shrink: true,
+                            },
                         }}
                         helperText="The date/time source database was last modified"
                     />
                 </Stack>
             </DialogContent>
-            <DialogActions>
+            <DialogActions sx={styles.actions}>
                 <Button onClick={handleClose} color="primary">
                     Cancel
                 </Button>
