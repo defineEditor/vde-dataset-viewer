@@ -319,6 +319,7 @@ const convertJson = async (
                     options.outEncoding === 'default'
                         ? undefined
                         : options.outEncoding,
+                isNdJson: options.outputFormat === 'NDJ1.1',
             },
         );
 

@@ -20,7 +20,7 @@ declare global {
             openFile: (
                 mode: 'local' | 'remote',
                 fileSettings?: {
-                    encoding: BufferEncoding;
+                    encoding: BufferEncoding | 'default';
                     filePath?: string;
                     folderPath?: string;
                 },

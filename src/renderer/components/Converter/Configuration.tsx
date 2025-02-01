@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, useRef } from 'react';
 import {
     Stack,
     Button,
@@ -24,6 +24,7 @@ import TableSortLabel from '@mui/material/TableSortLabel';
 import AppContext from 'renderer/utils/AppContext';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { openSnackbar } from 'renderer/redux/slices/ui';
+import { setConverterData } from 'renderer/redux/slices/data';
 import {
     FileInfo,
     ConvertedFileInfo,
@@ -31,6 +32,7 @@ import {
     ConvertTask,
     DatasetMetadata,
     ConversionOptions,
+    ConverterData,
 } from 'interfaces/common';
 import { mainTaskTypes } from 'misc/constants';
 import Metadata from 'renderer/components/Converter/Metadata';
@@ -95,6 +97,7 @@ const Converter: React.FC<{
     const [updateMetadata, setUpdateMetadata] = useState(false);
 
     const settings = useAppSelector((state) => state.settings.converter);
+    const converterData = useAppSelector((state) => state.data.converter);
 
     const handleOutputFormat = (event: React.ChangeEvent<HTMLInputElement>) => {
         setOutputFormat(event.target.value as OutputFormat);
@@ -120,6 +123,7 @@ const Converter: React.FC<{
         const addFiles = async () => {
             const result = await apiService.openFileDialog({
                 multiple: true,
+                initialFolder: converterData.sourceDir,
                 filters: [
                     {
                         name: 'All supported formats',
@@ -169,7 +173,7 @@ const Converter: React.FC<{
 
     const handleSelectDestination = () => {
         const selectDestination = async () => {
-            const result = await apiService.openDirectoryDialog();
+            const result = await apiService.openDirectoryDialog(destinationDir);
             if (result === null) {
                 dispatch(
                     openSnackbar({
@@ -313,6 +317,48 @@ const Converter: React.FC<{
     const handleOptionsChange = (newOptions: ConversionOptions) => {
         setOptions(newOptions);
     };
+
+    // Add ref to store latest configuration
+    const configRef = useRef<ConverterData>({
+        ...converterData,
+    });
+
+    // Update ref whenever relevant state changes
+    useEffect(() => {
+        // If there are no files, use the previous sourceDir
+        const sourceDir =
+            files.length > 0 ? files[0].folder : configRef.current.sourceDir;
+        configRef.current = {
+            configuration: {
+                options,
+                metadata,
+                outputFormat,
+                updateMetadata,
+            },
+            destinationDir,
+            sourceDir,
+        };
+    }, [
+        files,
+        options,
+        metadata,
+        outputFormat,
+        updateMetadata,
+        destinationDir,
+    ]);
+
+    // Initialize configuration and store configuration on unmount
+    useEffect(() => {
+        setMetadata(converterData.configuration.metadata);
+        setOptions(converterData.configuration.options);
+        setOutputFormat(converterData.configuration.outputFormat);
+        setUpdateMetadata(converterData.configuration.updateMetadata);
+        setDestinationDir(converterData.destinationDir);
+
+        return () => {
+            dispatch(setConverterData(configRef.current));
+        };
+    }, [dispatch, converterData]);
 
     return (
         <Stack spacing={2} sx={styles.container}>

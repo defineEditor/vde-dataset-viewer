@@ -1,7 +1,8 @@
 import { UtilityProcess, utilityProcess, app, BrowserWindow } from 'electron';
 import path from 'path';
+import fs from 'fs';
 import { ConvertedFileInfo, ConvertTask, MainTask } from 'interfaces/common';
-import { MainTaskType } from 'misc/constants';
+import { MainTaskType, mainTaskTypes } from 'misc/constants';
 
 class TaskManager {
     private processes: Map<string, UtilityProcess>;
@@ -85,11 +86,25 @@ class TaskManager {
     public async handleTask(
         task: MainTask,
         mainWindow: BrowserWindow,
-    ): Promise<boolean> {
-        try {
-            this.mainWindow = mainWindow;
-            this.maxThreads = task.options?.threads || 1;
+    ): Promise<boolean | { error: string }> {
+        this.mainWindow = mainWindow;
+        this.maxThreads = task.options?.threads || 1;
+        if (task.type === mainTaskTypes.CONVERT) {
+            const result = await this.handleConveterTask(task);
+            return result;
+        }
+        return false;
+    }
 
+    public async handleConveterTask(
+        task: ConvertTask,
+    ): Promise<boolean | { error: string }> {
+        try {
+            // Check destination folder exists
+
+            if (fs.existsSync(task.options.destinationDir)) {
+                throw new Error('Destination folder does not exist');
+            }
             task.files.forEach((file, index) => {
                 this.taskQueue.push({
                     type: task.type,
@@ -102,6 +117,9 @@ class TaskManager {
             await this.processQueue();
             return true;
         } catch (error) {
+            if (error instanceof Error) {
+                return { error: error.message };
+            }
             return false;
         }
     }

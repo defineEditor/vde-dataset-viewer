@@ -1,6 +1,7 @@
 import { BasicFilter, IApiStudy, IApiStudyDataset } from 'interfaces/api';
 import { ICheckUpdateResult, SettingsConverter } from 'interfaces/main';
 import { modals, ModalType, AllowedPathnames } from 'misc/constants';
+import { ConversionConfig } from 'interfaces/converter';
 
 export interface ISettings {
     viewer: {
@@ -99,6 +100,12 @@ export interface IRecentFile {
 
 export type DatasetMode = 'local' | 'remote';
 
+export interface ConverterData {
+    configuration: ConversionConfig;
+    destinationDir: string;
+    sourceDir: string;
+}
+
 export interface IData {
     loadedRecords: {
         [name: string]: number;
@@ -115,6 +122,7 @@ export interface IData {
         lastOptions: BasicFilter['options'];
         lastType: 'manual' | 'ui';
     };
+    converter: ConverterData;
 }
 
 export interface IApiRecord {

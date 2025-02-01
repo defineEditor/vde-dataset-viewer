@@ -1,4 +1,11 @@
-import { IData, IStore, IUi, ISettings, IApi } from 'interfaces/common';
+import {
+    IData,
+    IStore,
+    IUi,
+    ISettings,
+    IApi,
+    ConverterData,
+} from 'interfaces/common';
 import { paths } from 'misc/constants';
 
 export const settings: ISettings = {
@@ -57,6 +64,24 @@ export const ui: IUi = {
     },
 };
 
+export const converter: ConverterData = {
+    configuration: {
+        options: {
+            prettyPrint: false,
+            inEncoding: 'default',
+            outEncoding: 'default',
+            renameFiles: false,
+            renamePattern: '',
+            renameReplacement: '',
+        },
+        updateMetadata: false,
+        metadata: {},
+        outputFormat: 'DJ1.1',
+    },
+    destinationDir: '',
+    sourceDir: '',
+};
+
 export const data: IData = {
     loadedRecords: {},
     recentFolders: [],
@@ -67,6 +92,7 @@ export const data: IData = {
         lastOptions: { caseInsensitive: true },
         lastType: 'manual',
     },
+    converter,
 };
 
 export const api: IApi = {
