@@ -6,6 +6,7 @@
 ## Improvements
 - Added ability to build filter from the cell data by a right click
 - Added filter indication to a column which is used in a filter
+- Show App version in the About section
 
 ## Technical Changes
 - Update electron to v34
