@@ -636,6 +636,11 @@ class ApiService {
     public cleanTaskProgressListeners = () => {
         window.electron.cleanTaskProgressListeners();
     };
+
+    public getAppVersion = async (): Promise<string> => {
+        const result = await window.electron.getAppVersion();
+        return result;
+    };
 }
 
 export default ApiService;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
@@ -71,6 +71,17 @@ const About: React.FC = () => {
         checkUpdates();
     };
 
+    const [appVersion, setAppVersion] = useState('');
+
+    useEffect(() => {
+        const getAppVersion = async () => {
+            const version = await apiService.getAppVersion();
+            setAppVersion(version);
+        };
+
+        getAppVersion();
+    }, [apiService]);
+
     return (
         <Stack sx={styles.root} justifyContent="center" spacing={10}>
             <Box sx={styles.main}>
@@ -80,7 +91,7 @@ const About: React.FC = () => {
                     color="primary"
                     gutterBottom
                 >
-                    VDE Dataset Viewer
+                    VDE Dataset Viewer {appVersion}
                 </Typography>
                 <Typography
                     variant="body1"

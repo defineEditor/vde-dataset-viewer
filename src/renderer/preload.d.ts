@@ -52,7 +52,6 @@ declare global {
             saveLocalStore: (localStore: ILocalStore) => void;
             loadLocalStore: () => Promise<ILocalStore>;
             onSaveStore: (callback: () => Promise<void>) => void;
-            isWindows: boolean;
             checkForUpdates: () => Promise<ICheckUpdateResult>;
             downloadUpdate: () => Promise<boolean>;
             ipcRenderer: {
@@ -75,6 +74,8 @@ declare global {
             openDirectoryDialog: (
                 initialFolder: string | null,
             ) => Promise<string>;
+            getAppVersion: () => Promise<string>;
+            isWindows: boolean;
         };
     }
 }

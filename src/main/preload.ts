@@ -85,6 +85,7 @@ contextBridge.exposeInMainWorld('electron', {
     cleanTaskProgressListeners: () => {
         ipcRenderer.removeAllListeners('renderer:taskProgress');
     },
+    getAppVersion: () => ipcRenderer.invoke('main:getVersion'),
     ipcRenderer: {
         sendMessage(channel: Channels, args: unknown[]) {
             ipcRenderer.send(channel, args);

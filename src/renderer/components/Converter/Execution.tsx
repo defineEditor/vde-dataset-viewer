@@ -141,11 +141,12 @@ const Execution: React.FC<{
 
             <Box sx={styles.button}>
                 <Typography variant="caption" sx={{ ml: 2 }}>
-                    {elapsedTime > 0 &&
-                        `
-                        Time: ${Math.floor(elapsedTime / 60)}:
-                        ${(elapsedTime % 60).toString().padStart(2, '0')}
-                        `}
+                    {(elapsedTime > 0 || isComplete) &&
+                        `Time: ${Math.floor(elapsedTime / 60)}:${(
+                            elapsedTime % 60
+                        )
+                            .toString()
+                            .padStart(2, '0')}`}
                 </Typography>
                 <Button
                     variant="contained"

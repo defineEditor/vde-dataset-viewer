@@ -159,6 +159,9 @@ app.whenReady()
                 return taskManager.handleTask(task, mainWindow);
             },
         );
+        ipcMain.handle('main:getVersion', (_event: IpcMainInvokeEvent) => {
+            return app.getVersion();
+        });
         createWindow();
         app.on('activate', () => {
             // On macOS it's common to re-create a window in the app when the
