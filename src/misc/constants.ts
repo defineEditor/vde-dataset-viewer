@@ -16,5 +16,10 @@ export const paths = {
     CONVERTER: '/converter',
 } as const;
 
+export const mainTaskTypes = {
+    CONVERT: 'convert',
+} as const;
+
 export type ModalType = (typeof modals)[keyof typeof modals];
 export type AllowedPathnames = (typeof paths)[keyof typeof paths];
+export type MainTaskType = (typeof mainTaskTypes)[keyof typeof mainTaskTypes];

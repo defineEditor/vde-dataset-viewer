@@ -22,12 +22,20 @@ interface ITableRow {
     [key: string]: string | number | boolean | null;
 }
 
-const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
-    tableData,
-    isLoading,
-}: {
+interface DatasetViewProps {
     tableData: ITableData;
     isLoading: boolean;
+    handleContextMenu: (
+        event: React.MouseEvent,
+        rowIndex: number,
+        columnIndex: number,
+    ) => void;
+}
+
+const DatasetView: React.FC<DatasetViewProps> = ({
+    tableData,
+    isLoading,
+    handleContextMenu,
 }) => {
     const dispatch = useAppDispatch();
     const settings = useAppSelector((state) => state.settings.viewer);
@@ -51,6 +59,12 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
             enableResizing: false,
         });
         return result;
+    }, [tableData.header]);
+
+    const filteredColumns = useMemo<string[]>(() => {
+        return tableData.header
+            .filter((column) => column.isFiltered)
+            .map((column) => column.id);
     }, [tableData.header]);
 
     // Inital rows;
@@ -343,12 +357,14 @@ const DatasetView: React.FC<{ tableData: ITableData; isLoading: boolean }> = ({
             handleCellClick={handleCellClick}
             handleMouseDown={handleMouseDown}
             handleMouseOver={handleMouseOver}
+            handleContextMenu={handleContextMenu}
             isLoading={isLoading}
             dynamicRowHeight={settings.dynamicRowHeight}
             rowVirtualizer={rowVirtualizer}
             sorting={sorting}
             onSortingChange={setSorting}
             hasPagination={tableData?.metadata?.records > settings.pageSize}
+            filteredColumns={filteredColumns}
         />
     );
 };

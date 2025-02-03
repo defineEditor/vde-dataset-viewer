@@ -9,6 +9,9 @@ import {
     ILocalStore,
     ICheckUpdateResult,
     IFetchResponse,
+    FileInfo,
+    MainTask,
+    ProgressInfo,
 } from 'interfaces/common';
 
 declare global {
@@ -17,7 +20,7 @@ declare global {
             openFile: (
                 mode: 'local' | 'remote',
                 fileSettings?: {
-                    encoding: BufferEncoding;
+                    encoding: BufferEncoding | 'default';
                     filePath?: string;
                     folderPath?: string;
                 },
@@ -41,6 +44,7 @@ declare global {
                 filterData?: BasicFilter,
                 columns?: ColumnMetadata[],
             ) => Promise<ItemDataArray[] | null>;
+            pathForFile: (file: File) => string;
             fetch: (
                 input: RequestInfo | URL,
                 init?: RequestInit,
@@ -48,7 +52,6 @@ declare global {
             saveLocalStore: (localStore: ILocalStore) => void;
             loadLocalStore: () => Promise<ILocalStore>;
             onSaveStore: (callback: () => Promise<void>) => void;
-            isWindows: boolean;
             checkForUpdates: () => Promise<ICheckUpdateResult>;
             downloadUpdate: () => Promise<boolean>;
             ipcRenderer: {
@@ -60,6 +63,19 @@ declare global {
                 once(channel: string, func: (...args: unknown[]) => void): void;
             };
             writeToClipboard: (text: string) => Promise<boolean>;
+            startTask: (task: MainTask) => Promise<boolean | { error: string }>;
+            onTaskProgress: (callback: (info: ProgressInfo) => void) => void;
+            cleanTaskProgressListeners: () => void;
+            openFileDialog: (options: {
+                multiple?: boolean;
+                initialFolder?: string;
+                filters?: { name: string; extensions: string[] }[];
+            }) => Promise<FileInfo[] | null>;
+            openDirectoryDialog: (
+                initialFolder: string | null,
+            ) => Promise<string>;
+            getAppVersion: () => Promise<string>;
+            isWindows: boolean;
         };
     }
 }

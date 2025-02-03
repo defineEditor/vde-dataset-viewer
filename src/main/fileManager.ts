@@ -7,6 +7,7 @@ import {
     IOpenFile,
     ColumnMetadata,
     DatasetJsonMetadata,
+    FileInfo,
 } from 'interfaces/common';
 import openFile from 'main/openFile';
 import fs from 'fs';
@@ -60,7 +61,7 @@ class FileManager {
         _event: IpcMainInvokeEvent,
         mode: 'local' | 'remote',
         fileSettings: {
-            encoding: BufferEncoding;
+            encoding: BufferEncoding | 'default';
             filePath?: string;
             folderPath?: string;
         },
@@ -132,7 +133,7 @@ class FileManager {
         }
         let data: DatasetJson | DatasetXpt;
         try {
-            if (type === 'xpt') {
+            if (type === 'xpt' || encoding === 'default') {
                 data = new DatasetXpt(newFile.path);
             } else {
                 data = new DatasetJson(newFile.path, {
@@ -242,6 +243,93 @@ class FileManager {
             }
         }
         return null;
+    };
+
+    public openFileDialog = async (
+        _event: IpcMainInvokeEvent,
+        options: {
+            multiple?: boolean;
+            initialFolder?: string;
+            filters?: { name: string; extensions: string[] }[];
+        },
+    ): Promise<FileInfo[] | null> => {
+        try {
+            const { multiple, initialFolder, filters } = options;
+            let startFolder = initialFolder;
+            // Check if initialFolder exists;
+            if (initialFolder !== undefined) {
+                if (fs.existsSync(initialFolder) === false) {
+                    startFolder = undefined;
+                }
+            }
+
+            const properties: Array<'openFile' | 'multiSelections'> = [
+                'openFile',
+            ];
+            if (multiple) {
+                properties.push('multiSelections');
+            }
+            const result = await dialog.showOpenDialog({
+                properties,
+                defaultPath: startFolder,
+                filters,
+            });
+            if (result.canceled) {
+                return [];
+            }
+            return result.filePaths.map((filePath) => {
+                const parsedPath = path.parse(filePath);
+                // Get data of the last modification and size of the file
+                const stats = fs.statSync(filePath);
+                let format: 'xpt' | 'json' | 'ndjson';
+                if (parsedPath.ext.toLowerCase() === '.xpt') {
+                    format = 'xpt';
+                } else if (parsedPath.ext.toLowerCase() === '.json') {
+                    format = 'json';
+                } else if (parsedPath.ext.toLowerCase() === '.ndjson') {
+                    format = 'ndjson';
+                } else {
+                    throw new Error('File extension not supported');
+                }
+                return {
+                    filename: parsedPath.base,
+                    fullPath: filePath,
+                    folder: parsedPath.dir,
+                    format,
+                    size: stats.size,
+                    lastModified: stats.mtime.getTime(),
+                };
+            });
+        } catch (error) {
+            return null;
+        }
+    };
+
+    public openDirectoryDialog = async (
+        _event: IpcMainInvokeEvent,
+        initialFolder: string | null,
+    ): Promise<string | null> => {
+        try {
+            let startFolder =
+                initialFolder === null ? undefined : initialFolder;
+            // Check if initialFolder exists;
+            if (initialFolder !== null) {
+                if (fs.existsSync(initialFolder) === false) {
+                    startFolder = undefined;
+                }
+            }
+
+            const result = await dialog.showOpenDialog({
+                properties: ['openDirectory'],
+                defaultPath: startFolder,
+            });
+            if (result.canceled) {
+                return '';
+            }
+            return result.filePaths[0];
+        } catch (error) {
+            return null;
+        }
     };
 }
 

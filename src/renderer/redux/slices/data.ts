@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { data as initialData } from 'renderer/redux/initialState';
-import { IRecentFile, BasicFilter } from 'interfaces/common';
+import { IRecentFile, BasicFilter, ConverterData } from 'interfaces/common';
 import deepEqual from 'renderer/utils/deepEqual';
 import getFolderName from 'renderer/utils/getFolderName';
 import { closeDataset, openDataset } from 'renderer/redux/slices/ui';
@@ -87,6 +87,9 @@ export const dataSlice = createSlice({
         ) => {
             state.loadedRecords[action.payload.fileId] = action.payload.records;
         },
+        setConverterData: (state, action: PayloadAction<ConverterData>) => {
+            state.converter = action.payload;
+        },
     },
     extraReducers: (builder) => {
         builder.addCase(openDataset, (state, action) => {
@@ -109,7 +112,12 @@ export const dataSlice = createSlice({
     },
 });
 
-export const { addRecent, setFilter, resetFilter, setLoadedRecords } =
-    dataSlice.actions;
+export const {
+    addRecent,
+    setFilter,
+    resetFilter,
+    setLoadedRecords,
+    setConverterData,
+} = dataSlice.actions;
 
 export default dataSlice.reducer;

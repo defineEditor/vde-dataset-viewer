@@ -1,6 +1,7 @@
 import { BasicFilter, IApiStudy, IApiStudyDataset } from 'interfaces/api';
-import { ICheckUpdateResult } from 'interfaces/main';
+import { ICheckUpdateResult, SettingsConverter } from 'interfaces/main';
 import { modals, ModalType, AllowedPathnames } from 'misc/constants';
+import { ConversionConfig } from 'interfaces/converter';
 
 export interface ISettings {
     viewer: {
@@ -13,14 +14,19 @@ export interface ISettings {
         maxPrecision?: number;
         copyFormat: 'tab' | 'csv' | 'json';
     };
-    converter: {
-        threads: number;
-        defaultOutputFormat: 'json' | 'ndjson';
-    };
+    converter: SettingsConverter;
     other: {
         checkForUpdates: boolean;
         loadingAnimation: 'santa' | 'cat' | 'dog' | 'normal' | 'random';
-        inEncoding: 'utf8' | 'utf16le' | 'base64' | 'ucs2' | 'latin1' | 'ascii';
+        inEncoding:
+            | 'default'
+            | 'utf8'
+            | 'utf16le'
+            | 'base64'
+            | 'ucs2'
+            | 'latin1'
+            | 'ascii';
+        dragoverAnimation: boolean;
     };
 }
 
@@ -94,6 +100,12 @@ export interface IRecentFile {
 
 export type DatasetMode = 'local' | 'remote';
 
+export interface ConverterData {
+    configuration: ConversionConfig;
+    destinationDir: string;
+    sourceDir: string;
+}
+
 export interface IData {
     loadedRecords: {
         [name: string]: number;
@@ -110,6 +122,7 @@ export interface IData {
         lastOptions: BasicFilter['options'];
         lastType: 'manual' | 'ui';
     };
+    converter: ConverterData;
 }
 
 export interface IApiRecord {

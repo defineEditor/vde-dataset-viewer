@@ -15,6 +15,8 @@ import {
     IApiStudy,
     IApiStudyDataset,
     DatasetMode,
+    MainTask,
+    ProgressInfo,
 } from 'interfaces/common';
 import store from 'renderer/redux/store';
 import transformData from 'renderer/services/transformData';
@@ -508,6 +510,32 @@ class ApiService {
         return result;
     };
 
+    // Select files
+    public openFileDialog = async (options?: {
+        multiple?: boolean;
+        initialFolder?: string;
+        filters?: Array<{ name: string; extensions: string[] }>;
+    }) => {
+        const {
+            multiple = false,
+            initialFolder,
+            filters = [{ name: 'All Files', extensions: ['*'] }],
+        } = options || {};
+        const result = await window.electron.openFileDialog({
+            multiple,
+            initialFolder,
+            filters,
+        });
+        return result;
+    };
+
+    public openDirectoryDialog = async (
+        initialFolder: string | null = null,
+    ) => {
+        const result = await window.electron.openDirectoryDialog(initialFolder);
+        return result;
+    };
+
     public getApiAbout = async (
         apiRecord: IApiRecord,
     ): Promise<IApiAbout | null> => {
@@ -591,6 +619,26 @@ class ApiService {
         } catch (error) {
             result = null;
         }
+        return result;
+    };
+
+    public startTask = async (task: MainTask) => {
+        const result = await window.electron.startTask(task);
+        return result;
+    };
+
+    public subscriteToTaskProgress = (
+        callback: (info: ProgressInfo) => void,
+    ) => {
+        window.electron.onTaskProgress(callback);
+    };
+
+    public cleanTaskProgressListeners = () => {
+        window.electron.cleanTaskProgressListeners();
+    };
+
+    public getAppVersion = async (): Promise<string> => {
+        const result = await window.electron.getAppVersion();
         return result;
     };
 }

@@ -17,6 +17,7 @@ import {
     SortingState as ISortingState,
     Updater as IUpdater,
 } from '@tanstack/react-table';
+import FilterIcon from '@mui/icons-material/FilterAlt';
 import { VirtualItem, Virtualizer } from '@tanstack/react-virtual';
 import { ITableRow } from 'interfaces/common';
 import Loading from 'renderer/components/Loading';
@@ -144,6 +145,11 @@ const styles = {
         color: '#888',
         textAlign: 'center',
     },
+    filterIcon: {
+        fontSize: '16px',
+        color: 'grey.600',
+        pb: '1px',
+    },
 };
 
 const DatasetViewUI: React.FC<{
@@ -156,15 +162,21 @@ const DatasetViewUI: React.FC<{
     virtualRows: VirtualItem[];
     rows: IRow<ITableRow>[];
     highlightedCells: { row: number; column: number }[];
-    handleCellClick: (_rowIndex: number, _columnIndex: number) => void;
-    handleMouseDown: (_rowIndex: number, _columnIndex: number) => void;
-    handleMouseOver: (_rowIndex: number, _columnIndex: number) => void;
+    handleCellClick: (rowIndex: number, columnIndex: number) => void;
+    handleMouseDown: (rowIndex: number, columnIndex: number) => void;
+    handleMouseOver: (rowIndex: number, columnIndex: number) => void;
     isLoading: boolean;
     dynamicRowHeight: boolean;
     rowVirtualizer: Virtualizer<HTMLDivElement, Element>;
     sorting: ISortingState;
     onSortingChange: (updater: IUpdater<ISortingState>) => void;
     hasPagination: boolean;
+    handleContextMenu?: (
+        event: React.MouseEvent<HTMLTableCellElement, MouseEvent>,
+        rowIndex: number,
+        columnIndex: number,
+    ) => void;
+    filteredColumns?: string[];
 }> = ({
     table,
     tableContainerRef,
@@ -184,6 +196,8 @@ const DatasetViewUI: React.FC<{
     sorting,
     onSortingChange,
     hasPagination,
+    handleContextMenu = (_event, _rowIndex, _columnIndex) => {},
+    filteredColumns = [],
 }) => {
     return (
         <Paper
@@ -269,6 +283,13 @@ const DatasetViewUI: React.FC<{
                                             {flexRender(
                                                 header.column.columnDef.header,
                                                 header.getContext(),
+                                            )}
+                                            {filteredColumns.includes(
+                                                header.id,
+                                            ) && (
+                                                <FilterIcon
+                                                    sx={styles.filterIcon}
+                                                />
                                             )}
                                         </TableSortLabel>
                                         <Box
@@ -424,6 +445,13 @@ const DatasetViewUI: React.FC<{
                                                 }
                                                 onMouseOver={() =>
                                                     handleMouseOver(
+                                                        virtualRow.index,
+                                                        vc.index + 1,
+                                                    )
+                                                }
+                                                onContextMenu={(event) =>
+                                                    handleContextMenu(
+                                                        event,
                                                         virtualRow.index,
                                                         vc.index + 1,
                                                     )

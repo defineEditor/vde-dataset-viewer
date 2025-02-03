@@ -1,4 +1,11 @@
-import { IData, IStore, IUi, ISettings, IApi } from 'interfaces/common';
+import {
+    IData,
+    IStore,
+    IUi,
+    ISettings,
+    IApi,
+    ConverterData,
+} from 'interfaces/common';
 import { paths } from 'misc/constants';
 
 export const settings: ISettings = {
@@ -9,16 +16,30 @@ export const settings: ISettings = {
         maxColWidth: 100,
         dateFormat: 'ISO8601',
         roundNumbers: false,
+        maxPrecision: 8,
         copyFormat: 'tab',
     },
     converter: {
         threads: 2,
-        defaultOutputFormat: 'json',
+        dateFormats: [
+            'DATE',
+            'DDMMYY',
+            'MMDDYY',
+            'YYMMDD',
+            'B8601DA',
+            'E8601DA',
+        ],
+        timeFormats: ['TIME', 'HHMM', 'MMSS', 'E8601TM', 'B8601TM'],
+        datetimeFormats: ['DATETIME', 'E8601DT', 'B8601DT'],
+        convertSuffixDt: false,
+        convertSuffixTm: false,
+        convertSuffixDtm: false,
     },
     other: {
         checkForUpdates: true,
         loadingAnimation: 'random',
         inEncoding: 'utf8',
+        dragoverAnimation: true,
     },
 };
 export const ui: IUi = {
@@ -43,6 +64,24 @@ export const ui: IUi = {
     },
 };
 
+export const converter: ConverterData = {
+    configuration: {
+        options: {
+            prettyPrint: false,
+            inEncoding: 'default',
+            outEncoding: 'default',
+            renameFiles: false,
+            renamePattern: '',
+            renameReplacement: '',
+        },
+        updateMetadata: false,
+        metadata: {},
+        outputFormat: 'DJ1.1',
+    },
+    destinationDir: '',
+    sourceDir: '',
+};
+
 export const data: IData = {
     loadedRecords: {},
     recentFolders: [],
@@ -53,6 +92,7 @@ export const data: IData = {
         lastOptions: { caseInsensitive: true },
         lastType: 'manual',
     },
+    converter,
 };
 
 export const api: IApi = {

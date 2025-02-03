@@ -2,8 +2,6 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import ConstructionIcon from '@mui/icons-material/Construction';
 
-// ...existing code...
-
 const UnderConstruction: React.FC = () => (
     <Box
         display="flex"

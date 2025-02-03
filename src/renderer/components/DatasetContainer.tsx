@@ -4,6 +4,7 @@ import Paper from '@mui/material/Paper';
 import TablePagination from '@mui/material/TablePagination';
 import { ITableData } from 'interfaces/common';
 import DatasetView from 'renderer/components/DatasetView';
+import ContextMenu from 'renderer/components/DatasetView/ContextMenu';
 import AppContext from 'renderer/utils/AppContext';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import { openSnackbar, setPage, closeDataset } from 'renderer/redux/slices/ui';
@@ -57,6 +58,41 @@ const DatasetContainer: React.FC = () => {
     const currentFilter = useAppSelector(
         (state) => state.data.filterData.currentFilter,
     );
+
+    const [contextMenu, setContextMenu] = useState<{
+        position: { top: number; left: number };
+        value: string | number | boolean | null;
+        columnId: string;
+        open: boolean;
+    }>({
+        position: { top: 0, left: 0 },
+        value: null,
+        columnId: '',
+        open: false,
+    });
+
+    const handleContextMenu = useCallback(
+        (event: React.MouseEvent, rowIndex: number, columnIndex: number) => {
+            event.preventDefault();
+            if (columnIndex === 0 || !table) return; // Ignore row number column
+
+            const rows = table.data;
+            const columnId = table.header[columnIndex - 1].id;
+            const value = rows[rowIndex][columnId];
+
+            setContextMenu({
+                position: { top: event.clientY, left: event.clientX },
+                value,
+                columnId,
+                open: true,
+            });
+        },
+        [table],
+    );
+
+    const handleCloseContextMenu = () => {
+        setContextMenu((prev) => ({ ...prev, open: false }));
+    };
 
     // Load initial data
     useEffect(() => {
@@ -176,6 +212,18 @@ const DatasetContainer: React.FC = () => {
                     viewerSettings.estimateWidthRows,
                     viewerSettings.maxColWidth,
                 );
+                // Mark filtered columns
+                if (currentFilter !== null) {
+                    const filtertedColumns = currentFilter.conditions.map(
+                        (c) => c.variable,
+                    );
+                    newData.header = newData.header.map((col) => {
+                        return {
+                            ...col,
+                            isFiltered: filtertedColumns.includes(col.id),
+                        };
+                    });
+                }
                 if (currentFilter !== null && newData.data.length < pageSize) {
                     setTotalRecords(newData.data.length);
                 } else {
@@ -228,6 +276,15 @@ const DatasetContainer: React.FC = () => {
                     key={`${fileId}:${page}`} // Add key prop to force unmount/remount
                     tableData={table}
                     isLoading={isLoading}
+                    handleContextMenu={handleContextMenu}
+                />
+                <ContextMenu
+                    open={contextMenu.open}
+                    anchorPosition={contextMenu.position}
+                    onClose={handleCloseContextMenu}
+                    value={contextMenu.value}
+                    columnId={contextMenu.columnId}
+                    metadata={table.metadata}
                 />
             </Paper>
             {pageSize < table.metadata.records && (

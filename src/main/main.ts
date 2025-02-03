@@ -1,6 +1,12 @@
 /* eslint global-require: off, no-console: off, promise/always-return: off */
 import path from 'path';
-import { app, BrowserWindow, shell, ipcMain } from 'electron';
+import {
+    app,
+    BrowserWindow,
+    shell,
+    ipcMain,
+    IpcMainInvokeEvent,
+} from 'electron';
 import StoreManager from 'main/storeManager';
 import { resolveHtmlPath, writeToClipboard } from 'main/util';
 import {
@@ -11,6 +17,8 @@ import {
 import { checkForUpdates, downloadUpdate } from 'main/appUpdate';
 import FileManager from 'main/fileManager';
 import NetManager from 'main/netManager';
+import TaskManager from 'main/taskManager';
+import { MainTask } from 'interfaces/main';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -123,6 +131,7 @@ app.whenReady()
         const fileManager = new FileManager();
         const storeManager = new StoreManager();
         const netManager = new NetManager();
+        const taskManager = new TaskManager();
         ipcMain.handle('main:openFile', fileManager.handleFileOpen);
         ipcMain.handle('main:fetch', netManager.fetch);
         ipcMain.handle('main:closeFile', fileManager.handleFileClose);
@@ -136,6 +145,23 @@ app.whenReady()
         );
         ipcMain.handle('store:save', storeManager.save);
         ipcMain.handle('store:load', storeManager.load);
+        ipcMain.handle('main:openFileDialog', fileManager.openFileDialog);
+        ipcMain.handle(
+            'main:openDirectoryDialog',
+            fileManager.openDirectoryDialog,
+        );
+        ipcMain.handle(
+            'main:startTask',
+            (_event: IpcMainInvokeEvent, task: MainTask) => {
+                if (mainWindow === null) {
+                    return Promise.resolve(false);
+                }
+                return taskManager.handleTask(task, mainWindow);
+            },
+        );
+        ipcMain.handle('main:getVersion', (_event: IpcMainInvokeEvent) => {
+            return app.getVersion();
+        });
         createWindow();
         app.on('activate', () => {
             // On macOS it's common to re-create a window in the app when the

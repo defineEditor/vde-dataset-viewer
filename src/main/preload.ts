@@ -1,5 +1,17 @@
-import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
-import { BasicFilter, ColumnMetadata, ILocalStore } from 'interfaces/common';
+import {
+    contextBridge,
+    ipcRenderer,
+    IpcRendererEvent,
+    webUtils,
+} from 'electron';
+import { ProgressInfo } from 'electron-updater';
+import {
+    BasicFilter,
+    ColumnMetadata,
+    ILocalStore,
+    FileInfo,
+    MainTask,
+} from 'interfaces/common';
 
 export type Channels = 'ipc-example';
 
@@ -47,9 +59,33 @@ contextBridge.exposeInMainWorld('electron', {
             ipcRenderer.send('main:storeSaved');
         });
     },
+    pathForFile: (file: File) => webUtils.getPathForFile(file),
     fetch: (input: RequestInfo | URL, init?: RequestInit) =>
         ipcRenderer.invoke('main:fetch', input, init),
+    openFileDialog: (options: {
+        multiple?: boolean;
+        initialFolder?: string;
+        filters?: { name: string; extensions: string[] }[];
+    }): Promise<FileInfo[] | null> =>
+        ipcRenderer.invoke('main:openFileDialog', options),
+    openDirectoryDialog: (
+        initialFolder: string | null,
+    ): Promise<string | null> =>
+        ipcRenderer.invoke('main:openDirectoryDialog', initialFolder),
     isWindows: process.platform === 'win32',
+    startTask: (task: MainTask) => ipcRenderer.invoke('main:startTask', task),
+    onTaskProgress: (callback: (info: ProgressInfo) => void) => {
+        ipcRenderer.on(
+            'renderer:taskProgress',
+            async (_event: IpcRendererEvent, info: ProgressInfo) => {
+                callback(info);
+            },
+        );
+    },
+    cleanTaskProgressListeners: () => {
+        ipcRenderer.removeAllListeners('renderer:taskProgress');
+    },
+    getAppVersion: () => ipcRenderer.invoke('main:getVersion'),
     ipcRenderer: {
         sendMessage(channel: Channels, args: unknown[]) {
             ipcRenderer.send(channel, args);
