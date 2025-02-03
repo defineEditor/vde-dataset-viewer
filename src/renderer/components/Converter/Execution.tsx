@@ -32,7 +32,7 @@ const styles = {
         flex: '1 1 auto',
     },
     tasks: {
-        flex: '1 1 auto',
+        flex: '1 1 99%',
         overflow: 'scroll',
     },
     button: {

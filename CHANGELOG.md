@@ -13,6 +13,7 @@
 ## Bug fixes
 - When viewing XPT datasets > page size rows, there is one extra record loaded
 - Filter fail in case of numeric variables
+- Null values from XPT are shown as 0
 
 # 0.3.3
 ## Core Updates

@@ -18,7 +18,7 @@ export interface ICheckUpdateResult {
     errorMessage?: string;
 }
 
-export type OutputFormat = 'DJ1.1' | 'NDJ1.1';
+export type OutputFormat = 'DJ1.1' | 'DNJ1.1';
 
 export interface FileInfo {
     fullPath: string;
