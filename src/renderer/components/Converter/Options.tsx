@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -72,15 +72,29 @@ const Options: React.FC<OptionsDialogProps> = ({
         });
     };
 
-    const handleSave = () => {
+    const handleSave = useCallback(() => {
         onOptionsChange(localOptions);
         onClose();
-    };
+    }, [localOptions, onOptionsChange, onClose]);
 
     const handleClose = () => {
         setLocalOptions(options);
         onClose();
     };
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.ctrlKey && event.key === 's') {
+                event.preventDefault();
+                handleSave();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [handleSave]);
 
     return (
         <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>

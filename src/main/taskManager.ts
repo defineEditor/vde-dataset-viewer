@@ -28,6 +28,10 @@ class TaskManager {
         this.mainWindow = null;
     }
 
+    private hasPendingTasks(): boolean {
+        return this.taskQueue.length > 0 || this.running > 0;
+    }
+
     private async processQueue(): Promise<void> {
         while (this.taskQueue.length > 0 && this.running < this.maxThreads) {
             const next = this.taskQueue.shift();
@@ -101,8 +105,7 @@ class TaskManager {
     ): Promise<boolean | { error: string }> {
         try {
             // Check destination folder exists
-
-            if (fs.existsSync(task.options.destinationDir)) {
+            if (!fs.existsSync(task.options.destinationDir)) {
                 throw new Error('Destination folder does not exist');
             }
             task.files.forEach((file, index) => {
@@ -115,6 +118,18 @@ class TaskManager {
             });
 
             await this.processQueue();
+
+            // Wait till all tasks are completed
+            await new Promise<void>((resolve) => {
+                const checkTasks = () => {
+                    if (!this.hasPendingTasks()) {
+                        resolve();
+                    } else {
+                        setTimeout(checkTasks, 500);
+                    }
+                };
+                checkTasks();
+            });
             return true;
         } catch (error) {
             if (error instanceof Error) {

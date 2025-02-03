@@ -1,7 +1,7 @@
 # 0.4.0
 ## Core Updates
 - Added Converter (XPT -> JSON, XPT -> NDJSON, JSON <-> NDJSON)
-- Added Drag & Drop functionality
+- Added dataset drag & drop functionality
 
 ## Improvements
 - Added ability to build filter from the cell data by a right click

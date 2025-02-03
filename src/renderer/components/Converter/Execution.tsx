@@ -8,7 +8,9 @@ import {
     Typography,
 } from '@mui/material';
 import AppContext from 'renderer/utils/AppContext';
+import { useAppDispatch } from 'renderer/redux/hooks';
 import { ProgressInfo, ConvertTask } from 'interfaces/common';
+import { openSnackbar } from 'renderer/redux/slices/ui';
 
 const styles = {
     container: {
@@ -26,6 +28,20 @@ const styles = {
         borderRadius: 4,
         mt: 1,
     },
+    title: {
+        flex: '1 1 auto',
+    },
+    tasks: {
+        flex: '1 1 auto',
+        overflow: 'scroll',
+    },
+    button: {
+        flex: '1 1 auto',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        mt: 2,
+    },
 };
 
 const Execution: React.FC<{
@@ -33,10 +49,25 @@ const Execution: React.FC<{
     task: ConvertTask;
 }> = ({ onBack, task }) => {
     const { apiService } = useContext(AppContext);
+    const dispatch = useAppDispatch();
+
     const [progress, setProgress] = useState<number[]>(
         new Array(task.files.length).fill(0),
     );
     const [isComplete, setIsComplete] = useState(false);
+    const [elapsedTime, setElapsedTime] = useState(0);
+
+    // Add timer effect
+    useEffect(() => {
+        const startTime = Date.now();
+        const timer = setInterval(() => {
+            if (!isComplete) {
+                setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+            }
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [isComplete]);
 
     useEffect(() => {
         apiService.cleanTaskProgressListeners();
@@ -53,46 +84,69 @@ const Execution: React.FC<{
             }
         });
 
-        apiService.startTask(task);
+        const runTask = async () => {
+            const result = await apiService.startTask(task);
+            if (typeof result === 'object' && 'error' in result) {
+                dispatch(
+                    openSnackbar({
+                        message: result.error,
+                        type: 'error',
+                    }),
+                );
+            } else if (result === false) {
+                dispatch(
+                    openSnackbar({
+                        message: 'Error while executing the task',
+                        type: 'error',
+                    }),
+                );
+            }
+            setIsComplete(true);
+        };
+
+        runTask();
 
         return () => {
             apiService.cleanTaskProgressListeners();
         };
-    }, [apiService, task]);
-
-    // Check if all files are complete
-    useEffect(() => {
-        const allComplete = progress.every((p) => p === 100);
-        if (allComplete) {
-            setIsComplete(true);
-        }
-    }, [progress]);
+    }, [apiService, task, dispatch]);
 
     return (
         <Stack spacing={2} sx={styles.container}>
-            <Typography variant="h6">Converting Files</Typography>
+            <Typography variant="h6" sx={styles.title}>
+                Converting Files
+            </Typography>
 
-            {task.files.map((file, index) => (
-                <Paper key={file.fullPath} sx={styles.progressContainer}>
-                    <Typography variant="subtitle1">
-                        {file.outputName}
-                    </Typography>
-                    <LinearProgress
-                        variant="determinate"
-                        value={progress[index]}
-                        sx={styles.progressBar}
-                    />
-                    <Typography variant="caption" color="text.secondary">
-                        {progress[index] === 100
-                            ? 'Complete'
-                            : progress[index] === 0
-                              ? 'Pending'
-                              : `Converting (${Math.round(progress[index])}%)`}
-                    </Typography>
-                </Paper>
-            ))}
+            <Box sx={styles.tasks}>
+                {task.files.map((file, index) => (
+                    <Paper key={file.fullPath} sx={styles.progressContainer}>
+                        <Typography variant="subtitle1">
+                            {file.outputName}
+                        </Typography>
+                        <LinearProgress
+                            variant="determinate"
+                            value={progress[index]}
+                            sx={styles.progressBar}
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                            {progress[index] === 100
+                                ? 'Complete'
+                                : progress[index] === 0
+                                  ? 'Pending'
+                                  : `Converting (${Math.round(progress[index])}%)`}
+                        </Typography>
+                    </Paper>
+                ))}
+            </Box>
 
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+            <Box sx={styles.button}>
+                <Typography variant="caption" sx={{ ml: 2 }}>
+                    {elapsedTime > 0 &&
+                        `
+                        Time: ${Math.floor(elapsedTime / 60)}:
+                        ${(elapsedTime % 60).toString().padStart(2, '0')}
+                        `}
+                </Typography>
                 <Button
                     variant="contained"
                     onClick={onBack}

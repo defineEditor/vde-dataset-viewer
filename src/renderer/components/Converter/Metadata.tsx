@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -55,7 +55,7 @@ const Metadata: React.FC<MetadataDialogProps> = ({
     const [localMetadata, setLocalMetadata] =
         useState<Partial<DatasetMetadata>>(metadata);
 
-    React.useEffect(() => {
+    useEffect(() => {
         setLocalMetadata(metadata);
     }, [metadata]);
 
@@ -81,15 +81,35 @@ const Metadata: React.FC<MetadataDialogProps> = ({
             });
         };
 
-    const handleSave = () => {
+    const handleSave = useCallback(() => {
         onMetadataChange(localMetadata);
+        onClose();
+    }, [localMetadata, onMetadataChange, onClose]);
+
+    const handleClose = () => {
+        // Reset to original values
+        setLocalMetadata(metadata);
         onClose();
     };
 
-    const handleClose = () => {
-        setLocalMetadata(metadata); // Reset to original values
-        onClose();
+    const handleClearAll = () => {
+        const emptyMetadata: Partial<DatasetMetadata> = {};
+        setLocalMetadata(emptyMetadata);
     };
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.ctrlKey && event.key === 's') {
+                event.preventDefault();
+                handleSave();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [handleSave]);
 
     return (
         <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
@@ -193,6 +213,9 @@ const Metadata: React.FC<MetadataDialogProps> = ({
                 </Stack>
             </DialogContent>
             <DialogActions sx={styles.actions}>
+                <Button onClick={handleClearAll} color="primary">
+                    Clear All
+                </Button>
                 <Button onClick={handleClose} color="primary">
                     Cancel
                 </Button>

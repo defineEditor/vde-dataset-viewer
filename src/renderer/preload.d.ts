@@ -64,7 +64,7 @@ declare global {
                 once(channel: string, func: (...args: unknown[]) => void): void;
             };
             writeToClipboard: (text: string) => Promise<boolean>;
-            startTask: (task: MainTask) => Promise<boolean>;
+            startTask: (task: MainTask) => Promise<boolean | { error: string }>;
             onTaskProgress: (callback: (info: ProgressInfo) => void) => void;
             cleanTaskProgressListeners: () => void;
             openFileDialog: (options: {
