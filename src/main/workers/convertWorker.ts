@@ -91,7 +91,11 @@ const processXptMetadata = (
         );
     }
     // Set Dataset-JSON version
-    if (options.outputFormat === 'DJ1.1' || options.outputFormat === 'DNJ1.1') {
+    if (
+        options.outputFormat === 'DJ1.1' ||
+        options.outputFormat === 'DNJ1.1' ||
+        options.outputFormat === 'DJC1.1'
+    ) {
         newMetadata.datasetJSONVersion = '1.1';
     }
 
@@ -115,7 +119,11 @@ const updateMetadata = (
     // Set attributes which are updated in any case;
     newMetadata.datasetJSONCreationDateTime = new Date().toISOString();
 
-    if (options.outputFormat === 'DJ1.1' || options.outputFormat === 'DNJ1.1') {
+    if (
+        options.outputFormat === 'DJ1.1' ||
+        options.outputFormat === 'DNJ1.1' ||
+        options.outputFormat === 'DJC1.1'
+    ) {
         newMetadata.datasetJSONVersion = '1.1';
     }
 
@@ -320,6 +328,7 @@ const convertJson = async (
                         ? undefined
                         : options.outEncoding,
                 isNdJson: options.outputFormat === 'DNJ1.1',
+                isCompressed: options.outputFormat === 'DJC1.1',
             },
         );
 

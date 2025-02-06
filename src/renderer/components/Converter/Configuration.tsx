@@ -33,6 +33,7 @@ import {
     DatasetMetadata,
     ConversionOptions,
     ConverterData,
+    DJFileExtension,
 } from 'interfaces/common';
 import { mainTaskTypes } from 'misc/constants';
 import Metadata from 'renderer/components/Converter/Metadata';
@@ -102,11 +103,13 @@ const Converter: React.FC<{
     const handleOutputFormat = (event: React.ChangeEvent<HTMLInputElement>) => {
         setOutputFormat(event.target.value as OutputFormat);
         // Update output name for all files
-        let extension: 'json' | 'ndjson';
+        let extension: DJFileExtension;
         if (event.target.value === 'DJ1.1') {
             extension = 'json';
-        } else {
+        } else if (event.target.value === 'DNJ1.1') {
             extension = 'ndjson';
+        } else {
+            extension = 'dsjc';
         }
         setFiles(
             files.map((file) => ({
@@ -127,7 +130,7 @@ const Converter: React.FC<{
                 filters: [
                     {
                         name: 'All supported formats',
-                        extensions: ['xpt', 'json', 'ndjson'],
+                        extensions: ['xpt', 'json', 'ndjson', 'dsjc'],
                     },
                     {
                         name: 'XPT',
@@ -141,6 +144,10 @@ const Converter: React.FC<{
                         name: 'NDJSON',
                         extensions: ['ndjson'],
                     },
+                    {
+                        name: 'Compressed JSON',
+                        extensions: ['dsjc'],
+                    },
                 ],
             });
             if (result === null) {
@@ -152,11 +159,13 @@ const Converter: React.FC<{
                 );
                 return;
             }
-            let extension: 'json' | 'ndjson';
+            let extension: DJFileExtension;
             if (outputFormat === 'DJ1.1') {
                 extension = 'json';
-            } else {
+            } else if (outputFormat === 'DNJ1.1') {
                 extension = 'ndjson';
+            } else {
+                extension = 'dsjc';
             }
             const newFiles = result.map((file: FileInfo) => ({
                 ...file,
@@ -204,7 +213,7 @@ const Converter: React.FC<{
         if (options.renameFiles && options.renamePattern) {
             try {
                 const regex = new RegExp(options.renamePattern);
-                let extension: 'json' | 'ndjson';
+                let extension: DJFileExtension;
                 if (outputFormat === 'DJ1.1') {
                     extension = 'json';
                 } else {
@@ -231,11 +240,13 @@ const Converter: React.FC<{
 
     // Reset output names to original filenames when renaming is disabled
     useEffect(() => {
-        let extension: 'json' | 'ndjson';
+        let extension: DJFileExtension;
         if (outputFormat === 'DJ1.1') {
             extension = 'json';
-        } else {
+        } else if (outputFormat === 'DNJ1.1') {
             extension = 'ndjson';
+        } else {
+            extension = 'dsjc';
         }
         if (options.renameFiles === false) {
             setFiles((prev) =>
@@ -375,6 +386,9 @@ const Converter: React.FC<{
                 >
                     <MenuItem value="DJ1.1">Dataset-JSON v1.1</MenuItem>
                     <MenuItem value="DNJ1.1">Dataset-NDJSON v1.1</MenuItem>
+                    <MenuItem value="DJC1.1">
+                        Compressed Dataset-JSON v1.1
+                    </MenuItem>
                 </TextField>
                 <Button variant="contained" onClick={handleOptionsOpen}>
                     Options

@@ -18,13 +18,14 @@ export interface ICheckUpdateResult {
     errorMessage?: string;
 }
 
-export type OutputFormat = 'DJ1.1' | 'DNJ1.1';
+export type OutputFormat = 'DJ1.1' | 'DNJ1.1' | 'DJC1.1';
+export type DJFileExtension = 'json' | 'ndjson' | 'dsjc';
 
 export interface FileInfo {
     fullPath: string;
     folder: string;
     filename: string;
-    format: 'xpt' | 'json' | 'ndjson';
+    format: 'xpt' | DJFileExtension;
     size: number;
     lastModified: number;
     datasetJsonVersion?: string;

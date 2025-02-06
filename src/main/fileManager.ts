@@ -120,6 +120,9 @@ class FileManager {
             case 'ndjson':
                 type = 'json';
                 break;
+            case 'dsjc':
+                type = 'json';
+                break;
             case 'xpt':
                 type = 'xpt';
                 break;
