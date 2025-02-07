@@ -80,6 +80,7 @@ export interface IUiControl {
 export interface IUiViewer {
     datasetInfoTab: 0 | 1;
     filterInputMode: 'manual' | 'interactive';
+    sidebarOpen: boolean;
 }
 
 export interface IUi {

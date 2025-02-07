@@ -49,6 +49,7 @@ export const ui: IUi = {
     viewer: {
         datasetInfoTab: 0,
         filterInputMode: 'manual',
+        sidebarOpen: false,
     },
     modals: [],
     snackbar: {

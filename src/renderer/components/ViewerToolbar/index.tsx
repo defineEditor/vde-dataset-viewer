@@ -9,6 +9,7 @@ import {
     openModal,
     setPage,
     openSnackbar,
+    toggleSidebar,
 } from 'renderer/redux/slices/ui';
 import { resetFilter, addRecent } from 'renderer/redux/slices/data';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
@@ -99,6 +100,10 @@ const Header: React.FC = () => {
         dispatch(openModal({ type: modals.DATASETINFO, data: {} }));
     }, [dispatch]);
 
+    const handleToggleSidebar = useCallback(() => {
+        dispatch(toggleSidebar());
+    }, [dispatch]);
+
     // Add shortcuts for actions
     useEffect(() => {
         const handleViewerToolbarKeyDown = (event: KeyboardEvent) => {
@@ -119,6 +124,9 @@ const Header: React.FC = () => {
                     case 'r':
                         handleFilterReset();
                         break;
+                    case '`':
+                        handleToggleSidebar();
+                        break;
                     default:
                         break;
                 }
@@ -136,6 +144,7 @@ const Header: React.FC = () => {
         handleFilterClick,
         handleDataSetInfoClick,
         handleFilterReset,
+        handleToggleSidebar,
     ]);
 
     return (

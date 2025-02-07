@@ -7,10 +7,16 @@ import DatasetView from 'renderer/components/DatasetView';
 import ContextMenu from 'renderer/components/DatasetView/ContextMenu';
 import AppContext from 'renderer/utils/AppContext';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
-import { openSnackbar, setPage, closeDataset } from 'renderer/redux/slices/ui';
+import {
+    openSnackbar,
+    setPage,
+    closeDataset,
+    toggleSidebar,
+} from 'renderer/redux/slices/ui';
 import { getData } from 'renderer/utils/readData';
 import estimateWidth from 'renderer/utils/estimateWidth';
 import deepEqual from 'renderer/utils/deepEqual';
+import DatasetSidebar from 'renderer/components/DatasetView/Sidebar';
 
 const styles = {
     main: {
@@ -48,6 +54,7 @@ const DatasetContainer: React.FC = () => {
     const fileId = useAppSelector((state) => state.ui.currentFileId);
     const pageSize = useAppSelector((state) => state.settings.viewer.pageSize);
     const viewerSettings = useAppSelector((state) => state.settings.viewer);
+    const sidebarOpen = useAppSelector((state) => state.ui.viewer.sidebarOpen);
 
     const { apiService } = useContext(AppContext);
 
@@ -92,6 +99,10 @@ const DatasetContainer: React.FC = () => {
 
     const handleCloseContextMenu = () => {
         setContextMenu((prev) => ({ ...prev, open: false }));
+    };
+
+    const handleCloseSidebar = () => {
+        dispatch(toggleSidebar());
     };
 
     // Load initial data
@@ -270,38 +281,41 @@ const DatasetContainer: React.FC = () => {
     }
 
     return (
-        <Stack sx={styles.main}>
-            <Paper sx={styles.table}>
-                <DatasetView
-                    key={`${fileId}:${page}`} // Add key prop to force unmount/remount
-                    tableData={table}
-                    isLoading={isLoading}
-                    handleContextMenu={handleContextMenu}
-                />
-                <ContextMenu
-                    open={contextMenu.open}
-                    anchorPosition={contextMenu.position}
-                    onClose={handleCloseContextMenu}
-                    value={contextMenu.value}
-                    columnId={contextMenu.columnId}
-                    metadata={table.metadata}
-                />
-            </Paper>
-            {pageSize < table.metadata.records && (
-                <Paper sx={styles.pagination}>
-                    <TablePagination
-                        sx={{ mr: 2, borderRadius: 0 }}
-                        component="div"
-                        count={totalRecords}
-                        page={page}
-                        disabled={currentFilter !== null}
-                        onPageChange={handleChangePage}
-                        rowsPerPage={pageSize}
-                        rowsPerPageOptions={[-1]}
+        <>
+            <Stack sx={styles.main}>
+                <Paper sx={styles.table}>
+                    <DatasetView
+                        key={`${fileId}:${page}`} // Add key prop to force unmount/remount
+                        tableData={table}
+                        isLoading={isLoading}
+                        handleContextMenu={handleContextMenu}
+                    />
+                    <ContextMenu
+                        open={contextMenu.open}
+                        anchorPosition={contextMenu.position}
+                        onClose={handleCloseContextMenu}
+                        value={contextMenu.value}
+                        columnId={contextMenu.columnId}
+                        metadata={table.metadata}
                     />
                 </Paper>
-            )}
-        </Stack>
+                {pageSize < table.metadata.records && (
+                    <Paper sx={styles.pagination}>
+                        <TablePagination
+                            sx={{ mr: 2, borderRadius: 0 }}
+                            component="div"
+                            count={totalRecords}
+                            page={page}
+                            disabled={currentFilter !== null}
+                            onPageChange={handleChangePage}
+                            rowsPerPage={pageSize}
+                            rowsPerPageOptions={[-1]}
+                        />
+                    </Paper>
+                )}
+            </Stack>
+            <DatasetSidebar open={sidebarOpen} onClose={handleCloseSidebar} />
+        </>
     );
 };
 

@@ -119,6 +119,9 @@ export const uiSlice = createSlice({
         ) => {
             state.viewer.filterInputMode = action.payload;
         },
+        toggleSidebar: (state) => {
+            state.viewer.sidebarOpen = !state.viewer.sidebarOpen;
+        },
     },
 });
 
@@ -135,6 +138,7 @@ export const {
     setPage,
     setDatasetInfoTab,
     setFilterInputMode,
+    toggleSidebar,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;
