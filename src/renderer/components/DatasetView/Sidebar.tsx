@@ -1,5 +1,5 @@
-import React, { useState, useContext } from 'react';
-import { useAppDispatch } from 'renderer/redux/hooks';
+import React, { useState, useContext, useEffect } from 'react';
+import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { openDataset } from 'renderer/redux/slices/ui';
 import AppContext from 'renderer/utils/AppContext';
 import Drawer from '@mui/material/Drawer';
@@ -17,11 +17,13 @@ const styles = {
         zIndex: 9001,
     },
     paper: {
-        minWidth: '400px',
+        minWidth: '150px',
     },
     filter: {
-        mx: 3,
-        my: 2,
+        m: 0,
+    },
+    item: {
+        p: 0,
     },
 };
 
@@ -32,26 +34,68 @@ const DatasetSidebar: React.FC<{
     const dispatch = useAppDispatch();
     const { apiService } = useContext(AppContext);
     const [filterText, setFilterText] = useState('');
+
     const openedFiles = apiService
         .getOpenedFiles()
         .filter((file) => file.mode === 'local');
+
+    const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+
+    const currentFileIndex = openedFiles.findIndex(
+        (file) => file.fileId === currentFileId,
+    );
+
+    const [selectedIndex, setSelectedIndex] = useState(0);
 
     const filteredFiles = openedFiles.filter((file) =>
         file.name?.toLowerCase().includes(filterText.toLowerCase()),
     );
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter' && filteredFiles.length === 1) {
-            onClose();
-            setFilterText('');
-            dispatch(openDataset({ fileId: filteredFiles[0].fileId }));
+    // When sidebar is open, set the current file as selected
+    useEffect(() => {
+        if (open) {
+            setSelectedIndex(currentFileIndex);
         }
-    };
+    }, [open, currentFileIndex]);
+
+    // Reset selected index when filtered files change
+    useEffect(() => {
+        setSelectedIndex(filteredFiles.length > 0 ? 0 : -1);
+    }, [filteredFiles.length]);
 
     const handleOpenDataset = (fileId: string) => {
         onClose();
         setFilterText('');
         dispatch(openDataset({ fileId }));
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (filteredFiles.length === 0) return;
+
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                setSelectedIndex((prev) =>
+                    prev < filteredFiles.length - 1 ? prev + 1 : 0,
+                );
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                setSelectedIndex((prev) =>
+                    prev > 0 ? prev - 1 : filteredFiles.length - 1,
+                );
+                break;
+            case 'Enter':
+                if (
+                    selectedIndex >= 0 &&
+                    selectedIndex < filteredFiles.length
+                ) {
+                    handleOpenDataset(filteredFiles[selectedIndex].fileId);
+                }
+                break;
+            default:
+                break;
+        }
     };
 
     const handleOpenNewDataset = async () => {
@@ -70,6 +114,7 @@ const DatasetSidebar: React.FC<{
         >
             <TextField
                 autoFocus
+                variant="filled"
                 value={filterText}
                 onChange={(e) => setFilterText(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -77,10 +122,12 @@ const DatasetSidebar: React.FC<{
                 sx={styles.filter}
             />
             <List>
-                {filteredFiles.map((file) => (
-                    <ListItem key={file.fileId}>
+                {filteredFiles.map((file, index) => (
+                    <ListItem key={file.fileId} sx={styles.item}>
                         <ListItemButton
                             onClick={() => handleOpenDataset(file.fileId)}
+                            onMouseEnter={() => setSelectedIndex(index)}
+                            selected={index === selectedIndex}
                         >
                             <ListItemText
                                 primary={file.name}
