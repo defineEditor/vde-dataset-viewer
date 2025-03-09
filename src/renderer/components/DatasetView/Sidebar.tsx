@@ -7,7 +7,6 @@ import {
     TextField,
     List,
     ListItem,
-    Button,
     ListItemButton,
     ListItemText,
 } from '@mui/material';
@@ -24,6 +23,21 @@ const styles = {
     },
     item: {
         p: 0,
+    },
+    type: {
+        display: 'inline-block',
+        backgroundColor: 'primary.main',
+        fontFamily: 'monospace',
+        fontWeight: '500',
+        color: 'grey.300',
+        borderRadius: 8,
+        height: 20,
+        pl: 1,
+        pr: 1,
+        mb: 1,
+    },
+    filterInput: {
+        py: 1,
     },
 };
 
@@ -55,6 +69,7 @@ const DatasetSidebar: React.FC<{
     useEffect(() => {
         if (open) {
             setSelectedIndex(currentFileIndex);
+            setFilterText('');
         }
     }, [open, currentFileIndex]);
 
@@ -98,12 +113,6 @@ const DatasetSidebar: React.FC<{
         }
     };
 
-    const handleOpenNewDataset = async () => {
-        onClose();
-        setFilterText('');
-        // ...reuse or define open logic...
-    };
-
     return (
         <Drawer
             open={open}
@@ -120,6 +129,7 @@ const DatasetSidebar: React.FC<{
                 onKeyDown={handleKeyDown}
                 placeholder="Filter by name"
                 sx={styles.filter}
+                slotProps={{ input: { sx: styles.filterInput } }}
             />
             <List>
                 {filteredFiles.map((file, index) => (
@@ -132,12 +142,14 @@ const DatasetSidebar: React.FC<{
                             <ListItemText
                                 primary={file.name}
                                 secondary={file.type}
+                                slotProps={{
+                                    secondary: { sx: styles.type },
+                                }}
                             />
                         </ListItemButton>
                     </ListItem>
                 ))}
             </List>
-            <Button onClick={handleOpenNewDataset}>Open New Dataset</Button>
         </Drawer>
     );
 };
