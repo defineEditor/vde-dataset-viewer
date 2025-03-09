@@ -74,6 +74,7 @@ export interface IUiControl {
     goTo: {
         row: number | null;
         column: string | null;
+        cellSelection: boolean;
     };
 }
 

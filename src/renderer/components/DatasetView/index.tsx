@@ -306,12 +306,28 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             rowVirtualizer.scrollToIndex(row, { align: 'center' });
             dispatch(setGoTo({ row: null }));
             // Highlight the row number
-            handleCellClick(row, 0);
+            if (!goTo.cellSelection) {
+                handleCellClick(row, 0);
+            } else if (goTo.column !== null && goTo.cellSelection) {
+                // Highlight the cell
+                const columnIndex =
+                    tableData.header.findIndex(
+                        (item) =>
+                            item.id.toLowerCase() ===
+                            goTo.column?.toLowerCase(),
+                    ) + 1;
+                if (columnIndex !== -1) {
+                    handleCellClick(row - 1, columnIndex);
+                }
+            }
         }
     }, [
         goTo.row,
+        goTo.column,
+        goTo.cellSelection,
         rowVirtualizer,
         dispatch,
+        tableData.header,
         settings.pageSize,
         currentPage,
         handleCellClick,
@@ -319,7 +335,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     ]);
 
     useEffect(() => {
-        if (goTo.column !== null) {
+        if (goTo.column !== null && goTo.row === null) {
             // Add +1 as the first column is the row number
             const columnIndex =
                 tableData.header.findIndex(
@@ -333,10 +349,14 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             }
             dispatch(setGoTo({ column: null }));
             // Highlight the column
-            handleColumnSelect(columnIndex);
+            if (!goTo.cellSelection) {
+                handleColumnSelect(columnIndex);
+            }
         }
     }, [
         goTo.column,
+        goTo.row,
+        goTo.cellSelection,
         tableData.header,
         columnVirtualizer,
         dispatch,

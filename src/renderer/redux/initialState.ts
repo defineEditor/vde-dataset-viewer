@@ -61,6 +61,7 @@ export const ui: IUi = {
         goTo: {
             row: null,
             column: null,
+            cellSelection: false,
         },
     },
 };

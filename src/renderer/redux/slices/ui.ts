@@ -94,6 +94,12 @@ export const uiSlice = createSlice({
             if (column !== undefined) {
                 state.control.goTo.column = column;
             }
+            if (row !== undefined && column !== undefined) {
+                state.control.goTo.cellSelection = true;
+            } else if (!state.control.goTo.row && !state.control.goTo.column) {
+                // Reset the value once both column and cell are selected
+                state.control.goTo.cellSelection = false;
+            }
         },
         closeModal: (state, action: PayloadAction<{ type: ModalType }>) => {
             const { type } = action.payload;
