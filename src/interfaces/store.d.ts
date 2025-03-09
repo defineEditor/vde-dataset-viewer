@@ -114,6 +114,11 @@ export interface IData {
     };
     recentFolders: string[];
     recentFiles: IRecentFile[];
+    openDatasets: {
+        [name: string]: {
+            filter: BasicFilter | null;
+        };
+    };
     filterData: {
         currentFilter: BasicFilter | null;
         recentFilters: {

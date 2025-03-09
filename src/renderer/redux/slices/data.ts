@@ -95,7 +95,25 @@ export const dataSlice = createSlice({
         builder.addCase(openDataset, (state, action) => {
             const { fileId } = action.payload;
             if (action.payload.currentFileId !== fileId) {
-                state.filterData.currentFilter = null;
+                // Save the filter;
+                if (
+                    action.payload.currentFileId &&
+                    state.filterData.currentFilter
+                ) {
+                    state.openDatasets[action.payload.currentFileId] = {
+                        filter: state.filterData.currentFilter,
+                    };
+                }
+                // Check if filter is saved;
+                if (
+                    state.openDatasets[fileId] &&
+                    state.openDatasets[fileId].filter
+                ) {
+                    state.filterData.currentFilter =
+                        state.openDatasets[fileId].filter;
+                } else {
+                    state.filterData.currentFilter = null;
+                }
             }
 
             return state;

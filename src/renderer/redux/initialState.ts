@@ -88,6 +88,7 @@ export const data: IData = {
     loadedRecords: {},
     recentFolders: [],
     recentFiles: [],
+    openDatasets: {},
     filterData: {
         currentFilter: null,
         recentFilters: [],
