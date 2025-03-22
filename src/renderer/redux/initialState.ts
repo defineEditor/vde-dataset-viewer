@@ -63,6 +63,10 @@ export const ui: IUi = {
             column: null,
             cellSelection: false,
         },
+        select: {
+            row: null,
+            column: null,
+        },
     },
 };
 

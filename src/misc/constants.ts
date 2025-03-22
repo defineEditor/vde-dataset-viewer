@@ -5,6 +5,7 @@ export const modals = {
     APPUPDATE: 'APPUPDATE',
     EDITAPI: 'EDITAPI',
     ERROR: 'ERROR',
+    VARIABLEINFO: 'VARIABLEINFO',
 } as const;
 
 export const paths = {

@@ -101,6 +101,21 @@ export const uiSlice = createSlice({
                 state.control.goTo.cellSelection = false;
             }
         },
+        setSelect: (
+            state,
+            action: PayloadAction<{
+                row?: number | null;
+                column?: string | null;
+            }>,
+        ) => {
+            const { row, column } = action.payload;
+            if (row !== undefined) {
+                state.control.select.row = row;
+            }
+            if (column !== undefined) {
+                state.control.select.column = column;
+            }
+        },
         closeModal: (state, action: PayloadAction<{ type: ModalType }>) => {
             const { type } = action.payload;
             // Find the last opened modal of the given type and remove it
@@ -141,6 +156,7 @@ export const {
     closeAllModals,
     openModal,
     setGoTo,
+    setSelect,
     setPage,
     setDatasetInfoTab,
     setFilterInputMode,

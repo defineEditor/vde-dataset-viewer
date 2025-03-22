@@ -249,6 +249,13 @@ const DatasetViewUI: React.FC<{
                                             width: header.getSize(),
                                             cursor: 'pointer',
                                         }}
+                                        onContextMenu={(event) =>
+                                            handleContextMenu(
+                                                event,
+                                                0,
+                                                vc.index + 1,
+                                            )
+                                        }
                                     >
                                         <TableSortLabel
                                             onClick={() => {

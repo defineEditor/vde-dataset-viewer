@@ -40,7 +40,11 @@ export interface IUiModalAppUpdate extends IUiModalBase {
 }
 
 export interface IUiModalGeneral extends IUiModalBase {
-    type: typeof modals.GOTO | typeof modals.DATASETINFO | typeof modals.FILTER;
+    type:
+        | typeof modals.GOTO
+        | typeof modals.DATASETINFO
+        | typeof modals.FILTER
+        | typeof modals.VARIABLEINFO;
     data: {};
 }
 
@@ -56,8 +60,14 @@ export interface IUiModalMessage extends IUiModalBase {
     data: { message: string };
 }
 
+export interface IUiModalVariableInfo extends IUiModalBase {
+    type: typeof modals.VARIABLEINFO;
+    data: { columnId: string };
+}
+
 export type IUiModal =
     | IUiModalAppUpdate
+    | IUiModalVariableInfo
     | IUiModalGeneral
     | IUiModalEditApi
     | IUiModalMessage;
@@ -75,6 +85,10 @@ export interface IUiControl {
         row: number | null;
         column: string | null;
         cellSelection: boolean;
+    };
+    select: {
+        row: number | null;
+        column: string | null;
     };
 }
 

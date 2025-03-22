@@ -8,7 +8,7 @@ import React, {
 import { ITableData } from 'interfaces/common';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
-import { openSnackbar, setGoTo } from 'renderer/redux/slices/ui';
+import { openSnackbar, setGoTo, setSelect } from 'renderer/redux/slices/ui';
 import View from 'renderer/components/DatasetView/View';
 import {
     ColumnDef,
@@ -361,6 +361,46 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         columnVirtualizer,
         dispatch,
         handleColumnSelect,
+    ]);
+
+    // Select control
+    const select = useAppSelector((state) => state.ui.control.select);
+
+    useEffect(() => {
+        if (select.row !== null || select.column !== null) {
+            let columnIndex = -1;
+            if (select.column !== null) {
+                // Add +1 as the first column is the row number
+                columnIndex =
+                    tableData.header.findIndex(
+                        (item) =>
+                            item.id.toLowerCase() ===
+                            select.column?.toLowerCase(),
+                    ) + 1;
+            }
+
+            if (select.row !== null && columnIndex !== -1) {
+                // Cell selection
+                const row = (select.row - 1) % settings.pageSize;
+                handleCellClick(row, columnIndex);
+            } else if (select.row !== null) {
+                // Row selection
+                const row = (select.row - 1) % settings.pageSize;
+                handleCellClick(row, 0);
+            } else if (columnIndex !== -1) {
+                // Column selection
+                handleColumnSelect(columnIndex);
+            }
+            // Clean select control
+            dispatch(setSelect({ row: null, column: null }));
+        }
+    }, [
+        select,
+        tableData.header,
+        dispatch,
+        handleCellClick,
+        handleColumnSelect,
+        settings.pageSize,
     ]);
 
     return (
