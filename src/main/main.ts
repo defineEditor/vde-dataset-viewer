@@ -143,6 +143,10 @@ app.whenReady()
             'read:getObservations',
             fileManager.handleGetObservations,
         );
+        ipcMain.handle(
+            'read:getUniqueValues',
+            fileManager.handleGetUniqueValues,
+        );
         ipcMain.handle('store:save', storeManager.save);
         ipcMain.handle('store:load', storeManager.load);
         ipcMain.handle('main:openFileDialog', fileManager.openFileDialog);

@@ -248,6 +248,31 @@ class FileManager {
         return null;
     };
 
+    public handleGetUniqueValues = async (
+        _event: IpcMainInvokeEvent,
+        fileId: string,
+        columns: string[],
+        limit?: number,
+        addCount?: boolean,
+    ) => {
+        if (this.openedFiles[fileId] instanceof DatasetJson) {
+            try {
+                return await this.openedFiles[fileId].getUniqueValues({
+                    columns,
+                    limit,
+                    addCount,
+                });
+            } catch (error) {
+                dialog.showErrorBox(
+                    'Data Error',
+                    `An error occurred while retrieving unique values: ${(error as Error).message}`,
+                );
+                return null;
+            }
+        }
+        return null;
+    };
+
     public openFileDialog = async (
         _event: IpcMainInvokeEvent,
         options: {

@@ -58,6 +58,7 @@ const shortcuts = {
         'Ctrl + F': 'Filter data',
         'Ctrl + I': 'Dataset Information',
         'Ctrl + C': 'Copy selected cells',
+        'Ctrl + `': 'Toggle opened dataset selection',
     },
 };
 

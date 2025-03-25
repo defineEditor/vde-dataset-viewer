@@ -104,7 +104,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         estimateSize: (index) => visibleColumns[index + 1].getSize(), // Adjust index
         getScrollElement: () => tableContainerRef.current,
         horizontal: true,
-        overscan: 3,
+        overscan: 4,
     });
 
     const rowVirtualizer = useVirtualizer({
@@ -317,7 +317,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                             goTo.column?.toLowerCase(),
                     ) + 1;
                 if (columnIndex !== -1) {
-                    handleCellClick(row - 1, columnIndex);
+                    handleCellClick(row, columnIndex);
                 }
             }
         }

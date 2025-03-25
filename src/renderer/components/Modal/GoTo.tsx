@@ -133,9 +133,9 @@ const GoTo: React.FC<IUiModal> = (props: IUiModal) => {
     ) => {
         if (reason === 'selectOption' && value) {
             setInputValue(value);
+            event.stopPropagation();
             setGoToType('Column');
         }
-        event.stopPropagation();
     };
 
     useEffect(() => {

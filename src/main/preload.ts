@@ -11,6 +11,7 @@ import {
     ILocalStore,
     FileInfo,
     MainTask,
+    TableRowValue,
 } from 'interfaces/common';
 
 export type Channels = 'ipc-example';
@@ -47,6 +48,25 @@ contextBridge.exposeInMainWorld('electron', {
             filterData,
             columns,
         ),
+    getUniqueValues: (
+        fileId: string,
+        columnIds: string[],
+        limit?: number,
+        addCount?: boolean,
+    ): Promise<{
+        [columnId: string]: {
+            values: TableRowValue[];
+            counts: { [name: string]: number };
+        };
+    } | null> => {
+        return ipcRenderer.invoke(
+            'read:getUniqueValues',
+            fileId,
+            columnIds,
+            limit,
+            addCount,
+        );
+    },
     saveLocalStore: (localStore: ILocalStore) =>
         ipcRenderer.invoke('store:save', localStore),
     loadLocalStore: (): Promise<ILocalStore> =>

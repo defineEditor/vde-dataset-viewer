@@ -12,6 +12,7 @@ import {
     FileInfo,
     MainTask,
     ProgressInfo,
+    TableRowValue,
 } from 'interfaces/common';
 
 declare global {
@@ -44,6 +45,17 @@ declare global {
                 filterData?: BasicFilter,
                 columns?: ColumnMetadata[],
             ) => Promise<ItemDataArray[] | null>;
+            getUniqueValues: (
+                fileId: string,
+                columnIds: string[],
+                limit?: number,
+                addCount?: boolean,
+            ) => Promise<{
+                [columnId: string]: {
+                    values: TableRowValue[];
+                    counts: { [name: string]: number };
+                };
+            } | null>;
             pathForFile: (file: File) => string;
             fetch: (
                 input: RequestInfo | URL,
