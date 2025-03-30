@@ -187,9 +187,7 @@ const Header: React.FC = () => {
                 >
                     <NextPlanOutlinedIcon
                         sx={{
-                            color: isFilterEnabled
-                                ? 'success.main'
-                                : 'primary.main',
+                            color: 'primary.main',
                         }}
                     />
                 </IconButton>
