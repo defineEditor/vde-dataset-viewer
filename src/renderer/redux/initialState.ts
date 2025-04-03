@@ -34,6 +34,7 @@ export const settings: ISettings = {
         convertSuffixDt: false,
         convertSuffixTm: false,
         convertSuffixDtm: false,
+        csvEpoch: '1960-01-01',
     },
     other: {
         checkForUpdates: true,
