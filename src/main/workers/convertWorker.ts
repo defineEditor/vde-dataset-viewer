@@ -125,7 +125,7 @@ const updateMetadata = (
         options.outputFormat === 'DNJ1.1' ||
         options.outputFormat === 'DJC1.1'
     ) {
-        newMetadata.datasetJSONVersion = '1.1';
+        newMetadata.datasetJSONVersion = '1.1.0';
     }
 
     newMetadata.sourceSystem = {
