@@ -81,7 +81,7 @@ const DatasetSidebar: React.FC<{
     const handleOpenDataset = (fileId: string) => {
         onClose();
         setFilterText('');
-        dispatch(openDataset({ fileId }));
+        dispatch(openDataset({ fileId, currentFileId }));
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

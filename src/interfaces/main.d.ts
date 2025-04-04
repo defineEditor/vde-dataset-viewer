@@ -10,6 +10,7 @@ export interface SettingsConverter {
     convertSuffixDt: boolean;
     convertSuffixTm: boolean;
     convertSuffixDtm: boolean;
+    csvEpoch: string;
 }
 
 export interface ICheckUpdateResult {
@@ -18,14 +19,14 @@ export interface ICheckUpdateResult {
     errorMessage?: string;
 }
 
-export type OutputFormat = 'DJ1.1' | 'DNJ1.1' | 'DJC1.1';
-export type DJFileExtension = 'json' | 'ndjson' | 'dsjc';
+export type OutputFormat = 'DJ1.1' | 'DNJ1.1' | 'DJC1.1' | 'CSV';
+export type OutputFileExtension = 'json' | 'ndjson' | 'dsjc' | 'csv';
 
 export interface FileInfo {
     fullPath: string;
     folder: string;
     filename: string;
-    format: 'xpt' | DJFileExtension;
+    format: 'xpt' | OutputFileExtension;
     size: number;
     lastModified: number;
     datasetJsonVersion?: string;

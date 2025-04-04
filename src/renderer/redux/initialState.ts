@@ -34,6 +34,7 @@ export const settings: ISettings = {
         convertSuffixDt: false,
         convertSuffixTm: false,
         convertSuffixDtm: false,
+        csvEpoch: '1960-01-01',
     },
     other: {
         checkForUpdates: true,
@@ -59,6 +60,11 @@ export const ui: IUi = {
     },
     control: {
         goTo: {
+            row: null,
+            column: null,
+            cellSelection: false,
+        },
+        select: {
             row: null,
             column: null,
         },
@@ -87,6 +93,7 @@ export const data: IData = {
     loadedRecords: {},
     recentFolders: [],
     recentFiles: [],
+    openDatasets: {},
     filterData: {
         currentFilter: null,
         recentFilters: [],

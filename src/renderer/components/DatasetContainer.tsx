@@ -71,11 +71,13 @@ const DatasetContainer: React.FC = () => {
         value: string | number | boolean | null;
         columnId: string;
         open: boolean;
+        isHeader: boolean;
     }>({
         position: { top: 0, left: 0 },
         value: null,
         columnId: '',
         open: false,
+        isHeader: false,
     });
 
     const handleContextMenu = useCallback(
@@ -92,6 +94,7 @@ const DatasetContainer: React.FC = () => {
                 value,
                 columnId,
                 open: true,
+                isHeader: rowIndex === 0,
             });
         },
         [table],
@@ -297,6 +300,7 @@ const DatasetContainer: React.FC = () => {
                         value={contextMenu.value}
                         columnId={contextMenu.columnId}
                         metadata={table.metadata}
+                        isHeader={contextMenu.isHeader}
                     />
                 </Paper>
                 {pageSize < table.metadata.records && (

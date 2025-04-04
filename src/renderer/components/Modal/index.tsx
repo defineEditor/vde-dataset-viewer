@@ -2,6 +2,7 @@ import React from 'react';
 import { useAppSelector } from 'renderer/redux/hooks';
 import GoTo from 'renderer/components/Modal/GoTo';
 import DatasetInfo from 'renderer/components/Modal/DatasetInfo';
+import VariableInfo from 'renderer/components/Modal/VariableInfo';
 import Filter from 'renderer/components/Modal/Filter';
 import AppUpdate from 'renderer/components/Modal/AppUpdate';
 import EditApi from 'renderer/components/Modal/EditApi';
@@ -16,6 +17,7 @@ const MODAL_COMPONENTS = {
     [modalNames.APPUPDATE]: AppUpdate,
     [modalNames.EDITAPI]: EditApi,
     [modalNames.ERROR]: ErrorModal,
+    [modalNames.VARIABLEINFO]: VariableInfo,
 };
 
 const ModalRoot: React.FC = () => {

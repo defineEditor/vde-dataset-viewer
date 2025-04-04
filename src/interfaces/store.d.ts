@@ -40,7 +40,11 @@ export interface IUiModalAppUpdate extends IUiModalBase {
 }
 
 export interface IUiModalGeneral extends IUiModalBase {
-    type: typeof modals.GOTO | typeof modals.DATASETINFO | typeof modals.FILTER;
+    type:
+        | typeof modals.GOTO
+        | typeof modals.DATASETINFO
+        | typeof modals.FILTER
+        | typeof modals.VARIABLEINFO;
     data: {};
 }
 
@@ -56,8 +60,14 @@ export interface IUiModalMessage extends IUiModalBase {
     data: { message: string };
 }
 
+export interface IUiModalVariableInfo extends IUiModalBase {
+    type: typeof modals.VARIABLEINFO;
+    data: { columnId: string };
+}
+
 export type IUiModal =
     | IUiModalAppUpdate
+    | IUiModalVariableInfo
     | IUiModalGeneral
     | IUiModalEditApi
     | IUiModalMessage;
@@ -72,6 +82,11 @@ export interface IUiSnackbar {
 
 export interface IUiControl {
     goTo: {
+        row: number | null;
+        column: string | null;
+        cellSelection: boolean;
+    };
+    select: {
         row: number | null;
         column: string | null;
     };
@@ -113,6 +128,11 @@ export interface IData {
     };
     recentFolders: string[];
     recentFiles: IRecentFile[];
+    openDatasets: {
+        [name: string]: {
+            filter: BasicFilter | null;
+        };
+    };
     filterData: {
         currentFilter: BasicFilter | null;
         recentFilters: {

@@ -4,6 +4,7 @@ import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
 import ShortcutIcon from '@mui/icons-material/Shortcut';
 import InfoIcon from '@mui/icons-material/Info';
 import FilterIcon from '@mui/icons-material/FilterAlt';
+import NextPlanOutlinedIcon from '@mui/icons-material/NextPlan';
 import {
     openDataset,
     openModal,
@@ -104,6 +105,10 @@ const Header: React.FC = () => {
         dispatch(toggleSidebar());
     }, [dispatch]);
 
+    const handleSwitchClick = useCallback(() => {
+        dispatch(toggleSidebar());
+    }, [dispatch]);
+
     // Add shortcuts for actions
     useEffect(() => {
         const handleViewerToolbarKeyDown = (event: KeyboardEvent) => {
@@ -170,6 +175,19 @@ const Header: React.FC = () => {
                                 currentFileMode === 'remote'
                                     ? 'grey.500'
                                     : 'primary.main',
+                        }}
+                    />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Switch Dataset" enterDelay={1000}>
+                <IconButton
+                    onClick={handleSwitchClick}
+                    id="filterData"
+                    size="small"
+                >
+                    <NextPlanOutlinedIcon
+                        sx={{
+                            color: 'primary.main',
                         }}
                     />
                 </IconButton>

@@ -31,8 +31,10 @@ export interface IHeaderCell {
     isFiltered?: boolean;
 }
 
+export type TableRowValue = string | number | boolean | null;
+
 export interface ITableRow {
-    [key: string]: string | number | boolean | null;
+    [key: string]: TableRowValue;
 }
 
 export interface ITableData {

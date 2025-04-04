@@ -8,7 +8,7 @@ import React, {
 import { ITableData } from 'interfaces/common';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
-import { openSnackbar, setGoTo } from 'renderer/redux/slices/ui';
+import { openSnackbar, setGoTo, setSelect } from 'renderer/redux/slices/ui';
 import View from 'renderer/components/DatasetView/View';
 import {
     ColumnDef,
@@ -104,7 +104,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         estimateSize: (index) => visibleColumns[index + 1].getSize(), // Adjust index
         getScrollElement: () => tableContainerRef.current,
         horizontal: true,
-        overscan: 3,
+        overscan: 4,
     });
 
     const rowVirtualizer = useVirtualizer({
@@ -306,12 +306,28 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             rowVirtualizer.scrollToIndex(row, { align: 'center' });
             dispatch(setGoTo({ row: null }));
             // Highlight the row number
-            handleCellClick(row, 0);
+            if (!goTo.cellSelection) {
+                handleCellClick(row, 0);
+            } else if (goTo.column !== null && goTo.cellSelection) {
+                // Highlight the cell
+                const columnIndex =
+                    tableData.header.findIndex(
+                        (item) =>
+                            item.id.toLowerCase() ===
+                            goTo.column?.toLowerCase(),
+                    ) + 1;
+                if (columnIndex !== -1) {
+                    handleCellClick(row, columnIndex);
+                }
+            }
         }
     }, [
         goTo.row,
+        goTo.column,
+        goTo.cellSelection,
         rowVirtualizer,
         dispatch,
+        tableData.header,
         settings.pageSize,
         currentPage,
         handleCellClick,
@@ -319,7 +335,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     ]);
 
     useEffect(() => {
-        if (goTo.column !== null) {
+        if (goTo.column !== null && goTo.row === null) {
             // Add +1 as the first column is the row number
             const columnIndex =
                 tableData.header.findIndex(
@@ -333,14 +349,58 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             }
             dispatch(setGoTo({ column: null }));
             // Highlight the column
-            handleColumnSelect(columnIndex);
+            if (!goTo.cellSelection) {
+                handleColumnSelect(columnIndex);
+            }
         }
     }, [
         goTo.column,
+        goTo.row,
+        goTo.cellSelection,
         tableData.header,
         columnVirtualizer,
         dispatch,
         handleColumnSelect,
+    ]);
+
+    // Select control
+    const select = useAppSelector((state) => state.ui.control.select);
+
+    useEffect(() => {
+        if (select.row !== null || select.column !== null) {
+            let columnIndex = -1;
+            if (select.column !== null) {
+                // Add +1 as the first column is the row number
+                columnIndex =
+                    tableData.header.findIndex(
+                        (item) =>
+                            item.id.toLowerCase() ===
+                            select.column?.toLowerCase(),
+                    ) + 1;
+            }
+
+            if (select.row !== null && columnIndex !== -1) {
+                // Cell selection
+                const row = (select.row - 1) % settings.pageSize;
+                handleCellClick(row, columnIndex);
+            } else if (select.row !== null) {
+                // Row selection
+                const row = (select.row - 1) % settings.pageSize;
+                handleCellClick(row, 0);
+            } else if (columnIndex !== -1) {
+                // Column selection
+                handleColumnSelect(columnIndex);
+            }
+            // Clean select control
+            dispatch(setSelect({ row: null, column: null }));
+        }
+    }, [
+        select,
+        tableData.header,
+        dispatch,
+        handleCellClick,
+        handleColumnSelect,
+        settings.pageSize,
     ]);
 
     return (

@@ -94,6 +94,27 @@ export const uiSlice = createSlice({
             if (column !== undefined) {
                 state.control.goTo.column = column;
             }
+            if (row !== undefined && column !== undefined) {
+                state.control.goTo.cellSelection = true;
+            } else if (!state.control.goTo.row && !state.control.goTo.column) {
+                // Reset the value once both column and cell are selected
+                state.control.goTo.cellSelection = false;
+            }
+        },
+        setSelect: (
+            state,
+            action: PayloadAction<{
+                row?: number | null;
+                column?: string | null;
+            }>,
+        ) => {
+            const { row, column } = action.payload;
+            if (row !== undefined) {
+                state.control.select.row = row;
+            }
+            if (column !== undefined) {
+                state.control.select.column = column;
+            }
         },
         closeModal: (state, action: PayloadAction<{ type: ModalType }>) => {
             const { type } = action.payload;
@@ -135,6 +156,7 @@ export const {
     closeAllModals,
     openModal,
     setGoTo,
+    setSelect,
     setPage,
     setDatasetInfoTab,
     setFilterInputMode,
