@@ -1,5 +1,6 @@
 import { dialog, IpcMainInvokeEvent } from 'electron';
 import DatasetJson from 'js-stream-dataset-json';
+import DatasetSas7bdat from 'js-stream-sas7bdat';
 import DatasetXpt from 'xport-js';
 import {
     DatasetType,
@@ -25,7 +26,9 @@ const getHash = (str: string): string => {
 };
 
 class FileManager {
-    private openedFiles: { [key: string]: DatasetJson | DatasetXpt } = {};
+    private openedFiles: {
+        [key: string]: DatasetJson | DatasetXpt | DatasetSas7bdat;
+    } = {};
 
     constructor() {
         this.openedFiles = {};
@@ -35,7 +38,10 @@ class FileManager {
         // Check if the file is already opened
         const foundFileIds = Object.keys(this.openedFiles).filter((fileId) => {
             const file = this.openedFiles[fileId];
-            if (file instanceof DatasetJson) {
+            if (
+                file instanceof DatasetJson ||
+                file instanceof DatasetSas7bdat
+            ) {
                 return file.filePath === pathToFile;
             }
             if (file instanceof DatasetXpt) {
@@ -120,6 +126,9 @@ class FileManager {
             case 'ndjson':
                 type = 'json';
                 break;
+            case 'sas7bdat':
+                type = 'sas7bdat';
+                break;
             case 'dsjc':
                 type = 'json';
                 break;
@@ -134,10 +143,12 @@ class FileManager {
                     errorMessage: 'File extension not supported',
                 };
         }
-        let data: DatasetJson | DatasetXpt;
+        let data: DatasetJson | DatasetXpt | DatasetSas7bdat;
         try {
             if (type === 'xpt' || encoding === 'default') {
                 data = new DatasetXpt(newFile.path);
+            } else if (type === 'sas7bdat') {
+                data = new DatasetSas7bdat(newFile.path);
             } else {
                 data = new DatasetJson(newFile.path, {
                     encoding,

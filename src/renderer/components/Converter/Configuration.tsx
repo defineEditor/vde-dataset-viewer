@@ -130,11 +130,13 @@ const Converter: React.FC<{
                 filters: [
                     {
                         name: 'All supported formats',
-                        extensions: ['xpt', 'json', 'ndjson', 'dsjc'],
-                    },
-                    {
-                        name: 'XPT',
-                        extensions: ['xpt'],
+                        extensions: [
+                            'xpt',
+                            'json',
+                            'ndjson',
+                            'dsjc',
+                            'sas7bdat',
+                        ],
                     },
                     {
                         name: 'JSON',
@@ -147,6 +149,14 @@ const Converter: React.FC<{
                     {
                         name: 'Compressed JSON',
                         extensions: ['dsjc'],
+                    },
+                    {
+                        name: 'SAS7BDAT',
+                        extensions: ['sas7bdat'],
+                    },
+                    {
+                        name: 'XPT',
+                        extensions: ['xpt'],
                     },
                 ],
             });

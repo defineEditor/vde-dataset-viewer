@@ -14,7 +14,7 @@ export {
     ColumnMetadata,
 } from 'js-array-filter';
 
-export type DatasetType = 'json' | 'xpt';
+export type DatasetType = 'json' | 'xpt' | 'sas7bdat';
 
 export interface IOpenFile {
     fileId: string;
