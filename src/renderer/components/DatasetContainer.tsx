@@ -53,7 +53,7 @@ const DatasetContainer: React.FC = () => {
 
     const fileId = useAppSelector((state) => state.ui.currentFileId);
     const pageSize = useAppSelector((state) => state.settings.viewer.pageSize);
-    const viewerSettings = useAppSelector((state) => state.settings.viewer);
+    const settings = useAppSelector((state) => state.settings);
     const sidebarOpen = useAppSelector((state) => state.ui.viewer.sidebarOpen);
 
     const { apiService } = useContext(AppContext);
@@ -124,7 +124,7 @@ const DatasetContainer: React.FC = () => {
                     fileId,
                     0,
                     pageSize,
-                    viewerSettings,
+                    settings,
                 );
             } catch (error) {
                 // Remove current fileId as something is wrong with itj
@@ -144,8 +144,8 @@ const DatasetContainer: React.FC = () => {
             if (newData !== null) {
                 newData.header = updateWidth(
                     newData,
-                    viewerSettings.estimateWidthRows,
-                    viewerSettings.maxColWidth,
+                    settings.viewer.estimateWidthRows,
+                    settings.viewer.maxColWidth,
                 );
                 setTotalRecords(newData.metadata.records);
                 setTable(newData);
@@ -154,7 +154,7 @@ const DatasetContainer: React.FC = () => {
         };
 
         readDataset();
-    }, [dispatch, fileId, pageSize, apiService, viewerSettings]);
+    }, [dispatch, fileId, pageSize, apiService, settings]);
 
     // Pagination
     const page = useAppSelector((state) => state.ui.currentPage);
@@ -176,13 +176,13 @@ const DatasetContainer: React.FC = () => {
                     fileId,
                     start,
                     pageSize,
-                    viewerSettings,
+                    settings,
                 );
                 if (newData !== null) {
                     newData.header = updateWidth(
                         newData,
-                        viewerSettings.estimateWidthRows,
-                        viewerSettings.maxColWidth,
+                        settings.viewer.estimateWidthRows,
+                        settings.viewer.maxColWidth,
                     );
                     setTable(newData);
                     dispatch(setPage(newPage));
@@ -192,7 +192,7 @@ const DatasetContainer: React.FC = () => {
 
             readNext((newPage as number) * pageSize);
         },
-        [fileId, pageSize, table, dispatch, apiService, viewerSettings],
+        [fileId, pageSize, table, dispatch, apiService, settings],
     );
 
     // Filter change
@@ -216,15 +216,15 @@ const DatasetContainer: React.FC = () => {
                 fileId,
                 0,
                 pageSize,
-                viewerSettings,
+                settings,
                 undefined,
                 currentFilter === null ? undefined : currentFilter,
             );
             if (newData !== null) {
                 newData.header = updateWidth(
                     newData,
-                    viewerSettings.estimateWidthRows,
-                    viewerSettings.maxColWidth,
+                    settings.viewer.estimateWidthRows,
+                    settings.viewer.maxColWidth,
                 );
                 // Mark filtered columns
                 if (currentFilter !== null) {
@@ -264,7 +264,7 @@ const DatasetContainer: React.FC = () => {
         currentFilter,
         page,
         apiService,
-        viewerSettings,
+        settings,
     ]);
 
     // GoTo control

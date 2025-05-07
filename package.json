@@ -27,6 +27,7 @@
         "bp-linux": "npm run build && electron-builder build --linux --publish never && ts-node ./.erb/scripts/moveFiles.ts",
         "package-linux": "electron-builder build --linux --publish never && ts-node ./.erb/scripts/moveFiles.ts",
         "package-win": "electron-builder build --win --x64 --publish never && ts-node ./.erb/scripts/moveFiles.ts",
+        "package-win-docker": "docker run --rm -v ${PWD}:/project -w /project electronuserland/builder:wine electron-builder build --win --x64 --publish never && ts-node ./.erb/scripts/moveFiles.ts",
         "package-all": "ts-node ./.erb/scripts/clean.js dist && npm run build && npm run package-linux && npm run package-win && npm run build:dll",
         "rebuild": "electron-rebuild --parallel --types prod,dev,optional --module-dir release/app",
         "prestart": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.main.dev.ts",
@@ -134,7 +135,7 @@
         "css-minimizer-webpack-plugin": "^5.0.1",
         "detect-port": "^1.5.1",
         "electron": "^34.0.0",
-        "electron-builder": "^24.13.3",
+        "electron-builder": "^26.0.12",
         "electron-devtools-installer": "^4.0.0",
         "electronmon": "^2.0.2",
         "eslint": "^8.49.0",
@@ -179,6 +180,8 @@
         "appId": "org.vde.vde-dataset-viewer",
         "asar": true,
         "asarUnpack": "**\\*.{node,dll}",
+        "buildDependenciesFromSource": false,
+        "npmRebuild": false,
         "files": [
             "dist",
             "node_modules",
@@ -250,7 +253,7 @@
             "repo": "vde-dataset-viewer"
         }
     },
-    "devEngines": {
+    "engines": {
         "node": ">=14.x",
         "npm": ">=7.x"
     },

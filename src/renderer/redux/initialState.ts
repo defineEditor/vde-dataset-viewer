@@ -18,6 +18,7 @@ export const settings: ISettings = {
         roundNumbers: false,
         maxPrecision: 8,
         copyFormat: 'tab',
+        applyDateFormat: true,
     },
     converter: {
         threads: 2,

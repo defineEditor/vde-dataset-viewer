@@ -12,6 +12,7 @@ export interface ISettings {
         dateFormat: 'ISO8601' | 'DDMONYEAR';
         roundNumbers: boolean;
         maxPrecision?: number;
+        applyDateFormat: boolean;
         copyFormat: 'tab' | 'csv' | 'json';
     };
     converter: SettingsConverter;

@@ -86,6 +86,20 @@ export const Viewer: React.FC<ViewerProps> = ({
                     and may cause errors when scrolling with scrollbar
                 </Alert>
             )}
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        checked={settings.viewer.applyDateFormat}
+                        onChange={onSettingChange}
+                        name="viewer.applyDateFormat"
+                    />
+                }
+                label="Apply Date Format"
+            />
+            <Typography variant="caption" sx={styles.helperText}>
+                For XPT/SAS7BDAT files, apply date format if assigned to a
+                column
+            </Typography>
         </Stack>
         <TextField
             label="Date Format"

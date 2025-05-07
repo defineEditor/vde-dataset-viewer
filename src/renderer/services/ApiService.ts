@@ -254,7 +254,7 @@ class ApiService {
         fileId: string,
         start: number,
         length: number,
-        settings: ISettings['viewer'],
+        settings: ISettings,
         filterColumns?: string[],
         filterData?: BasicFilter,
     ): Promise<ITableRow[]> => {
