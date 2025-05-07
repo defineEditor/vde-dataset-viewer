@@ -38,7 +38,9 @@ export const Converter: React.FC<ConverterProps> = ({
                 slotProps={{ htmlInput: { min: 1, max: 16 } }}
                 sx={styles.inputField}
             />
-            <Typography variant="h6">XPT Conversion Settings</Typography>
+            <Typography variant="h6">
+                SAS7BDAT/XPT Conversion Settings
+            </Typography>
             <Typography variant="caption">
                 When a variable has one of the following display formats
                 applied, it will be converted as a numeric variable with a

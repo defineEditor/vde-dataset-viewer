@@ -97,8 +97,9 @@ export const Viewer: React.FC<ViewerProps> = ({
                 label="Apply Date Format"
             />
             <Typography variant="caption" sx={styles.helperText}>
-                For XPT/SAS7BDAT files, apply date format if assigned to a
-                column
+                For XPT/SAS7BDAT files, apply datetime/date/time format if
+                assigned to a column. The list of formats is taken from Settings
+                -&gt; Converter.
             </Typography>
         </Stack>
         <TextField

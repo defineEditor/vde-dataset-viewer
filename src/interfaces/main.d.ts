@@ -26,7 +26,7 @@ export interface FileInfo {
     fullPath: string;
     folder: string;
     filename: string;
-    format: 'xpt' | OutputFileExtension;
+    format: 'xpt' | 'sas7bdat' | OutputFileExtension;
     size: number;
     lastModified: number;
     datasetJsonVersion?: string;

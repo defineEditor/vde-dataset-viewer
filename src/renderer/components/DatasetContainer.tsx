@@ -87,14 +87,14 @@ const DatasetContainer: React.FC = () => {
 
             const rows = table.data;
             const columnId = table.header[columnIndex - 1].id;
-            const value = rows[rowIndex][columnId];
+            const value = rowIndex === -1 ? '' : rows[rowIndex][columnId];
 
             setContextMenu({
                 position: { top: event.clientY, left: event.clientX },
                 value,
                 columnId,
                 open: true,
-                isHeader: rowIndex === 0,
+                isHeader: rowIndex === -1,
             });
         },
         [table],

@@ -259,7 +259,7 @@ const DatasetViewUI: React.FC<{
                                         onContextMenu={(event) =>
                                             handleContextMenu(
                                                 event,
-                                                0,
+                                                -1,
                                                 vc.index + 1,
                                             )
                                         }

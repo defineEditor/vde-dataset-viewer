@@ -320,11 +320,13 @@ class FileManager {
                 const parsedPath = path.parse(filePath);
                 // Get data of the last modification and size of the file
                 const stats = fs.statSync(filePath);
-                let format: 'xpt' | 'json' | 'ndjson';
+                let format: 'xpt' | 'json' | 'ndjson' | 'sas7bdat';
                 if (parsedPath.ext.toLowerCase() === '.xpt') {
                     format = 'xpt';
                 } else if (parsedPath.ext.toLowerCase() === '.json') {
                     format = 'json';
+                } else if (parsedPath.ext.toLowerCase() === '.sas7bdat') {
+                    format = 'sas7bdat';
                 } else if (parsedPath.ext.toLowerCase() === '.ndjson') {
                     format = 'ndjson';
                 } else {
