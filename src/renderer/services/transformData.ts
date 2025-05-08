@@ -107,49 +107,46 @@ const transformData = (
         });
     }
 
-    // Add support for numeric variables with date formats
     const numericDateColsToFormat: number[] = [];
-    if (settings.viewer.applyDateFormat) {
-        metadata.columns.forEach((column, index) => {
-            if (
-                ['integer', 'float', 'double', 'decimal'].includes(
-                    column.dataType,
-                ) &&
-                column.displayFormat &&
-                settings.converter.dateFormats.includes(column.displayFormat)
-            ) {
-                numericDateColsToFormat.push(index);
-            }
-        });
-    }
-
-    // Add support for numeric variables with time formats
     const numericTimeColsToFormat: number[] = [];
-    if (settings.viewer.applyDateFormat) {
-        metadata.columns.forEach((column, index) => {
-            if (
-                ['integer', 'float', 'double', 'decimal'].includes(
-                    column.dataType,
-                ) &&
-                column.displayFormat &&
-                settings.converter.timeFormats.includes(column.displayFormat)
-            ) {
-                numericTimeColsToFormat.push(index);
-            }
-        });
-    }
-
-    // Add support for numeric variables with datetime formats
     const numericDatetimeColsToFormat: number[] = [];
     if (settings.viewer.applyDateFormat) {
         metadata.columns.forEach((column, index) => {
+            if (!column.displayFormat) {
+                return;
+            }
+
+            const updatedDisplayFormat = column.displayFormat
+                .toUpperCase()
+                .replace(/(.+?)\d*(\.\d*)$/, '$1');
+
+            // Check for numeric variables with date formats
             if (
                 ['integer', 'float', 'double', 'decimal'].includes(
                     column.dataType,
                 ) &&
-                column.displayFormat &&
+                settings.converter.dateFormats.includes(updatedDisplayFormat)
+            ) {
+                numericDateColsToFormat.push(index);
+            }
+
+            // Check for numeric variables with time formats
+            if (
+                ['integer', 'float', 'double', 'decimal'].includes(
+                    column.dataType,
+                ) &&
+                settings.converter.timeFormats.includes(updatedDisplayFormat)
+            ) {
+                numericTimeColsToFormat.push(index);
+            }
+
+            // Check for numeric variables with datetime formats
+            if (
+                ['integer', 'float', 'double', 'decimal'].includes(
+                    column.dataType,
+                ) &&
                 settings.converter.datetimeFormats.includes(
-                    column.displayFormat,
+                    updatedDisplayFormat,
                 )
             ) {
                 numericDatetimeColsToFormat.push(index);

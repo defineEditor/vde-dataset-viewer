@@ -29,6 +29,8 @@ export interface IHeaderCell {
     type?: string;
     /** Filter is applied to the column */
     isFiltered?: boolean;
+    /** Numeric variable with datetime format */
+    numericDatetimeType?: 'date' | 'time' | 'datetime';
 }
 
 export type TableRowValue = string | number | boolean | null;

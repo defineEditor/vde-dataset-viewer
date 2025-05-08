@@ -44,6 +44,20 @@ export default function estimateWidth(
                         return 0;
                     }),
                 );
+            } else if (column.numericDatetimeType) {
+                if (column.numericDatetimeType === 'date') {
+                    // Date
+                    columnWidth = 10;
+                    longestWord = 10;
+                } else if (column.numericDatetimeType === 'datetime') {
+                    // Date
+                    columnWidth = 19;
+                    longestWord = 19;
+                } else if (column.numericDatetimeType === 'time') {
+                    // Time
+                    columnWidth = 8;
+                    longestWord = 8;
+                }
             } else if (
                 ['integer', 'float', 'double', 'decimal'].includes(
                     column.type || '',

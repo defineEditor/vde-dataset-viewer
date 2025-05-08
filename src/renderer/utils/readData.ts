@@ -36,6 +36,46 @@ const getData = async (
     const rawHeader = metadata.columns;
 
     const newHeader: IHeaderCell[] = rawHeader.map((item) => {
+        if (
+            item.displayFormat &&
+            settings.viewer.applyDateFormat &&
+            ['integer', 'float', 'double', 'decimal'].includes(item.dataType)
+        ) {
+            // Check if the displayFormat is a date, time, or datetime format
+            let numericDatetimeType: 'date' | 'datetime' | 'time' | null = null;
+
+            const updatedDisplayFormat = item.displayFormat
+                .toUpperCase()
+                .replace(/(.+?)\d*(\.\d*)$/, '$1');
+
+            // Check for numeric variables with date formats
+            if (settings.converter.dateFormats.includes(updatedDisplayFormat)) {
+                numericDatetimeType = 'date';
+            }
+
+            // Check for numeric variables with time formats
+            if (settings.converter.timeFormats.includes(updatedDisplayFormat)) {
+                numericDatetimeType = 'time';
+            }
+
+            // Check for numeric variables with datetime formats
+            if (
+                settings.converter.datetimeFormats.includes(
+                    updatedDisplayFormat,
+                )
+            ) {
+                numericDatetimeType = 'datetime';
+            }
+            if (numericDatetimeType !== null) {
+                return {
+                    id: item.name,
+                    label: item.label,
+                    type: item.dataType,
+                    numericDatetimeType,
+                };
+            }
+        }
+
         return {
             id: item.name,
             label: item.label,
