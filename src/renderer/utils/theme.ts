@@ -1,6 +1,6 @@
 import { createTheme } from '@mui/material/styles';
 
-const theme = createTheme({
+const baseObj = {
     palette: {
         secondary: {
             light: '#F44336',
@@ -17,6 +17,33 @@ const theme = createTheme({
             default: '#e0e0e0',
         },
     },
+};
+
+export const theme = createTheme({
+    ...baseObj,
 });
 
-export default theme;
+export const themeWithoutAnimation = createTheme({
+    ...baseObj,
+    transitions: {
+        // So we have `transition: none;` everywhere
+        create: () => 'none',
+    },
+    components: {
+        MuiButtonBase: {
+            defaultProps: {
+                disableRipple: true,
+            },
+        },
+        MuiButton: {
+            defaultProps: {
+                disableRipple: true,
+            },
+        },
+        MuiIconButton: {
+            defaultProps: {
+                disableRipple: true,
+            },
+        },
+    },
+});

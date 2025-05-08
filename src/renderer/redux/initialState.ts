@@ -42,6 +42,7 @@ export const settings: ISettings = {
         loadingAnimation: 'random',
         inEncoding: 'utf8',
         dragoverAnimation: true,
+        disableUiAnimation: false,
     },
 };
 export const ui: IUi = {

@@ -28,6 +28,7 @@ export interface ISettings {
             | 'latin1'
             | 'ascii';
         dragoverAnimation: boolean;
+        disableUiAnimation: boolean;
     };
 }
 
