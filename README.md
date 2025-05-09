@@ -7,7 +7,11 @@ The VDE Dataset Viewer is a tool designed to help users visualize and explore da
 
 Supported Formats:
 * [Dataset-JSON v1.1](https://github.com/cdisc-org/DataExchange-DatasetJson)
-* NDJSON representation of Dataset-JSON
+* NDJSON representation of Dataset-JSON 1.1
+* Compressed Dataset-JSON 1.1
+* XPORT v5
+* SAS7BDAT
+
 
 API Specification: [DataExchange-DatasetJson-API](https://github.com/cdisc-org/DataExchange-DatasetJson-API)
 

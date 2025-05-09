@@ -64,6 +64,8 @@ declare global {
             saveLocalStore: (localStore: ILocalStore) => void;
             loadLocalStore: () => Promise<ILocalStore>;
             onSaveStore: (callback: () => Promise<void>) => void;
+            onFileOpen: (callback: (filePath: string) => void) => void;
+            removeFileOpenListener: () => void;
             checkForUpdates: () => Promise<ICheckUpdateResult>;
             downloadUpdate: () => Promise<boolean>;
             ipcRenderer: {
