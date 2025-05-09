@@ -14,6 +14,7 @@ export interface ISettings {
         maxPrecision?: number;
         applyDateFormat: boolean;
         copyFormat: 'tab' | 'csv' | 'json';
+        showTypeIcons: boolean;
     };
     converter: SettingsConverter;
     other: {

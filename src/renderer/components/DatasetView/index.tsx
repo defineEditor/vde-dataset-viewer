@@ -5,7 +5,7 @@ import React, {
     useMemo,
     useRef,
 } from 'react';
-import { ITableData } from 'interfaces/common';
+import { ITableData, ItemType } from 'interfaces/common';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { openSnackbar, setGoTo, setSelect } from 'renderer/redux/slices/ui';
@@ -16,7 +16,15 @@ import {
     useReactTable,
     getSortedRowModel,
     SortingState as ISortingState,
+    RowData,
 } from '@tanstack/react-table';
+
+declare module '@tanstack/table-core' {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    interface ColumnMeta<TData extends RowData, TValue> {
+        type?: ItemType | 'rowNumber';
+    }
+}
 
 interface ITableRow {
     [key: string]: string | number | boolean | null;
@@ -49,6 +57,11 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                 header: column.id,
                 size: column.size,
                 enableResizing: true,
+                meta: {
+                    type: column.numericDatetimeType
+                        ? 'datetime'
+                        : column.type || 'string',
+                },
             };
         });
         // Add row number column
@@ -57,6 +70,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             header: '#',
             size: 60,
             enableResizing: false,
+            meta: { type: 'integer' },
         });
         return result;
     }, [tableData.header]);
@@ -215,6 +229,30 @@ const DatasetView: React.FC<DatasetViewProps> = ({
 
             rowIndices.sort((a, b) => a - b);
             columnIndices.sort((a, b) => a - b);
+
+            // Check if row or column indeces exists
+            let invalidIndeces = false;
+            rowIndices.some((rowIndex) => {
+                if (rows[rowIndex] === undefined) {
+                    // Row index is out of bounds
+                    invalidIndeces = true;
+                    return true;
+                }
+                return false;
+            });
+            columnIndices.some((columnIndex) => {
+                if (visibleColumns[columnIndex] === undefined) {
+                    // Column index is out of bounds
+                    invalidIndeces = true;
+                    return true;
+                }
+                return false;
+            });
+
+            // If any index is invalid, do not proceed
+            if (invalidIndeces) {
+                return;
+            }
 
             let selectedData = '';
             if (settings.copyFormat === 'tab') {
@@ -425,6 +463,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             onSortingChange={setSorting}
             hasPagination={tableData?.metadata?.records > settings.pageSize}
             filteredColumns={filteredColumns}
+            showTypeIcons={settings.showTypeIcons}
         />
     );
 };

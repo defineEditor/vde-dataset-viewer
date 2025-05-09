@@ -106,7 +106,8 @@ export const Other: React.FC<OtherProps> = ({ settings, onSettingChange }) => (
             />
             <Typography variant="caption" sx={styles.helperText}>
                 Disable all UI animations, such as menu or modal transitions and
-                button.
+                button. Can improve experience on a remote desktop or low
+                performance machines.
             </Typography>
         </Stack>
     </Stack>

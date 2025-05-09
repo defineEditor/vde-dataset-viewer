@@ -18,6 +18,9 @@ import {
     Updater as IUpdater,
 } from '@tanstack/react-table';
 import FilterIcon from '@mui/icons-material/FilterAlt';
+import FontDownloadIcon from '@mui/icons-material/FontDownload';
+import LooksOneIcon from '@mui/icons-material/LooksOne';
+import AccessTimeIcon from '@mui/icons-material/HourglassFull';
 import { VirtualItem, Virtualizer } from '@tanstack/react-virtual';
 import { ITableRow } from 'interfaces/common';
 import Loading from 'renderer/components/Loading';
@@ -150,6 +153,24 @@ const styles = {
         color: 'grey.600',
         pb: '1px',
     },
+    typeIcon: {
+        fontSize: '16px',
+        color: 'grey.600',
+        ml: '4px',
+    },
+};
+
+const getTypeIcon = (type: string | undefined) => {
+    if (!type) {
+        return null;
+    }
+    if (['date', 'datetime', 'time'].includes(type)) {
+        return <AccessTimeIcon sx={styles.typeIcon} />;
+    }
+    if (['integer', 'float', 'double', 'decimal'].includes(type)) {
+        return <LooksOneIcon sx={styles.typeIcon} />;
+    }
+    return <FontDownloadIcon sx={styles.typeIcon} />;
 };
 
 const DatasetViewUI: React.FC<{
@@ -179,6 +200,7 @@ const DatasetViewUI: React.FC<{
     filteredColumns?: string[];
     containerStyle?: React.CSSProperties;
     hideRowNumbers?: boolean;
+    showTypeIcons?: boolean;
 }> = ({
     table,
     tableContainerRef,
@@ -202,6 +224,7 @@ const DatasetViewUI: React.FC<{
     filteredColumns = [],
     containerStyle = undefined,
     hideRowNumbers = false,
+    showTypeIcons = false,
 }) => {
     return (
         <Paper
@@ -298,6 +321,11 @@ const DatasetViewUI: React.FC<{
                                                 header.column.columnDef.header,
                                                 header.getContext(),
                                             )}
+                                            {showTypeIcons &&
+                                                getTypeIcon(
+                                                    header.column.columnDef.meta
+                                                        ?.type,
+                                                )}
                                             {filteredColumns.includes(
                                                 header.id,
                                             ) && (

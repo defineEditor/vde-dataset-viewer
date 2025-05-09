@@ -1,72 +1,11 @@
 import { DatasetJsonMetadata, ISettings, ITableRow } from 'interfaces/common';
 import { ItemDataArray } from 'js-stream-dataset-json';
-
-// Constants for epoch conversion
-// SAS epoch is January 1, 1960
-// Unix epoch is January 1, 1970
-const SECONDS_PER_DAY = 86400;
-const MILLISECONDS_PER_DAY = SECONDS_PER_DAY * 1000;
-const DAYS_BETWEEN_EPOCHS = 3653; // Days between 1960-01-01 and 1970-01-01 (10 years + 2 leap days)
-
-// Convert SAS date (days since 1960-01-01) to JavaScript Date
-const sasDateToJsDate = (sasDate: number): Date => {
-    // Convert SAS date (days since 1960-01-01) to days since Unix epoch (1970-01-01)
-    const unixDays = sasDate - DAYS_BETWEEN_EPOCHS;
-    // Convert days to milliseconds and create a JavaScript Date
-    return new Date(unixDays * MILLISECONDS_PER_DAY);
-};
-
-// Convert SAS time (seconds since midnight) to JavaScript Date components
-const sasTimeToComponents = (
-    sasTime: number,
-): { hours: string; minutes: string; seconds: string } => {
-    const totalSeconds = Math.round(sasTime);
-    const hours = Math.floor(totalSeconds / 3600)
-        .toString()
-        .padStart(2, '0');
-    const minutes = Math.floor((totalSeconds % 3600) / 60)
-        .toString()
-        .padStart(2, '0');
-    const seconds = Math.floor(totalSeconds % 60)
-        .toString()
-        .padStart(2, '0');
-    return { hours, minutes, seconds };
-};
-
-// Convert SAS datetime (seconds since 1960-01-01) to JavaScript Date
-const sasDatetimeToJsDate = (sasDatetime: number): Date => {
-    // Convert SAS datetime (seconds since 1960-01-01) to milliseconds since Unix epoch
-    const unixMilliseconds =
-        (sasDatetime - DAYS_BETWEEN_EPOCHS * SECONDS_PER_DAY) * 1000;
-    return new Date(unixMilliseconds);
-};
-
-const formatDateToDDMONYYYY = (date: Date, addTime?: boolean): string => {
-    const day = date.getUTCDate().toString().padStart(2, '0');
-    const monthNames = [
-        'JAN',
-        'FEB',
-        'MAR',
-        'APR',
-        'MAY',
-        'JUN',
-        'JUL',
-        'AUG',
-        'SEP',
-        'OCT',
-        'NOV',
-        'DEC',
-    ];
-    const month = monthNames[date.getUTCMonth()];
-    const year = date.getUTCFullYear().toString();
-    if (addTime) {
-        const hours = date.getUTCHours().toString().padStart(2, '0');
-        const minutes = date.getUTCMinutes().toString().padStart(2, '0');
-        const seconds = date.getUTCSeconds().toString().padStart(2, '0');
-        return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
-    }
-    return `${day}${month}${year}`;
-};
+import {
+    sasDateToJsDate,
+    sasDatetimeToJsDate,
+    formatDateToDDMONYYYY,
+    sasTimeToComponents,
+} from 'renderer/utils/transformUtils';
 
 const transformData = (
     data: ItemDataArray[],

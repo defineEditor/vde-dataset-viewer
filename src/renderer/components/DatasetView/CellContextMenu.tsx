@@ -2,7 +2,18 @@ import React from 'react';
 import { Menu, MenuItem, Divider, ListSubheader } from '@mui/material';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import Filter from 'js-array-filter';
-import { DatasetJsonMetadata, BasicFilter } from 'interfaces/common';
+import {
+    DatasetJsonMetadata,
+    BasicFilter,
+    IHeaderCell,
+    ISettings,
+} from 'interfaces/common';
+import {
+    jsDateToSasDate,
+    jsDateToSasDatetime,
+    componentsToSasTime,
+    formatDDMONYYYYtoDate,
+} from 'renderer/utils/transformUtils';
 import { resetFilter, setFilter } from 'renderer/redux/slices/data';
 
 interface ContextMenuProps {
@@ -10,22 +21,67 @@ interface ContextMenuProps {
     anchorPosition: { top: number; left: number };
     onClose: () => void;
     value: string | number | boolean | null;
-    columnId: string;
     metadata: DatasetJsonMetadata;
+    header: IHeaderCell;
 }
+
+const handleTransformation = (
+    header: IHeaderCell,
+    value: string | number | boolean | null,
+    dateFormat: ISettings['viewer']['dateFormat'],
+) => {
+    let updatedValue = value;
+    if (header.numericDatetimeType) {
+        let date: Date | null = null;
+        if (dateFormat === 'ISO8601' || header.numericDatetimeType === 'time') {
+            if (header.numericDatetimeType === 'datetime') {
+                // Shift by timezone offset to get UTC time
+                date = new Date(
+                    new Date(value as string).getTime() -
+                        new Date().getTimezoneOffset() * 60 * 1000,
+                );
+            } else if (header.numericDatetimeType === 'date') {
+                date = new Date(value as string);
+            } else if (header.numericDatetimeType === 'time') {
+                date = new Date(`2000-01-01T${value}Z`);
+            }
+        } else if (dateFormat === 'DDMONYEAR') {
+            date = formatDDMONYYYYtoDate(value as string);
+        }
+
+        if (date === null) {
+            updatedValue = null;
+        } else if (header.numericDatetimeType === 'datetime') {
+            updatedValue = jsDateToSasDatetime(date);
+        } else if (header.numericDatetimeType === 'date') {
+            updatedValue = jsDateToSasDate(date);
+        } else if (header.numericDatetimeType === 'time') {
+            updatedValue = componentsToSasTime(
+                date.getUTCHours(),
+                date.getUTCMinutes(),
+                date.getUTCSeconds(),
+            );
+        }
+    }
+    return updatedValue;
+};
 
 const CellContextMenu: React.FC<ContextMenuProps> = ({
     open,
     anchorPosition,
     onClose,
     value,
-    columnId,
+    header,
     metadata,
 }) => {
     const dispatch = useAppDispatch();
 
     const currentFilter = useAppSelector(
         (state) => state.data.filterData.currentFilter,
+    );
+
+    const dateFormat = useAppSelector(
+        (state) => state.settings.viewer.dateFormat,
     );
 
     const isStringColumn = [
@@ -36,7 +92,7 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
         'decimal',
         'URL',
     ].includes(
-        metadata.columns.find((col) => col.name === columnId)?.dataType || '',
+        metadata.columns.find((col) => col.name === header.id)?.dataType || '',
     );
 
     const isColumnsInCurrentFilter =
@@ -44,13 +100,15 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
             ? false
             : currentFilter.conditions
                   .map((condition) => condition.variable)
-                  .includes(columnId);
+                  .includes(header.id);
 
     const handleFilterByValue = () => {
         // Filter by value
+        const updatedValue = handleTransformation(header, value, dateFormat);
+
         const condition = isStringColumn
-            ? `${columnId} = '${value}'`
-            : `${columnId} = ${value}`;
+            ? `${header.id} = '${updatedValue}'`
+            : `${header.id} = ${updatedValue}`;
         const newFilter = new Filter(
             'dataset-json1.1',
             metadata.columns,
@@ -72,9 +130,14 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
                 metadata.columns,
                 currentFilter,
             );
+            const updatedValue = handleTransformation(
+                header,
+                value,
+                dateFormat,
+            );
             const condition = isStringColumn
-                ? `${columnId} = '${value}'`
-                : `${columnId} = ${value}`;
+                ? `${header.id} = '${updatedValue}'`
+                : `${header.id} = ${updatedValue}`;
             const filterString = newFilter.toString();
             newFilter.update(`${filterString} and ${condition}`);
             dispatch(
@@ -103,7 +166,7 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
             // Find all indexes where the column appears
             const indexes = newBasicFilter.conditions
                 .map((condition, index) =>
-                    condition.variable === columnId ? index : -1,
+                    condition.variable === header.id ? index : -1,
                 )
                 .filter((index) => index !== -1)
                 .sort((a, b) => b - a); // Sort in descending order

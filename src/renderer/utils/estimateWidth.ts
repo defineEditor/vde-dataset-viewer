@@ -5,6 +5,7 @@ export default function estimateWidth(
     data: ITableData,
     widthEstimateRows: number,
     maxColWidth: number,
+    showTypeIcons: boolean = false,
 ): { [id: string]: number } {
     const { header, data: tableData } = data;
     const result = {};
@@ -71,10 +72,17 @@ export default function estimateWidth(
                 columnWidth = 4;
                 longestWord = 4;
             }
-            // Id.length - label length + 2 characters for sorting icon
+            // Id.length - label length + space for icons
+            // 2 chars for sort icon
+            // 2 chars in case it is a formatted datetime column
+            const iconsSize = 2 + (showTypeIcons ? 3 : 0);
             result[id] = Math.min(
                 Math.round(
-                    Math.max(columnWidth, longestWord, id.length * 1.3 + 2),
+                    Math.max(
+                        columnWidth,
+                        longestWord,
+                        id.length * 1.3 + iconsSize,
+                    ),
                 ),
                 maxColWidth,
             );
