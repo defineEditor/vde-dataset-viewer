@@ -96,6 +96,7 @@ const transformData = (
     return data.map((row, index) => {
         const newRow: ITableRow = {};
         row.forEach((cell, cellIndex) => {
+            // Round values
             if (
                 settings.viewer.roundNumbers &&
                 cell != null &&
@@ -104,7 +105,10 @@ const transformData = (
                 newRow[metadata.columns[cellIndex].name] = parseFloat(
                     Number(cell).toFixed(settings.viewer.maxPrecision),
                 );
-            } else if (
+            }
+
+            // Convert numeric dates to character format
+            if (
                 settings.viewer.dateFormat !== 'ISO8601' &&
                 cell != null &&
                 dateColsToFormat.includes(cellIndex)

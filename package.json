@@ -27,7 +27,6 @@
         "bp-linux": "npm run build && electron-builder build --linux --publish never && ts-node ./.erb/scripts/moveFiles.ts",
         "package-linux": "electron-builder build --linux --publish never && ts-node ./.erb/scripts/moveFiles.ts",
         "package-win": "electron-builder build --win --x64 --publish never && ts-node ./.erb/scripts/moveFiles.ts",
-        "package-win-docker": "docker run --rm -v ${PWD}:/project -w /project electronuserland/builder:wine electron-builder build --win --x64 --publish never && ts-node ./.erb/scripts/moveFiles.ts",
         "package-all": "ts-node ./.erb/scripts/clean.js dist && npm run build && npm run package-linux && npm run package-win && npm run build:dll",
         "rebuild": "electron-rebuild --parallel --types prod,dev,optional --module-dir release/app",
         "prestart": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.main.dev.ts",
@@ -187,6 +186,38 @@
             "node_modules",
             "package.json"
         ],
+        "fileAssociations": [
+            {
+                "ext": "json",
+                "name": "JSON",
+                "description": "Dataset JSON File",
+                "role": "Viewer"
+            },
+            {
+                "ext": "ndjson",
+                "name": "NDJSON",
+                "description": "Dataset JSON File",
+                "role": "Viewer"
+            },
+            {
+                "ext": "djsc",
+                "name": "DJSC",
+                "description": "Dataset JSON Compressed File",
+                "role": "Viewer"
+            },
+            {
+                "ext": "sas7bdat",
+                "name": "SAS7BDAT",
+                "description": "SAS Dataset File",
+                "role": "Viewer"
+            },
+            {
+                "ext": "xpt",
+                "name": "XPT",
+                "description": "SAS Transport File",
+                "role": "Viewer"
+            }
+        ],
         "mac": {
             "target": {
                 "target": "default",
@@ -237,7 +268,7 @@
                 "AppImage",
                 "deb"
             ],
-            "category": "Development"
+            "category": "Viewer"
         },
         "directories": {
             "app": "release/app",

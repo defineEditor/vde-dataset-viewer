@@ -14,7 +14,11 @@ import AppContext from 'renderer/utils/AppContext';
 import ViewFile from 'renderer/components/ViewFile';
 import Settings from 'renderer/components/Settings';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
-import { setPathname } from 'renderer/redux/slices/ui';
+import {
+    setPathname,
+    openDataset,
+    openSnackbar,
+} from 'renderer/redux/slices/ui';
 import { AllowedPathnames } from 'interfaces/common';
 import ViewerToolbar from 'renderer/components/ViewerToolbar';
 import Shortcuts from 'renderer/components/Shortcuts';
@@ -22,6 +26,8 @@ import Converter from 'renderer/components/Converter';
 import About from 'renderer/components/About';
 import { paths } from 'misc/constants';
 import { saveStore } from 'renderer/redux/stateUtils';
+import { openNewDataset } from 'renderer/utils/readData';
+import { addRecent } from 'renderer/redux/slices/data';
 
 const styles = {
     main: {
@@ -187,6 +193,66 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
             window.removeEventListener('keydown', handleMainKeyDown);
         };
     }, [dispatch, apiService]);
+
+    // Handle "Open With" file opening events from the OS
+    const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+
+    useEffect(() => {
+        const handleFileOpen = async (filePath: string) => {
+            try {
+                const newDataInfo = await openNewDataset(
+                    apiService,
+                    'local',
+                    filePath,
+                );
+                if (newDataInfo.errorMessage) {
+                    if (newDataInfo.errorMessage !== 'cancelled') {
+                        dispatch(
+                            openSnackbar({
+                                type: 'error',
+                                message: newDataInfo.errorMessage,
+                            }),
+                        );
+                    }
+                    return;
+                }
+                dispatch(
+                    addRecent({
+                        name: newDataInfo.metadata.name,
+                        label: newDataInfo.metadata.label,
+                        path: newDataInfo.path,
+                    }),
+                );
+                dispatch(
+                    openDataset({
+                        fileId: newDataInfo.fileId,
+                        type: newDataInfo.type,
+                        name: newDataInfo.metadata.name,
+                        label: newDataInfo.metadata.label,
+                        mode: 'local',
+                        totalRecords: newDataInfo.metadata.records,
+                        currentFileId,
+                    }),
+                );
+            } catch (error) {
+                if (error instanceof Error) {
+                    dispatch(
+                        openSnackbar({
+                            message: `Error opening file: ${error.message || 'Unknown error'}`,
+                            type: 'error',
+                        }),
+                    );
+                }
+            }
+        };
+
+        window.electron.onFileOpen(handleFileOpen);
+
+        // Clean up listener on unmount
+        return () => {
+            window.electron.removeFileOpenListener();
+        };
+    }, [apiService, dispatch, currentFileId]);
 
     return (
         <AppProvider

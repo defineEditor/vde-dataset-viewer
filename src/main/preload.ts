@@ -79,6 +79,17 @@ contextBridge.exposeInMainWorld('electron', {
             ipcRenderer.send('main:storeSaved');
         });
     },
+    onFileOpen: (callback: (filePath: string) => void) => {
+        ipcRenderer.on(
+            'renderer:openFile',
+            (_event: IpcRendererEvent, filePath: string) => {
+                callback(filePath);
+            },
+        );
+    },
+    removeFileOpenListener: () => {
+        ipcRenderer.removeAllListeners('renderer:openFile');
+    },
     pathForFile: (file: File) => webUtils.getPathForFile(file),
     fetch: (input: RequestInfo | URL, init?: RequestInit) =>
         ipcRenderer.invoke('main:fetch', input, init),
