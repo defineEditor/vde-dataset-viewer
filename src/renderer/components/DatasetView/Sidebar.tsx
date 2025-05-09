@@ -1,15 +1,17 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
-import { openDataset } from 'renderer/redux/slices/ui';
+import { openDataset, closeDataset } from 'renderer/redux/slices/ui';
 import AppContext from 'renderer/utils/AppContext';
-import Drawer from '@mui/material/Drawer';
 import {
     TextField,
     List,
     ListItem,
     ListItemButton,
     ListItemText,
+    IconButton,
+    Drawer,
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 
 const styles = {
     drawer: {
@@ -39,6 +41,9 @@ const styles = {
     filterInput: {
         py: 1,
     },
+    closeIcon: {
+        fontSize: '24px',
+    },
 };
 
 const DatasetSidebar: React.FC<{
@@ -49,9 +54,9 @@ const DatasetSidebar: React.FC<{
     const { apiService } = useContext(AppContext);
     const [filterText, setFilterText] = useState('');
 
-    const openedFiles = apiService
-        .getOpenedFiles()
-        .filter((file) => file.mode === 'local');
+    const [openedFiles, setOpenedFiles] = useState(
+        apiService.getOpenedFiles().filter((file) => file.mode === 'local'),
+    );
 
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
 
@@ -82,6 +87,26 @@ const DatasetSidebar: React.FC<{
         onClose();
         setFilterText('');
         dispatch(openDataset({ fileId, currentFileId }));
+    };
+
+    const handleCloseDataset = (
+        event: React.MouseEvent<HTMLElement>,
+        fileId: string,
+    ) => {
+        event.stopPropagation();
+        dispatch(
+            closeDataset({
+                fileId,
+            }),
+        );
+        apiService.close(fileId);
+        setOpenedFiles(
+            apiService.getOpenedFiles().filter((file) => file.mode === 'local'),
+        );
+        const newFileIndex = apiService
+            .getOpenedFiles()
+            .findIndex((file) => file.fileId === currentFileId);
+        setSelectedIndex(newFileIndex);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -133,7 +158,22 @@ const DatasetSidebar: React.FC<{
             />
             <List>
                 {filteredFiles.map((file, index) => (
-                    <ListItem key={file.fileId} sx={styles.item}>
+                    <ListItem
+                        key={file.fileId}
+                        sx={styles.item}
+                        secondaryAction={
+                            <IconButton
+                                onClick={(event) =>
+                                    handleCloseDataset(event, file.fileId)
+                                }
+                            >
+                                <CloseIcon
+                                    fontSize="small"
+                                    sx={styles.closeIcon}
+                                />
+                            </IconButton>
+                        }
+                    >
                         <ListItemButton
                             onClick={() => handleOpenDataset(file.fileId)}
                             onMouseEnter={() => setSelectedIndex(index)}

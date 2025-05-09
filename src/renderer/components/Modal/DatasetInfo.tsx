@@ -7,11 +7,6 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import AppContext from 'renderer/utils/AppContext';
 import {
-    closeModal,
-    setDatasetInfoTab,
-    setGoTo,
-} from 'renderer/redux/slices/ui';
-import {
     DatasetJsonMetadata,
     IUiModal,
     ItemDescription,
@@ -33,8 +28,19 @@ import {
     Paper,
     IconButton,
     TableSortLabel,
+    TextField,
+    InputAdornment,
 } from '@mui/material';
 import ShortcutIcon from '@mui/icons-material/Shortcut';
+import InfoIcon from '@mui/icons-material/Info';
+import SearchIcon from '@mui/icons-material/Search';
+import {
+    closeModal,
+    setDatasetInfoTab,
+    setGoTo,
+    openModal,
+} from 'renderer/redux/slices/ui';
+import { modals } from 'misc/constants';
 
 const styles = {
     dialog: {
@@ -73,6 +79,10 @@ const styles = {
         display: 'flex',
         flexDirection: 'column',
         p: 0,
+    },
+    actionIcon: {
+        color: 'primary.main',
+        fontSize: '24px',
     },
 };
 
@@ -169,7 +179,8 @@ const ColumnsTab: React.FC<{
     metadata: DatasetJsonMetadata;
     onClose: () => void;
     active: boolean;
-}> = ({ metadata, onClose, active }) => {
+    searchTerm: string;
+}> = ({ metadata, onClose, active, searchTerm }) => {
     const dispatch = useAppDispatch();
     const headers: {
         key: keyof ItemDescription;
@@ -225,10 +236,34 @@ const ColumnsTab: React.FC<{
         onClose();
     };
 
+    const handleShowInfo = (id: string) => {
+        dispatch(
+            openModal({
+                type: modals.VARIABLEINFO,
+                data: { columnId: id },
+            }),
+        );
+    };
+
     useEffect(() => {
         setSortedColumns(metadata.columns);
         setSortConfig(null);
     }, [active, metadata.columns]);
+
+    const filteredColumns = sortedColumns.filter((column) => {
+        if (!searchTerm) return true;
+
+        const searchTermLower = searchTerm.toLowerCase();
+        // Search across all column properties
+        return headers.some((header) => {
+            const value = column[header.key];
+            return (
+                value !== null &&
+                value !== undefined &&
+                String(value).toLowerCase().includes(searchTermLower)
+            );
+        });
+    });
 
     return (
         <TableContainer component={Paper} sx={{ maxHeight: '100%' }}>
@@ -257,7 +292,7 @@ const ColumnsTab: React.FC<{
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {sortedColumns.map((column, index) => (
+                    {filteredColumns.map((column, index) => (
                         // eslint-disable-next-line react/no-array-index-key
                         <TableRow key={index}>
                             {headers.map((header) => (
@@ -266,18 +301,26 @@ const ColumnsTab: React.FC<{
                                 </TableCell>
                             ))}
                             <TableCell key="actions">
-                                <IconButton
-                                    onClick={() => handleGoToClick(column.name)}
-                                    id="goto"
-                                    size="medium"
-                                >
-                                    <ShortcutIcon
-                                        sx={{
-                                            color: 'primary.main',
-                                            fontSize: '20px',
-                                        }}
-                                    />
-                                </IconButton>
+                                <Stack direction="row" spacing={1}>
+                                    <IconButton
+                                        onClick={() =>
+                                            handleGoToClick(column.name)
+                                        }
+                                        id="goto"
+                                        size="small"
+                                    >
+                                        <ShortcutIcon sx={styles.actionIcon} />
+                                    </IconButton>
+                                    <IconButton
+                                        onClick={() =>
+                                            handleShowInfo(column.name)
+                                        }
+                                        id="goto"
+                                        size="small"
+                                    >
+                                        <InfoIcon sx={styles.actionIcon} />
+                                    </IconButton>
+                                </Stack>
                             </TableCell>
                         </TableRow>
                     ))}
@@ -296,6 +339,8 @@ const DatasetInfo: React.FC<IUiModal> = (props: IUiModal) => {
     );
     const { apiService } = useContext(AppContext);
     const currentMetadata = apiService.getOpenedFileMetadata(currentFileId);
+    const [searchTerm, setSearchTerm] = useState('');
+    const searchInputRef = React.useRef<HTMLInputElement>(null);
 
     const handleClose = useCallback(() => {
         dispatch(closeModal({ type }));
@@ -310,13 +355,20 @@ const DatasetInfo: React.FC<IUiModal> = (props: IUiModal) => {
             if (event.key === 'Escape') {
                 handleClose();
             }
+            // Focus search input when Ctrl+F is pressed and Columns tab is active
+            if (event.ctrlKey && event.key === 'f' && datasetInfoTab === 1) {
+                event.preventDefault();
+                if (searchInputRef.current) {
+                    searchInputRef.current.focus();
+                }
+            }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [handleClose]);
+    }, [handleClose, datasetInfoTab]);
 
     return (
         <Dialog
@@ -324,7 +376,56 @@ const DatasetInfo: React.FC<IUiModal> = (props: IUiModal) => {
             onClose={handleClose}
             PaperProps={{ sx: { ...styles.dialog } }}
         >
-            <DialogTitle sx={styles.title}>Dataset Information</DialogTitle>
+            <DialogTitle sx={styles.title}>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                    }}
+                >
+                    <div>Dataset Information</div>
+                    {datasetInfoTab === 1 && (
+                        <TextField
+                            placeholder="Search columns"
+                            size="small"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            variant="outlined"
+                            inputRef={searchInputRef}
+                            slotProps={{
+                                input: {
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <SearchIcon
+                                                sx={{ color: 'white' }}
+                                            />
+                                        </InputAdornment>
+                                    ),
+                                    sx: {
+                                        color: 'white',
+                                        '& .MuiOutlinedInput-notchedOutline': {
+                                            borderColor:
+                                                'rgba(255, 255, 255, 0.5)',
+                                        },
+                                        '&:hover .MuiOutlinedInput-notchedOutline':
+                                            {
+                                                borderColor: 'white',
+                                            },
+                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline':
+                                            {
+                                                borderColor: 'white',
+                                            },
+                                        '&::placeholder': {
+                                            color: 'rgba(255, 255, 255, 0.7)',
+                                        },
+                                    },
+                                },
+                            }}
+                        />
+                    )}
+                </Box>
+            </DialogTitle>
             <DialogContent sx={styles.content}>
                 <Tabs
                     value={datasetInfoTab}
@@ -342,7 +443,8 @@ const DatasetInfo: React.FC<IUiModal> = (props: IUiModal) => {
                     <ColumnsTab
                         metadata={currentMetadata}
                         onClose={handleClose}
-                        active={datasetInfoTab !== 1}
+                        active={datasetInfoTab === 1}
+                        searchTerm={searchTerm}
                     />
                 </Box>
             </DialogContent>

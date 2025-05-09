@@ -135,12 +135,13 @@ const styles = {
         textAlign: 'center',
     },
     loading: {
-        position: 'absolute',
+        position: 'fixed',
         top: '50%',
         left: '50%',
         display: 'flex',
         flexDirection: 'column',
         transform: 'translate(-50%, -50%)',
+        zIndex: 999,
     },
     sponsored: {
         marginTop: '10px',
