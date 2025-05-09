@@ -9,7 +9,7 @@ const openFile = async (
         filters: [
             {
                 name: 'JSON Files',
-                extensions: ['json', 'ndjson', 'xpt', 'dsjc', 'sas7bdat'],
+                extensions: ['json', 'ndjson', 'xpt', 'djsc', 'sas7bdat'],
             },
         ],
     });

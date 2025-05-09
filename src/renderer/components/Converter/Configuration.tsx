@@ -109,7 +109,7 @@ const Converter: React.FC<{
         } else if (event.target.value === 'DNJ1.1') {
             extension = 'ndjson';
         } else {
-            extension = 'dsjc';
+            extension = 'djsc';
         }
         setFiles(
             files.map((file) => ({
@@ -130,7 +130,7 @@ const Converter: React.FC<{
                 filters: [
                     {
                         name: 'All supported formats',
-                        extensions: ['xpt', 'json', 'ndjson', 'dsjc'],
+                        extensions: ['xpt', 'json', 'ndjson', 'djsc'],
                     },
                     {
                         name: 'JSON',
@@ -142,7 +142,7 @@ const Converter: React.FC<{
                     },
                     {
                         name: 'Compressed JSON',
-                        extensions: ['dsjc'],
+                        extensions: ['djsc'],
                     },
                     {
                         name: 'XPT',
@@ -167,7 +167,7 @@ const Converter: React.FC<{
             } else if (outputFormat === 'CSV') {
                 extension = 'csv';
             } else {
-                extension = 'dsjc';
+                extension = 'djsc';
             }
             const newFiles = result.map((file: FileInfo) => ({
                 ...file,
@@ -250,7 +250,7 @@ const Converter: React.FC<{
         } else if (outputFormat === 'CSV') {
             extension = 'ndjson';
         } else {
-            extension = 'dsjc';
+            extension = 'djsc';
         }
         if (options.renameFiles === false) {
             setFiles((prev) =>

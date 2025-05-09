@@ -129,7 +129,7 @@ class FileManager {
             case 'sas7bdat':
                 type = 'sas7bdat';
                 break;
-            case 'dsjc':
+            case 'djsc':
                 type = 'json';
                 break;
             case 'xpt':

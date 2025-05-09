@@ -41,6 +41,8 @@ const Header: React.FC = () => {
 
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
 
+    const isModalOpen = useAppSelector((state) => state.ui.modals?.length > 0);
+
     const openFiles = apiService.getOpenedFiles(currentFileId);
 
     const dataset = openFiles.length === 1 ? openFiles[0] : null;
@@ -112,7 +114,8 @@ const Header: React.FC = () => {
     // Add shortcuts for actions
     useEffect(() => {
         const handleViewerToolbarKeyDown = (event: KeyboardEvent) => {
-            if (event.ctrlKey) {
+            // Do use keywords if a Modal is open
+            if (event.ctrlKey && !isModalOpen) {
                 switch (event.key) {
                     case 'g':
                         handleGoToClick();
@@ -150,6 +153,7 @@ const Header: React.FC = () => {
         handleDataSetInfoClick,
         handleFilterReset,
         handleToggleSidebar,
+        isModalOpen,
     ]);
 
     return (
