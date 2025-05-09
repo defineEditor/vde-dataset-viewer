@@ -103,9 +103,9 @@ const DatasetSidebar: React.FC<{
         setOpenedFiles(
             apiService.getOpenedFiles().filter((file) => file.mode === 'local'),
         );
-        const newFileIndex = openedFiles.findIndex(
-            (file) => file.fileId === currentFileId,
-        );
+        const newFileIndex = apiService
+            .getOpenedFiles()
+            .findIndex((file) => file.fileId === currentFileId);
         setSelectedIndex(newFileIndex);
     };
 

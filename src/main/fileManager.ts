@@ -145,13 +145,15 @@ class FileManager {
         }
         let data: DatasetJson | DatasetXpt | DatasetSas7bdat;
         try {
-            if (type === 'xpt' || encoding === 'default') {
+            if (type === 'xpt') {
                 data = new DatasetXpt(newFile.path);
             } else if (type === 'sas7bdat') {
                 data = new DatasetSas7bdat(newFile.path);
             } else {
+                const updatedEncoding: BufferEncoding =
+                    encoding === 'default' ? 'utf8' : encoding;
                 data = new DatasetJson(newFile.path, {
-                    encoding,
+                    encoding: updatedEncoding,
                 });
             }
         } catch (error) {
