@@ -94,6 +94,21 @@ export const Other: React.FC<OtherProps> = ({ settings, onSettingChange }) => (
                 Show an animation when dragging files over the application
                 window.
             </Typography>
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        checked={settings.other.disableUiAnimation}
+                        onChange={onSettingChange}
+                        name="other.disableUiAnimation"
+                    />
+                }
+                label="Disable UI Animation"
+            />
+            <Typography variant="caption" sx={styles.helperText}>
+                Disable all UI animations, such as menu or modal transitions and
+                button. Can improve experience on a remote desktop or low
+                performance machines.
+            </Typography>
         </Stack>
     </Stack>
 );

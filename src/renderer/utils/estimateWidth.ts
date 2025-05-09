@@ -5,6 +5,7 @@ export default function estimateWidth(
     data: ITableData,
     widthEstimateRows: number,
     maxColWidth: number,
+    showTypeIcons: boolean = false,
 ): { [id: string]: number } {
     const { header, data: tableData } = data;
     const result = {};
@@ -44,6 +45,20 @@ export default function estimateWidth(
                         return 0;
                     }),
                 );
+            } else if (column.numericDatetimeType) {
+                if (column.numericDatetimeType === 'date') {
+                    // Date
+                    columnWidth = 10;
+                    longestWord = 10;
+                } else if (column.numericDatetimeType === 'datetime') {
+                    // Date
+                    columnWidth = 19;
+                    longestWord = 19;
+                } else if (column.numericDatetimeType === 'time') {
+                    // Time
+                    columnWidth = 8;
+                    longestWord = 8;
+                }
             } else if (
                 ['integer', 'float', 'double', 'decimal'].includes(
                     column.type || '',
@@ -57,10 +72,17 @@ export default function estimateWidth(
                 columnWidth = 4;
                 longestWord = 4;
             }
-            // Id.length - label length + 2 characters for sorting icon
+            // Id.length - label length + space for icons
+            // 2 chars for sort icon
+            // 2 chars in case it is a formatted datetime column
+            const iconsSize = 2 + (showTypeIcons ? 3 : 0);
             result[id] = Math.min(
                 Math.round(
-                    Math.max(columnWidth, longestWord, id.length * 1.3 + 2),
+                    Math.max(
+                        columnWidth,
+                        longestWord,
+                        id.length * 1.3 + iconsSize,
+                    ),
                 ),
                 maxColWidth,
             );

@@ -1,5 +1,5 @@
 import React from 'react';
-import { DatasetJsonMetadata } from 'interfaces/common';
+import { DatasetJsonMetadata, IHeaderCell } from 'interfaces/common';
 import CellContextMenu from 'renderer/components/DatasetView/CellContextMenu';
 import HeaderContextMenu from 'renderer/components/DatasetView/HeaderContextMenu';
 
@@ -8,8 +8,8 @@ interface ContextMenuProps {
     anchorPosition: { top: number; left: number };
     onClose: () => void;
     value: string | number | boolean | null;
-    columnId: string;
     metadata: DatasetJsonMetadata;
+    header: IHeaderCell;
     isHeader?: boolean;
 }
 
@@ -18,8 +18,8 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
     anchorPosition,
     onClose,
     value,
-    columnId,
     metadata,
+    header,
     isHeader = false,
 }) => {
     if (isHeader) {
@@ -28,7 +28,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
                 open={open}
                 anchorPosition={anchorPosition}
                 onClose={onClose}
-                columnId={columnId}
+                header={header}
             />
         );
     }
@@ -38,8 +38,8 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
             anchorPosition={anchorPosition}
             onClose={onClose}
             value={value}
-            columnId={columnId}
             metadata={metadata}
+            header={header}
         />
     );
 };

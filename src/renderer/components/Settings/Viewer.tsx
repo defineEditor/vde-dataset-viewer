@@ -86,6 +86,21 @@ export const Viewer: React.FC<ViewerProps> = ({
                     and may cause errors when scrolling with scrollbar
                 </Alert>
             )}
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        checked={settings.viewer.applyDateFormat}
+                        onChange={onSettingChange}
+                        name="viewer.applyDateFormat"
+                    />
+                }
+                label="Apply Date Format"
+            />
+            <Typography variant="caption" sx={styles.helperText}>
+                For XPT/SAS7BDAT files, apply datetime/date/time format if
+                assigned to a column. The list of formats is taken from Settings
+                -&gt; Converter.
+            </Typography>
         </Stack>
         <TextField
             label="Date Format"
@@ -115,33 +130,48 @@ export const Viewer: React.FC<ViewerProps> = ({
             <Typography variant="caption" sx={styles.helperText}>
                 When selected, float, double and decimal numbers will be rounded
             </Typography>
+            <TextField
+                label="Max Precision"
+                helperText="Precision used when number rounding is enabled"
+                name="viewer.maxPrecision"
+                type="number"
+                disabled={!settings.viewer.roundNumbers}
+                value={settings.viewer.maxPrecision}
+                onChange={onSettingChange}
+                sx={styles.inputField}
+                slotProps={{ htmlInput: { min: 1, max: 32 } }}
+            />
+            <Typography variant="h6">Miscellaneous</Typography>
+            <TextField
+                label="Copied Values Format"
+                helperText="A format used when selected cells are copied into a buffer (Ctrl+C)"
+                name="viewer.copyFormat"
+                value={settings.viewer.copyFormat}
+                select
+                onChange={(event) =>
+                    onSettingChange(
+                        event as React.ChangeEvent<HTMLInputElement>,
+                    )
+                }
+                sx={styles.inputField}
+            >
+                <MenuItem value="tab">Tab-delimited</MenuItem>
+                <MenuItem value="csv">CSV</MenuItem>
+                <MenuItem value="json">JSON</MenuItem>
+            </TextField>
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        checked={settings.viewer.showTypeIcons}
+                        onChange={onSettingChange}
+                        name="viewer.showTypeIcons"
+                    />
+                }
+                label="Show Type Icons"
+            />
+            <Typography variant="caption" sx={styles.helperText}>
+                When enabled, type icons are shown in the header of the table
+            </Typography>
         </Stack>
-        <TextField
-            label="Max Precision"
-            helperText="Precision used when number rounding is enabled"
-            name="viewer.maxPrecision"
-            type="number"
-            disabled={!settings.viewer.roundNumbers}
-            value={settings.viewer.maxPrecision}
-            onChange={onSettingChange}
-            sx={styles.inputField}
-            slotProps={{ htmlInput: { min: 1, max: 32 } }}
-        />
-        <Typography variant="h6">Miscellaneous</Typography>
-        <TextField
-            label="Copied Values Format"
-            helperText="A format used when selected cells are copied into a buffer (Ctrl+C)"
-            name="viewer.copyFormat"
-            value={settings.viewer.copyFormat}
-            select
-            onChange={(event) =>
-                onSettingChange(event as React.ChangeEvent<HTMLInputElement>)
-            }
-            sx={styles.inputField}
-        >
-            <MenuItem value="tab">Tab-delimited</MenuItem>
-            <MenuItem value="csv">CSV</MenuItem>
-            <MenuItem value="json">JSON</MenuItem>
-        </TextField>
     </Stack>
 );

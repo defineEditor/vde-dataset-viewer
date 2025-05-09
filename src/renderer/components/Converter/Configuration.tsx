@@ -133,10 +133,6 @@ const Converter: React.FC<{
                         extensions: ['xpt', 'json', 'ndjson', 'dsjc'],
                     },
                     {
-                        name: 'XPT',
-                        extensions: ['xpt'],
-                    },
-                    {
                         name: 'JSON',
                         extensions: ['json'],
                     },
@@ -147,6 +143,10 @@ const Converter: React.FC<{
                     {
                         name: 'Compressed JSON',
                         extensions: ['dsjc'],
+                    },
+                    {
+                        name: 'XPT',
+                        extensions: ['xpt'],
                     },
                 ],
             });

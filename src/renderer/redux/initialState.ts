@@ -18,6 +18,8 @@ export const settings: ISettings = {
         roundNumbers: false,
         maxPrecision: 8,
         copyFormat: 'tab',
+        applyDateFormat: true,
+        showTypeIcons: false,
     },
     converter: {
         threads: 2,
@@ -41,6 +43,7 @@ export const settings: ISettings = {
         loadingAnimation: 'random',
         inEncoding: 'utf8',
         dragoverAnimation: true,
+        disableUiAnimation: false,
     },
 };
 export const ui: IUi = {

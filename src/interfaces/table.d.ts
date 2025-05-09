@@ -1,4 +1,5 @@
 import { DatasetJsonMetadata } from 'interfaces/api.d';
+import { ItemType } from 'interfaces/datasetJson.d';
 import { BasicFilter } from 'js-array-filter';
 
 export type SortOrder = 'asc' | 'desc';
@@ -26,9 +27,11 @@ export interface IHeaderCell {
     /** Size in px */
     size?: number;
     /** Type */
-    type?: string;
+    type?: ItemType;
     /** Filter is applied to the column */
     isFiltered?: boolean;
+    /** Numeric variable with datetime format */
+    numericDatetimeType?: 'date' | 'time' | 'datetime';
 }
 
 export type TableRowValue = string | number | boolean | null;

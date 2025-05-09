@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useContext } from 'react';
 import Stack from '@mui/material/Stack';
 import Paper from '@mui/material/Paper';
 import TablePagination from '@mui/material/TablePagination';
-import { ITableData } from 'interfaces/common';
+import { IHeaderCell, ITableData } from 'interfaces/common';
 import DatasetView from 'renderer/components/DatasetView';
 import ContextMenu from 'renderer/components/DatasetView/ContextMenu';
 import AppContext from 'renderer/utils/AppContext';
@@ -36,8 +36,14 @@ const updateWidth = (
     data: ITableData,
     estimateWidthRows: number,
     maxColWidth: number,
+    showTypeIcons: boolean = false,
 ) => {
-    const widths = estimateWidth(data, estimateWidthRows, maxColWidth);
+    const widths = estimateWidth(
+        data,
+        estimateWidthRows,
+        maxColWidth,
+        showTypeIcons,
+    );
     // Update column style with default width
     return data.header.map((col) => {
         // 9px per character + 18px padding
@@ -53,7 +59,7 @@ const DatasetContainer: React.FC = () => {
 
     const fileId = useAppSelector((state) => state.ui.currentFileId);
     const pageSize = useAppSelector((state) => state.settings.viewer.pageSize);
-    const viewerSettings = useAppSelector((state) => state.settings.viewer);
+    const settings = useAppSelector((state) => state.settings);
     const sidebarOpen = useAppSelector((state) => state.ui.viewer.sidebarOpen);
 
     const { apiService } = useContext(AppContext);
@@ -69,13 +75,13 @@ const DatasetContainer: React.FC = () => {
     const [contextMenu, setContextMenu] = useState<{
         position: { top: number; left: number };
         value: string | number | boolean | null;
-        columnId: string;
+        header: IHeaderCell;
         open: boolean;
         isHeader: boolean;
     }>({
         position: { top: 0, left: 0 },
         value: null,
-        columnId: '',
+        header: { id: '', label: '' },
         open: false,
         isHeader: false,
     });
@@ -86,15 +92,15 @@ const DatasetContainer: React.FC = () => {
             if (columnIndex === 0 || !table) return; // Ignore row number column
 
             const rows = table.data;
-            const columnId = table.header[columnIndex - 1].id;
-            const value = rows[rowIndex][columnId];
+            const header = table.header[columnIndex - 1];
+            const value = rowIndex === -1 ? '' : rows[rowIndex][header.id];
 
             setContextMenu({
                 position: { top: event.clientY, left: event.clientX },
                 value,
-                columnId,
+                header,
                 open: true,
-                isHeader: rowIndex === 0,
+                isHeader: rowIndex === -1,
             });
         },
         [table],
@@ -124,7 +130,7 @@ const DatasetContainer: React.FC = () => {
                     fileId,
                     0,
                     pageSize,
-                    viewerSettings,
+                    settings,
                 );
             } catch (error) {
                 // Remove current fileId as something is wrong with itj
@@ -144,8 +150,9 @@ const DatasetContainer: React.FC = () => {
             if (newData !== null) {
                 newData.header = updateWidth(
                     newData,
-                    viewerSettings.estimateWidthRows,
-                    viewerSettings.maxColWidth,
+                    settings.viewer.estimateWidthRows,
+                    settings.viewer.maxColWidth,
+                    settings.viewer.showTypeIcons,
                 );
                 setTotalRecords(newData.metadata.records);
                 setTable(newData);
@@ -154,7 +161,7 @@ const DatasetContainer: React.FC = () => {
         };
 
         readDataset();
-    }, [dispatch, fileId, pageSize, apiService, viewerSettings]);
+    }, [dispatch, fileId, pageSize, apiService, settings]);
 
     // Pagination
     const page = useAppSelector((state) => state.ui.currentPage);
@@ -176,13 +183,14 @@ const DatasetContainer: React.FC = () => {
                     fileId,
                     start,
                     pageSize,
-                    viewerSettings,
+                    settings,
                 );
                 if (newData !== null) {
                     newData.header = updateWidth(
                         newData,
-                        viewerSettings.estimateWidthRows,
-                        viewerSettings.maxColWidth,
+                        settings.viewer.estimateWidthRows,
+                        settings.viewer.maxColWidth,
+                        settings.viewer.showTypeIcons,
                     );
                     setTable(newData);
                     dispatch(setPage(newPage));
@@ -192,7 +200,7 @@ const DatasetContainer: React.FC = () => {
 
             readNext((newPage as number) * pageSize);
         },
-        [fileId, pageSize, table, dispatch, apiService, viewerSettings],
+        [fileId, pageSize, table, dispatch, apiService, settings],
     );
 
     // Filter change
@@ -216,15 +224,16 @@ const DatasetContainer: React.FC = () => {
                 fileId,
                 0,
                 pageSize,
-                viewerSettings,
+                settings,
                 undefined,
                 currentFilter === null ? undefined : currentFilter,
             );
             if (newData !== null) {
                 newData.header = updateWidth(
                     newData,
-                    viewerSettings.estimateWidthRows,
-                    viewerSettings.maxColWidth,
+                    settings.viewer.estimateWidthRows,
+                    settings.viewer.maxColWidth,
+                    settings.viewer.showTypeIcons,
                 );
                 // Mark filtered columns
                 if (currentFilter !== null) {
@@ -264,7 +273,7 @@ const DatasetContainer: React.FC = () => {
         currentFilter,
         page,
         apiService,
-        viewerSettings,
+        settings,
     ]);
 
     // GoTo control
@@ -298,8 +307,8 @@ const DatasetContainer: React.FC = () => {
                         anchorPosition={contextMenu.position}
                         onClose={handleCloseContextMenu}
                         value={contextMenu.value}
-                        columnId={contextMenu.columnId}
                         metadata={table.metadata}
+                        header={contextMenu.header}
                         isHeader={contextMenu.isHeader}
                     />
                 </Paper>

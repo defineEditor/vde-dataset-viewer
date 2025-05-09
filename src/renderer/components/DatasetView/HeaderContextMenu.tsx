@@ -3,28 +3,34 @@ import { Menu, MenuItem } from '@mui/material';
 import { useAppDispatch } from 'renderer/redux/hooks';
 import { openModal, setSelect } from 'renderer/redux/slices/ui';
 import { modals } from 'misc/constants';
+import { IHeaderCell } from 'interfaces/common';
 
 interface HeaderContextMenuProps {
     open: boolean;
     anchorPosition: { top: number; left: number };
     onClose: () => void;
-    columnId: string;
+    header: IHeaderCell;
 }
 
 const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
     open,
     anchorPosition,
     onClose,
-    columnId,
+    header,
 }) => {
     const dispatch = useAppDispatch();
 
     const handleShowInfo = () => {
-        dispatch(openModal({ type: modals.VARIABLEINFO, data: { columnId } }));
+        dispatch(
+            openModal({
+                type: modals.VARIABLEINFO,
+                data: { columnId: header.id },
+            }),
+        );
     };
 
     const handleSelect = () => {
-        dispatch(setSelect({ column: columnId }));
+        dispatch(setSelect({ column: header.id }));
     };
 
     return (
