@@ -46,7 +46,7 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
                     onClose();
                 }}
             >
-                Variable Info
+                Column Info
             </MenuItem>
             <MenuItem
                 onClick={() => {

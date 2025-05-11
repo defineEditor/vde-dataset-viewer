@@ -3,6 +3,13 @@ import { ICheckUpdateResult, SettingsConverter } from 'interfaces/main';
 import { modals, ModalType, AllowedPathnames } from 'misc/constants';
 import { ConversionConfig } from 'interfaces/converter';
 
+export interface IMask {
+    name: string;
+    id: string;
+    columns: string[];
+    sticky?: boolean;
+}
+
 export interface ISettings {
     viewer: {
         pageSize: number;
@@ -47,7 +54,8 @@ export interface IUiModalGeneral extends IUiModalBase {
         | typeof modals.GOTO
         | typeof modals.DATASETINFO
         | typeof modals.FILTER
-        | typeof modals.VARIABLEINFO;
+        | typeof modals.VARIABLEINFO
+        | typeof modals.MASK;
     data: {};
 }
 
@@ -145,6 +153,10 @@ export interface IData {
         }[];
         lastOptions: BasicFilter['options'];
         lastType: 'manual' | 'ui';
+    };
+    maskData: {
+        currentMask: IMask | null;
+        savedMasks: IMask[];
     };
     converter: ConverterData;
 }

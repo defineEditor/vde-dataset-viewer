@@ -57,7 +57,7 @@ const transformData = (
 
             const updatedDisplayFormat = column.displayFormat
                 .toUpperCase()
-                .replace(/(.+?)\d*(\.\d*)$/, '$1');
+                .replace(/(.+?)\d*(\.\d*)?$/, '$1');
 
             // Check for numeric variables with date formats
             if (

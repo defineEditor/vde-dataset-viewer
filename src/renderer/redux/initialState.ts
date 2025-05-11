@@ -103,6 +103,16 @@ export const data: IData = {
         lastOptions: { caseInsensitive: true },
         lastType: 'manual',
     },
+    maskData: {
+        currentMask: null,
+        savedMasks: [
+            {
+                id: 'mask-example-1',
+                name: 'Subject Identifiers',
+                columns: ['STUDYID', 'SUBJID', 'USUBJID'],
+            },
+        ],
+    },
     converter,
 };
 
