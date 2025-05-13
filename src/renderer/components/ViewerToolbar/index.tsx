@@ -240,7 +240,7 @@ const Header: React.FC = () => {
                     />
                 </IconButton>
             </Tooltip>
-            <Tooltip title="Column Visability" enterDelay={1000}>
+            <Tooltip title="Column Visibility" enterDelay={1000}>
                 <IconButton
                     onClick={handleMaskClick}
                     id="maskColumns"
