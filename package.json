@@ -103,7 +103,7 @@
         "electron-log": "^4.4.8",
         "electron-updater": "^6.1.4",
         "js-array-filter": "^0.1.4",
-        "js-stream-dataset-json": "^0.5.3",
+        "js-stream-dataset-json": "^0.6.1",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "react-redux": "^8.0.2",
@@ -134,7 +134,7 @@
         "css-minimizer-webpack-plugin": "^5.0.1",
         "detect-port": "^1.5.1",
         "electron": "^34.0.0",
-        "electron-builder": "^24.13.3",
+        "electron-builder": "^26.0.12",
         "electron-devtools-installer": "^4.0.0",
         "electronmon": "^2.0.2",
         "eslint": "^8.49.0",
@@ -179,10 +179,44 @@
         "appId": "org.vde.vde-dataset-viewer",
         "asar": true,
         "asarUnpack": "**\\*.{node,dll}",
+        "buildDependenciesFromSource": false,
+        "npmRebuild": false,
         "files": [
             "dist",
             "node_modules",
             "package.json"
+        ],
+        "fileAssociations": [
+            {
+                "ext": "json",
+                "name": "JSON",
+                "description": "Dataset JSON File",
+                "role": "Viewer"
+            },
+            {
+                "ext": "ndjson",
+                "name": "NDJSON",
+                "description": "Dataset JSON File",
+                "role": "Viewer"
+            },
+            {
+                "ext": "djsc",
+                "name": "DJSC",
+                "description": "Dataset JSON Compressed File",
+                "role": "Viewer"
+            },
+            {
+                "ext": "sas7bdat",
+                "name": "SAS7BDAT",
+                "description": "SAS Dataset File",
+                "role": "Viewer"
+            },
+            {
+                "ext": "xpt",
+                "name": "XPT",
+                "description": "SAS Transport File",
+                "role": "Viewer"
+            }
         ],
         "mac": {
             "target": {
@@ -234,7 +268,7 @@
                 "AppImage",
                 "deb"
             ],
-            "category": "Development"
+            "category": "Viewer"
         },
         "directories": {
             "app": "release/app",
@@ -250,7 +284,7 @@
             "repo": "vde-dataset-viewer"
         }
     },
-    "devEngines": {
+    "engines": {
         "node": ">=14.x",
         "npm": ">=7.x"
     },

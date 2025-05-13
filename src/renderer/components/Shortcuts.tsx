@@ -56,8 +56,10 @@ const shortcuts = {
         'Ctrl + O': 'Open a new file',
         'Ctrl + G': 'Go to line or column',
         'Ctrl + F': 'Filter data',
+        'Ctrl + E': 'Column Visibility',
         'Ctrl + I': 'Dataset Information',
         'Ctrl + C': 'Copy selected cells',
+        'Ctrl + `': 'Toggle opened dataset selection',
     },
 };
 

@@ -13,12 +13,13 @@ import {
     Alert,
     MenuItem,
 } from '@mui/material';
-import { ConversionOptions } from 'interfaces/common';
+import { ConversionOptions, OutputFormat } from 'interfaces/common';
 
 interface OptionsDialogProps {
     open: boolean;
     onClose: () => void;
     options: ConversionOptions;
+    outputFormat: OutputFormat;
     onOptionsChange: (options: ConversionOptions) => void;
 }
 
@@ -53,6 +54,7 @@ const Options: React.FC<OptionsDialogProps> = ({
     open,
     onClose,
     options,
+    outputFormat,
     onOptionsChange,
 }) => {
     const [localOptions, setLocalOptions] =
@@ -101,31 +103,7 @@ const Options: React.FC<OptionsDialogProps> = ({
             <DialogTitle sx={styles.title}>Conversion Options</DialogTitle>
             <DialogContent sx={styles.content}>
                 <Stack spacing={2} sx={styles.fields}>
-                    <FormControlLabel
-                        sx={styles.noSelect}
-                        control={
-                            <Checkbox
-                                checked={localOptions.prettyPrint}
-                                onChange={(e) =>
-                                    handleChange(
-                                        'prettyPrint',
-                                        e.target.checked,
-                                    )
-                                }
-                            />
-                        }
-                        label="Pretty Print"
-                    />
-                    <Typography variant="caption" sx={styles.helperText}>
-                        Output JSON file in a human-readable format
-                    </Typography>
-                    {localOptions.prettyPrint && (
-                        <Alert severity="warning" sx={styles.alert}>
-                            It is recommended to disable pretty print option for
-                            final datasets, due to significant increase in file
-                            size
-                        </Alert>
-                    )}
+                    <Typography variant="h6">General Options</Typography>
                     <Stack direction="row" spacing={2}>
                         <TextField
                             fullWidth
@@ -202,6 +180,33 @@ const Options: React.FC<OptionsDialogProps> = ({
                             disabled={!localOptions.renameFiles}
                         />
                     </Stack>
+                    <Typography variant="h6">Dataset-JSON Options</Typography>
+                    <FormControlLabel
+                        sx={styles.noSelect}
+                        disabled={outputFormat === 'CSV'}
+                        control={
+                            <Checkbox
+                                checked={localOptions.prettyPrint}
+                                onChange={(e) =>
+                                    handleChange(
+                                        'prettyPrint',
+                                        e.target.checked,
+                                    )
+                                }
+                            />
+                        }
+                        label="Pretty Print"
+                    />
+                    <Typography variant="caption" sx={styles.helperText}>
+                        Output JSON file in a human-readable format
+                    </Typography>
+                    {localOptions.prettyPrint && outputFormat !== 'CSV' && (
+                        <Alert severity="warning" sx={styles.alert}>
+                            It is recommended to disable pretty print option for
+                            final datasets, due to significant increase in file
+                            size
+                        </Alert>
+                    )}
                 </Stack>
             </DialogContent>
             <DialogActions sx={styles.actions}>

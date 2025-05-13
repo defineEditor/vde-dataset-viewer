@@ -4,11 +4,14 @@ import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
 import ShortcutIcon from '@mui/icons-material/Shortcut';
 import InfoIcon from '@mui/icons-material/Info';
 import FilterIcon from '@mui/icons-material/FilterAlt';
+import NextPlanOutlinedIcon from '@mui/icons-material/NextPlan';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import {
     openDataset,
     openModal,
     setPage,
     openSnackbar,
+    toggleSidebar,
 } from 'renderer/redux/slices/ui';
 import { resetFilter, addRecent } from 'renderer/redux/slices/data';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
@@ -36,8 +39,13 @@ const Header: React.FC = () => {
     const isFilterEnabled = useAppSelector(
         (state) => state.data.filterData.currentFilter !== null,
     );
+    const isMaskEnabled = useAppSelector(
+        (state) => state.data.maskData.currentMask !== null,
+    );
 
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+
+    const isModalOpen = useAppSelector((state) => state.ui.modals?.length > 0);
 
     const openFiles = apiService.getOpenedFiles(currentFileId);
 
@@ -99,10 +107,25 @@ const Header: React.FC = () => {
         dispatch(openModal({ type: modals.DATASETINFO, data: {} }));
     }, [dispatch]);
 
+    const handleMaskClick = useCallback(() => {
+        dispatch(openModal({ type: modals.MASK, data: {} }));
+    }, [dispatch]);
+
+    const handleToggleSidebar = useCallback(() => {
+        dispatch(toggleSidebar());
+    }, [dispatch]);
+
+    const handleSwitchClick = useCallback(() => {
+        dispatch(toggleSidebar());
+    }, [dispatch]);
+
     // Add shortcuts for actions
     useEffect(() => {
         const handleViewerToolbarKeyDown = (event: KeyboardEvent) => {
-            if (event.ctrlKey) {
+            // Do use keywords if a Modal is open
+            if (event.ctrlKey && !isModalOpen) {
+                event.preventDefault();
+                event.stopPropagation();
                 switch (event.key) {
                     case 'g':
                         handleGoToClick();
@@ -118,6 +141,12 @@ const Header: React.FC = () => {
                         break;
                     case 'r':
                         handleFilterReset();
+                        break;
+                    case 'e':
+                        handleMaskClick();
+                        break;
+                    case '`':
+                        handleToggleSidebar();
                         break;
                     default:
                         break;
@@ -136,6 +165,9 @@ const Header: React.FC = () => {
         handleFilterClick,
         handleDataSetInfoClick,
         handleFilterReset,
+        handleToggleSidebar,
+        handleMaskClick,
+        isModalOpen,
     ]);
 
     return (
@@ -165,6 +197,19 @@ const Header: React.FC = () => {
                     />
                 </IconButton>
             </Tooltip>
+            <Tooltip title="Switch Dataset" enterDelay={1000}>
+                <IconButton
+                    onClick={handleSwitchClick}
+                    id="filterData"
+                    size="small"
+                >
+                    <NextPlanOutlinedIcon
+                        sx={{
+                            color: 'primary.main',
+                        }}
+                    />
+                </IconButton>
+            </Tooltip>
             <Tooltip title="Go to Line or Column" enterDelay={1000}>
                 <IconButton
                     onClick={handleGoToClick}
@@ -189,6 +234,22 @@ const Header: React.FC = () => {
                     <FilterIcon
                         sx={{
                             color: isFilterEnabled
+                                ? 'success.main'
+                                : 'primary.main',
+                        }}
+                    />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Column Visibility" enterDelay={1000}>
+                <IconButton
+                    onClick={handleMaskClick}
+                    id="maskColumns"
+                    size="small"
+                    disabled={pathname !== paths.VIEWFILE}
+                >
+                    <VisibilityIcon
+                        sx={{
+                            color: isMaskEnabled
                                 ? 'success.main'
                                 : 'primary.main',
                         }}

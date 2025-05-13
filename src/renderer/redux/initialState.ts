@@ -18,6 +18,8 @@ export const settings: ISettings = {
         roundNumbers: false,
         maxPrecision: 8,
         copyFormat: 'tab',
+        applyDateFormat: true,
+        showTypeIcons: false,
     },
     converter: {
         threads: 2,
@@ -34,12 +36,14 @@ export const settings: ISettings = {
         convertSuffixDt: false,
         convertSuffixTm: false,
         convertSuffixDtm: false,
+        csvEpoch: '1960-01-01',
     },
     other: {
         checkForUpdates: true,
         loadingAnimation: 'random',
         inEncoding: 'utf8',
         dragoverAnimation: true,
+        disableUiAnimation: false,
     },
 };
 export const ui: IUi = {
@@ -49,6 +53,7 @@ export const ui: IUi = {
     viewer: {
         datasetInfoTab: 0,
         filterInputMode: 'manual',
+        sidebarOpen: false,
     },
     modals: [],
     snackbar: {
@@ -58,6 +63,11 @@ export const ui: IUi = {
     },
     control: {
         goTo: {
+            row: null,
+            column: null,
+            cellSelection: false,
+        },
+        select: {
             row: null,
             column: null,
         },
@@ -86,11 +96,22 @@ export const data: IData = {
     loadedRecords: {},
     recentFolders: [],
     recentFiles: [],
+    openDatasets: {},
     filterData: {
         currentFilter: null,
         recentFilters: [],
         lastOptions: { caseInsensitive: true },
         lastType: 'manual',
+    },
+    maskData: {
+        currentMask: null,
+        savedMasks: [
+            {
+                id: 'mask-example-1',
+                name: 'Subject Identifiers',
+                columns: ['STUDYID', 'SUBJID', 'USUBJID'],
+            },
+        ],
     },
     converter,
 };

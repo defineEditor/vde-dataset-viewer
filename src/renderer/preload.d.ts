@@ -12,6 +12,7 @@ import {
     FileInfo,
     MainTask,
     ProgressInfo,
+    TableRowValue,
 } from 'interfaces/common';
 
 declare global {
@@ -44,6 +45,17 @@ declare global {
                 filterData?: BasicFilter,
                 columns?: ColumnMetadata[],
             ) => Promise<ItemDataArray[] | null>;
+            getUniqueValues: (
+                fileId: string,
+                columnIds: string[],
+                limit?: number,
+                addCount?: boolean,
+            ) => Promise<{
+                [columnId: string]: {
+                    values: TableRowValue[];
+                    counts: { [name: string]: number };
+                };
+            } | null>;
             pathForFile: (file: File) => string;
             fetch: (
                 input: RequestInfo | URL,
@@ -52,6 +64,8 @@ declare global {
             saveLocalStore: (localStore: ILocalStore) => void;
             loadLocalStore: () => Promise<ILocalStore>;
             onSaveStore: (callback: () => Promise<void>) => void;
+            onFileOpen: (callback: (filePath: string) => void) => void;
+            removeFileOpenListener: () => void;
             checkForUpdates: () => Promise<ICheckUpdateResult>;
             downloadUpdate: () => Promise<boolean>;
             ipcRenderer: {

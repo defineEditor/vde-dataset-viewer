@@ -7,7 +7,10 @@ const openFile = async (
         title: 'Open Dataset-JSON file',
         defaultPath: folderPath,
         filters: [
-            { name: 'JSON Files', extensions: ['json', 'ndjson', 'xpt'] },
+            {
+                name: 'JSON Files',
+                extensions: ['json', 'ndjson', 'xpt', 'djsc', 'sas7bdat'],
+            },
         ],
     });
     if (!canceled) {

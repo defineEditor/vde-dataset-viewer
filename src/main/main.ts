@@ -21,6 +21,56 @@ import TaskManager from 'main/taskManager';
 import { MainTask } from 'interfaces/main';
 
 let mainWindow: BrowserWindow | null = null;
+let fileToOpen: string | null = null;
+
+// Get file path from command line arguments
+function getFilePathFromArgs(args: string[]): string | null {
+    // Skip the first arg on packaged apps (it's the app path)
+    const startIdx = app.isPackaged ? 1 : 2;
+
+    for (let i = startIdx; i < args.length; i++) {
+        const arg = args[i];
+        // Check if this arg is a file path that exists
+        if (arg && !arg.startsWith('-')) {
+            return arg;
+        }
+    }
+    return null;
+}
+
+// Store command line arguments for later use
+fileToOpen = getFilePathFromArgs(process.argv);
+
+// Handle file opening from "Open With" on start
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+    app.quit();
+} else {
+    app.on('second-instance', (_event, commandLine) => {
+        // In case the second instance is opened, focus the current window.
+        if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.focus();
+
+            // Check for file paths in command line arguments
+            const filePath = getFilePathFromArgs(commandLine);
+            if (filePath) {
+                mainWindow.webContents.send('renderer:openFile', filePath);
+            }
+        }
+    });
+
+    // Handle file opening when app is already running
+    app.on('open-file', (event, filePath) => {
+        event.preventDefault();
+        if (mainWindow) {
+            mainWindow.webContents.send('renderer:openFile', filePath);
+        } else {
+            fileToOpen = filePath;
+        }
+    });
+}
 
 if (process.env.NODE_ENV === 'production') {
     const sourceMapSupport = require('source-map-support');
@@ -89,6 +139,12 @@ const createWindow = async () => {
             mainWindow.maximize();
             mainWindow.showInactive();
         }
+
+        // Open file if one was provided
+        if (fileToOpen) {
+            mainWindow.webContents.send('renderer:openFile', fileToOpen);
+            fileToOpen = null;
+        }
     });
 
     mainWindow.on('close', async (event) => {
@@ -142,6 +198,10 @@ app.whenReady()
         ipcMain.handle(
             'read:getObservations',
             fileManager.handleGetObservations,
+        );
+        ipcMain.handle(
+            'read:getUniqueValues',
+            fileManager.handleGetUniqueValues,
         );
         ipcMain.handle('store:save', storeManager.save);
         ipcMain.handle('store:load', storeManager.load);

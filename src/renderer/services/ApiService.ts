@@ -17,6 +17,7 @@ import {
     DatasetMode,
     MainTask,
     ProgressInfo,
+    TableRowValue,
 } from 'interfaces/common';
 import store from 'renderer/redux/store';
 import transformData from 'renderer/services/transformData';
@@ -253,7 +254,7 @@ class ApiService {
         fileId: string,
         start: number,
         length: number,
-        settings: ISettings['viewer'],
+        settings: ISettings,
         filterColumns?: string[],
         filterData?: BasicFilter,
     ): Promise<ITableRow[]> => {
@@ -390,6 +391,102 @@ class ApiService {
         return result;
     };
 
+    public getUniqueValues = async (
+        fileId: string,
+        columnIds: string[],
+        limit?: number,
+        addCount: boolean = false,
+        getAllValues: boolean = false,
+    ): Promise<{
+        [columnId: string]: {
+            values: TableRowValue[];
+            counts: { [value: string]: number };
+        };
+    }> => {
+        // Check if the data is already loaded and no filter is needed
+        const result = {};
+        columnIds.forEach((columnId) => {
+            result[columnId] = {
+                values: [],
+                counts: {},
+            };
+        });
+
+        const fullyLoaded = this.isFullyLoaded(fileId);
+
+        if (fullyLoaded || getAllValues === false) {
+            columnIds.forEach((columnId) => {
+                const uniqueValues = this.openedFilesData[fileId]
+                    .map((row) => row[columnId])
+                    .filter(
+                        (value, index, self) => self.indexOf(value) === index,
+                    );
+                result[columnId] = {
+                    values: uniqueValues,
+                    counts: {},
+                };
+            });
+            // Get counts if needed
+            if (addCount) {
+                columnIds.forEach((columnId) => {
+                    const counts = {};
+                    this.openedFilesData[fileId].forEach((row) => {
+                        const rawValue = row[columnId];
+                        const value =
+                            rawValue === null ? 'null' : String(rawValue);
+                        if (counts[value] === undefined) {
+                            counts[value] = 1;
+                        } else {
+                            counts[value] += 1;
+                        }
+                    });
+                    // Sort by counts
+                    result[columnId].counts = Object.fromEntries(
+                        Object.entries(counts).sort(
+                            ([, a], [, b]): number =>
+                                (b as number) - (a as number),
+                        ),
+                    );
+                });
+            }
+            if (limit !== undefined) {
+                columnIds.forEach((columnId) => {
+                    result[columnId].values = result[columnId].values.slice(
+                        0,
+                        limit,
+                    );
+                    result[columnId].counts = Object.fromEntries(
+                        Object.entries(result[columnId].counts).slice(0, limit),
+                    );
+                });
+            }
+        }
+
+        if (!fullyLoaded && getAllValues) {
+            // Get unique values from the file
+            const file = this.openedFiles.find(
+                (fileItem) => fileItem.fileId === fileId,
+            );
+            if (file === undefined) {
+                throw new Error(
+                    'Trying to get unique values from the file which is not opened',
+                );
+            }
+            const uniqueValues = await window.electron.getUniqueValues(
+                fileId,
+                columnIds,
+                limit,
+                addCount,
+            );
+            if (uniqueValues === null) {
+                return result;
+            }
+            return uniqueValues;
+        }
+
+        return result;
+    };
+
     // Close file
     public close = async (fileId: string): Promise<boolean> => {
         const file = this.openedFiles.find(
@@ -467,6 +564,20 @@ class ApiService {
                     type: file.type,
                 };
             });
+    };
+
+    // Check if a file is fully loaded
+    public isFullyLoaded = (fileId: string): boolean => {
+        if (this.openedFilesMetadata[fileId] === undefined) {
+            throw new Error(
+                'Trying to check if file is fully loaded and it is not opened',
+            );
+        }
+
+        return (
+            this.openedFilesMetadata[fileId].records ===
+            this.openedFilesData[fileId]?.length
+        );
     };
 
     public getOpenedFileMetadata = (fileId: string): DatasetJsonMetadata => {

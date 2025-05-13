@@ -33,6 +33,7 @@ import {
     DatasetMetadata,
     ConversionOptions,
     ConverterData,
+    OutputFileExtension,
 } from 'interfaces/common';
 import { mainTaskTypes } from 'misc/constants';
 import Metadata from 'renderer/components/Converter/Metadata';
@@ -101,22 +102,6 @@ const Converter: React.FC<{
 
     const handleOutputFormat = (event: React.ChangeEvent<HTMLInputElement>) => {
         setOutputFormat(event.target.value as OutputFormat);
-        // Update output name for all files
-        let extension: 'json' | 'ndjson';
-        if (event.target.value === 'DJ1.1') {
-            extension = 'json';
-        } else {
-            extension = 'ndjson';
-        }
-        setFiles(
-            files.map((file) => ({
-                ...file,
-                outputName: file.filename.replace(
-                    /(.*\.)\w+$/,
-                    `$1${extension}`,
-                ),
-            })),
-        );
     };
 
     const handleAddFiles = () => {
@@ -127,11 +112,7 @@ const Converter: React.FC<{
                 filters: [
                     {
                         name: 'All supported formats',
-                        extensions: ['xpt', 'json', 'ndjson'],
-                    },
-                    {
-                        name: 'XPT',
-                        extensions: ['xpt'],
+                        extensions: ['xpt', 'json', 'ndjson', 'djsc'],
                     },
                     {
                         name: 'JSON',
@@ -140,6 +121,14 @@ const Converter: React.FC<{
                     {
                         name: 'NDJSON',
                         extensions: ['ndjson'],
+                    },
+                    {
+                        name: 'Compressed JSON',
+                        extensions: ['djsc'],
+                    },
+                    {
+                        name: 'XPT',
+                        extensions: ['xpt'],
                     },
                 ],
             });
@@ -152,11 +141,15 @@ const Converter: React.FC<{
                 );
                 return;
             }
-            let extension: 'json' | 'ndjson';
+            let extension: OutputFileExtension;
             if (outputFormat === 'DJ1.1') {
                 extension = 'json';
-            } else {
+            } else if (outputFormat === 'DNJ1.1') {
                 extension = 'ndjson';
+            } else if (outputFormat === 'CSV') {
+                extension = 'csv';
+            } else {
+                extension = 'djsc';
             }
             const newFiles = result.map((file: FileInfo) => ({
                 ...file,
@@ -204,11 +197,17 @@ const Converter: React.FC<{
         if (options.renameFiles && options.renamePattern) {
             try {
                 const regex = new RegExp(options.renamePattern);
-                let extension: 'json' | 'ndjson';
+                let extension: OutputFileExtension;
                 if (outputFormat === 'DJ1.1') {
                     extension = 'json';
-                } else {
+                } else if (outputFormat === 'DNJ1.1') {
                     extension = 'ndjson';
+                } else if (outputFormat === 'CSV') {
+                    extension = 'csv';
+                } else if (outputFormat === 'DJC1.1') {
+                    extension = 'djsc';
+                } else {
+                    throw new Error('Invalid output format');
                 }
                 setFiles((prev) =>
                     prev.map((file) => ({
@@ -231,11 +230,17 @@ const Converter: React.FC<{
 
     // Reset output names to original filenames when renaming is disabled
     useEffect(() => {
-        let extension: 'json' | 'ndjson';
+        let extension: OutputFileExtension;
         if (outputFormat === 'DJ1.1') {
             extension = 'json';
-        } else {
+        } else if (outputFormat === 'DNJ1.1') {
             extension = 'ndjson';
+        } else if (outputFormat === 'CSV') {
+            extension = 'csv';
+        } else if (outputFormat === 'DJC1.1') {
+            extension = 'djsc';
+        } else {
+            throw new Error('Invalid output format');
         }
         if (options.renameFiles === false) {
             setFiles((prev) =>
@@ -375,29 +380,37 @@ const Converter: React.FC<{
                 >
                     <MenuItem value="DJ1.1">Dataset-JSON v1.1</MenuItem>
                     <MenuItem value="DNJ1.1">Dataset-NDJSON v1.1</MenuItem>
+                    <MenuItem value="DJC1.1">
+                        Compressed Dataset-JSON v1.1
+                    </MenuItem>
+                    <MenuItem value="CSV">CSV</MenuItem>
                 </TextField>
                 <Button variant="contained" onClick={handleOptionsOpen}>
                     Options
                 </Button>
-                <FormControlLabel
-                    sx={styles.noSelect}
-                    control={
-                        <Switch
-                            checked={updateMetadata}
-                            onChange={(e) =>
-                                setUpdateMetadata(e.target.checked)
+                {outputFormat !== 'CSV' && (
+                    <>
+                        <FormControlLabel
+                            sx={styles.noSelect}
+                            control={
+                                <Switch
+                                    checked={updateMetadata}
+                                    onChange={(e) =>
+                                        setUpdateMetadata(e.target.checked)
+                                    }
+                                />
                             }
+                            label="Update Metadata"
                         />
-                    }
-                    label="Update Metadata"
-                />
-                <Button
-                    variant="contained"
-                    onClick={handleMetadataOpen}
-                    disabled={!updateMetadata}
-                >
-                    Metadata
-                </Button>
+                        <Button
+                            variant="contained"
+                            onClick={handleMetadataOpen}
+                            disabled={!updateMetadata}
+                        >
+                            Metadata
+                        </Button>
+                    </>
+                )}
             </Stack>
 
             <Typography variant="h6">Files</Typography>
@@ -571,6 +584,7 @@ const Converter: React.FC<{
                 open={isOptionsOpen}
                 onClose={handleOptionsClose}
                 options={options}
+                outputFormat={outputFormat}
                 onOptionsChange={handleOptionsChange}
             />
             <Metadata

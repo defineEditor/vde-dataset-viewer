@@ -3,6 +3,13 @@ import { ICheckUpdateResult, SettingsConverter } from 'interfaces/main';
 import { modals, ModalType, AllowedPathnames } from 'misc/constants';
 import { ConversionConfig } from 'interfaces/converter';
 
+export interface IMask {
+    name: string;
+    id: string;
+    columns: string[];
+    sticky?: boolean;
+}
+
 export interface ISettings {
     viewer: {
         pageSize: number;
@@ -12,7 +19,9 @@ export interface ISettings {
         dateFormat: 'ISO8601' | 'DDMONYEAR';
         roundNumbers: boolean;
         maxPrecision?: number;
+        applyDateFormat: boolean;
         copyFormat: 'tab' | 'csv' | 'json';
+        showTypeIcons: boolean;
     };
     converter: SettingsConverter;
     other: {
@@ -27,6 +36,7 @@ export interface ISettings {
             | 'latin1'
             | 'ascii';
         dragoverAnimation: boolean;
+        disableUiAnimation: boolean;
     };
 }
 
@@ -40,7 +50,12 @@ export interface IUiModalAppUpdate extends IUiModalBase {
 }
 
 export interface IUiModalGeneral extends IUiModalBase {
-    type: typeof modals.GOTO | typeof modals.DATASETINFO | typeof modals.FILTER;
+    type:
+        | typeof modals.GOTO
+        | typeof modals.DATASETINFO
+        | typeof modals.FILTER
+        | typeof modals.VARIABLEINFO
+        | typeof modals.MASK;
     data: {};
 }
 
@@ -56,8 +71,14 @@ export interface IUiModalMessage extends IUiModalBase {
     data: { message: string };
 }
 
+export interface IUiModalVariableInfo extends IUiModalBase {
+    type: typeof modals.VARIABLEINFO;
+    data: { columnId: string };
+}
+
 export type IUiModal =
     | IUiModalAppUpdate
+    | IUiModalVariableInfo
     | IUiModalGeneral
     | IUiModalEditApi
     | IUiModalMessage;
@@ -74,12 +95,18 @@ export interface IUiControl {
     goTo: {
         row: number | null;
         column: string | null;
+        cellSelection: boolean;
+    };
+    select: {
+        row: number | null;
+        column: string | null;
     };
 }
 
 export interface IUiViewer {
     datasetInfoTab: 0 | 1;
     filterInputMode: 'manual' | 'interactive';
+    sidebarOpen: boolean;
 }
 
 export interface IUi {
@@ -112,6 +139,11 @@ export interface IData {
     };
     recentFolders: string[];
     recentFiles: IRecentFile[];
+    openDatasets: {
+        [name: string]: {
+            filter: BasicFilter | null;
+        };
+    };
     filterData: {
         currentFilter: BasicFilter | null;
         recentFilters: {
@@ -121,6 +153,10 @@ export interface IData {
         }[];
         lastOptions: BasicFilter['options'];
         lastType: 'manual' | 'ui';
+    };
+    maskData: {
+        currentMask: IMask | null;
+        savedMasks: IMask[];
     };
     converter: ConverterData;
 }

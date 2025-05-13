@@ -43,7 +43,7 @@ const styles = {
         fontSize: 14,
         height: 21,
     },
-    extensionXpt: {
+    extensionXptSas7bdat: {
         display: 'inline-block',
         backgroundColor: 'warning.dark',
         fontFamily: 'monospace',
@@ -77,7 +77,9 @@ const FileCard: React.FC<{
 }> = ({ name, path, label, handleRecentFileClick }) => {
     const extension = path.split('.').pop()?.toUpperCase();
     const extensionStyle =
-        extension === 'XPT' ? styles.extensionXpt : styles.extensionOther;
+        extension === 'XPT' || extension === 'SAS7BDAT'
+            ? styles.extensionXptSas7bdat
+            : styles.extensionOther;
 
     return (
         <Card sx={styles.card}>

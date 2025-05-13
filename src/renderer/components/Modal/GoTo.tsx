@@ -44,32 +44,63 @@ const GoTo: React.FC<IUiModal> = (props: IUiModal) => {
     }, [dispatch, type]);
 
     const handleGoTo = useCallback(() => {
-        const normalizedValue = inputValue.replace(/[\s.,]/g, '');
-        if (!Number.isNaN(Number(normalizedValue))) {
-            // If the input value is a number, go to the row number
-            // Check the line is less than the total number of rows
-            const rowNumber = Number(normalizedValue);
-            if (rowNumber <= currentMetadata.records && rowNumber > 0) {
-                dispatch(setGoTo({ row: rowNumber }));
-                dispatch(closeModal({ type }));
-            } else {
-                setHelperText(
-                    `Row number does not exist (dataset has ${
-                        currentMetadata.records
-                    } rows)`,
-                );
-            }
-        } else {
-            // If the input value is a string, go to the column name
-            // Check if the column exists;
+        if (inputValue.includes(':')) {
+            // Handle column:row format
+            const [colPart, rowPart] = inputValue.split(':');
+            const normalizedRowValue = rowPart.replace(/[\s.,]/g, '');
+            const rowNumber = Number(normalizedRowValue);
+
+            // Validate row part
+            const isRowValid =
+                !Number.isNaN(rowNumber) &&
+                rowNumber > 0 &&
+                rowNumber <= currentMetadata.records;
+
+            // Validate column part
             const columnNames = autoCompletecolumnNames.map((name) =>
                 name.toLowerCase(),
             );
-            if (columnNames.includes(inputValue.toLowerCase())) {
-                dispatch(setGoTo({ column: inputValue }));
+            const isColumnValid = columnNames.includes(colPart.toLowerCase());
+
+            if (isColumnValid && isRowValid) {
+                dispatch(setGoTo({ column: colPart, row: rowNumber }));
                 dispatch(closeModal({ type }));
             } else {
-                setHelperText('Column name does not exist');
+                let errorMessage = '';
+                if (!isColumnValid)
+                    errorMessage += 'Column name does not exist. ';
+                if (!isRowValid)
+                    errorMessage += `Row number must be between 1 and ${currentMetadata.records}.`;
+                setHelperText(errorMessage.trim());
+            }
+        } else {
+            const normalizedValue = inputValue.replace(/[\s.,]/g, '');
+            if (!Number.isNaN(Number(normalizedValue))) {
+                // If the input value is a number, go to the row number
+                // Check the line is less than the total number of rows
+                const rowNumber = Number(normalizedValue);
+                if (rowNumber <= currentMetadata.records && rowNumber > 0) {
+                    dispatch(setGoTo({ row: rowNumber }));
+                    dispatch(closeModal({ type }));
+                } else {
+                    setHelperText(
+                        `Row number does not exist (dataset has ${
+                            currentMetadata.records
+                        } rows)`,
+                    );
+                }
+            } else {
+                // If the input value is a string, go to the column name
+                // Check if the column exists;
+                const columnNames = autoCompletecolumnNames.map((name) =>
+                    name.toLowerCase(),
+                );
+                if (columnNames.includes(inputValue.toLowerCase())) {
+                    dispatch(setGoTo({ column: inputValue }));
+                    dispatch(closeModal({ type }));
+                } else {
+                    setHelperText('Column name does not exist');
+                }
             }
         }
     }, [
@@ -82,7 +113,13 @@ const GoTo: React.FC<IUiModal> = (props: IUiModal) => {
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setInputValue(event.target.value);
-        if (!Number.isNaN(Number(event.target.value.replace(/[\s.,]/g, '')))) {
+        setHelperText('');
+
+        if (event.target.value.includes(':')) {
+            setGoToType('Column:Row');
+        } else if (
+            !Number.isNaN(Number(event.target.value.replace(/[\s.,]/g, '')))
+        ) {
             setGoToType('Row');
         } else {
             setGoToType('Column');
@@ -90,12 +127,13 @@ const GoTo: React.FC<IUiModal> = (props: IUiModal) => {
     };
 
     const handleOptionSelect = (
-        _event: React.ChangeEvent<{}>,
+        event: React.ChangeEvent<{}>,
         value: string | null,
         reason: AutocompleteChangeReason,
     ) => {
         if (reason === 'selectOption' && value) {
             setInputValue(value);
+            event.stopPropagation();
             setGoToType('Column');
         }
     };
@@ -141,7 +179,7 @@ const GoTo: React.FC<IUiModal> = (props: IUiModal) => {
                     renderInput={(params) => (
                         <TextField
                             {...params}
-                            label="Enter row number or column name"
+                            label="Enter row number, column name, or column:row"
                             variant="outlined"
                             fullWidth
                             margin="normal"

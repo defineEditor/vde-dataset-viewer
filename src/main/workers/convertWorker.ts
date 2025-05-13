@@ -2,6 +2,7 @@ import { ConvertedFileInfo, ConvertTask } from 'interfaces/main';
 import DatasetXpt from 'xport-js';
 import DatasetJson, { ItemDataArray } from 'js-stream-dataset-json';
 import path from 'path';
+import fs from 'fs';
 import { DatasetJsonMetadata, ItemType } from 'interfaces/common';
 
 const processXptMetadata = (
@@ -91,8 +92,12 @@ const processXptMetadata = (
         );
     }
     // Set Dataset-JSON version
-    if (options.outputFormat === 'DJ1.1' || options.outputFormat === 'DNJ1.1') {
-        newMetadata.datasetJSONVersion = '1.1';
+    if (
+        options.outputFormat === 'DJ1.1' ||
+        options.outputFormat === 'DNJ1.1' ||
+        options.outputFormat === 'DJC1.1'
+    ) {
+        newMetadata.datasetJSONVersion = '1.1.0';
     }
 
     // ItemOID;
@@ -115,8 +120,12 @@ const updateMetadata = (
     // Set attributes which are updated in any case;
     newMetadata.datasetJSONCreationDateTime = new Date().toISOString();
 
-    if (options.outputFormat === 'DJ1.1' || options.outputFormat === 'DNJ1.1') {
-        newMetadata.datasetJSONVersion = '1.1';
+    if (
+        options.outputFormat === 'DJ1.1' ||
+        options.outputFormat === 'DNJ1.1' ||
+        options.outputFormat === 'DJC1.1'
+    ) {
+        newMetadata.datasetJSONVersion = '1.1.0';
     }
 
     newMetadata.sourceSystem = {
@@ -180,7 +189,8 @@ const updateMetadata = (
     return properMetadata as DatasetJsonMetadata;
 };
 
-const convertXptDateTime = (value: number, type: ItemType): string => {
+// Convert a number to a date/time string
+const convertNum2Dt = (value: number, type: ItemType): string => {
     if (value === null || Number.isNaN(value)) return '';
 
     const xptEpoch = new Date('1960-01-01T00:00:00.000Z');
@@ -204,6 +214,37 @@ const convertXptDateTime = (value: number, type: ItemType): string => {
     }
 };
 
+// Convert a date/time string to a number
+const convertDt2Num = (
+    value: string,
+    type: ItemType,
+    epoch: Date,
+): number | null => {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        throw new Error(`Invalid date format: ${value}`);
+    }
+
+    switch (type) {
+        case 'date':
+            return Math.floor(
+                (date.getTime() - epoch.getTime()) / (24 * 60 * 60 * 1000),
+            );
+        case 'time':
+            return Math.floor(
+                (date.getTime() - new Date(date.toDateString()).getTime()) /
+                    1000,
+            );
+        case 'datetime':
+            return Math.floor((date.getTime() - epoch.getTime()) / 1000);
+        default:
+            throw new Error(`Invalid date type: ${type}`);
+    }
+};
+
 const convertXpt = async (
     file: ConvertedFileInfo,
     options: ConvertTask['options'],
@@ -213,85 +254,198 @@ const convertXpt = async (
         const { destinationDir, prettyPrint } = options;
         const { outputName, fullPath } = file;
         const datasetXpt = new DatasetXpt(fullPath);
-        const datasetJson = new DatasetJson(
-            path.join(destinationDir, outputName),
-            {
+        if (options.outputFormat === 'CSV') {
+            await datasetXpt.getMetadata();
+            await datasetXpt.toCsv(destinationDir);
+        } else {
+            const datasetJson = new DatasetJson(
+                path.join(destinationDir, outputName),
+                {
+                    encoding:
+                        options.outEncoding === 'default'
+                            ? undefined
+                            : options.outEncoding,
+                },
+            );
+
+            const metadata = await datasetXpt.getMetadata('dataset-json1.1');
+            let updatedMetadata = processXptMetadata(
+                metadata,
+                options,
+                outputName,
+            );
+
+            // Standard metadata updates;
+            updatedMetadata = updateMetadata(updatedMetadata, options);
+
+            await datasetJson.write({
+                metadata: updatedMetadata,
+                action: 'create',
+                options: { prettify: prettyPrint },
+            });
+
+            // Identify the datetime columns which should be converted
+            const dtIndexes = updatedMetadata.columns.reduce(
+                (acc, column, index) => {
+                    if (
+                        ['datetime', 'date', 'time'].includes(column.dataType)
+                    ) {
+                        acc.push({ index, dataType: column.dataType });
+                    }
+                    return acc;
+                },
+                [] as Array<{ index: number; dataType: ItemType }>,
+            );
+
+            const { records } = updatedMetadata;
+            let currentRecord = 0;
+
+            let buffer: ItemDataArray[] = [];
+            // Read blocks of 10k records
+            for await (const obs of datasetXpt.read({
+                skipHeader: true,
                 encoding:
-                    options.outEncoding === 'default'
+                    options.inEncoding === 'default'
                         ? undefined
-                        : options.outEncoding,
-            },
-        );
-
-        const metadata = await datasetXpt.getMetadata('dataset-json1.1');
-        let updatedMetadata = processXptMetadata(metadata, options, outputName);
-
-        // Standard metadata updates;
-        updatedMetadata = updateMetadata(updatedMetadata, options);
-
-        await datasetJson.write({
-            metadata: updatedMetadata,
-            action: 'create',
-            options: { prettify: prettyPrint },
-        });
-
-        // Identify the datetime columns which should be converted
-        const dtIndexes = updatedMetadata.columns.reduce(
-            (acc, column, index) => {
-                if (['datetime', 'date', 'time'].includes(column.dataType)) {
-                    acc.push({ index, dataType: column.dataType });
+                        : options.inEncoding,
+            })) {
+                // Convert datetime values if needed
+                if (dtIndexes.length > 0) {
+                    const row = obs as ItemDataArray;
+                    dtIndexes.forEach(({ index, dataType }) => {
+                        row[index] = convertNum2Dt(
+                            row[index] as number,
+                            dataType,
+                        );
+                    });
                 }
-                return acc;
-            },
-            [] as Array<{ index: number; dataType: ItemType }>,
-        );
+                buffer.push(obs as ItemDataArray);
+                currentRecord++;
+                if (currentRecord % 10000 === 0) {
+                    await datasetJson.write({
+                        data: buffer,
+                        action: 'write',
+                        options: { prettify: prettyPrint },
+                    });
+                    buffer = [];
 
-        const { records } = updatedMetadata;
-        let currentRecord = 0;
-
-        let buffer: ItemDataArray[] = [];
-        // Read blocks of 10k records
-        for await (const obs of datasetXpt.read({
-            skipHeader: true,
-            encoding:
-                options.inEncoding === 'default'
-                    ? undefined
-                    : options.inEncoding,
-        })) {
-            // Convert datetime values if needed
-            if (dtIndexes.length > 0) {
-                const row = obs as ItemDataArray;
-                dtIndexes.forEach(({ index, dataType }) => {
-                    row[index] = convertXptDateTime(
-                        row[index] as number,
-                        dataType,
-                    );
-                });
+                    sendMessage(currentRecord / records);
+                }
             }
-            buffer.push(obs as ItemDataArray);
-            currentRecord++;
-            if (currentRecord % 10000 === 0) {
-                await datasetJson.write({
-                    data: buffer,
-                    action: 'write',
-                    options: { prettify: prettyPrint },
-                });
-                buffer = [];
 
-                sendMessage(currentRecord / records);
-            }
+            // Write the remaining records
+            await datasetJson.write({
+                data: buffer,
+                action: 'finalize',
+                options: { prettify: prettyPrint },
+            });
         }
-
-        // Write the remaining records
-        await datasetJson.write({
-            data: buffer,
-            action: 'finalize',
-            options: { prettify: prettyPrint },
-        });
 
         // Send the final message informing that the conversion is done
         sendMessage(1);
 
+        return true;
+    } catch (error) {
+        return false;
+    }
+};
+
+const datasetJson2Csv = async (
+    datasetInput: DatasetJson,
+    file: ConvertedFileInfo,
+    options: ConvertTask['options'],
+    sendMessage: (progress: number) => void,
+): Promise<boolean> => {
+    try {
+        const { destinationDir } = options;
+        const { outputName } = file;
+        const outputPath = path.join(destinationDir, outputName);
+
+        // Get metadata to access column information and total record count
+        const metadata = await datasetInput.getMetadata();
+        const { columns, records } = metadata;
+
+        // Create write stream for CSV output
+        const writeStream = fs.createWriteStream(outputPath, {
+            encoding:
+                options.outEncoding === 'default'
+                    ? 'utf8'
+                    : options.outEncoding,
+        });
+
+        // Check if datetime/date/time columns need conversion
+        const epoch =
+            options.csvEpoch === '' ? null : new Date(options.csvEpoch);
+        const convertDates = epoch !== null;
+
+        let dtIndexes: Array<{ index: number; dataType: ItemType }> = [];
+
+        if (convertDates) {
+            // Get columns which need conversion
+            dtIndexes = columns
+                .filter(
+                    (col) =>
+                        ['datetime', 'date', 'time'].includes(col.dataType) &&
+                        col.targetDataType === 'integer',
+                )
+                .map((col) => ({
+                    index: columns.indexOf(col),
+                    dataType: col.dataType,
+                }));
+        }
+
+        // Write header row with column names
+        const header = columns.map((col) => `"${col.name}"`).join(',');
+        writeStream.write(`${header}\n`);
+
+        let currentRecord = 0;
+
+        // Process records in streaming fashion
+        for await (const obs of datasetInput.readRecords({
+            bufferLength: 10000,
+        })) {
+            const row = obs as ItemDataArray;
+
+            if (convertDates) {
+                // Convert datetime values if needed
+                dtIndexes.forEach(({ index, dataType }) => {
+                    row[index] = convertDt2Num(
+                        row[index] as string,
+                        dataType,
+                        epoch as Date,
+                    );
+                });
+            }
+
+            // Format each value in the row properly for CSV
+            const csvRow = row
+                .map((value) => {
+                    if (value === null || value === undefined) return '';
+                    if (typeof value === 'string')
+                        return `"${value.replace(/"/g, '""')}"`;
+                    return String(value);
+                })
+                .join(',');
+
+            writeStream.write(`${csvRow}\n`);
+
+            currentRecord++;
+            if (currentRecord % 10000 === 0) {
+                // Report progress periodically
+                sendMessage(currentRecord / records);
+            }
+        }
+
+        // Close the write stream
+        await new Promise<void>((resolve, reject) => {
+            writeStream.end((err: Error | null) => {
+                if (err) reject(err);
+                else resolve();
+            });
+        });
+
+        // Send final progress
+        sendMessage(1);
         return true;
     } catch (error) {
         return false;
@@ -312,6 +466,14 @@ const convertJson = async (
                     ? undefined
                     : options.inEncoding,
         });
+        if (options.outputFormat === 'CSV') {
+            return await datasetJson2Csv(
+                datasetInput,
+                file,
+                options,
+                sendMessage,
+            );
+        }
         const datasetOutput = new DatasetJson(
             path.join(destinationDir, outputName),
             {
@@ -320,6 +482,7 @@ const convertJson = async (
                         ? undefined
                         : options.outEncoding,
                 isNdJson: options.outputFormat === 'DNJ1.1',
+                isCompressed: options.outputFormat === 'DJC1.1',
             },
         );
 

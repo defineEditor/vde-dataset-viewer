@@ -18,6 +18,9 @@ import {
     Updater as IUpdater,
 } from '@tanstack/react-table';
 import FilterIcon from '@mui/icons-material/FilterAlt';
+import FontDownloadIcon from '@mui/icons-material/FontDownload';
+import LooksOneIcon from '@mui/icons-material/LooksOne';
+import AccessTimeIcon from '@mui/icons-material/HourglassFull';
 import { VirtualItem, Virtualizer } from '@tanstack/react-virtual';
 import { ITableRow } from 'interfaces/common';
 import Loading from 'renderer/components/Loading';
@@ -132,12 +135,13 @@ const styles = {
         textAlign: 'center',
     },
     loading: {
-        position: 'absolute',
+        position: 'fixed',
         top: '50%',
         left: '50%',
         display: 'flex',
         flexDirection: 'column',
         transform: 'translate(-50%, -50%)',
+        zIndex: 999,
     },
     sponsored: {
         marginTop: '10px',
@@ -150,6 +154,24 @@ const styles = {
         color: 'grey.600',
         pb: '1px',
     },
+    typeIcon: {
+        fontSize: '16px',
+        color: 'grey.600',
+        ml: '4px',
+    },
+};
+
+const getTypeIcon = (type: string | undefined) => {
+    if (!type) {
+        return null;
+    }
+    if (['date', 'datetime', 'time'].includes(type)) {
+        return <AccessTimeIcon sx={styles.typeIcon} />;
+    }
+    if (['integer', 'float', 'double', 'decimal'].includes(type)) {
+        return <LooksOneIcon sx={styles.typeIcon} />;
+    }
+    return <FontDownloadIcon sx={styles.typeIcon} />;
 };
 
 const DatasetViewUI: React.FC<{
@@ -177,6 +199,9 @@ const DatasetViewUI: React.FC<{
         columnIndex: number,
     ) => void;
     filteredColumns?: string[];
+    containerStyle?: React.CSSProperties;
+    hideRowNumbers?: boolean;
+    showTypeIcons?: boolean;
 }> = ({
     table,
     tableContainerRef,
@@ -198,14 +223,18 @@ const DatasetViewUI: React.FC<{
     hasPagination,
     handleContextMenu = (_event, _rowIndex, _columnIndex) => {},
     filteredColumns = [],
+    containerStyle = undefined,
+    hideRowNumbers = false,
+    showTypeIcons = false,
 }) => {
     return (
         <Paper
             ref={tableContainerRef}
             sx={
-                hasPagination
+                containerStyle ||
+                (hasPagination
                     ? styles.containerWithPage
-                    : styles.containerWithoutPage
+                    : styles.containerWithoutPage)
             }
         >
             <Table sx={styles.table}>
@@ -215,21 +244,23 @@ const DatasetViewUI: React.FC<{
                             key={headerGroup.id}
                             style={styles.headerColumn}
                         >
-                            <TableCell
-                                sx={{
-                                    ...styles.tableHeaderCell,
-                                    width: visibleColumns[0].getSize(),
-                                    ...styles.headerRowNumberCell,
-                                }}
-                            >
-                                <Box sx={styles.tableHeaderLabel}>
-                                    {flexRender(
-                                        headerGroup.headers[0].column.columnDef
-                                            .header,
-                                        headerGroup.headers[0].getContext(),
-                                    )}
-                                </Box>
-                            </TableCell>
+                            {!hideRowNumbers && (
+                                <TableCell
+                                    sx={{
+                                        ...styles.tableHeaderCell,
+                                        width: visibleColumns[0].getSize(),
+                                        ...styles.headerRowNumberCell,
+                                    }}
+                                >
+                                    <Box sx={styles.tableHeaderLabel}>
+                                        {flexRender(
+                                            headerGroup.headers[0].column
+                                                .columnDef.header,
+                                            headerGroup.headers[0].getContext(),
+                                        )}
+                                    </Box>
+                                </TableCell>
+                            )}
                             {virtualPaddingLeft ? (
                                 <TableCell
                                     sx={{
@@ -249,6 +280,13 @@ const DatasetViewUI: React.FC<{
                                             width: header.getSize(),
                                             cursor: 'pointer',
                                         }}
+                                        onContextMenu={(event) =>
+                                            handleContextMenu(
+                                                event,
+                                                -1,
+                                                vc.index + 1,
+                                            )
+                                        }
                                     >
                                         <TableSortLabel
                                             onClick={() => {
@@ -284,6 +322,11 @@ const DatasetViewUI: React.FC<{
                                                 header.column.columnDef.header,
                                                 header.getContext(),
                                             )}
+                                            {showTypeIcons &&
+                                                getTypeIcon(
+                                                    header.column.columnDef.meta
+                                                        ?.type,
+                                                )}
                                             {filteredColumns.includes(
                                                 header.id,
                                             ) && (
@@ -377,30 +420,41 @@ const DatasetViewUI: React.FC<{
                                         transform: `translateY(${virtualRow.start}px)`,
                                     }}
                                 >
-                                    <TableCell
-                                        sx={{
-                                            ...(dynamicRowHeight
-                                                ? styles.tableCellDynamic
-                                                : styles.tableCellFixed),
-                                            width: visibleCells[0].column.getSize(),
-                                            ...styles.rowNumberCell,
-                                        }}
-                                        onClick={() =>
-                                            handleCellClick(virtualRow.index, 0)
-                                        }
-                                        onMouseDown={() =>
-                                            handleMouseDown(virtualRow.index, 0)
-                                        }
-                                        onMouseOver={() =>
-                                            handleMouseOver(virtualRow.index, 0)
-                                        }
-                                    >
-                                        {flexRender(
-                                            visibleCells[0].column.columnDef
-                                                .cell,
-                                            visibleCells[0].getContext(),
-                                        )}
-                                    </TableCell>
+                                    {!hideRowNumbers && (
+                                        <TableCell
+                                            sx={{
+                                                ...(dynamicRowHeight
+                                                    ? styles.tableCellDynamic
+                                                    : styles.tableCellFixed),
+                                                width: visibleCells[0].column.getSize(),
+                                                ...styles.rowNumberCell,
+                                            }}
+                                            onClick={() =>
+                                                handleCellClick(
+                                                    virtualRow.index,
+                                                    0,
+                                                )
+                                            }
+                                            onMouseDown={() =>
+                                                handleMouseDown(
+                                                    virtualRow.index,
+                                                    0,
+                                                )
+                                            }
+                                            onMouseOver={() =>
+                                                handleMouseOver(
+                                                    virtualRow.index,
+                                                    0,
+                                                )
+                                            }
+                                        >
+                                            {flexRender(
+                                                visibleCells[0].column.columnDef
+                                                    .cell,
+                                                visibleCells[0].getContext(),
+                                            )}
+                                        </TableCell>
+                                    )}
                                     {virtualPaddingLeft ? (
                                         <TableCell
                                             sx={{

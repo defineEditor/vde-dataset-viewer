@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
-import theme from 'renderer/utils/theme';
+import { theme, themeWithoutAnimation } from 'renderer/utils/theme';
 import Main from 'renderer/components/Main';
 import Snackbar from 'renderer/components/Snackbar';
 import Modal from 'renderer/components/Modal';
@@ -62,6 +62,15 @@ const AppWithContext: React.FC = () => {
         (state) => state.settings.other.checkForUpdates,
     );
 
+    const disableUiAnimation = useAppSelector(
+        (state) => state.settings.other.disableUiAnimation,
+    );
+
+    let selectedTheme = theme;
+    if (disableUiAnimation) {
+        selectedTheme = themeWithoutAnimation;
+    }
+
     useEffect(() => {
         // At app startup load the saved state
         const loadStore = async () => {
@@ -94,11 +103,11 @@ const AppWithContext: React.FC = () => {
     });
 
     return (
-        <ThemeProvider theme={theme}>
+        <ThemeProvider theme={selectedTheme}>
             <CssBaseline />
             <ErrorBoundary>
                 <DragAndDrop>
-                    <Main theme={theme} />
+                    <Main theme={selectedTheme} />
                     <Snackbar />
                     <Modal />
                 </DragAndDrop>
