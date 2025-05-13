@@ -6,6 +6,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import uiReducer from 'renderer/redux/slices/ui';
 import dataReducer from 'renderer/redux/slices/data';
 import settingsReducer from 'renderer/redux/slices/settings';
+import apiReducer from 'renderer/redux/slices/api';
 import Filter from 'renderer/components/Modal/Filter';
 import AppContext from 'renderer/utils/AppContext';
 import ApiService from 'renderer/services/ApiService';
@@ -15,6 +16,7 @@ import { IStore } from 'interfaces/common';
 const mockApiService = {
     getOpenedFileData: jest.fn(),
     getOpenedFileMetadata: jest.fn(),
+    getOpenedFiles: jest.fn(),
 } as unknown as ApiService;
 
 const updatedInitialState = {
@@ -39,6 +41,9 @@ const updatedInitialState = {
             file1: 100,
         },
     },
+    api: {
+        ...initialState.api,
+    },
 } as IStore;
 
 const renderComponent = (store) =>
@@ -59,10 +64,12 @@ describe('Filter Component', () => {
                 ui: uiReducer,
                 data: dataReducer,
                 settings: settingsReducer,
+                api: apiReducer,
             },
             preloadedState: updatedInitialState,
         });
         (mockApiService.getOpenedFileData as jest.Mock).mockReturnValue([]);
+        (mockApiService.getOpenedFiles as jest.Mock).mockReturnValue([]);
         (mockApiService.getOpenedFileMetadata as jest.Mock).mockReturnValue({
             columns: [
                 { name: 'column1', dataType: 'string' },
