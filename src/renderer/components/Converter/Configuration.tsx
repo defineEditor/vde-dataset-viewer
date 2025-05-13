@@ -102,24 +102,6 @@ const Converter: React.FC<{
 
     const handleOutputFormat = (event: React.ChangeEvent<HTMLInputElement>) => {
         setOutputFormat(event.target.value as OutputFormat);
-        // Update output name for all files
-        let extension: OutputFileExtension;
-        if (event.target.value === 'DJ1.1') {
-            extension = 'json';
-        } else if (event.target.value === 'DNJ1.1') {
-            extension = 'ndjson';
-        } else {
-            extension = 'djsc';
-        }
-        setFiles(
-            files.map((file) => ({
-                ...file,
-                outputName: file.filename.replace(
-                    /(.*\.)\w+$/,
-                    `$1${extension}`,
-                ),
-            })),
-        );
     };
 
     const handleAddFiles = () => {
@@ -218,8 +200,14 @@ const Converter: React.FC<{
                 let extension: OutputFileExtension;
                 if (outputFormat === 'DJ1.1') {
                     extension = 'json';
-                } else {
+                } else if (outputFormat === 'DNJ1.1') {
                     extension = 'ndjson';
+                } else if (outputFormat === 'CSV') {
+                    extension = 'csv';
+                } else if (outputFormat === 'DJC1.1') {
+                    extension = 'djsc';
+                } else {
+                    throw new Error('Invalid output format');
                 }
                 setFiles((prev) =>
                     prev.map((file) => ({
@@ -248,9 +236,11 @@ const Converter: React.FC<{
         } else if (outputFormat === 'DNJ1.1') {
             extension = 'ndjson';
         } else if (outputFormat === 'CSV') {
-            extension = 'ndjson';
-        } else {
+            extension = 'csv';
+        } else if (outputFormat === 'DJC1.1') {
             extension = 'djsc';
+        } else {
+            throw new Error('Invalid output format');
         }
         if (options.renameFiles === false) {
             setFiles((prev) =>
