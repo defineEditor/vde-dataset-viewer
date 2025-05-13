@@ -1,3 +1,5 @@
+import { IHeaderCell, ISettings } from 'interfaces/common';
+
 // Constants for epoch conversion
 // SAS epoch is January 1, 1960
 // Unix epoch is January 1, 1970
@@ -141,4 +143,45 @@ export const formatDDMONYYYYtoDate = (dateStr: string): Date => {
     }
 
     return date;
+};
+
+export const handleTransformation = (
+    numericDatetimeType: IHeaderCell['numericDatetimeType'],
+    value: string | number | boolean | null,
+    dateFormat: ISettings['viewer']['dateFormat'],
+) => {
+    let updatedValue = value;
+    if (numericDatetimeType) {
+        let date: Date | null = null;
+        if (dateFormat === 'ISO8601' || numericDatetimeType === 'time') {
+            if (numericDatetimeType === 'datetime') {
+                // Shift by timezone offset to get UTC time
+                date = new Date(
+                    new Date(value as string).getTime() -
+                        new Date().getTimezoneOffset() * 60 * 1000,
+                );
+            } else if (numericDatetimeType === 'date') {
+                date = new Date(value as string);
+            } else if (numericDatetimeType === 'time') {
+                date = new Date(`2000-01-01T${value}Z`);
+            }
+        } else if (dateFormat === 'DDMONYEAR') {
+            date = formatDDMONYYYYtoDate(value as string);
+        }
+
+        if (date === null) {
+            updatedValue = null;
+        } else if (numericDatetimeType === 'datetime') {
+            updatedValue = jsDateToSasDatetime(date);
+        } else if (numericDatetimeType === 'date') {
+            updatedValue = jsDateToSasDate(date);
+        } else if (numericDatetimeType === 'time') {
+            updatedValue = componentsToSasTime(
+                date.getUTCHours(),
+                date.getUTCMinutes(),
+                date.getUTCSeconds(),
+            );
+        }
+    }
+    return updatedValue;
 };

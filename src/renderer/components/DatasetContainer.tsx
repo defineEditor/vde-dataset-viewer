@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useContext } from 'react';
 import Stack from '@mui/material/Stack';
 import Paper from '@mui/material/Paper';
 import TablePagination from '@mui/material/TablePagination';
-import { IHeaderCell, ITableData } from 'interfaces/common';
+import { IHeaderCell, ITableData, IMask } from 'interfaces/common';
 import DatasetView from 'renderer/components/DatasetView';
 import ContextMenu from 'renderer/components/DatasetView/ContextMenu';
 import AppContext from 'renderer/utils/AppContext';
@@ -61,6 +61,9 @@ const DatasetContainer: React.FC = () => {
     const pageSize = useAppSelector((state) => state.settings.viewer.pageSize);
     const settings = useAppSelector((state) => state.settings);
     const sidebarOpen = useAppSelector((state) => state.ui.viewer.sidebarOpen);
+    const currentMask = useAppSelector<IMask | null>(
+        (state) => state.data.maskData.currentMask,
+    );
 
     const { apiService } = useContext(AppContext);
 
@@ -92,7 +95,16 @@ const DatasetContainer: React.FC = () => {
             if (columnIndex === 0 || !table) return; // Ignore row number column
 
             const rows = table.data;
-            const header = table.header[columnIndex - 1];
+            // In case mask is used, we need to get the index of the column with mask applied
+            let updatedColumnIndex = columnIndex;
+            if (currentMask !== null && currentMask.columns.length > 0) {
+                const originalId = table.header[columnIndex - 1].id;
+                updatedColumnIndex =
+                    table.header.findIndex((item) => item.id === originalId) +
+                    1;
+            }
+
+            const header = table.header[updatedColumnIndex - 1];
             const value = rowIndex === -1 ? '' : rows[rowIndex][header.id];
 
             setContextMenu({
@@ -103,7 +115,7 @@ const DatasetContainer: React.FC = () => {
                 isHeader: rowIndex === -1,
             });
         },
-        [table],
+        [table, currentMask],
     );
 
     const handleCloseContextMenu = () => {

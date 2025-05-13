@@ -30,6 +30,7 @@ import {
     TableSortLabel,
     TextField,
     InputAdornment,
+    Tooltip,
 } from '@mui/material';
 import ShortcutIcon from '@mui/icons-material/Shortcut';
 import InfoIcon from '@mui/icons-material/Info';
@@ -302,24 +303,30 @@ const ColumnsTab: React.FC<{
                             ))}
                             <TableCell key="actions">
                                 <Stack direction="row" spacing={1}>
-                                    <IconButton
-                                        onClick={() =>
-                                            handleGoToClick(column.name)
-                                        }
-                                        id="goto"
-                                        size="small"
-                                    >
-                                        <ShortcutIcon sx={styles.actionIcon} />
-                                    </IconButton>
-                                    <IconButton
-                                        onClick={() =>
-                                            handleShowInfo(column.name)
-                                        }
-                                        id="goto"
-                                        size="small"
-                                    >
-                                        <InfoIcon sx={styles.actionIcon} />
-                                    </IconButton>
+                                    <Tooltip title="Go to column">
+                                        <IconButton
+                                            onClick={() =>
+                                                handleGoToClick(column.name)
+                                            }
+                                            id="goto"
+                                            size="small"
+                                        >
+                                            <ShortcutIcon
+                                                sx={styles.actionIcon}
+                                            />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Show column info">
+                                        <IconButton
+                                            onClick={() =>
+                                                handleShowInfo(column.name)
+                                            }
+                                            id="goto"
+                                            size="small"
+                                        >
+                                            <InfoIcon sx={styles.actionIcon} />
+                                        </IconButton>
+                                    </Tooltip>
                                 </Stack>
                             </TableCell>
                         </TableRow>

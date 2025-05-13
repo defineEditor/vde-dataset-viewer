@@ -56,6 +56,11 @@ export const uiSlice = createSlice({
                 if (state.currentPage !== 0) {
                     state.currentPage = 0;
                 }
+                // Close sidebar if it is open
+                if (state.viewer.sidebarOpen) {
+                    state.viewer.sidebarOpen = false;
+                }
+
                 if (
                     state.control.goTo.row !== null ||
                     state.control.goTo.column !== null

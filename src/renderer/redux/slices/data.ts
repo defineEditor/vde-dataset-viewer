@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { data as initialData } from 'renderer/redux/initialState';
 import { IRecentFile, BasicFilter, ConverterData } from 'interfaces/common';
+import { IMask } from 'interfaces/store';
 import deepEqual from 'renderer/utils/deepEqual';
 import getFolderName from 'renderer/utils/getFolderName';
 import { closeDataset, openDataset } from 'renderer/redux/slices/ui';
@@ -90,6 +91,38 @@ export const dataSlice = createSlice({
         setConverterData: (state, action: PayloadAction<ConverterData>) => {
             state.converter = action.payload;
         },
+        // Mask related actions
+        selectMask: (state, action: PayloadAction<IMask>) => {
+            state.maskData.currentMask = action.payload;
+            return state;
+        },
+        saveMask: (state, action: PayloadAction<IMask>) => {
+            // Check if mask with this id already exists
+            const existingIndex = state.maskData.savedMasks.findIndex(
+                (mask) => mask.id === action.payload.id,
+            );
+
+            if (existingIndex !== -1) {
+                // Update existing mask
+                state.maskData.savedMasks[existingIndex] = action.payload;
+            } else {
+                // Add new mask
+                state.maskData.savedMasks.push(action.payload);
+            }
+
+            return state;
+        },
+        deleteMask: (state, action: PayloadAction<IMask>) => {
+            // Remove mask from saved masks
+            state.maskData.savedMasks = state.maskData.savedMasks.filter(
+                (mask) => mask.id !== action.payload.id,
+            );
+            return state;
+        },
+        clearMask: (state) => {
+            state.maskData.currentMask = null;
+            return state;
+        },
     },
     extraReducers: (builder) => {
         builder.addCase(openDataset, (state, action) => {
@@ -116,6 +149,14 @@ export const dataSlice = createSlice({
                 }
             }
 
+            // If mask is not sticky, reset it
+            if (
+                state.maskData.currentMask &&
+                !state.maskData.currentMask.sticky
+            ) {
+                state.maskData.currentMask = null;
+            }
+
             return state;
         });
         builder.addCase(closeDataset, (state, action) => {
@@ -126,6 +167,14 @@ export const dataSlice = createSlice({
             }
             // Reset any filters
             state.filterData.currentFilter = null;
+
+            // If mask is not sticky, reset it
+            if (
+                state.maskData.currentMask &&
+                !state.maskData.currentMask.sticky
+            ) {
+                state.maskData.currentMask = null;
+            }
         });
     },
 });
@@ -136,6 +185,10 @@ export const {
     resetFilter,
     setLoadedRecords,
     setConverterData,
+    selectMask,
+    saveMask,
+    deleteMask,
+    clearMask,
 } = dataSlice.actions;
 
 export default dataSlice.reducer;

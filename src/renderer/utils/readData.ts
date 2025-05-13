@@ -9,33 +9,11 @@ import {
 } from 'interfaces/common';
 import ApiService from 'renderer/services/ApiService';
 
-// Get dataset records;
-const getData = async (
-    apiService: ApiService,
-    fileId: string,
-    start: number,
-    length: number,
+export const getHeader = (
+    metadata: DatasetJsonMetadata,
     settings: ISettings,
-    filterColumns?: string[],
-    filterData?: BasicFilter,
-): Promise<ITableData | null> => {
-    const metadata = await apiService.getMetadata(fileId);
-    if (metadata === null || Object.keys(metadata).length === 0) {
-        return null;
-    }
-
-    const itemData = (await apiService.getObservations(
-        fileId,
-        start,
-        length,
-        settings,
-        filterColumns,
-        filterData,
-    )) as ITableRow[];
-
-    const rawHeader = metadata.columns;
-
-    const newHeader: IHeaderCell[] = rawHeader.map((item) => {
+): IHeaderCell[] => {
+    return metadata.columns.map((item) => {
         if (
             item.displayFormat &&
             settings.viewer.applyDateFormat &&
@@ -82,6 +60,33 @@ const getData = async (
             type: item.dataType,
         };
     });
+};
+
+// Get dataset records;
+const getData = async (
+    apiService: ApiService,
+    fileId: string,
+    start: number,
+    length: number,
+    settings: ISettings,
+    filterColumns?: string[],
+    filterData?: BasicFilter,
+): Promise<ITableData | null> => {
+    const metadata = await apiService.getMetadata(fileId);
+    if (metadata === null || Object.keys(metadata).length === 0) {
+        return null;
+    }
+
+    const itemData = (await apiService.getObservations(
+        fileId,
+        start,
+        length,
+        settings,
+        filterColumns,
+        filterData,
+    )) as ITableRow[];
+
+    const newHeader = getHeader(metadata, settings);
 
     return {
         header: newHeader,

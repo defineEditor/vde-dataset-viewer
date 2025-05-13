@@ -5,6 +5,7 @@ import ShortcutIcon from '@mui/icons-material/Shortcut';
 import InfoIcon from '@mui/icons-material/Info';
 import FilterIcon from '@mui/icons-material/FilterAlt';
 import NextPlanOutlinedIcon from '@mui/icons-material/NextPlan';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import {
     openDataset,
     openModal,
@@ -37,6 +38,9 @@ const Header: React.FC = () => {
     const pathname = useAppSelector((state) => state.ui.pathname);
     const isFilterEnabled = useAppSelector(
         (state) => state.data.filterData.currentFilter !== null,
+    );
+    const isMaskEnabled = useAppSelector(
+        (state) => state.data.maskData.currentMask !== null,
     );
 
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
@@ -103,6 +107,10 @@ const Header: React.FC = () => {
         dispatch(openModal({ type: modals.DATASETINFO, data: {} }));
     }, [dispatch]);
 
+    const handleMaskClick = useCallback(() => {
+        dispatch(openModal({ type: modals.MASK, data: {} }));
+    }, [dispatch]);
+
     const handleToggleSidebar = useCallback(() => {
         dispatch(toggleSidebar());
     }, [dispatch]);
@@ -116,6 +124,8 @@ const Header: React.FC = () => {
         const handleViewerToolbarKeyDown = (event: KeyboardEvent) => {
             // Do use keywords if a Modal is open
             if (event.ctrlKey && !isModalOpen) {
+                event.preventDefault();
+                event.stopPropagation();
                 switch (event.key) {
                     case 'g':
                         handleGoToClick();
@@ -131,6 +141,9 @@ const Header: React.FC = () => {
                         break;
                     case 'r':
                         handleFilterReset();
+                        break;
+                    case 'e':
+                        handleMaskClick();
                         break;
                     case '`':
                         handleToggleSidebar();
@@ -153,6 +166,7 @@ const Header: React.FC = () => {
         handleDataSetInfoClick,
         handleFilterReset,
         handleToggleSidebar,
+        handleMaskClick,
         isModalOpen,
     ]);
 
@@ -220,6 +234,22 @@ const Header: React.FC = () => {
                     <FilterIcon
                         sx={{
                             color: isFilterEnabled
+                                ? 'success.main'
+                                : 'primary.main',
+                        }}
+                    />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Column Visibility" enterDelay={1000}>
+                <IconButton
+                    onClick={handleMaskClick}
+                    id="maskColumns"
+                    size="small"
+                    disabled={pathname !== paths.VIEWFILE}
+                >
+                    <VisibilityIcon
+                        sx={{
+                            color: isMaskEnabled
                                 ? 'success.main'
                                 : 'primary.main',
                         }}

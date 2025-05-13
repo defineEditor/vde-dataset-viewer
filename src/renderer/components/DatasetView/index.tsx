@@ -17,6 +17,7 @@ import {
     getSortedRowModel,
     SortingState as ISortingState,
     RowData,
+    VisibilityState,
 } from '@tanstack/react-table';
 
 declare module '@tanstack/table-core' {
@@ -48,6 +49,9 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     const dispatch = useAppDispatch();
     const settings = useAppSelector((state) => state.settings.viewer);
     const currentPage = useAppSelector((state) => state.ui.currentPage);
+    const currentMask = useAppSelector(
+        (state) => state.data.maskData.currentMask,
+    );
     const [sorting, setSorting] = useState<ISortingState>([]);
 
     const columns = useMemo<ColumnDef<ITableRow>[]>(() => {
@@ -75,6 +79,30 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         return result;
     }, [tableData.header]);
 
+    // Create column visibility state based on current mask
+    const columnVisibility = useMemo<VisibilityState>(() => {
+        if (!currentMask || !currentMask.columns.length) {
+            // If no mask is applied, all columns are visible
+            return {};
+        }
+
+        const visibilityState: VisibilityState = {};
+
+        // Always make row number column visible
+        visibilityState['#'] = true;
+
+        // Make only masked columns visible
+        tableData.header.forEach((header) => {
+            const columnId = header.id;
+            if (columnId !== '#') {
+                visibilityState[columnId] =
+                    currentMask.columns.includes(columnId);
+            }
+        });
+
+        return visibilityState;
+    }, [currentMask, tableData.header]);
+
     const filteredColumns = useMemo<string[]>(() => {
         return tableData.header
             .filter((column) => column.isFiltered)
@@ -97,6 +125,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         },
         state: {
             sorting,
+            columnVisibility,
         },
         onSortingChange: setSorting,
     });
