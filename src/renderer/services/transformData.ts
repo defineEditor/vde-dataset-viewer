@@ -23,28 +23,6 @@ const transformData = (
             }
         });
     }
-    const dateColsToFormat: number[] = [];
-    if (settings.viewer.dateFormat !== 'ISO8601') {
-        metadata.columns.forEach((column, index) => {
-            if (
-                column.dataType === 'date' &&
-                ['integer', 'decimal'].includes(column.targetDataType || '')
-            ) {
-                dateColsToFormat.push(index);
-            }
-        });
-    }
-    const datetimeColsToFormat: number[] = [];
-    if (settings.viewer.dateFormat !== 'ISO8601') {
-        metadata.columns.forEach((column, index) => {
-            if (
-                column.dataType === 'datetime' &&
-                ['integer', 'decimal'].includes(column.targetDataType || '')
-            ) {
-                datetimeColsToFormat.push(index);
-            }
-        });
-    }
 
     const numericDateColsToFormat: number[] = [];
     const numericTimeColsToFormat: number[] = [];
@@ -109,20 +87,6 @@ const transformData = (
 
             // Convert numeric dates to character format
             if (
-                settings.viewer.dateFormat !== 'ISO8601' &&
-                cell != null &&
-                dateColsToFormat.includes(cellIndex)
-            ) {
-                newRow[metadata.columns[cellIndex].name] =
-                    formatDateToDDMONYYYY(new Date(cell as string));
-            } else if (
-                settings.viewer.dateFormat !== 'ISO8601' &&
-                cell != null &&
-                datetimeColsToFormat.includes(cellIndex)
-            ) {
-                newRow[metadata.columns[cellIndex].name] =
-                    formatDateToDDMONYYYY(new Date(cell as string), true);
-            } else if (
                 settings.viewer.applyDateFormat &&
                 cell != null &&
                 numericDateColsToFormat.includes(cellIndex)

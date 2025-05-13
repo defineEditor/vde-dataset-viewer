@@ -41,6 +41,9 @@ const styles = {
     dialog: {
         minWidth: '50%',
     },
+    actions: {
+        m: 2,
+    },
     title: {
         marginBottom: 2,
         backgroundColor: 'primary.main',
@@ -112,7 +115,7 @@ const Mask: React.FC = () => {
         dispatch(closeModal({ type: modals.MASK }));
     }, [dispatch]);
 
-    const handleApply = () => {
+    const handleApply = useCallback(() => {
         if (selectedColumns.length > 0) {
             const mask: IMask = {
                 name: '',
@@ -123,7 +126,7 @@ const Mask: React.FC = () => {
             dispatch(selectMask(mask));
         }
         handleClose();
-    };
+    }, [dispatch, selectedColumns, sticky, handleClose]);
 
     const handleSelectMask = (mask: IMask) => {
         setSelectedColumns(mask.columns);
@@ -216,6 +219,8 @@ const Mask: React.FC = () => {
                         dispatch(selectMask(savedMasks[maskIndex]));
                         handleClose();
                     }
+                } else if (event.key === 's' && editingMaskId === null) {
+                    handleApply();
                 }
             }
         };
@@ -227,7 +232,7 @@ const Mask: React.FC = () => {
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [savedMasks, dispatch, handleClose]);
+    }, [savedMasks, dispatch, handleClose, handleApply, editingMaskId]);
 
     return (
         <Dialog
@@ -342,7 +347,7 @@ const Mask: React.FC = () => {
                                     >
                                         <TextField
                                             fullWidth
-                                            label="Mask Name"
+                                            label="Set Name"
                                             value={editingMaskName}
                                             onChange={(e) =>
                                                 setEditingMaskName(
@@ -454,7 +459,7 @@ const Mask: React.FC = () => {
                     </>
                 )}
             </DialogContent>
-            <DialogActions>
+            <DialogActions sx={styles.actions}>
                 <Button onClick={handleReset} color="primary">
                     Reset
                 </Button>

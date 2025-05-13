@@ -6,14 +6,8 @@ import {
     DatasetJsonMetadata,
     BasicFilter,
     IHeaderCell,
-    ISettings,
 } from 'interfaces/common';
-import {
-    jsDateToSasDate,
-    jsDateToSasDatetime,
-    componentsToSasTime,
-    formatDDMONYYYYtoDate,
-} from 'renderer/utils/transformUtils';
+import { handleTransformation } from 'renderer/utils/transformUtils';
 import { resetFilter, setFilter } from 'renderer/redux/slices/data';
 
 interface ContextMenuProps {
@@ -24,47 +18,6 @@ interface ContextMenuProps {
     metadata: DatasetJsonMetadata;
     header: IHeaderCell;
 }
-
-const handleTransformation = (
-    header: IHeaderCell,
-    value: string | number | boolean | null,
-    dateFormat: ISettings['viewer']['dateFormat'],
-) => {
-    let updatedValue = value;
-    if (header.numericDatetimeType) {
-        let date: Date | null = null;
-        if (dateFormat === 'ISO8601' || header.numericDatetimeType === 'time') {
-            if (header.numericDatetimeType === 'datetime') {
-                // Shift by timezone offset to get UTC time
-                date = new Date(
-                    new Date(value as string).getTime() -
-                        new Date().getTimezoneOffset() * 60 * 1000,
-                );
-            } else if (header.numericDatetimeType === 'date') {
-                date = new Date(value as string);
-            } else if (header.numericDatetimeType === 'time') {
-                date = new Date(`2000-01-01T${value}Z`);
-            }
-        } else if (dateFormat === 'DDMONYEAR') {
-            date = formatDDMONYYYYtoDate(value as string);
-        }
-
-        if (date === null) {
-            updatedValue = null;
-        } else if (header.numericDatetimeType === 'datetime') {
-            updatedValue = jsDateToSasDatetime(date);
-        } else if (header.numericDatetimeType === 'date') {
-            updatedValue = jsDateToSasDate(date);
-        } else if (header.numericDatetimeType === 'time') {
-            updatedValue = componentsToSasTime(
-                date.getUTCHours(),
-                date.getUTCMinutes(),
-                date.getUTCSeconds(),
-            );
-        }
-    }
-    return updatedValue;
-};
 
 const CellContextMenu: React.FC<ContextMenuProps> = ({
     open,
@@ -104,7 +57,11 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
 
     const handleFilterByValue = () => {
         // Filter by value
-        const updatedValue = handleTransformation(header, value, dateFormat);
+        const updatedValue = handleTransformation(
+            header.numericDatetimeType,
+            value,
+            dateFormat,
+        );
 
         const condition = isStringColumn
             ? `${header.id} = '${updatedValue}'`
@@ -131,7 +88,7 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
                 currentFilter,
             );
             const updatedValue = handleTransformation(
-                header,
+                header.numericDatetimeType,
                 value,
                 dateFormat,
             );

@@ -142,7 +142,7 @@ const Header: React.FC = () => {
                     case 'r':
                         handleFilterReset();
                         break;
-                    case 'v':
+                    case 'e':
                         handleMaskClick();
                         break;
                     case '`':
