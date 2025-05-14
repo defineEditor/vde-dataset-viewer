@@ -15,6 +15,27 @@ Supported Formats:
 
 API Specification: [DataExchange-DatasetJson-API](https://github.com/cdisc-org/DataExchange-DatasetJson-API)
 
+## Installation
+
+### Download and Install
+You can download installation packages or portable version for your operating system:
+
+1. Visit the [official downloads page](https://defineeditor.com/vde-dataset-viewer/downloads) for the latest stable version
+2. Or check the [GitHub Releases](https://github.com/defineEditor/vde-dataset-viewer/releases) page for all versions
+
+### Installation Options
+- **Windows**: Run the installer (vde-dataset-viewer.Setup.x.y.z.exe) or use the portable version (vde-dataset-viewer.x.y.z.exe)
+- **Linux**: Use the AppImage file (make it executable with `chmod +x filename.AppImage`)
+- **From Source**: Follow the Development instructions below to build from source
+
+Supported Formats:
+* [Dataset-JSON v1.1](https://github.com/cdisc-org/DataExchange-DatasetJson)
+* NDJSON representation of Dataset-JSON 1.1
+* Compressed Dataset-JSON 1.1
+* XPORT v5
+* SAS7BDAT
+
+
 ## Features
 * Reading large size datasets
 * Multiplatform: Windows, Linux (and MacOS if someone with Mac packages it)
@@ -23,6 +44,7 @@ API Specification: [DataExchange-DatasetJson-API](https://github.com/cdisc-org/D
 * Row and column navigation
 * Metadata info
 * Cell selection
+* Column visibility control
 * Automatic updates
 * Automated testing
 * API access
