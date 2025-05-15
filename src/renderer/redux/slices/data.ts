@@ -44,16 +44,20 @@ export const dataSlice = createSlice({
             state,
             action: PayloadAction<{ filter: BasicFilter; datasetName: string }>,
         ) => {
-            // If there are more than 100 recent filters, remove the oldest one
             const newRecentFilters = state.filterData.recentFilters.slice();
             // Check if the new filter is already present in the recent filters
             const index = newRecentFilters.findIndex((recentFilter) =>
-                deepEqual(recentFilter.filter, action.payload.filter),
+                // Do not compare options
+                deepEqual(
+                    { ...recentFilter.filter, options: {} },
+                    { ...action.payload.filter, options: {} },
+                ),
             );
             if (index !== -1) {
                 // If it is, remove the old entry
                 newRecentFilters.splice(index, 1);
             } else if (newRecentFilters.length >= 100) {
+                // If there are more than 100 recent filters, remove the oldest one
                 newRecentFilters.pop();
             }
             newRecentFilters.unshift({

@@ -20,9 +20,21 @@ import ManualInput from 'renderer/components/Modal/Filter/ManualInput';
 import AppContext from 'renderer/utils/AppContext';
 import { setFilter, resetFilter } from 'renderer/redux/slices/data';
 import { BasicFilter as IBasicFilter, IUiModal } from 'interfaces/common';
-import { Stack, Switch, Typography } from '@mui/material';
+import {
+    Stack,
+    Switch,
+    Typography,
+    List,
+    ListItem,
+    ListItemText,
+    ListItemAvatar,
+    Divider,
+    Chip,
+    Tooltip,
+} from '@mui/material';
 import InteractiveInput from 'renderer/components/Modal/Filter/InteractiveInput';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import EditIcon from '@mui/icons-material/Edit';
 import { getHeader } from 'renderer/utils/readData';
 import { handleTransformation } from 'renderer/utils/transformUtils';
 
@@ -41,7 +53,32 @@ const styles = {
     actions: {
         m: 2,
     },
+    recentFiltersTitle: {
+        mt: 2,
+        textAlign: 'center',
+    },
+    filterItem: {
+        cursor: 'pointer',
+        backgroundColor: 'grey.100',
+    },
+    shortcutChip: {
+        backgroundColor: 'grey.300',
+        fontSize: '0.75rem',
+        height: 24,
+        minWidth: 55,
+        fontWeight: 'bold',
+        mr: 4,
+    },
+    filtersList: {
+        maxHeight: 320,
+        overflow: 'auto',
+    },
 };
+
+// Create dummy filter for conversion and validation purposes;
+const filterForConversion = new Filter('dataset-json1.1', [], '', {
+    caseInsensitiveColNames: true,
+});
 
 const FilterComponent: React.FC<IUiModal> = (props: IUiModal) => {
     const { type } = props;
@@ -105,6 +142,22 @@ const FilterComponent: React.FC<IUiModal> = (props: IUiModal) => {
     const lastOptions = useAppSelector(
         (state) => state.data.filterData.lastOptions,
     );
+    const recentFilters = useAppSelector(
+        (state) => state.data.filterData.recentFilters,
+    );
+
+    const recentFiltersValidated = useMemo(() => {
+        return recentFilters.map((filter) => {
+            const filterString = filterForConversion.toString(filter.filter);
+            const isValid =
+                filterForValidation.validateFilterString(filterString);
+            return {
+                ...filter,
+                isValid,
+            };
+        });
+    }, [recentFilters, filterForValidation]);
+
     const [caseInsensitive, setCaseInsensitive] = useState(
         lastOptions?.caseInsensitive ?? true,
     );
@@ -232,87 +285,115 @@ const FilterComponent: React.FC<IUiModal> = (props: IUiModal) => {
         setInteractiveFilter(filter);
     };
 
-    const handleSetFilter = useCallback(() => {
-        let finalFilter: string;
-        const filter = new Filter('dataset-json1.1', metadata.columns, '');
-        if (inputType === 'interactive') {
-            if (interactiveFilter === null) {
-                finalFilter = '';
-            } else {
-                // If filter contains formatted dates, convert them to numeric values;
-                const header = getHeader(metadata, settings);
-                // Get all columns with formatted dates;
-                const dateColumns = header
-                    .filter((column) => column.numericDatetimeType)
-                    .map((column) => column.id);
-
-                interactiveFilter.conditions = interactiveFilter.conditions.map(
-                    (condition) => {
-                        if (dateColumns.includes(condition.variable)) {
-                            const numericDatetimeType = header.find(
-                                (column) => column.id === condition.variable,
-                            )?.numericDatetimeType;
-                            if (typeof condition.value === 'string') {
-                                condition.value = handleTransformation(
-                                    numericDatetimeType,
-                                    condition.value,
-                                    settings.viewer.dateFormat,
-                                );
-                            } else if (Array.isArray(condition.value)) {
-                                condition.value = condition.value.map(
-                                    (value) => {
-                                        if (typeof value === 'string') {
-                                            return handleTransformation(
-                                                numericDatetimeType,
-                                                value,
-                                                settings.viewer.dateFormat,
-                                            ) as number;
-                                        }
-                                        return value;
-                                    },
-                                );
-                            }
-                        }
-                        return condition;
-                    },
-                );
-                filter.update(interactiveFilter);
-                finalFilter = filter.toString();
-            }
-        } else {
-            finalFilter = inputValue;
-        }
-
-        if (finalFilter === '') {
-            dispatch(resetFilter());
-            handleClose();
-        } else if (filter.validateFilterString(finalFilter)) {
-            filter.update(finalFilter);
-            const basicFilter = {
-                ...filter.toBasicFilter(),
-                options: { caseInsensitive },
-            };
-            dispatch(
-                setFilter({ filter: basicFilter, datasetName: dataset.name }),
+    const handleSetFilter = useCallback(
+        (filter?: IBasicFilter) => {
+            let finalFilter: string;
+            const newFilter = new Filter(
+                'dataset-json1.1',
+                metadata.columns,
+                '',
             );
-            handleClose();
-        }
-    }, [
-        dataset.name,
-        dispatch,
-        handleClose,
-        inputValue,
-        caseInsensitive,
-        interactiveFilter,
-        inputType,
-        settings,
-        metadata,
-    ]);
+            if (filter !== undefined) {
+                finalFilter = newFilter.toString(filter);
+            } else if (inputType === 'interactive') {
+                if (interactiveFilter === null) {
+                    finalFilter = '';
+                } else {
+                    // If filter contains formatted dates, convert them to numeric values;
+                    const header = getHeader(metadata, settings);
+                    // Get all columns with formatted dates;
+                    const dateColumns = header
+                        .filter((column) => column.numericDatetimeType)
+                        .map((column) => column.id);
+
+                    const conditionsUpdated = interactiveFilter.conditions.map(
+                        (condition) => {
+                            if (dateColumns.includes(condition.variable)) {
+                                const numericDatetimeType = header.find(
+                                    (column) =>
+                                        column.id === condition.variable,
+                                )?.numericDatetimeType;
+                                if (typeof condition.value === 'string') {
+                                    condition.value = handleTransformation(
+                                        numericDatetimeType,
+                                        condition.value,
+                                        settings.viewer.dateFormat,
+                                    );
+                                } else if (Array.isArray(condition.value)) {
+                                    condition.value = condition.value.map(
+                                        (value) => {
+                                            if (typeof value === 'string') {
+                                                return handleTransformation(
+                                                    numericDatetimeType,
+                                                    value,
+                                                    settings.viewer.dateFormat,
+                                                ) as number;
+                                            }
+                                            return value;
+                                        },
+                                    );
+                                }
+                            }
+                            return condition;
+                        },
+                    );
+                    newFilter.update({
+                        ...interactiveFilter,
+                        conditions: conditionsUpdated,
+                    });
+                    finalFilter = newFilter.toString();
+                }
+            } else {
+                finalFilter = inputValue;
+            }
+
+            if (finalFilter === '') {
+                dispatch(resetFilter());
+                handleClose();
+            } else if (newFilter.validateFilterString(finalFilter)) {
+                newFilter.update(finalFilter);
+                const basicFilter = {
+                    ...newFilter.toBasicFilter(),
+                    options: { caseInsensitive },
+                };
+                dispatch(
+                    setFilter({
+                        filter: basicFilter,
+                        datasetName: dataset.name,
+                    }),
+                );
+                handleClose();
+            }
+        },
+        [
+            dataset.name,
+            dispatch,
+            handleClose,
+            inputValue,
+            caseInsensitive,
+            interactiveFilter,
+            inputType,
+            settings,
+            metadata,
+        ],
+    );
 
     const handleReloadData = () => {
         dispatch(resetFilter());
     };
 
+    const handleSelectFilter = useCallback(
+        (filter: IBasicFilter) => {
+            if (inputType === 'interactive') {
+                setInteractiveFilter(filter);
+            } else {
+                setInputValue(filterForConversion.toString(filter));
+            }
+        },
+        [inputType],
+    );
+
+    // Shortcuts
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'Enter') {
@@ -323,6 +404,28 @@ const FilterComponent: React.FC<IUiModal> = (props: IUiModal) => {
                 handleSetFilter();
             } else if (event.key === 'Escape') {
                 handleClose();
+            } else if (
+                event.ctrlKey &&
+                !event.altKey &&
+                !event.shiftKey &&
+                !event.metaKey
+            ) {
+                const keyNum = parseInt(event.key, 10);
+                // Check if it's a number key from 0-9
+                if (!Number.isNaN(keyNum) && keyNum >= 1 && keyNum <= 9) {
+                    const filterIndex = keyNum - 1;
+                    if (recentFiltersValidated[filterIndex]?.isValid) {
+                        event.preventDefault();
+                        handleSetFilter(
+                            recentFiltersValidated[filterIndex].filter,
+                        );
+                    }
+                } else if (event.key === '0') {
+                    if (recentFiltersValidated[9]?.isValid) {
+                        event.preventDefault();
+                        handleSetFilter(recentFiltersValidated[9].filter);
+                    }
+                }
             }
         };
 
@@ -330,7 +433,12 @@ const FilterComponent: React.FC<IUiModal> = (props: IUiModal) => {
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [handleClose, handleSetFilter]);
+    }, [
+        handleClose,
+        handleSetFilter,
+        recentFiltersValidated,
+        handleSelectFilter,
+    ]);
 
     const isValidFilter = filterForValidation.validateFilterString(inputValue);
 
@@ -410,6 +518,61 @@ const FilterComponent: React.FC<IUiModal> = (props: IUiModal) => {
                             datasetName={dataset.name}
                         />
                     )}
+                    <Typography variant="h6" sx={styles.recentFiltersTitle}>
+                        Recent Filters
+                    </Typography>
+                    <List sx={styles.filtersList}>
+                        {recentFiltersValidated
+                            .slice(0, 5)
+                            .map((filterItem, index) => (
+                                <>
+                                    <ListItem sx={styles.filterItem}>
+                                        <ListItemAvatar>
+                                            <Chip
+                                                label={`Ctrl+${index === 9 ? 0 : index + 1}`}
+                                                sx={styles.shortcutChip}
+                                                size="small"
+                                                disabled={!filterItem.isValid}
+                                            />
+                                        </ListItemAvatar>
+                                        <ListItemText
+                                            primary={filterForConversion.toString(
+                                                filterItem.filter,
+                                            )}
+                                            slotProps={{
+                                                primary: filterItem.isValid
+                                                    ? { color: 'textPrimary' }
+                                                    : {
+                                                          color: 'textDisabled',
+                                                      },
+                                            }}
+                                        />
+                                        <Tooltip title="Edit filter">
+                                            <IconButton
+                                                edge="end"
+                                                aria-label="edit"
+                                                disabled={
+                                                    /* For interactive mode, cannot edit invalid filter */
+                                                    !filterItem.isValid &&
+                                                    inputType === 'interactive'
+                                                }
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleSelectFilter(
+                                                        filterItem.filter,
+                                                    );
+                                                }}
+                                            >
+                                                <EditIcon />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </ListItem>
+                                    {index <
+                                        Math.min(recentFilters.length, 10) -
+                                            1 && <Divider />}
+                                </>
+                            ))}
+                    </List>
                 </Stack>
             </DialogContent>
             <DialogActions sx={styles.actions}>
@@ -420,7 +583,7 @@ const FilterComponent: React.FC<IUiModal> = (props: IUiModal) => {
                     Cancel
                 </Button>
                 <Button
-                    onClick={handleSetFilter}
+                    onClick={() => handleSetFilter()}
                     disabled={!isValidFilter}
                     color="primary"
                     variant="contained"

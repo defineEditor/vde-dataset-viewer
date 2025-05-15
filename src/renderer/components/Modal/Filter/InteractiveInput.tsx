@@ -142,9 +142,9 @@ const ValueAutocomplete: React.FC<{
             textValue =
                 condition.value === null || !Array.isArray(condition.value)
                     ? []
-                    : (condition.value.map((value) =>
-                          value.toString(),
-                      ) as string[]);
+                    : (condition.value
+                          .filter((value) => value !== null)
+                          .map((value) => value.toString()) as string[]);
         } else {
             textValue =
                 condition.value === null || !Array.isArray(condition.value)
@@ -165,9 +165,10 @@ const ValueAutocomplete: React.FC<{
     let valueOptions: string[] = [];
 
     if (columnName !== undefined && uniqueValues[columnName]) {
-        valueOptions = uniqueValues[columnName].map((value) =>
-            value === null ? 'null' : value.toString(),
-        );
+        // Do not show null in multiselection, nulls should be handled by separate condition
+        valueOptions = uniqueValues[columnName]
+            .filter((value) => value !== null)
+            .map((value) => value.toString());
     }
 
     return (
