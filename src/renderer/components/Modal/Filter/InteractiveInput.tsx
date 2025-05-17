@@ -136,26 +136,30 @@ const ValueAutocomplete: React.FC<{
 }) => {
     const columnType = columnTypes[condition.variable.toLowerCase()];
     const isMultiple = ['in', 'notin'].includes(condition.operator);
-    let textValue: string | string[];
-    if (isMultiple) {
-        if (['number', 'boolean'].includes(columnType)) {
-            textValue =
-                condition.value === null || !Array.isArray(condition.value)
+    const [inputValue, setInputValue] = React.useState<string | undefined>(
+        undefined,
+    );
+
+    const textValue = React.useMemo(() => {
+        if (isMultiple) {
+            setInputValue('');
+            if (['number', 'boolean'].includes(columnType)) {
+                return condition.value === null ||
+                    !Array.isArray(condition.value)
                     ? []
                     : (condition.value
                           .filter((value) => value !== null)
                           .map((value) => value.toString()) as string[]);
-        } else {
-            textValue =
-                condition.value === null || !Array.isArray(condition.value)
-                    ? []
-                    : (condition.value as string[]);
+            }
+            return condition.value === null || !Array.isArray(condition.value)
+                ? []
+                : (condition.value as string[]);
         }
-    } else if (['number', 'boolean'].includes(columnType)) {
-        textValue = condition.value === null ? '' : condition.value.toString();
-    } else {
-        textValue = condition.value as string;
-    }
+        if (['number', 'boolean'].includes(columnType)) {
+            return condition.value === null ? '' : condition.value.toString();
+        }
+        return condition.value as string;
+    }, [isMultiple, columnType, condition.value]);
 
     // Get proper column name
     const columnName = columnNames.find(
@@ -178,6 +182,10 @@ const ValueAutocomplete: React.FC<{
             sx={styles.valueSelect}
             options={valueOptions}
             value={textValue}
+            inputValue={inputValue}
+            onInputChange={(_event, newInputValue) => {
+                setInputValue(newInputValue);
+            }}
             filterOptions={(options, state) => {
                 const filteredOptions = options.filter((option) =>
                     option
@@ -341,6 +349,19 @@ const InteractiveInput: React.FC<{
                 const newCondition = updateConditionValue(
                     conditions[index],
                     value || [],
+                    columnTypes,
+                );
+                const newConditions = [...conditions];
+                newConditions[index] = newCondition;
+                const newFilter = {
+                    conditions: newConditions,
+                    connectors,
+                };
+                onChange(newFilter);
+            } else if (reason === 'clear') {
+                const newCondition = updateConditionValue(
+                    conditions[index],
+                    [],
                     columnTypes,
                 );
                 const newConditions = [...conditions];
