@@ -1,5 +1,9 @@
-import React, { useState, useMemo } from 'react';
-import { TextField, Autocomplete } from '@mui/material';
+import React, { useState, useMemo, useEffect } from 'react';
+import {
+    TextField,
+    Autocomplete,
+    AutocompleteInputChangeReason,
+} from '@mui/material';
 import Filter, { ColumnMetadata } from 'js-array-filter';
 import { useAppSelector } from 'renderer/redux/hooks';
 
@@ -44,13 +48,17 @@ const ManualInput: React.FC<{
         if (error) {
             setError(false);
         }
-        if (filterForValidation.validateFilterString(value)) {
+        handleSetInputValue(value);
+    };
+
+    // Check filter on change
+    useEffect(() => {
+        if (filterForValidation.validateFilterString(inputValue)) {
             setWarning(false);
         } else {
             setWarning(true);
         }
-        handleSetInputValue(value);
-    };
+    }, [inputValue, filterForValidation]);
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
@@ -63,7 +71,7 @@ const ManualInput: React.FC<{
     const handleRecentFilterChange = (
         event: React.SyntheticEvent,
         value: string | null,
-        reason: string,
+        reason: AutocompleteInputChangeReason,
     ) => {
         if (reason === 'selectOption') {
             handleSetInputValue(value || '');
@@ -79,8 +87,15 @@ const ManualInput: React.FC<{
             }
             // Prevent the Enter from activating the filter
             event.stopPropagation();
+        } else if (reason === 'clear') {
+            if (error) {
+                setError(false);
+            }
+            if (warning) {
+                setWarning(false);
+            }
         }
-        if (value) {
+        if (value || value === '') {
             handleSetInputValue(value);
         }
     };
