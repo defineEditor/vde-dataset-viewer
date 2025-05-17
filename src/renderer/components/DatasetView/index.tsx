@@ -220,14 +220,19 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     const handleMouseOver = (rowIndex: number, columnIndex: number) => {
         if (selecting && startCell) {
             const newHighlightedCells: { row: number; column: number }[] = [];
-            const startRow = Math.min(startCell.row, rowIndex);
-            const endRow = Math.max(startCell.row, rowIndex);
+            let startRow = Math.min(startCell.row, rowIndex);
+            let endRow = Math.max(startCell.row, rowIndex);
             // If user hovers on the row number, highlight the entire row
             let startColumn;
             let endColumn;
             if (columnIndex === 0) {
                 startColumn = 0;
                 endColumn = visibleColumns.length - 1;
+            } else if (rowIndex === 0) {
+                startColumn = Math.min(startCell.column, columnIndex);
+                endColumn = Math.max(startCell.column, columnIndex);
+                startRow = 0;
+                endRow = rows.length - 1;
             } else {
                 startColumn = Math.min(startCell.column, columnIndex);
                 endColumn = Math.max(startCell.column, columnIndex);

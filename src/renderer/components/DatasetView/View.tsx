@@ -65,7 +65,7 @@ const styles = {
         display: 'flex',
     },
     tableHeaderCell: {
-        padding: 1,
+        padding: 0,
         fontFamily: 'Roboto Mono',
         display: 'flex',
         position: 'relative',
@@ -75,6 +75,12 @@ const styles = {
     tableHeaderLabel: {
         width: '100%',
         textAlign: 'center',
+        flex: 1,
+        justifyContent: 'center',
+    },
+    tableHeaderText: {
+        py: 1,
+        pl: 1,
     },
     tableCellDynamic: {
         border: '1px solid rgba(224, 224, 224, 1)',
@@ -303,6 +309,12 @@ const DatasetViewUI: React.FC<{
                                                     },
                                                 ]);
                                             }}
+                                            onMouseDown={() =>
+                                                handleMouseDown(0, vc.index + 1)
+                                            }
+                                            onMouseOver={() =>
+                                                handleMouseOver(0, vc.index + 1)
+                                            }
                                             active={
                                                 !!sorting.find(
                                                     (sort) =>
@@ -317,11 +329,15 @@ const DatasetViewUI: React.FC<{
                                                     ? 'desc'
                                                     : 'asc'
                                             }
+                                            sx={styles.tableHeaderLabel}
                                         >
-                                            {flexRender(
-                                                header.column.columnDef.header,
-                                                header.getContext(),
-                                            )}
+                                            <Box sx={styles.tableHeaderText}>
+                                                {flexRender(
+                                                    header.column.columnDef
+                                                        .header,
+                                                    header.getContext(),
+                                                )}
+                                            </Box>
                                             {showTypeIcons &&
                                                 getTypeIcon(
                                                     header.column.columnDef.meta
