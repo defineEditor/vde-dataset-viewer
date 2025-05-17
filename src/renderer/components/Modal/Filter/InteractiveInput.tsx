@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
     TextField,
     Button,
@@ -138,9 +138,14 @@ const ValueAutocomplete: React.FC<{
     const isMultiple = ['in', 'notin'].includes(condition.operator);
     const [inputValue, setInputValue] = React.useState<string | undefined>('');
 
+    useEffect(() => {
+        if (isMultiple && condition.value) {
+            setInputValue('');
+        }
+    }, [isMultiple, condition.value]);
+
     const textValue = React.useMemo(() => {
         if (isMultiple) {
-            setInputValue('');
             if (['number', 'boolean'].includes(columnType)) {
                 return condition.value === null ||
                     !Array.isArray(condition.value)
