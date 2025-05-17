@@ -526,7 +526,7 @@ const FilterComponent: React.FC<IUiModal> = (props: IUiModal) => {
                         {recentFiltersValidated
                             .slice(0, 5)
                             .map((filterItem, index) => (
-                                <>
+                                <React.Fragment key={filterItem.date}>
                                     <ListItem sx={styles.filterItem}>
                                         <ListItemAvatar>
                                             <Chip
@@ -571,7 +571,7 @@ const FilterComponent: React.FC<IUiModal> = (props: IUiModal) => {
                                     {index <
                                         Math.min(recentFilters.length, 10) -
                                             1 && <Divider />}
-                                </>
+                                </React.Fragment>
                             ))}
                     </List>
                 </Stack>

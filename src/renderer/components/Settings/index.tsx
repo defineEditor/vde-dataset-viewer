@@ -17,8 +17,8 @@ import { resetSettings, setSettings } from 'renderer/redux/slices/settings';
 import { openSnackbar } from 'renderer/redux/slices/ui';
 import AppContext from 'renderer/utils/AppContext';
 import store from 'renderer/redux/store';
-import { ISettings } from 'interfaces/common';
 import { styles } from 'renderer/components/Settings/styles';
+import { ISettings } from 'interfaces/common';
 import { Viewer } from 'renderer/components/Settings/Viewer';
 import { Converter } from 'renderer/components/Settings/Converter';
 import { Other } from 'renderer/components/Settings/Other';
@@ -126,7 +126,7 @@ const Settings: React.FC = () => {
 
     return (
         <Paper sx={styles.paper}>
-            <Stack sx={styles.main} spacing={2} justifyContent="space-between">
+            <Box sx={styles.contentContainer}>
                 <Tabs
                     value={tabIndex}
                     onChange={handleTabChange}
@@ -136,24 +136,28 @@ const Settings: React.FC = () => {
                     <Tab label="Converter" sx={styles.tab} />
                     <Tab label="Other" sx={styles.tab} />
                 </Tabs>
-                <Box hidden={tabIndex !== 0} sx={styles.tabPanel}>
-                    <Viewer
-                        settings={newSettings}
-                        onSettingChange={handleInputChange}
-                    />
+                <Box sx={styles.scrollableContent}>
+                    <Box hidden={tabIndex !== 0} sx={styles.tabPanel}>
+                        <Viewer
+                            settings={newSettings}
+                            onSettingChange={handleInputChange}
+                        />
+                    </Box>
+                    <Box hidden={tabIndex !== 1} sx={styles.tabPanel}>
+                        <Converter
+                            settings={newSettings}
+                            onSettingChange={handleInputChange}
+                        />
+                    </Box>
+                    <Box hidden={tabIndex !== 2} sx={styles.tabPanel}>
+                        <Other
+                            settings={newSettings}
+                            onSettingChange={handleInputChange}
+                        />
+                    </Box>
                 </Box>
-                <Box hidden={tabIndex !== 1} sx={styles.tabPanel}>
-                    <Converter
-                        settings={newSettings}
-                        onSettingChange={handleInputChange}
-                    />
-                </Box>
-                <Box hidden={tabIndex !== 2} sx={styles.tabPanel}>
-                    <Other
-                        settings={newSettings}
-                        onSettingChange={handleInputChange}
-                    />
-                </Box>
+            </Box>
+            <Box sx={styles.fixedButtonBar}>
                 <Stack direction="row" spacing={2} sx={styles.buttonContainer}>
                     <Button onClick={handleReset} color="primary">
                         Reset to default
@@ -173,7 +177,7 @@ const Settings: React.FC = () => {
                         Save
                     </Button>
                 </Stack>
-            </Stack>
+            </Box>
             <Dialog open={openResetDialog} onClose={handleCloseResetDialog}>
                 <DialogTitle>Confirm Reset</DialogTitle>
                 <DialogContent>

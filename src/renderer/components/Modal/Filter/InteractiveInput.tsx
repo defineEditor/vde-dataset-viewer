@@ -136,9 +136,7 @@ const ValueAutocomplete: React.FC<{
 }) => {
     const columnType = columnTypes[condition.variable.toLowerCase()];
     const isMultiple = ['in', 'notin'].includes(condition.operator);
-    const [inputValue, setInputValue] = React.useState<string | undefined>(
-        undefined,
-    );
+    const [inputValue, setInputValue] = React.useState<string | undefined>('');
 
     const textValue = React.useMemo(() => {
         if (isMultiple) {

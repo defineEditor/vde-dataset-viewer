@@ -107,7 +107,7 @@ export const Converter: React.FC<ConverterProps> = ({
                         {...params}
                         label="Date Formats"
                         helperText="Date formats used for conversion"
-                        sx={styles.inputField}
+                        sx={styles.inputFieldLong}
                     />
                 )}
             />
@@ -146,7 +146,7 @@ export const Converter: React.FC<ConverterProps> = ({
                         {...params}
                         label="Time Formats"
                         helperText="Time formats used for conversion"
-                        sx={styles.inputField}
+                        sx={styles.inputFieldLong}
                     />
                 )}
             />
@@ -186,7 +186,7 @@ export const Converter: React.FC<ConverterProps> = ({
                         {...params}
                         label="Datetime Formats"
                         helperText="Datetime formats used for conversion"
-                        sx={styles.inputField}
+                        sx={styles.inputFieldLong}
                     />
                 )}
             />
