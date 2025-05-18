@@ -5,6 +5,7 @@ import {
     ISettings,
     IApi,
     ConverterData,
+    ValidatorData,
 } from 'interfaces/common';
 import { paths } from 'misc/constants';
 
@@ -44,6 +45,12 @@ export const settings: ISettings = {
         inEncoding: 'utf8',
         dragoverAnimation: true,
         disableUiAnimation: false,
+    },
+    validator: {
+        validatorPath: '',
+        poolSize: 4,
+        cachePath: '',
+        localRulesPath: '',
     },
 };
 export const ui: IUi = {
@@ -92,6 +99,25 @@ export const converter: ConverterData = {
     sourceDir: '',
 };
 
+export const validator: ValidatorData = {
+    info: {
+        version: '',
+        standards: [],
+        controlledTerminology: [],
+    },
+    configuration: {
+        whodrugPath: '',
+        meddraPath: '',
+        loincPath: '',
+        medrtPath: '',
+        uniiPath: '',
+        snomedVersion: '',
+        snomedUrl: '',
+        snomedEdition: '',
+        customStandard: false,
+    },
+};
+
 export const data: IData = {
     loadedRecords: {},
     recentFolders: [],
@@ -114,6 +140,7 @@ export const data: IData = {
         ],
     },
     converter,
+    validator,
 };
 
 export const api: IApi = {

@@ -21,6 +21,7 @@ import { styles } from 'renderer/components/Settings/styles';
 import { ISettings } from 'interfaces/common';
 import { Viewer } from 'renderer/components/Settings/Viewer';
 import { Converter } from 'renderer/components/Settings/Converter';
+import { Validator } from 'renderer/components/Settings/Validator';
 import { Other } from 'renderer/components/Settings/Other';
 
 const Settings: React.FC = () => {
@@ -134,6 +135,7 @@ const Settings: React.FC = () => {
                 >
                     <Tab label="Viewer" sx={styles.tab} />
                     <Tab label="Converter" sx={styles.tab} />
+                    <Tab label="Validation" sx={styles.tab} />
                     <Tab label="Other" sx={styles.tab} />
                 </Tabs>
                 <Box sx={styles.scrollableContent}>
@@ -150,6 +152,12 @@ const Settings: React.FC = () => {
                         />
                     </Box>
                     <Box hidden={tabIndex !== 2} sx={styles.tabPanel}>
+                        <Validator
+                            settings={newSettings}
+                            onSettingChange={handleInputChange}
+                        />
+                    </Box>
+                    <Box hidden={tabIndex !== 3} sx={styles.tabPanel}>
                         <Other
                             settings={newSettings}
                             onSettingChange={handleInputChange}

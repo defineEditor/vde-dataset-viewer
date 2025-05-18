@@ -1,4 +1,8 @@
-import { ConvertedFileInfo, ConvertTask } from 'interfaces/main';
+import {
+    ConvertedFileInfo,
+    ConverterProcessTask,
+    ConvertTask,
+} from 'interfaces/main';
 import DatasetXpt from 'xport-js';
 import DatasetJson, { ItemDataArray } from 'js-stream-dataset-json';
 import path from 'path';
@@ -537,19 +541,13 @@ const convertJson = async (
 
 process.parentPort.once(
     'message',
-    async (messageData: {
-        data: {
-            processId: string;
-            file: ConvertedFileInfo;
-            options: ConvertTask['options'];
-        };
-    }) => {
+    async (messageData: { data: ConverterProcessTask }) => {
         const { data } = messageData;
-        const { processId, file, options } = data;
+        const { id, file, options } = data;
 
         const sendMessage = (progress: number) => {
             process.parentPort.postMessage({
-                id: processId,
+                id,
                 progress,
             });
         };

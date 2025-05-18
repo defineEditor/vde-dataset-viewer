@@ -1,18 +1,18 @@
 import { UtilityProcess, utilityProcess, app, BrowserWindow } from 'electron';
 import path from 'path';
 import fs from 'fs';
-import { ConvertedFileInfo, ConvertTask, MainTask } from 'interfaces/common';
-import { MainTaskType, mainTaskTypes } from 'misc/constants';
+import {
+    ConvertTask,
+    ValidateTask,
+    MainTask,
+    MainProcessTask,
+} from 'interfaces/common';
+import { mainTaskTypes } from 'misc/constants';
 
 class TaskManager {
     private processes: Map<string, UtilityProcess>;
 
-    private taskQueue: {
-        type: MainTaskType;
-        index: number;
-        file: ConvertedFileInfo;
-        options: ConvertTask['options'];
-    }[];
+    private taskQueue: MainProcessTask[];
 
     private running: number;
 
@@ -37,46 +37,41 @@ class TaskManager {
             const next = this.taskQueue.shift();
             if (next) {
                 this.running++;
-                this.startProcess(
-                    next.type,
-                    next.index,
-                    next.file,
-                    next.options,
-                );
+                this.startProcess(next);
             }
         }
     }
 
-    private async startProcess(
-        type: MainTaskType,
-        index: number,
-        file: ConvertedFileInfo,
-        options: ConvertTask['options'],
-    ): Promise<void> {
+    private async startProcess(processTask: MainProcessTask): Promise<void> {
+        const { type, id, options } = processTask;
         const process = this.createProcess(type);
-        const processId = `${type}-${index.toString()}`;
-        this.processes.set(processId, process);
-        // Version to the options object
-        process.postMessage({
-            processId,
-            file,
-            options: { ...options, appVersion: app.getVersion() },
-        });
+        this.processes.set(id, process);
+        // Add AppVersion as it is available only in main process
+        if (type === mainTaskTypes.CONVERT) {
+            process.postMessage({
+                ...processTask,
+                options: {
+                    ...options,
+                    appVersion: app.getVersion(),
+                },
+            });
+        } else if (type === mainTaskTypes.VALIDATE) {
+            process.postMessage(processTask);
+        }
 
         return new Promise((resolve) => {
             process.on('message', (progressResult) => {
-                const { id, progress } = progressResult;
                 if (this.mainWindow === null) {
                     return;
                 }
                 this.mainWindow.webContents.send('renderer:taskProgress', {
-                    id,
-                    progress,
+                    id: progressResult.id,
+                    progress: progressResult.progress,
                 });
             });
 
             process.once('exit', (code) => {
-                this.processes.delete(processId);
+                this.processes.delete(id);
                 this.running--;
                 if (code !== 0) {
                     // Handle error
@@ -92,9 +87,14 @@ class TaskManager {
         mainWindow: BrowserWindow,
     ): Promise<boolean | { error: string }> {
         this.mainWindow = mainWindow;
-        this.maxThreads = task.options?.threads || 1;
         if (task.type === mainTaskTypes.CONVERT) {
+            this.maxThreads = task.options?.threads || 1;
             const result = await this.handleConveterTask(task);
+            return result;
+        }
+        if (task.type === mainTaskTypes.VALIDATE) {
+            this.maxThreads = task.options?.poolSize || 1;
+            const result = await this.handleValidateTask(task);
             return result;
         }
         return false;
@@ -111,10 +111,50 @@ class TaskManager {
             task.files.forEach((file, index) => {
                 this.taskQueue.push({
                     type: task.type,
-                    index,
+                    id: `${task.type}.${index.toString()}`,
                     file,
                     options: task.options,
                 });
+            });
+
+            await this.processQueue();
+
+            // Wait till all tasks are completed
+            await new Promise<void>((resolve) => {
+                const checkTasks = () => {
+                    if (!this.hasPendingTasks()) {
+                        resolve();
+                    } else {
+                        setTimeout(checkTasks, 500);
+                    }
+                };
+                checkTasks();
+            });
+            return true;
+        } catch (error) {
+            if (error instanceof Error) {
+                return { error: error.message };
+            }
+            return false;
+        }
+    }
+
+    public async handleValidateTask(
+        task: ValidateTask,
+    ): Promise<boolean | { error: string }> {
+        try {
+            // Check validator exists and is a executable
+            if (
+                !fs.existsSync(task.options.validatorPath) ||
+                !fs.statSync(task.options.validatorPath).isFile()
+            ) {
+                return { error: 'Destination folder does not exist' };
+            }
+            this.taskQueue.push({
+                type: task.type,
+                id: task.task,
+                options: task.options,
+                configuration: task.configuration,
             });
 
             await this.processQueue();

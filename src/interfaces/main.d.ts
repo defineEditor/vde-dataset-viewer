@@ -13,6 +13,13 @@ export interface SettingsConverter {
     csvEpoch: string;
 }
 
+export interface SettingsValidator {
+    validatorPath: string;
+    poolSize: number;
+    cachePath: string;
+    localRulesPath: string;
+}
+
 export interface ICheckUpdateResult {
     newUpdated: boolean;
     update?: UpdateCheckResult['updateInfo'];
@@ -26,7 +33,7 @@ export interface FileInfo {
     fullPath: string;
     folder: string;
     filename: string;
-    format: 'xpt' | 'sas7bdat' | OutputFileExtension;
+    format: 'xpt' | 'sas7bdat' | OutputFileExtension | '';
     size: number;
     lastModified: number;
     datasetJsonVersion?: string;
@@ -67,11 +74,52 @@ export interface ConvertTask {
     options: ConvertTaskOptions;
 }
 
+export type ValidateSubTask =
+    | 'validate'
+    | 'getVersion'
+    | 'getStandards'
+    | 'getTerminology';
+
+export interface ValidatorConfig {
+    whodrugPath: string;
+    meddraPath: string;
+    loincPath: string;
+    medrtPath: string;
+    uniiPath: string;
+    snomedVersion: string;
+    snomedUrl: string;
+    snomedEdition: string;
+    customStandard: boolean;
+}
+
+export interface ValidateTask {
+    type: typeof mainTaskTypes.VALIDATE;
+    options: SettingsValidator;
+    task: ValidateSubTask;
+    configuration?: ValidatorConfig;
+}
+
 export interface ProgressInfo {
     id: string;
     progress: number;
 }
 
-export type MainTask = ConvertTask;
+export interface ConverterProcessTask {
+    type: ConvertTask['type'];
+    id: string;
+    file: ConvertedFileInfo;
+    options: ConvertTask['options'];
+}
+
+export interface ValidatorProcessTask {
+    type: ValidateTask['type'];
+    id: string;
+    options: SettingsValidator;
+    configuration?: ValidatorConfig;
+}
+
+export type MainProcessTask = ConverterProcessTask | ValidatorProcessTask;
+
+export type MainTask = ConvertTask | ValidateTask;
 
 export { UpdateCheckResult };

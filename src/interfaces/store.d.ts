@@ -1,5 +1,10 @@
 import { BasicFilter, IApiStudy, IApiStudyDataset } from 'interfaces/api';
-import { ICheckUpdateResult, SettingsConverter } from 'interfaces/main';
+import {
+    ICheckUpdateResult,
+    SettingsConverter,
+    SettingsValidator,
+    ValidatorConfig,
+} from 'interfaces/main';
 import { modals, ModalType, AllowedPathnames } from 'misc/constants';
 import { ConversionConfig } from 'interfaces/converter';
 
@@ -24,6 +29,7 @@ export interface ISettings {
         showTypeIcons: boolean;
     };
     converter: SettingsConverter;
+    validator: SettingsValidator;
     other: {
         checkForUpdates: boolean;
         loadingAnimation: 'santa' | 'cat' | 'dog' | 'normal' | 'random';
@@ -132,6 +138,21 @@ export interface ConverterData {
     destinationDir: string;
     sourceDir: string;
 }
+export interface ValidatorData {
+    info: {
+        version: string;
+        standards: {
+            name: string;
+            version: string;
+            subStandard?: string;
+        }[];
+        controlledTerminology: {
+            name: string;
+            version: string;
+        }[];
+    };
+    configuration: ValidatorConfig;
+}
 
 export interface IData {
     loadedRecords: {
@@ -159,6 +180,7 @@ export interface IData {
         savedMasks: IMask[];
     };
     converter: ConverterData;
+    validator: ValidatorData;
 }
 
 export interface IApiRecord {
