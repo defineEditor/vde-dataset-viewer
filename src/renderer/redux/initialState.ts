@@ -103,7 +103,7 @@ export const validator: ValidatorData = {
     info: {
         version: '',
         standards: [],
-        controlledTerminology: [],
+        terminology: [],
     },
     configuration: {
         whodrugPath: '',

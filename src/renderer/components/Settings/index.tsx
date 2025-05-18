@@ -15,6 +15,10 @@ import {
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { resetSettings, setSettings } from 'renderer/redux/slices/settings';
 import { openSnackbar } from 'renderer/redux/slices/ui';
+import {
+    resetValidatorInfo,
+    setValidatorData,
+} from 'renderer/redux/slices/data';
 import AppContext from 'renderer/utils/AppContext';
 import store from 'renderer/redux/store';
 import { styles } from 'renderer/components/Settings/styles';
@@ -27,8 +31,13 @@ import { Other } from 'renderer/components/Settings/Other';
 const Settings: React.FC = () => {
     const [tabIndex, setTabIndex] = useState(0);
     const initialSettings = useAppSelector((state) => state.settings);
+    const initialValidatorInfo = useAppSelector(
+        (state) => state.data.validator.info,
+    );
     const dispatch = useAppDispatch();
     const [newSettings, setNewSettings] = useState<ISettings>(initialSettings);
+    const [newValidatorInfo, setNewValidatorInfo] =
+        useState(initialValidatorInfo);
     const [reloadSettings, setReloadSettings] = useState(false);
     const [openResetDialog, setOpenResetDialog] = useState(false);
 
@@ -43,6 +52,19 @@ const Settings: React.FC = () => {
 
     const handleSave = React.useCallback(() => {
         dispatch(setSettings(newSettings));
+        // If validator path was removed, reset the validator info
+        if (
+            newSettings.validator.validatorPath === '' &&
+            initialSettings.validator.validatorPath !== ''
+        ) {
+            dispatch(resetValidatorInfo());
+        } else if (
+            JSON.stringify(initialValidatorInfo) !==
+            JSON.stringify(newValidatorInfo)
+        ) {
+            // Save validator info if it was changed
+            dispatch(setValidatorData({ info: newValidatorInfo }));
+        }
         dispatch(
             openSnackbar({
                 message: 'Settings saved',
@@ -52,7 +74,14 @@ const Settings: React.FC = () => {
         );
         const state = store.getState();
         apiService.saveLocalStore({ reduxStore: state });
-    }, [dispatch, newSettings, apiService]);
+    }, [
+        dispatch,
+        newSettings,
+        newValidatorInfo,
+        apiService,
+        initialSettings.validator.validatorPath,
+        initialValidatorInfo,
+    ]);
 
     const handleCancel = () => {
         setSettings(initialSettings);
@@ -155,6 +184,11 @@ const Settings: React.FC = () => {
                         <Validator
                             settings={newSettings}
                             onSettingChange={handleInputChange}
+                            validatorInfo={newValidatorInfo}
+                            onChangeValidatorInfo={setNewValidatorInfo}
+                            initialValidatorPath={
+                                initialSettings.validator.validatorPath
+                            }
                         />
                     </Box>
                     <Box hidden={tabIndex !== 3} sx={styles.tabPanel}>

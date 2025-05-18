@@ -64,10 +64,31 @@ class TaskManager {
                 if (this.mainWindow === null) {
                     return;
                 }
-                this.mainWindow.webContents.send('renderer:taskProgress', {
-                    id: progressResult.id,
-                    progress: progressResult.progress,
-                });
+                if (type === mainTaskTypes.VALIDATE) {
+                    if (progressResult.progress === 100) {
+                        this.mainWindow.webContents.send(
+                            'renderer:taskProgress',
+                            {
+                                id: progressResult.id,
+                                progress: progressResult.progress,
+                                result: progressResult.result,
+                            },
+                        );
+                    } else {
+                        this.mainWindow.webContents.send(
+                            'renderer:taskProgress',
+                            {
+                                id: progressResult.id,
+                                progress: progressResult.progress,
+                            },
+                        );
+                    }
+                } else if (type === mainTaskTypes.CONVERT) {
+                    this.mainWindow.webContents.send('renderer:taskProgress', {
+                        id: progressResult.id,
+                        progress: progressResult.progress,
+                    });
+                }
             });
 
             process.once('exit', (code) => {

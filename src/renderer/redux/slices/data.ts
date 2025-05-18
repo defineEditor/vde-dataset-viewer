@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { data as initialData } from 'renderer/redux/initialState';
 import { IRecentFile, BasicFilter, ConverterData } from 'interfaces/common';
-import { IMask } from 'interfaces/store';
+import { IMask, ValidatorData } from 'interfaces/store';
 import deepEqual from 'renderer/utils/deepEqual';
 import getFolderName from 'renderer/utils/getFolderName';
 import { closeDataset, openDataset } from 'renderer/redux/slices/ui';
@@ -127,6 +127,20 @@ export const dataSlice = createSlice({
             state.maskData.currentMask = null;
             return state;
         },
+        setValidatorData: (
+            state,
+            action: PayloadAction<Partial<ValidatorData>>,
+        ) => {
+            // Set validator info
+            state.validator = {
+                ...state.validator,
+                ...action.payload,
+            };
+        },
+        resetValidatorInfo: (state) => {
+            // Reset validator info
+            state.validator.info = initialData.validator.info;
+        },
     },
     extraReducers: (builder) => {
         builder.addCase(openDataset, (state, action) => {
@@ -193,6 +207,8 @@ export const {
     saveMask,
     deleteMask,
     clearMask,
+    setValidatorData,
+    resetValidatorInfo,
 } = dataSlice.actions;
 
 export default dataSlice.reducer;

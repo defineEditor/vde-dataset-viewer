@@ -74,11 +74,7 @@ export interface ConvertTask {
     options: ConvertTaskOptions;
 }
 
-export type ValidateSubTask =
-    | 'validate'
-    | 'getVersion'
-    | 'getStandards'
-    | 'getTerminology';
+export type ValidateSubTask = 'validate' | 'getInfo';
 
 export interface ValidatorConfig {
     whodrugPath: string;
@@ -98,10 +94,16 @@ export interface ValidateTask {
     task: ValidateSubTask;
     configuration?: ValidatorConfig;
 }
+export interface ValidateGetInfoResult {
+    version: string;
+    standards: string[];
+    terminology: string[];
+}
 
 export interface ProgressInfo {
     id: string;
     progress: number;
+    result?: ValidateGetInfoResult;
 }
 
 export interface ConverterProcessTask {

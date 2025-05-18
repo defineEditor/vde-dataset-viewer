@@ -1,5 +1,10 @@
-import { ValidatorProcessTask, ValidateSubTask } from 'interfaces/main';
+import {
+    ValidatorProcessTask,
+    ValidateSubTask,
+    ProgressInfo,
+} from 'interfaces/common';
 import fs from 'fs';
+import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
@@ -56,9 +61,7 @@ const getVersion = async (validatorPath: string): Promise<string> => {
  * @param validatorPath Path to the Core CLI executable
  * @returns Promise that resolves to an array of standards
  */
-const getStandards = async (
-    validatorPath: string,
-): Promise<{ standard: string; version: string }[]> => {
+const getStandards = async (validatorPath: string): Promise<string[]> => {
     // Run the Core CLI with the list-rule-sets command
     const { stdout, stderr } = await execAsync(
         `"${validatorPath}" list-rule-sets`,
@@ -70,16 +73,13 @@ const getStandards = async (
 
     // Parse the output to extract standards
     // Output format may vary, adjust parsing as needed based on actual output
-    const standards: { standard: string; version: string }[] = [];
+    const standards: string[] = [];
     const lines = stdout.split('\n');
 
     for (const line of lines) {
-        const trimmedLine = line.trim();
-        // Extract standard/version format (e.g., "sdtmig/3-4")
-        standards.push({
-            standard: trimmedLine.split(',')[0],
-            version: trimmedLine.split(',')[1],
-        });
+        if (line.trim() !== '') {
+            standards.push(line.trim());
+        }
     }
 
     return standards;
@@ -106,7 +106,9 @@ const getControlledTerminology = async (
     const lines = stdout.split('\n');
 
     for (const line of lines) {
-        terminologies.push(line.trim());
+        if (line.trim() !== '') {
+            terminologies.push(line.trim());
+        }
     }
 
     return terminologies;
@@ -114,7 +116,9 @@ const getControlledTerminology = async (
 
 process.parentPort.once(
     'message',
-    async (messageData: { data: ValidatorProcessTask }) => {
+    async (messageData: {
+        data: ValidatorProcessTask;
+    }): Promise<ProgressInfo> => {
         const { data } = messageData;
         const { id, options } = data;
         // Use id as the task type since it aligns with ValidateSubTask values
@@ -148,45 +152,35 @@ process.parentPort.once(
             process.exit(1);
         }
 
+        // Get folder of the validator executable
+        const validatorFolder = path.dirname(validatorPath);
+
+        // Change current working directory to the validator folder
+        process.chdir(validatorFolder);
+
         try {
-            sendMessage(10);
-
             // Execute different commands based on the task
-            let result:
-                | string
-                | { standard: string; version: string }[]
-                | string[];
             switch (task) {
-                case 'getVersion':
-                    result = await getVersion(validatorPath);
+                case 'getInfo': {
+                    const version = await getVersion(validatorPath);
+                    const standards = await getStandards(validatorPath);
+                    const terminology =
+                        await getControlledTerminology(validatorPath);
                     process.parentPort.postMessage({
                         id: processId,
-                        result,
+                        result: {
+                            version,
+                            standards,
+                            terminology,
+                        },
                         progress: 100,
                     });
                     break;
-
-                case 'getStandards':
-                    result = await getStandards(validatorPath);
-                    process.parentPort.postMessage({
-                        id: processId,
-                        result,
-                        progress: 100,
-                    });
-                    break;
-
-                case 'getTerminology':
-                    result = await getControlledTerminology(validatorPath);
-                    process.parentPort.postMessage({
-                        id: processId,
-                        result,
-                        progress: 100,
-                    });
-                    break;
-
+                }
                 case 'validate':
                     // Implementation for validation would go here
                     // This would need to process configuration and other options
+                    sendMessage(10);
                     process.parentPort.postMessage({
                         id: processId,
                         error: 'Validation not implemented yet',

@@ -141,15 +141,8 @@ export interface ConverterData {
 export interface ValidatorData {
     info: {
         version: string;
-        standards: {
-            name: string;
-            version: string;
-            subStandard?: string;
-        }[];
-        controlledTerminology: {
-            name: string;
-            version: string;
-        }[];
+        standards: string[];
+        terminology: string[];
     };
     configuration: ValidatorConfig;
 }
