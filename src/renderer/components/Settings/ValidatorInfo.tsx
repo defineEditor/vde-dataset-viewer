@@ -46,15 +46,19 @@ export const ValidatorInfo: React.FC<ValidatorInfoProps> = ({
                     },
                 }}
                 select
+                value=""
                 onChange={() => {}}
             >
                 {validatorInfo.standards.map((standard) => (
-                    <MenuItem value={standard}>{standard}</MenuItem>
+                    <MenuItem value={standard} key={standard}>
+                        {standard}
+                    </MenuItem>
                 ))}
             </TextField>
             <TextField
                 label="Controlled Terminologies"
                 disabled={validatorInfo.terminology.length === 0}
+                value=""
                 slotProps={{
                     select: {
                         displayEmpty: true,
@@ -70,7 +74,9 @@ export const ValidatorInfo: React.FC<ValidatorInfoProps> = ({
                 onChange={() => {}}
             >
                 {validatorInfo.terminology.map((terminology) => (
-                    <MenuItem value={terminology}>{terminology}</MenuItem>
+                    <MenuItem value={terminology} key={terminology}>
+                        {terminology}
+                    </MenuItem>
                 ))}
             </TextField>
             <Button

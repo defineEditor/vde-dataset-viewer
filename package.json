@@ -247,7 +247,9 @@
             ]
         },
         "nsis": {
-            "artifactName": "${productName}.Setup.${version}.${ext}"
+            "artifactName": "${productName}.Setup.${version}.${ext}",
+            "allowToChangeInstallationDirectory": true,
+            "oneClick": false
         },
         "appImage": {
             "artifactName": "${productName}.${version}.${ext}"
