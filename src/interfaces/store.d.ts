@@ -61,7 +61,8 @@ export interface IUiModalGeneral extends IUiModalBase {
         | typeof modals.DATASETINFO
         | typeof modals.FILTER
         | typeof modals.VARIABLEINFO
-        | typeof modals.MASK;
+        | typeof modals.MASK
+        | typeof modals.VALIDATOR;
     data: {};
 }
 
@@ -111,6 +112,7 @@ export interface IUiControl {
 
 export interface IUiViewer {
     datasetInfoTab: 0 | 1;
+    validatorTab: 0 | 1;
     filterInputMode: 'manual' | 'interactive';
     sidebarOpen: boolean;
 }

@@ -59,6 +59,7 @@ export const ui: IUi = {
     currentPage: 0,
     viewer: {
         datasetInfoTab: 0,
+        validatorTab: 0,
         filterInputMode: 'manual',
         sidebarOpen: false,
     },

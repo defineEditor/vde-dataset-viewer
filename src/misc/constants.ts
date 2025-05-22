@@ -7,6 +7,7 @@ export const modals = {
     ERROR: 'ERROR',
     VARIABLEINFO: 'VARIABLEINFO',
     MASK: 'MASK',
+    VALIDATOR: 'VALIDATOR',
 } as const;
 
 export const paths = {

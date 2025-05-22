@@ -6,6 +6,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import FilterIcon from '@mui/icons-material/FilterAlt';
 import NextPlanOutlinedIcon from '@mui/icons-material/NextPlan';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import SettingsIcon from '@mui/icons-material/Settings';
 import {
     openDataset,
     openModal,
@@ -119,6 +120,9 @@ const Header: React.FC = () => {
         dispatch(toggleSidebar());
     }, [dispatch]);
 
+    const handleValidateClick = useCallback(() => {
+        dispatch(openModal({ type: modals.VALIDATOR, data: {} }));
+    }, [dispatch]);
     // Add shortcuts for actions
     useEffect(() => {
         const handleViewerToolbarKeyDown = (event: KeyboardEvent) => {
@@ -268,6 +272,16 @@ const Header: React.FC = () => {
                             color: 'primary.main',
                         }}
                     />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Data Validation" enterDelay={1000}>
+                <IconButton
+                    onClick={handleValidateClick}
+                    id="validateData"
+                    size="small"
+                    disabled={pathname !== paths.VIEWFILE}
+                >
+                    <SettingsIcon />
                 </IconButton>
             </Tooltip>
         </Stack>

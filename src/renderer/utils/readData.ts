@@ -77,8 +77,6 @@ const getData = async (
         return null;
     }
 
-    const startTime = performance.now();
-
     const itemData = (await apiService.getObservations(
         fileId,
         start,
@@ -87,10 +85,6 @@ const getData = async (
         filterColumns,
         filterData,
     )) as ITableRow[];
-
-    const endTime = performance.now();
-    const timeTaken = endTime - startTime;
-    console.log(`Time taken to fetch data: ${timeTaken / 1000} seconds`);
 
     const newHeader = getHeader(metadata, settings);
 

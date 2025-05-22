@@ -85,6 +85,11 @@ const styles = {
         color: 'primary.main',
         fontSize: '24px',
     },
+    titleBody: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
 };
 
 const MetadataTab: React.FC<{ metadata: DatasetJsonMetadata }> = ({
@@ -384,13 +389,7 @@ const DatasetInfo: React.FC<IUiModal> = (props: IUiModal) => {
             PaperProps={{ sx: { ...styles.dialog } }}
         >
             <DialogTitle sx={styles.title}>
-                <Box
-                    sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                    }}
-                >
+                <Box sx={styles.titleBody}>
                     <div>Dataset Information</div>
                     {datasetInfoTab === 1 && (
                         <TextField

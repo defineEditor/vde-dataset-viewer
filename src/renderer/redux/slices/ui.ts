@@ -139,6 +139,9 @@ export const uiSlice = createSlice({
         setDatasetInfoTab: (state, action: PayloadAction<0 | 1>) => {
             state.viewer.datasetInfoTab = action.payload;
         },
+        setValidatorTab: (state, action: PayloadAction<0 | 1>) => {
+            state.viewer.validatorTab = action.payload;
+        },
         setFilterInputMode: (
             state,
             action: PayloadAction<'manual' | 'interactive'>,
@@ -164,6 +167,7 @@ export const {
     setSelect,
     setPage,
     setDatasetInfoTab,
+    setValidatorTab,
     setFilterInputMode,
     toggleSidebar,
 } = uiSlice.actions;

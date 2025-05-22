@@ -17,16 +17,19 @@ const execAsync = promisify(exec);
  */
 const isExecutable = (filePath: string): boolean => {
     try {
-        // Check if file exists
         if (!fs.existsSync(filePath)) {
             return false;
         }
 
-        // Get file stats
         const stats = fs.statSync(filePath);
 
-        // Check if it's a file and has executable permissions
-        // 0o111 represents executable permissions (--x--x--x)
+        // Windows executables are typically .exe, .bat, .cmd files
+        if (process.platform === 'win32') {
+            const ext = path.extname(filePath).toLowerCase();
+            return stats.isFile() && ['.exe', '.bat', '.cmd'].includes(ext);
+        }
+
+        // Unix systems (macOS, Linux) - check for executable permissions
         // eslint-disable-next-line no-bitwise
         return stats.isFile() && Boolean(stats.mode & 0o111);
     } catch (error) {
