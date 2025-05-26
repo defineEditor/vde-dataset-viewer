@@ -18,10 +18,15 @@ import {
     MainTask,
     ProgressInfo,
     TableRowValue,
+    ValidatorConfig,
+    ValidateTask,
+    ConvertTask,
+    ConvertedFileInfo,
 } from 'interfaces/common';
 import store from 'renderer/redux/store';
 import transformData from 'renderer/services/transformData';
 import Filter from 'js-array-filter';
+import { mainTaskTypes } from 'misc/constants';
 import { setLoadedRecords } from 'renderer/redux/slices/data';
 
 class ApiService {
@@ -751,6 +756,94 @@ class ApiService {
     public getAppVersion = async (): Promise<string> => {
         const result = await window.electron.getAppVersion();
         return result;
+    };
+
+    public startValidation = async ({
+        fileId,
+        configuration,
+        settings,
+    }: {
+        fileId: string;
+        configuration: ValidatorConfig;
+        settings: ISettings;
+    }): Promise<boolean | { error: string }> => {
+        // Get the information about the file
+        const file = this.openedFiles.find(
+            (fileItem) => fileItem.fileId === fileId,
+        );
+
+        if (file === undefined) {
+            throw new Error(
+                'Trying to start validation on the file which is not opened',
+            );
+        }
+
+        // Check if conversion is needed;
+        const format = file.path.replace(/.*\.\w+/, '$1');
+
+        let conversionTask: ConvertTask | null = null;
+
+        if (format === 'ndjson' || format === 'sas7bdat') {
+            // Form a conversion task
+            const outputFormat = 'DJ1.1';
+            const destinationDir = '__TEMP__';
+
+            const fileInfo: ConvertedFileInfo = {
+                fullPath: file.path,
+                folder: '',
+                filename: file.name,
+                format,
+                size: 0,
+                lastModified: Date.now(),
+                datasetJsonVersion: '',
+                outputName: `${file.name}.json`,
+            };
+
+            conversionTask = {
+                type: mainTaskTypes.CONVERT,
+                files: [fileInfo],
+                options: {
+                    prettyPrint: false,
+                    inEncoding: settings.other.inEncoding,
+                    outEncoding: settings.other.inEncoding,
+                    outputFormat,
+                    destinationDir,
+                    updateMetadata: false,
+                    metadata: {},
+                    ...settings.converter,
+                },
+            };
+        }
+
+        // Form a validation task
+        const validationTask: ValidateTask = {
+            type: mainTaskTypes.VALIDATE,
+            options: settings.validator,
+            task: 'validate',
+            configuration,
+            validationDetails: {
+                files: [
+                    conversionTask
+                        ? conversionTask.options.destinationDir +
+                          conversionTask.files[0].outputName
+                        : file.path,
+                ],
+                folders: [],
+            },
+        };
+
+        // If conversion task is present, execute it first and then validation
+        if (conversionTask) {
+            const conversionResult = await this.startTask(conversionTask);
+            if (conversionResult === true) {
+                const validationResult = this.startTask(validationTask);
+                return validationResult;
+            }
+
+            return conversionResult;
+        }
+        const validationResult = this.startTask(validationTask);
+        return validationResult;
     };
 }
 

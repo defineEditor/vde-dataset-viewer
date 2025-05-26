@@ -86,6 +86,9 @@ export interface ValidatorConfig {
     snomedUrl: string;
     snomedEdition: string;
     customStandard: boolean;
+    defineVersion: string;
+    standard: string;
+    version: string;
 }
 
 export interface ValidateTask {
@@ -93,6 +96,10 @@ export interface ValidateTask {
     options: SettingsValidator;
     task: ValidateSubTask;
     configuration?: ValidatorConfig;
+    validationDetails?: {
+        files: string[];
+        folders: string[];
+    };
 }
 export interface ValidateGetInfoResult {
     version: string;
@@ -118,6 +125,8 @@ export interface ValidatorProcessTask {
     id: string;
     options: SettingsValidator;
     configuration?: ValidatorConfig;
+    validationDetails?: ValidateTask['validationDetails'];
+    outputDir?: string;
 }
 
 export type MainProcessTask = ConverterProcessTask | ValidatorProcessTask;

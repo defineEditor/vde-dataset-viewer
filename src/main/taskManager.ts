@@ -56,7 +56,13 @@ class TaskManager {
                 },
             });
         } else if (type === mainTaskTypes.VALIDATE) {
-            process.postMessage(processTask);
+            process.postMessage({
+                ...processTask,
+                outputDir: path.join(
+                    app.getPath('userData'),
+                    'validationReports',
+                ),
+            });
         }
 
         return new Promise((resolve) => {
@@ -176,6 +182,7 @@ class TaskManager {
                 id: task.task,
                 options: task.options,
                 configuration: task.configuration,
+                validationDetails: task.validationDetails,
             });
 
             await this.processQueue();

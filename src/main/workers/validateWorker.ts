@@ -117,6 +117,167 @@ const getControlledTerminology = async (
     return terminologies;
 };
 
+/**
+ * Validates datasets using CDISC CORE command line tool
+ * @param validatorPath Path to the Core CLI executable
+ * @param configuration Validation configuration
+ * @param validationDetails Files and folders to validate
+ * @param sendMessage Progress callback function
+ * @returns Promise that resolves to the validation report filename
+ */
+const runValidation = async (
+    validatorPath: string,
+    configuration: ValidatorProcessTask['configuration'],
+    validationDetails: ValidatorProcessTask['validationDetails'],
+    outputDir: string,
+    sendMessage: (progress: number) => void,
+): Promise<string> => {
+    // Build command arguments
+    const args: string[] = ['validate'];
+
+    // Add files to validate
+    if (validationDetails?.files && validationDetails.files.length > 0) {
+        validationDetails.files.forEach((file: string) => {
+            args.push('--dataset-path', `"${file}"`);
+        });
+    }
+
+    // Add folders to validate
+    if (validationDetails?.folders && validationDetails.folders.length > 0) {
+        validationDetails.folders.forEach((folder: string) => {
+            args.push('--data', `"${folder}"`);
+        });
+    }
+
+    // Add standard and version if provided
+    if (configuration?.standard && configuration?.version) {
+        args.push('--standard', configuration.standard);
+        args.push('--version', configuration.version);
+    }
+
+    // Add define version if provided
+    if (configuration?.defineVersion) {
+        args.push('--define-version', configuration.defineVersion);
+    }
+
+    // Add dictionary paths if provided
+    if (configuration?.whodrugPath) {
+        args.push('--whodrug', `"${configuration.whodrugPath}"`);
+    }
+    if (configuration?.meddraPath) {
+        args.push('--meddra', `"${configuration.meddraPath}"`);
+    }
+    if (configuration?.loincPath) {
+        args.push('--loinc', `"${configuration.loincPath}"`);
+    }
+    if (configuration?.medrtPath) {
+        args.push('--medrt', `"${configuration.medrtPath}"`);
+    }
+    if (configuration?.uniiPath) {
+        args.push('--unii', `"${configuration.uniiPath}"`);
+    }
+
+    // Add SNOMED configuration if provided
+    if (configuration?.snomedVersion) {
+        args.push('--snomed-version', configuration.snomedVersion);
+    }
+    if (configuration?.snomedUrl) {
+        args.push('--snomed-url', `"${configuration.snomedUrl}"`);
+    }
+    if (configuration?.snomedEdition) {
+        args.push('--snomed-edition', configuration.snomedEdition);
+    }
+
+    // Enable verbose progress output
+    args.push('--progress', 'percents');
+
+    // If the output directory does not exist, create it
+    if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir, { recursive: true });
+    }
+
+    // Generate output filename with current datetime
+    const now = new Date();
+    const timestamp = now
+        .toISOString()
+        .replace(/[:.]/g, '-')
+        .replace('T', '_')
+        .substring(0, 19);
+
+    // Get filename from the first file in validation details or use 'validation'
+    let baseFileName = 'validation';
+    if (validationDetails?.files && validationDetails.files.length > 0) {
+        const firstFile = validationDetails.files[0];
+        baseFileName = path.parse(firstFile).name;
+    }
+
+    const outputFileName = `${baseFileName}-${timestamp}-core-validation.json`;
+
+    // Use system temporary directory
+    const outputPath = path.join(outputDir, outputFileName);
+
+    // Add output parameter
+    args.push('--output', `"${outputPath}"`);
+
+    // Output in JSON format
+    args.push('--output-format', 'JSON');
+
+    // Build the full command
+    const command = `"${validatorPath}" ${args.join(' ')}`;
+
+    return new Promise((resolve, reject) => {
+        const childProcess = exec(command, {
+            cwd: path.dirname(validatorPath),
+        });
+
+        let progressMatch: RegExpMatchArray | null;
+
+        // Handle stdout for progress tracking
+        if (childProcess.stdout) {
+            childProcess.stdout.on('data', (data: string) => {
+                const output = data.toString();
+
+                // Parse progress from verbose output
+                // Look for progress indicators in the CDISC Core output
+                progressMatch = output.match(/(\d+)/);
+                if (output.startsWith('Output:')) {
+                    // Validation finished, send final progress
+                    sendMessage(100);
+                } else if (progressMatch) {
+                    const progress = parseInt(progressMatch[1], 10);
+                    if (progress > 0) {
+                        sendMessage(progress);
+                    }
+                }
+            });
+        }
+
+        // Handle process completion
+        childProcess.on('close', (code) => {
+            if (code === 0) {
+                // Validation completed successfully
+                sendMessage(100);
+                resolve(outputFileName);
+            } else {
+                reject(
+                    new Error(
+                        `CDISC Core validation failed with exit code ${code}`,
+                    ),
+                );
+            }
+        });
+
+        // Handle process errors
+        childProcess.on('error', (error) => {
+            reject(
+                new Error(
+                    `Failed to start CDISC Core validation: ${error.message}`,
+                ),
+            );
+        });
+    });
+};
+
 process.parentPort.once(
     'message',
     async (messageData: {
@@ -181,9 +342,13 @@ process.parentPort.once(
                     break;
                 }
                 case 'validate':
-                    // Implementation for validation would go here
-                    // This would need to process configuration and other options
-                    sendMessage(10);
+                    runValidation(
+                        validatorPath,
+                        data.configuration,
+                        data.validationDetails,
+                        data.outputDir || '',
+                        sendMessage,
+                    );
                     process.parentPort.postMessage({
                         id: processId,
                         error: 'Validation not implemented yet',

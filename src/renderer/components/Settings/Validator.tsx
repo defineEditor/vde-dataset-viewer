@@ -7,7 +7,7 @@ import { openSnackbar } from 'renderer/redux/slices/ui';
 import { styles } from 'renderer/components/Settings/styles';
 import { mainTaskTypes } from 'misc/constants';
 import { ValidatorInfo } from 'renderer/components/Settings/ValidatorInfo';
-import { FileSelector } from 'renderer/components/Settings/FileSelector';
+import SettingsFileSelector from 'renderer/components/Settings/SettingsFileSelector';
 import { validator as initialValidator } from 'renderer/redux/initialState';
 
 interface ValidatorProps {
@@ -168,7 +168,7 @@ export const Validator: React.FC<ValidatorProps> = ({
     return (
         <Stack spacing={2}>
             <Typography variant="h6">CDISC Core Settings</Typography>
-            <FileSelector
+            <SettingsFileSelector
                 name="validator.validatorPath"
                 label="Path to CDISC Core Executable"
                 value={settings.validator.validatorPath}
@@ -194,7 +194,7 @@ export const Validator: React.FC<ValidatorProps> = ({
                 slotProps={{ htmlInput: { min: 1, max: 16 } }}
                 sx={styles.inputField}
             />
-            <FileSelector
+            <SettingsFileSelector
                 name="validator.localRulesPath"
                 label="Path to CDISC Core Local Rules"
                 type="folder"
@@ -203,7 +203,7 @@ export const Validator: React.FC<ValidatorProps> = ({
                 onSelectDestination={handleSelectDestination}
                 onChange={onSettingChange}
             />
-            <FileSelector
+            <SettingsFileSelector
                 name="validator.cachePath"
                 label="Path to CDISC Core Cache"
                 helperText="Path to cache files containing preloaded metadata and rules"

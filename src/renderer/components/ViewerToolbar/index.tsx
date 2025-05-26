@@ -6,7 +6,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import FilterIcon from '@mui/icons-material/FilterAlt';
 import NextPlanOutlinedIcon from '@mui/icons-material/NextPlan';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import SettingsIcon from '@mui/icons-material/Settings';
+import FactCheckIcon from '@mui/icons-material/FactCheck';
 import {
     openDataset,
     openModal,
@@ -281,7 +281,11 @@ const Header: React.FC = () => {
                     size="small"
                     disabled={pathname !== paths.VIEWFILE}
                 >
-                    <SettingsIcon />
+                    <FactCheckIcon
+                        sx={{
+                            color: 'primary.main',
+                        }}
+                    />
                 </IconButton>
             </Tooltip>
         </Stack>

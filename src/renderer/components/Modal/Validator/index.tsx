@@ -1,13 +1,15 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import { IUiModal } from 'interfaces/common';
+import Configuration from 'renderer/components/Modal/Validator/Configuration';
+import { IUiModal, ValidatorConfig } from 'interfaces/common';
 import { Tabs, Tab, Box } from '@mui/material';
 import { closeModal, setValidatorTab } from 'renderer/redux/slices/ui';
+import { setValidatorData } from 'renderer/redux/slices/data';
 
 const styles = {
     dialog: {
@@ -39,10 +41,6 @@ const styles = {
     },
 };
 
-const Configuration: React.FC = () => {
-    return null;
-};
-
 const Results: React.FC = () => {
     return null;
 };
@@ -60,6 +58,23 @@ const DatasetInfo: React.FC<IUiModal> = (props: IUiModal) => {
 
     const handleTabChange = (_event: React.SyntheticEvent, newValue: 0 | 1) => {
         dispatch(setValidatorTab(newValue));
+    };
+
+    const validatorData = useAppSelector((state) => state.data.validator);
+    const [config, setConfig] = useState<ValidatorConfig>({
+        ...validatorData.configuration,
+    });
+
+    // Save configuration and trigger validation
+    const handleValidate = () => {
+        // Save the configuration
+        dispatch(
+            setValidatorData({
+                configuration: config,
+            }),
+        );
+
+        // Start validation
     };
 
     useEffect(() => {
@@ -103,13 +118,20 @@ const DatasetInfo: React.FC<IUiModal> = (props: IUiModal) => {
                     <Tab label="Results" sx={styles.tab} />
                 </Tabs>
                 <Box hidden={validatorTab !== 0} sx={styles.tabPanel}>
-                    <Configuration />
+                    <Configuration config={config} setConfig={setConfig} />
                 </Box>
                 <Box hidden={validatorTab !== 1} sx={styles.tabPanel}>
                     <Results />
                 </Box>
             </DialogContent>
             <DialogActions sx={styles.actions}>
+                <Button
+                    onClick={handleValidate}
+                    color="primary"
+                    disabled={validatorTab !== 0}
+                >
+                    Validate
+                </Button>
                 <Button onClick={handleClose} color="primary">
                     Close
                 </Button>
