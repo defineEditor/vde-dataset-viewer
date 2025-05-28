@@ -112,7 +112,13 @@ const Converter: React.FC<{
                 filters: [
                     {
                         name: 'All supported formats',
-                        extensions: ['xpt', 'json', 'ndjson', 'djsc'],
+                        extensions: [
+                            'xpt',
+                            'json',
+                            'ndjson',
+                            'djsc',
+                            'sas7bdat',
+                        ],
                     },
                     {
                         name: 'JSON',
@@ -283,6 +289,7 @@ const Converter: React.FC<{
         // Implement conversion logic here
         const task: ConvertTask = {
             type: mainTaskTypes.CONVERT,
+            idPrefix: 'converter',
             files,
             options: {
                 prettyPrint: options.prettyPrint,

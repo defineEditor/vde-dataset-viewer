@@ -14,7 +14,6 @@
     "link-modules": "node -r ts-node/register ../../.erb/scripts/link-modules.ts"
   },
   "dependencies": {
-        "js-stream-dataset-json": "^0.6.1",
-        "js-stream-sas7bdat": "^0.1.4"
+    "js-stream-sas7bdat": "^0.1.4"
   }
 }

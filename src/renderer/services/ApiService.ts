@@ -802,6 +802,7 @@ class ApiService {
             conversionTask = {
                 type: mainTaskTypes.CONVERT,
                 files: [fileInfo],
+                idPrefix: 'validator',
                 options: {
                     prettyPrint: false,
                     inEncoding: settings.other.inEncoding,
@@ -820,6 +821,7 @@ class ApiService {
             type: mainTaskTypes.VALIDATE,
             options: settings.validator,
             task: 'validate',
+            idPrefix: 'validator',
             configuration,
             validationDetails: {
                 files: [

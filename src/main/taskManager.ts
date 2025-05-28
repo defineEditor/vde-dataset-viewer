@@ -138,7 +138,7 @@ class TaskManager {
             task.files.forEach((file, index) => {
                 this.taskQueue.push({
                     type: task.type,
-                    id: `${task.type}.${index.toString()}`,
+                    id: `${task.idPrefix}-${task.type}-${index.toString()}`,
                     file,
                     options: task.options,
                 });
@@ -179,7 +179,7 @@ class TaskManager {
             }
             this.taskQueue.push({
                 type: task.type,
-                id: task.task,
+                id: `${task.idPrefix}-${task.task}`,
                 options: task.options,
                 configuration: task.configuration,
                 validationDetails: task.validationDetails,
@@ -231,7 +231,31 @@ class TaskManager {
 
     private createProcess(taskType: string): UtilityProcess {
         const processPath = this.getWorkerPath(taskType);
-        return utilityProcess.fork(processPath, [], {
+
+        // Generate debug arguments if in development or DEBUG_PROD is enabled
+        const debugArgs: string[] = [];
+        if (
+            process.env.NODE_ENV === 'development' ||
+            process.env.DEBUG_PROD === 'true'
+        ) {
+            // Generate a unique port based on the task type to avoid conflicts
+            let portOffset = 0;
+            switch (taskType) {
+                case mainTaskTypes.CONVERT:
+                    portOffset = 10;
+                    break;
+                case mainTaskTypes.VALIDATE:
+                    portOffset = 20;
+                    break;
+                default:
+                    portOffset = 30;
+                    break;
+            }
+            const debugPort = 9229 + portOffset;
+            debugArgs.push(`--inspect=${debugPort}`);
+        }
+
+        return utilityProcess.fork(processPath, debugArgs, {
             env: process.env,
             stdio: 'inherit',
         });

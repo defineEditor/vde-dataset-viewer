@@ -73,7 +73,7 @@ const Execution: React.FC<{
         apiService.cleanTaskProgressListeners();
 
         apiService.subscriteToTaskProgress((info: ProgressInfo) => {
-            const match = info.id.match(/convert-(\d+)/);
+            const match = info.id.match(/converter-convert-(\d+)/);
             if (match) {
                 const fileIndex = parseInt(match[1], 10);
                 setProgress((prev) => {

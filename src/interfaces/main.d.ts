@@ -72,6 +72,7 @@ export interface ConvertTask {
     type: typeof mainTaskTypes.CONVERT;
     files: ConvertedFileInfo[];
     options: ConvertTaskOptions;
+    idPrefix: string;
 }
 
 export type ValidateSubTask = 'validate' | 'getInfo';
@@ -100,6 +101,7 @@ export interface ValidateTask {
         files: string[];
         folders: string[];
     };
+    idPrefix: string;
 }
 export interface ValidateGetInfoResult {
     version: string;
