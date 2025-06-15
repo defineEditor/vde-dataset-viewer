@@ -9,6 +9,7 @@ import {
     ColumnMetadata,
     DatasetJsonMetadata,
     FileInfo,
+    InputFileExtension,
 } from 'interfaces/common';
 import openFile from 'main/openFile';
 import fs from 'fs';
@@ -129,7 +130,7 @@ class FileManager {
             case 'sas7bdat':
                 type = 'sas7bdat';
                 break;
-            case 'djsc':
+            case 'dsjc':
                 type = 'json';
                 break;
             case 'xpt':
@@ -322,7 +323,7 @@ class FileManager {
                 const parsedPath = path.parse(filePath);
                 // Get data of the last modification and size of the file
                 const stats = fs.statSync(filePath);
-                let format: 'xpt' | 'json' | 'ndjson' | 'sas7bdat' | '';
+                let format: InputFileExtension | '';
                 if (parsedPath.ext.toLowerCase() === '.xpt') {
                     format = 'xpt';
                 } else if (parsedPath.ext.toLowerCase() === '.json') {
@@ -331,6 +332,8 @@ class FileManager {
                     format = 'sas7bdat';
                 } else if (parsedPath.ext.toLowerCase() === '.ndjson') {
                     format = 'ndjson';
+                } else if (parsedPath.ext.toLowerCase() === '.dsjc') {
+                    format = 'dsjc';
                 } else {
                     format = '';
                 }

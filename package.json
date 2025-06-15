@@ -188,20 +188,14 @@
         ],
         "fileAssociations": [
             {
-                "ext": "json",
-                "name": "JSON",
-                "description": "Dataset JSON File",
-                "role": "Viewer"
-            },
-            {
                 "ext": "ndjson",
                 "name": "NDJSON",
                 "description": "Dataset JSON File",
                 "role": "Viewer"
             },
             {
-                "ext": "djsc",
-                "name": "DJSC",
+                "ext": "dsjc",
+                "name": "DSJC",
                 "description": "Dataset JSON Compressed File",
                 "role": "Viewer"
             },

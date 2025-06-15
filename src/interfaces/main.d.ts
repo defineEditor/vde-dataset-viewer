@@ -27,13 +27,19 @@ export interface ICheckUpdateResult {
 }
 
 export type OutputFormat = 'DJ1.1' | 'DNJ1.1' | 'DJC1.1' | 'CSV';
-export type OutputFileExtension = 'json' | 'ndjson' | 'djsc' | 'csv';
+export type OutputFileExtension = 'json' | 'ndjson' | 'dsjc' | 'csv';
+export type InputFileExtension =
+    | 'xpt'
+    | 'sas7bdat'
+    | 'json'
+    | 'ndjson'
+    | 'dsjc';
 
 export interface FileInfo {
     fullPath: string;
     folder: string;
     filename: string;
-    format: 'xpt' | 'sas7bdat' | OutputFileExtension | '';
+    format: InputFileExtension | OutputFileExtension | '';
     size: number;
     lastModified: number;
     datasetJsonVersion?: string;

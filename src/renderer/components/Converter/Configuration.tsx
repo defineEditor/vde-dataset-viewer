@@ -116,7 +116,7 @@ const Converter: React.FC<{
                             'xpt',
                             'json',
                             'ndjson',
-                            'djsc',
+                            'dsjc',
                             'sas7bdat',
                         ],
                     },
@@ -130,7 +130,7 @@ const Converter: React.FC<{
                     },
                     {
                         name: 'Compressed JSON',
-                        extensions: ['djsc'],
+                        extensions: ['dsjc'],
                     },
                     {
                         name: 'XPT',
@@ -155,7 +155,7 @@ const Converter: React.FC<{
             } else if (outputFormat === 'CSV') {
                 extension = 'csv';
             } else {
-                extension = 'djsc';
+                extension = 'dsjc';
             }
             const newFiles = result.map((file: FileInfo) => ({
                 ...file,
@@ -211,7 +211,7 @@ const Converter: React.FC<{
                 } else if (outputFormat === 'CSV') {
                     extension = 'csv';
                 } else if (outputFormat === 'DJC1.1') {
-                    extension = 'djsc';
+                    extension = 'dsjc';
                 } else {
                     throw new Error('Invalid output format');
                 }
@@ -244,7 +244,7 @@ const Converter: React.FC<{
         } else if (outputFormat === 'CSV') {
             extension = 'csv';
         } else if (outputFormat === 'DJC1.1') {
-            extension = 'djsc';
+            extension = 'dsjc';
         } else {
             throw new Error('Invalid output format');
         }
