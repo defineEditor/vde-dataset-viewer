@@ -149,6 +149,19 @@ const configuration: webpack.Configuration = {
         new ReactRefreshWebpackPlugin(),
 
         new HtmlWebpackPlugin({
+            filename: path.join('splash.html'),
+            template: path.join(webpackPaths.srcRendererPath, 'splash.html'),
+            minify: {
+                collapseWhitespace: true,
+                removeAttributeQuotes: true,
+                removeComments: true,
+            },
+            isBrowser: false,
+            isDevelopment: false,
+            inject: false,
+        }),
+
+        new HtmlWebpackPlugin({
             filename: path.join('index.html'),
             template: path.join(webpackPaths.srcRendererPath, 'index.ejs'),
             minify: {

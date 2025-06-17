@@ -21,6 +21,7 @@ import TaskManager from 'main/taskManager';
 import { MainTask } from 'interfaces/main';
 
 let mainWindow: BrowserWindow | null = null;
+let splashScreen: BrowserWindow | null = null;
 let fileToOpen: string | null = null;
 
 // Get file path from command line arguments
@@ -113,6 +114,27 @@ const createWindow = async () => {
         return path.join(RESOURCES_PATH, ...paths);
     };
 
+    // Create splash screen
+    splashScreen = new BrowserWindow({
+        width: 400,
+        height: 300,
+        transparent: true,
+        frame: false,
+        alwaysOnTop: true,
+        center: true,
+        skipTaskbar: true,
+        resizable: false,
+        icon: getAssetPath('icon.png'),
+        webPreferences: {
+            devTools: false,
+        },
+    });
+
+    // Load the splash screen HTML
+    splashScreen.loadURL(resolveHtmlPath('splash.html'));
+    splashScreen.show();
+
+    // Create the main window but don't show it yet
     mainWindow = new BrowserWindow({
         show: false,
         width: 1024,
@@ -133,15 +155,21 @@ const createWindow = async () => {
         if (!mainWindow) {
             throw new Error('"mainWindow" is not defined');
         }
+
+        if (splashScreen) {
+            splashScreen.close();
+            splashScreen = null;
+        }
+
         if (process.env.START_MINIMIZED) {
-            mainWindow.minimize();
+            mainWindow?.minimize();
         } else {
-            mainWindow.maximize();
-            mainWindow.showInactive();
+            mainWindow?.maximize();
+            mainWindow?.showInactive();
         }
 
         // Open file if one was provided
-        if (fileToOpen) {
+        if (fileToOpen && mainWindow) {
             mainWindow.webContents.send('renderer:openFile', fileToOpen);
             fileToOpen = null;
         }
