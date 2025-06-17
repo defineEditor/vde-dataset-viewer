@@ -107,7 +107,7 @@ export interface ValidateTask {
         files: string[];
         folders: string[];
     };
-    idPrefix: string;
+    idPrefix: 'converter' | 'validator';
 }
 export interface ValidateGetInfoResult {
     version: string;

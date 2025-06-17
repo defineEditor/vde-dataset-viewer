@@ -286,7 +286,23 @@ process.parentPort.once(
         const { data } = messageData;
         const { id, options } = data;
         // Use id as the task type since it aligns with ValidateSubTask values
-        const task = id as ValidateSubTask;
+        let task = '';
+        if (id.startsWith('validator-')) {
+            // Remove 'validator-' prefix to get the actual task type
+            task = id.replace('validator-', '');
+        }
+        // Check if the task is valid
+        const validTasks: ValidateSubTask[] = ['validate', 'getInfo'];
+        if (!validTasks.includes(task as ValidateSubTask)) {
+            process.parentPort.postMessage({
+                id: `${data.type}-${id}`,
+                error: `Invalid task type: ${task}. Valid tasks are: ${validTasks.join(
+                    ', ',
+                )}`,
+                progress: 100,
+            });
+            process.exit(1);
+        }
         const { validatorPath } = options;
         const processId = `${data.type}-${id}`;
 

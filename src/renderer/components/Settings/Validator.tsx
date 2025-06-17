@@ -40,7 +40,7 @@ export const Validator: React.FC<ValidatorProps> = ({
 
             apiService.subscriteToTaskProgress((info: ProgressInfo) => {
                 if (
-                    info.id === `${mainTaskTypes.VALIDATE}-getInfo` &&
+                    info.id === `${mainTaskTypes.VALIDATE}-validator-getInfo` &&
                     info.progress === 100
                 ) {
                     if (info.result) {
@@ -62,6 +62,7 @@ export const Validator: React.FC<ValidatorProps> = ({
                         localRulesPath: '',
                         poolSize: 1,
                     },
+                    idPrefix: 'validator',
                 });
                 if (typeof result === 'object' && 'error' in result) {
                     dispatch(
