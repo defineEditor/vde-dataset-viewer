@@ -7,8 +7,10 @@ import FilterIcon from '@mui/icons-material/FilterAlt';
 import NextPlanOutlinedIcon from '@mui/icons-material/NextPlan';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
+import CachedIcon from '@mui/icons-material/Cached';
 import {
     openDataset,
+    closeDataset,
     openModal,
     setPage,
     openSnackbar,
@@ -123,6 +125,62 @@ const Header: React.FC = () => {
     const handleValidateClick = useCallback(() => {
         dispatch(openModal({ type: modals.VALIDATOR, data: {} }));
     }, [dispatch]);
+
+    const handleCloseDataset = useCallback(
+        async (fileId: string) => {
+            dispatch(
+                closeDataset({
+                    fileId,
+                }),
+            );
+            await apiService.close(fileId);
+        },
+        [dispatch, apiService],
+    );
+
+    const handleReloadClick = useCallback(async () => {
+        // Get filepath of the current file;
+        const currentFile = apiService.getOpenedFiles(currentFileId)[0];
+        if (!currentFile) {
+            dispatch(
+                openSnackbar({
+                    type: 'error',
+                    message: 'No dataset is currently opened.',
+                }),
+            );
+            return;
+        }
+        const { path, mode } = currentFile;
+        // Close the current dataset
+        await handleCloseDataset(currentFileId);
+        const newDataInfo = await openNewDataset(apiService, mode, path);
+        if (newDataInfo.errorMessage) {
+            if (newDataInfo.errorMessage !== 'cancelled') {
+                dispatch(
+                    openSnackbar({
+                        type: 'error',
+                        message: newDataInfo.errorMessage,
+                    }),
+                );
+            }
+            return;
+        }
+        dispatch(
+            openDataset({
+                fileId: newDataInfo.fileId,
+                type: newDataInfo.type,
+                name: newDataInfo.metadata.name,
+                label: newDataInfo.metadata.label,
+                mode,
+                totalRecords: newDataInfo.metadata.records,
+            }),
+        );
+        // Reset page for the new dataset
+        dispatch(setPage(0));
+        // Reset filter for the new dataset
+        dispatch(resetFilter());
+    }, [apiService, dispatch, currentFileId, handleCloseDataset]);
+
     // Add shortcuts for actions
     useEffect(() => {
         const handleViewerToolbarKeyDown = (event: KeyboardEvent) => {
@@ -144,7 +202,7 @@ const Header: React.FC = () => {
                         handleDataSetInfoClick();
                         break;
                     case 'r':
-                        handleFilterReset();
+                        handleReloadClick();
                         break;
                     case 'e':
                         handleMaskClick();
@@ -171,6 +229,7 @@ const Header: React.FC = () => {
         handleFilterReset,
         handleToggleSidebar,
         handleMaskClick,
+        handleReloadClick,
         isModalOpen,
     ]);
 
@@ -284,6 +343,37 @@ const Header: React.FC = () => {
                     <FactCheckIcon
                         sx={{
                             color: 'primary.main',
+                        }}
+                    />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Dataset Information" enterDelay={1000}>
+                <IconButton
+                    onClick={handleDataSetInfoClick}
+                    id="datasetInfo"
+                    size="small"
+                    disabled={pathname !== paths.VIEWFILE}
+                >
+                    <InfoIcon
+                        sx={{
+                            color: 'primary.main',
+                        }}
+                    />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Reload" enterDelay={1000}>
+                <IconButton
+                    onClick={handleReloadClick}
+                    id="open"
+                    size="small"
+                    disabled={currentFileMode === 'remote'}
+                >
+                    <CachedIcon
+                        sx={{
+                            color:
+                                currentFileMode === 'remote'
+                                    ? 'grey.500'
+                                    : 'primary.main',
                         }}
                     />
                 </IconButton>

@@ -553,6 +553,7 @@ class ApiService {
         nCols: number;
         records: number;
         type: DatasetType;
+        path: string;
     }[] => {
         // If fileId is not specified return all opened files
         return this.openedFiles
@@ -567,6 +568,7 @@ class ApiService {
                     nCols: metadata?.columns.length || 0,
                     records: metadata?.records || 0,
                     type: file.type,
+                    path: file.path,
                 };
             });
     };

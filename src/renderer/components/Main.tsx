@@ -17,6 +17,7 @@ import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import {
     setPathname,
     openDataset,
+    closeDataset,
     openSnackbar,
 } from 'renderer/redux/slices/ui';
 import { AllowedPathnames } from 'interfaces/common';
@@ -200,6 +201,20 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
     useEffect(() => {
         const handleFileOpen = async (filePath: string) => {
             try {
+                // Check if the requested file is already open
+                if (currentFileId) {
+                    const currentFile =
+                        apiService.getOpenedFiles(currentFileId)[0];
+                    if (currentFile && currentFile.path === filePath) {
+                        // We need to close it first
+                        dispatch(
+                            closeDataset({
+                                fileId: currentFileId,
+                            }),
+                        );
+                        await apiService.close(currentFileId);
+                    }
+                }
                 const newDataInfo = await openNewDataset(
                     apiService,
                     'local',
