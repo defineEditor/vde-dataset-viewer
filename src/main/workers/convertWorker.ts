@@ -313,6 +313,7 @@ const convertXpt = async (
                     options.inEncoding === 'default'
                         ? undefined
                         : options.inEncoding,
+                roundPrecision: options.xptRoundPrecision || 12,
             })) {
                 // Convert datetime values if needed
                 if (dtIndexes.length > 0) {

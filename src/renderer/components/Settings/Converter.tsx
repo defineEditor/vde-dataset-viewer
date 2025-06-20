@@ -227,6 +227,16 @@ export const Converter: React.FC<ConverterProps> = ({
                     label="Convert --DTM variables as datetime"
                 />
             </Stack>
+            <TextField
+                label="XPT Numeric Round Precision"
+                name="converter.xptRoundPrecision"
+                helperText="Numeric variables in XPT files are rounded to this precision"
+                type="number"
+                value={settings.converter.xptRoundPrecision}
+                onChange={onSettingChange}
+                slotProps={{ htmlInput: { min: 1, max: 16 } }}
+                sx={styles.inputField}
+            />
             <Typography variant="h6">CSV Conversion Settings</Typography>
             <Typography variant="caption">
                 Epoch used to convert date/time/datetime values.

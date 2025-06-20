@@ -11,6 +11,7 @@ export interface SettingsConverter {
     convertSuffixTm: boolean;
     convertSuffixDtm: boolean;
     csvEpoch: string;
+    xptRoundPrecision: number;
 }
 
 export interface SettingsValidator {

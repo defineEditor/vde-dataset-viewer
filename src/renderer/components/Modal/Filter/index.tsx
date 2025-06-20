@@ -260,6 +260,39 @@ const FilterComponent: React.FC<IUiModal> = (props: IUiModal) => {
             if (interactiveFilter === null) {
                 setInputValue('');
             } else {
+                const updatedInteractiveFilter: IBasicFilter = {
+                    ...interactiveFilter,
+                };
+
+                // Update interactive filter by removing all incomplete conditions
+                const incompleteConditions: number[] = [];
+                updatedInteractiveFilter.conditions.forEach(
+                    (condition, index) => {
+                        if (
+                            !condition.variable ||
+                            !condition.operator ||
+                            condition.value === undefined
+                        ) {
+                            incompleteConditions.push(index);
+                        }
+                    },
+                );
+
+                if (incompleteConditions.length > 0) {
+                    incompleteConditions
+                        .sort()
+                        .reverse()
+                        .forEach((index) => {
+                            updatedInteractiveFilter.conditions.splice(
+                                index,
+                                1,
+                            );
+                            updatedInteractiveFilter.connectors.splice(
+                                Math.min(index - 1, 0),
+                                1,
+                            );
+                        });
+                }
                 const filter = new Filter(
                     'dataset-json1.1',
                     metadata.columns,

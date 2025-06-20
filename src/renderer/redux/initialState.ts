@@ -37,6 +37,7 @@ export const settings: ISettings = {
         convertSuffixDt: false,
         convertSuffixTm: false,
         convertSuffixDtm: false,
+        xptRoundPrecision: 12,
         csvEpoch: '1960-01-01',
     },
     other: {
