@@ -288,7 +288,7 @@ const FilterComponent: React.FC<IUiModal> = (props: IUiModal) => {
                                 1,
                             );
                             updatedInteractiveFilter.connectors.splice(
-                                Math.min(index - 1, 0),
+                                Math.max(index - 1, 0),
                                 1,
                             );
                         });
