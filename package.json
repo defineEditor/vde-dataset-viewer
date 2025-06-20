@@ -108,7 +108,7 @@
         "react-dom": "^18.2.0",
         "react-redux": "^8.0.2",
         "redux": "^4.2.0",
-        "xport-js": "^0.2.5"
+        "xport-js": "^0.3.0"
     },
     "devDependencies": {
         "@electron/rebuild": "^3.3.0",
