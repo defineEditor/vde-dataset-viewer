@@ -39,6 +39,9 @@ const Header: React.FC = () => {
     const { apiService } = useContext(AppContext);
 
     const pathname = useAppSelector((state) => state.ui.pathname);
+    const validatorVersion = useAppSelector(
+        (state) => state.data.validator.info.version,
+    );
     const isFilterEnabled = useAppSelector(
         (state) => state.data.filterData.currentFilter !== null,
     );
@@ -319,26 +322,12 @@ const Header: React.FC = () => {
                     />
                 </IconButton>
             </Tooltip>
-            <Tooltip title="Dataset Information" enterDelay={1000}>
-                <IconButton
-                    onClick={handleDataSetInfoClick}
-                    id="datasetInfo"
-                    size="small"
-                    disabled={pathname !== paths.VIEWFILE}
-                >
-                    <InfoIcon
-                        sx={{
-                            color: 'primary.main',
-                        }}
-                    />
-                </IconButton>
-            </Tooltip>
             <Tooltip title="Data Validation" enterDelay={1000}>
                 <IconButton
                     onClick={handleValidateClick}
                     id="validateData"
                     size="small"
-                    disabled={pathname !== paths.VIEWFILE}
+                    disabled={pathname !== paths.VIEWFILE && !validatorVersion}
                 >
                     <FactCheckIcon
                         sx={{

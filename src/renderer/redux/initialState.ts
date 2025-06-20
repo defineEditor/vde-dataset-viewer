@@ -37,6 +37,7 @@ export const settings: ISettings = {
         convertSuffixDt: false,
         convertSuffixTm: false,
         convertSuffixDtm: false,
+        xptRoundPrecision: 12,
         csvEpoch: '1960-01-01',
     },
     other: {
@@ -116,6 +117,9 @@ export const validator: ValidatorData = {
         snomedUrl: '',
         snomedEdition: '',
         customStandard: false,
+        defineVersion: '',
+        standard: '',
+        version: '',
     },
 };
 

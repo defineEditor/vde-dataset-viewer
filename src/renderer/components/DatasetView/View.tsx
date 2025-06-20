@@ -193,6 +193,7 @@ const DatasetViewUI: React.FC<{
     handleCellClick: (rowIndex: number, columnIndex: number) => void;
     handleMouseDown: (rowIndex: number, columnIndex: number) => void;
     handleMouseOver: (rowIndex: number, columnIndex: number) => void;
+    handleResizeEnd: () => void;
     isLoading: boolean;
     dynamicRowHeight: boolean;
     rowVirtualizer: Virtualizer<HTMLDivElement, Element>;
@@ -221,6 +222,7 @@ const DatasetViewUI: React.FC<{
     handleCellClick,
     handleMouseDown,
     handleMouseOver,
+    handleResizeEnd,
     isLoading,
     dynamicRowHeight,
     rowVirtualizer,
@@ -358,15 +360,13 @@ const DatasetViewUI: React.FC<{
                                                     header.column.resetSize(),
                                                 onMouseDown:
                                                     header.getResizeHandler(),
+                                                onMouseUp: () =>
+                                                    handleResizeEnd(),
                                                 onTouchStart:
                                                     header.getResizeHandler(),
                                                 className: `resizer ${
                                                     table.options
                                                         .columnResizeDirection
-                                                } ${
-                                                    header.column.getIsResizing()
-                                                        ? 'isResizing'
-                                                        : ''
                                                 }`,
                                                 style: {
                                                     transform:

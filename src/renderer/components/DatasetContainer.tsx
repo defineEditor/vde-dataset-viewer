@@ -128,6 +128,10 @@ const DatasetContainer: React.FC = () => {
 
     // Load initial data
     useEffect(() => {
+        if (table?.fileId === fileId) {
+            // If table is already loaded for the current fileId, do not reload
+            return;
+        }
         setTable(null);
         const readDataset = async () => {
             if (fileId === '' || apiService === null) {
@@ -143,6 +147,8 @@ const DatasetContainer: React.FC = () => {
                     0,
                     pageSize,
                     settings,
+                    undefined,
+                    currentFilter === null ? undefined : currentFilter,
                 );
             } catch (error) {
                 // Remove current fileId as something is wrong with itj
@@ -173,7 +179,15 @@ const DatasetContainer: React.FC = () => {
         };
 
         readDataset();
-    }, [dispatch, fileId, pageSize, apiService, settings]);
+    }, [
+        dispatch,
+        fileId,
+        pageSize,
+        apiService,
+        settings,
+        currentFilter,
+        table?.fileId,
+    ]);
 
     // Pagination
     const page = useAppSelector((state) => state.ui.currentPage);
@@ -218,6 +232,10 @@ const DatasetContainer: React.FC = () => {
     // Filter change
     useEffect(() => {
         if (table === null || apiService === null) {
+            return;
+        }
+        // Check current table data corresponds to current file
+        if (table.fileId !== fileId) {
             return;
         }
         // Check if filter is already applied

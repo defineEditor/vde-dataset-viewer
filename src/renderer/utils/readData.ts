@@ -93,6 +93,7 @@ const getData = async (
         metadata,
         data: itemData,
         appliedFilter: filterData || null,
+        fileId,
     };
 };
 

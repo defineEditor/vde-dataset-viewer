@@ -45,4 +45,5 @@ export interface ITableData {
     metadata: DatasetJsonMetadata;
     data: ITableRow[];
     appliedFilter: BasicFilter | null;
+    fileId: string;
 }
