@@ -24,7 +24,6 @@ const DragAndDrop: React.FC<Props> = ({ children }) => {
         async (event: React.DragEvent) => {
             event.preventDefault();
             event.stopPropagation();
-            setIsDragging(false);
 
             const files = Array.from(event.dataTransfer.files);
             if (files.length === 0) return;
@@ -45,6 +44,7 @@ const DragAndDrop: React.FC<Props> = ({ children }) => {
                         }),
                     );
                 }
+                setIsDragging(false);
                 return;
             }
 
@@ -67,6 +67,7 @@ const DragAndDrop: React.FC<Props> = ({ children }) => {
                     currentFileId,
                 }),
             );
+            setIsDragging(false);
         },
         [apiService, dispatch, currentFileId],
     );

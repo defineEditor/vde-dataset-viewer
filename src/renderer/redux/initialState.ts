@@ -116,6 +116,9 @@ export const validator: ValidatorData = {
         snomedUrl: '',
         snomedEdition: '',
         customStandard: false,
+        defineVersion: '',
+        standard: '',
+        version: '',
     },
 };
 
