@@ -150,6 +150,13 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         overscan: 4,
     });
 
+    // If filter is used, we need to remeasure the columns
+    useEffect(() => {
+        if (data) {
+            columnVirtualizer.measure();
+        }
+    }, [data, columnVirtualizer]);
+
     const rowVirtualizer = useVirtualizer({
         count: rows.length,
         estimateSize: () => 38,
@@ -490,6 +497,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             handleMouseDown={handleMouseDown}
             handleMouseOver={handleMouseOver}
             handleContextMenu={handleContextMenu}
+            handleResizeEnd={columnVirtualizer.measure}
             isLoading={isLoading}
             dynamicRowHeight={settings.dynamicRowHeight}
             rowVirtualizer={rowVirtualizer}
