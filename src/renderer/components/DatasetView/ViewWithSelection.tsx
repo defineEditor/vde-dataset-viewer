@@ -233,6 +233,7 @@ const ViewWithSelection: React.FC<ViewWithSelectionProps> = ({
             filteredColumns={filteredColumns}
             containerStyle={containerStyle}
             hideRowNumbers={hideRowNumbers}
+            handleResizeEnd={() => {}}
         />
     );
 };

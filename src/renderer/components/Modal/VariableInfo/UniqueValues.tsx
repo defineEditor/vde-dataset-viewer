@@ -1,9 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useContext } from 'react';
 import Stack from '@mui/material/Stack';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import { ITableRow } from 'interfaces/common';
+import ContextMenu from 'renderer/components/DatasetView/ContextMenu';
+import AppContext from 'renderer/utils/AppContext';
+import { ITableRow, IHeaderCell } from 'interfaces/common';
 import { Typography, LinearProgress } from '@mui/material';
 import {
     useReactTable,
@@ -14,6 +16,7 @@ import {
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import ViewWithSelection from 'renderer/components/DatasetView/ViewWithSelection';
+import { useAppSelector } from 'renderer/redux/hooks';
 
 const styles = {
     sectionTitle: {
@@ -95,23 +98,43 @@ const UniqueValues: React.FC<{
     hasAllValues: boolean;
     totalRecords: number;
     onGetValues: () => void;
-}> = ({ counts, hasAllValues, onGetValues, totalRecords }) => {
+    onClose: () => void;
+    columnId: string;
+    searchTerm?: string;
+}> = ({
+    counts,
+    hasAllValues,
+    onGetValues,
+    onClose,
+    totalRecords,
+    columnId,
+    searchTerm = '',
+}) => {
     const [sorting, setSorting] = useState<SortingState>([
         { id: 'count', desc: true },
     ]);
     const tableContainerRef = React.useRef<HTMLDivElement>(null);
 
+    const { apiService } = useContext(AppContext);
+    const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+    const metadata = apiService.getOpenedFileMetadata(currentFileId);
     // Transform counts object into array for table
     const data = useMemo(() => {
         const entries = Object.entries(counts);
-
-        return entries.map(([value, count], index) => ({
+        let result = entries.map(([value, count], index) => ({
             '#': index + 1,
             value,
             count,
             percentage: (count / totalRecords) * 100,
         }));
-    }, [counts, totalRecords]);
+        if (searchTerm) {
+            const lower = searchTerm.toLowerCase();
+            result = result.filter((row) =>
+                String(row.value).toLowerCase().includes(lower),
+            );
+        }
+        return result;
+    }, [counts, totalRecords, searchTerm]);
 
     const columnHelper = createColumnHelper<ITableRow>();
 
@@ -185,11 +208,58 @@ const UniqueValues: React.FC<{
             (virtualColumns[virtualColumns.length - 1]?.end ?? 0);
     }
 
+    const [contextMenu, setContextMenu] = useState<{
+        position: { top: number; left: number };
+        value: string | number | boolean | null;
+        header: IHeaderCell;
+        open: boolean;
+        isHeader: boolean;
+    }>({
+        position: { top: 0, left: 0 },
+        value: null,
+        header: { id: '', label: '' },
+        open: false,
+        isHeader: false,
+    });
+
+    const handleContextMenu = useCallback(
+        (event: React.MouseEvent, rowIndex: number, _columnIndex: number) => {
+            event.preventDefault();
+            if (rowIndex === -1) return; // Ignore header row
+
+            // In case mask is used, we need to get the index of the column with mask applied
+            const header: IHeaderCell = {
+                id: columnId,
+                label: '',
+            };
+            const value = data[rowIndex] ? data[rowIndex].value : '';
+
+            setContextMenu({
+                position: { top: event.clientY, left: event.clientX },
+                value,
+                header,
+                open: true,
+                isHeader: false,
+            });
+        },
+        [data, columnId],
+    );
+
+    const handleCloseContextMenu = (
+        _event: {},
+        reason: 'backdropClick' | 'escapeKeyDown' | 'action',
+    ) => {
+        if (reason === 'action') {
+            onClose();
+        }
+        setContextMenu((prev) => ({ ...prev, open: false }));
+    };
+
     return (
         <Stack direction="column" width="100%" spacing={2}>
             <Stack direction="row" spacing={4}>
                 <Typography variant="h6" sx={styles.sectionTitle}>
-                    Unique Values
+                    Unique Values {data.length > 0 ? `(${data.length})` : ''}
                 </Typography>
                 {!hasAllValues && (
                     <Stack
@@ -205,7 +275,6 @@ const UniqueValues: React.FC<{
                             size="small"
                             onClick={onGetValues}
                             color="primary"
-                            disabled
                             aria-label="refresh-data"
                         >
                             <RefreshIcon />
@@ -231,6 +300,16 @@ const UniqueValues: React.FC<{
                 filteredColumns={[]}
                 containerStyle={styles.table}
                 hideRowNumbers
+                handleContextMenu={handleContextMenu}
+            />
+            <ContextMenu
+                open={contextMenu.open}
+                anchorPosition={contextMenu.position}
+                onClose={handleCloseContextMenu}
+                value={contextMenu.value}
+                metadata={metadata}
+                header={contextMenu.header}
+                isHeader={contextMenu.isHeader}
             />
         </Stack>
     );

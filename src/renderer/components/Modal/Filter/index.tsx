@@ -40,8 +40,8 @@ import { handleTransformation } from 'renderer/utils/transformUtils';
 
 const styles = {
     dialog: {
-        maxWidth: '90%',
-        minWidth: '50%',
+        maxWidth: '95%',
+        minWidth: { xs: '95%', sm: '95%', md: '90%', lg: '70%', xl: '60%' },
     },
     caseInsensitive: {
         minWidth: '170px',
