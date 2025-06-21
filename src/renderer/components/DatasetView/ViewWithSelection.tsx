@@ -35,6 +35,7 @@ interface ViewWithSelectionProps {
     filteredColumns?: string[];
     containerStyle?: { [name: string]: string | number };
     hideRowNumbers?: boolean;
+    handleResizeEnd?: () => void;
 }
 
 const ViewWithSelection: React.FC<ViewWithSelectionProps> = ({
@@ -56,6 +57,7 @@ const ViewWithSelection: React.FC<ViewWithSelectionProps> = ({
     filteredColumns = [],
     containerStyle = undefined,
     hideRowNumbers = false,
+    handleResizeEnd = () => {},
 }) => {
     const dispatch = useAppDispatch();
     const settings = useAppSelector((state) => state.settings.viewer);
@@ -233,7 +235,7 @@ const ViewWithSelection: React.FC<ViewWithSelectionProps> = ({
             filteredColumns={filteredColumns}
             containerStyle={containerStyle}
             hideRowNumbers={hideRowNumbers}
-            handleResizeEnd={() => {}}
+            handleResizeEnd={handleResizeEnd}
         />
     );
 };
