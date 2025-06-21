@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, useContext } from 'react';
+import React, {
+    useState,
+    useEffect,
+    useCallback,
+    useContext,
+    useRef,
+} from 'react';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
@@ -45,7 +51,7 @@ import { modals } from 'misc/constants';
 
 const styles = {
     dialog: {
-        minWidth: '80%',
+        minWidth: { xs: '95%', sm: '95%', md: '90%', lg: '80%', xl: '80%' },
         height: '80%',
     },
     tabs: {
@@ -90,6 +96,22 @@ const styles = {
         justifyContent: 'space-between',
         alignItems: 'center',
     },
+    searchInput: {
+        color: 'white',
+        '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'rgba(255, 255, 255, 0.5)',
+        },
+        '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'white',
+        },
+        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'white',
+        },
+        '&::placeholder': {
+            color: 'rgba(255, 255, 255, 0.7)',
+        },
+    },
+    searchIcon: { color: 'white' },
 };
 
 const MetadataTab: React.FC<{ metadata: DatasetJsonMetadata }> = ({
@@ -352,7 +374,7 @@ const DatasetInfo: React.FC<IUiModal> = (props: IUiModal) => {
     const { apiService } = useContext(AppContext);
     const currentMetadata = apiService.getOpenedFileMetadata(currentFileId);
     const [searchTerm, setSearchTerm] = useState('');
-    const searchInputRef = React.useRef<HTMLInputElement>(null);
+    const searchInputRef = useRef<HTMLInputElement>(null);
 
     const handleClose = useCallback(() => {
         dispatch(closeModal({ type }));
@@ -389,11 +411,15 @@ const DatasetInfo: React.FC<IUiModal> = (props: IUiModal) => {
             PaperProps={{ sx: { ...styles.dialog } }}
         >
             <DialogTitle sx={styles.title}>
-                <Box sx={styles.titleBody}>
-                    <div>Dataset Information</div>
+                <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                >
+                    Dataset Information
                     {datasetInfoTab === 1 && (
                         <TextField
-                            placeholder="Search columns"
+                            placeholder="Ctrl + F to search"
                             size="small"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -404,33 +430,16 @@ const DatasetInfo: React.FC<IUiModal> = (props: IUiModal) => {
                                     startAdornment: (
                                         <InputAdornment position="start">
                                             <SearchIcon
-                                                sx={{ color: 'white' }}
+                                                sx={styles.searchIcon}
                                             />
                                         </InputAdornment>
                                     ),
-                                    sx: {
-                                        color: 'white',
-                                        '& .MuiOutlinedInput-notchedOutline': {
-                                            borderColor:
-                                                'rgba(255, 255, 255, 0.5)',
-                                        },
-                                        '&:hover .MuiOutlinedInput-notchedOutline':
-                                            {
-                                                borderColor: 'white',
-                                            },
-                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline':
-                                            {
-                                                borderColor: 'white',
-                                            },
-                                        '&::placeholder': {
-                                            color: 'rgba(255, 255, 255, 0.7)',
-                                        },
-                                    },
+                                    sx: styles.searchInput,
                                 },
                             }}
                         />
                     )}
-                </Box>
+                </Stack>
             </DialogTitle>
             <DialogContent sx={styles.content}>
                 <Tabs

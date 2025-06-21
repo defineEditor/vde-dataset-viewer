@@ -8,7 +8,10 @@ import { IHeaderCell } from 'interfaces/common';
 interface HeaderContextMenuProps {
     open: boolean;
     anchorPosition: { top: number; left: number };
-    onClose: () => void;
+    onClose: (
+        event: {},
+        reason: 'backdropClick' | 'escapeKeyDown' | 'action',
+    ) => void;
     header: IHeaderCell;
 }
 
@@ -43,7 +46,7 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
             <MenuItem
                 onClick={() => {
                     handleShowInfo();
-                    onClose();
+                    onClose({}, 'action');
                 }}
             >
                 Column Info
@@ -51,7 +54,7 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
             <MenuItem
                 onClick={() => {
                     handleSelect();
-                    onClose();
+                    onClose({}, 'action');
                 }}
             >
                 Select Column

@@ -39,7 +39,7 @@ import { modals } from 'misc/constants';
 
 const styles = {
     dialog: {
-        minWidth: '50%',
+        minWidth: { xs: '95%', sm: '95%', md: '80%', lg: '60%', xl: '60%' },
     },
     actions: {
         m: 2,

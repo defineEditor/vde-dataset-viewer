@@ -269,7 +269,7 @@ class FileManager {
         limit?: number,
         addCount?: boolean,
     ) => {
-        if (this.openedFiles[fileId] instanceof DatasetJson) {
+        if (this.openedFiles[fileId]) {
             try {
                 return await this.openedFiles[fileId].getUniqueValues({
                     columns,

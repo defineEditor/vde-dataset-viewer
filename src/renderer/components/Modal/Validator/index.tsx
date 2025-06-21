@@ -13,7 +13,8 @@ import { setValidatorData } from 'renderer/redux/slices/data';
 
 const styles = {
     dialog: {
-        minWidth: '80%',
+        maxWidth: '95%',
+        minWidth: { xs: '95%', sm: '95%', md: '90%', lg: '80%', xl: '80%' },
         height: '80%',
     },
     tabs: {

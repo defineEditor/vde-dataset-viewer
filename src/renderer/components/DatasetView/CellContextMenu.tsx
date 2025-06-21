@@ -13,7 +13,10 @@ import { resetFilter, setFilter } from 'renderer/redux/slices/data';
 interface ContextMenuProps {
     open: boolean;
     anchorPosition: { top: number; left: number };
-    onClose: () => void;
+    onClose: (
+        event: {},
+        reason: 'backdropClick' | 'escapeKeyDown' | 'action',
+    ) => void;
     value: string | number | boolean | null;
     metadata: DatasetJsonMetadata;
     header: IHeaderCell;
@@ -169,7 +172,7 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
             <MenuItem
                 onClick={() => {
                     handleFilterByValue();
-                    onClose();
+                    onClose({}, 'action');
                 }}
             >
                 Filter by value
@@ -178,7 +181,7 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
                 <MenuItem
                     onClick={() => {
                         hadnleAddToFilter();
-                        onClose();
+                        onClose({}, 'action');
                     }}
                 >
                     Add to filter
@@ -188,7 +191,7 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
                 <MenuItem
                     onClick={() => {
                         handleRemoveFromFilter();
-                        onClose();
+                        onClose({}, 'action');
                     }}
                 >
                     Remove from filter
@@ -198,7 +201,7 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
                 <MenuItem
                     onClick={() => {
                         handleFilterReset();
-                        onClose();
+                        onClose({}, 'action');
                     }}
                 >
                     Reset filter
