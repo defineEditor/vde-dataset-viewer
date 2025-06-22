@@ -9,8 +9,9 @@ import {
 } from '@mui/material';
 import AppContext from 'renderer/utils/AppContext';
 import { useAppDispatch } from 'renderer/redux/hooks';
-import { ProgressInfo, ConvertTask } from 'interfaces/common';
+import { ConvertTask, TaskProgress } from 'interfaces/common';
 import { openSnackbar } from 'renderer/redux/slices/ui';
+import { mainTaskTypes } from 'misc/constants';
 
 const styles = {
     container: {
@@ -72,13 +73,16 @@ const Execution: React.FC<{
     useEffect(() => {
         apiService.cleanTaskProgressListeners();
 
-        apiService.subscriteToTaskProgress((info: ProgressInfo) => {
+        apiService.subscriteToTaskProgress((info: TaskProgress) => {
+            if (info.type !== mainTaskTypes.CONVERT) {
+                return;
+            }
             const match = info.id.match(/converter-convert-(\d+)/);
             if (match) {
                 const fileIndex = parseInt(match[1], 10);
                 setProgress((prev) => {
                     const newProgress = [...prev];
-                    newProgress[fileIndex] = info.progress * 100;
+                    newProgress[fileIndex] = info.progress;
                     return newProgress;
                 });
             }

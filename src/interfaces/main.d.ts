@@ -110,17 +110,6 @@ export interface ValidateTask {
     };
     idPrefix: 'converter' | 'validator';
 }
-export interface ValidateGetInfoResult {
-    version: string;
-    standards: string[];
-    terminology: string[];
-}
-
-export interface ProgressInfo {
-    id: string;
-    progress: number;
-    result?: ValidateGetInfoResult;
-}
 
 export interface ConverterProcessTask {
     type: ConvertTask['type'];
@@ -143,3 +132,25 @@ export type MainProcessTask = ConverterProcessTask | ValidatorProcessTask;
 export type MainTask = ConvertTask | ValidateTask;
 
 export { UpdateCheckResult };
+
+export interface ValidateGetInfoResult {
+    version: string;
+    standards: string[];
+    terminology: string[];
+}
+export interface ConverterTaskProgress {
+    type: typeof mainTaskTypes.CONVERT;
+    id: string;
+    progress: number;
+    error?: string;
+}
+
+export interface ValidatorTaskProgress {
+    type: typeof mainTaskTypes.VALIDATE;
+    id: string;
+    progress: number;
+    result?: ValidateGetInfoResult;
+    error?: string;
+}
+
+export type TaskProgress = ValidatorTaskProgress | ConverterTaskProgress;

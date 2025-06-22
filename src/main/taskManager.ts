@@ -75,15 +75,18 @@ class TaskManager {
                         this.mainWindow.webContents.send(
                             'renderer:taskProgress',
                             {
+                                type: mainTaskTypes.VALIDATE,
                                 id: progressResult.id,
                                 progress: progressResult.progress,
                                 result: progressResult.result,
+                                error: progressResult.error,
                             },
                         );
                     } else {
                         this.mainWindow.webContents.send(
                             'renderer:taskProgress',
                             {
+                                type: mainTaskTypes.VALIDATE,
                                 id: progressResult.id,
                                 progress: progressResult.progress,
                             },
@@ -91,6 +94,7 @@ class TaskManager {
                     }
                 } else if (type === mainTaskTypes.CONVERT) {
                     this.mainWindow.webContents.send('renderer:taskProgress', {
+                        type: mainTaskTypes.CONVERT,
                         id: progressResult.id,
                         progress: progressResult.progress,
                     });

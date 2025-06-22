@@ -1,28 +1,22 @@
 import React from 'react';
 import { TextField, Stack, Button, MenuItem } from '@mui/material';
 import { styles } from 'renderer/components/Settings/styles';
+import CircularProgress from '@mui/material/CircularProgress';
 import { ValidatorData } from 'interfaces/store';
 
 interface ValidatorInfoProps {
     disableRefresh: boolean;
     onRefresh: () => void;
+    updating: boolean;
     validatorInfo: ValidatorData['info'];
 }
 
 export const ValidatorInfo: React.FC<ValidatorInfoProps> = ({
     onRefresh,
     disableRefresh,
+    updating,
     validatorInfo,
 }) => {
-    const [refresh, setRefresh] = React.useState<boolean>(false);
-
-    const handleRefresh = () => {
-        if (!refresh) {
-            setRefresh(true);
-            onRefresh();
-        }
-    };
-
     return (
         <Stack direction="row" spacing={2}>
             <TextField
@@ -81,10 +75,15 @@ export const ValidatorInfo: React.FC<ValidatorInfoProps> = ({
             </TextField>
             <Button
                 variant="contained"
-                onClick={handleRefresh}
+                onClick={onRefresh}
                 disabled={disableRefresh}
+                sx={styles.refreshButton}
             >
-                Refresh
+                {updating ? (
+                    <CircularProgress size={24} sx={styles.circularProgress} />
+                ) : (
+                    <span>Refresh</span>
+                )}
             </Button>
         </Stack>
     );

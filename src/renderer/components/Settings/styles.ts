@@ -58,4 +58,10 @@ export const styles = {
         mt: 1,
         mb: 2,
     },
+    circularProgress: {
+        color: 'white',
+    },
+    refreshButton: {
+        width: '90px',
+    },
 };

@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useCallback } from 'react';
 import { TextField, Stack, Typography } from '@mui/material';
-import { ISettings, ProgressInfo, ValidatorData } from 'interfaces/common';
+import { ISettings, ValidatorData, TaskProgress } from 'interfaces/common';
 import AppContext from 'renderer/utils/AppContext';
 import { useAppDispatch } from 'renderer/redux/hooks';
 import { openSnackbar } from 'renderer/redux/slices/ui';
@@ -38,12 +38,22 @@ export const Validator: React.FC<ValidatorProps> = ({
         (validatorPath: string) => {
             apiService.cleanTaskProgressListeners();
 
-            apiService.subscriteToTaskProgress((info: ProgressInfo) => {
+            apiService.subscriteToTaskProgress((info: TaskProgress) => {
+                if (info.type !== mainTaskTypes.VALIDATE) {
+                    return;
+                }
                 if (
                     info.id === `${mainTaskTypes.VALIDATE}-validator-getInfo` &&
                     info.progress === 100
                 ) {
-                    if (info.result) {
+                    if (info.error) {
+                        dispatch(
+                            openSnackbar({
+                                message: info.error,
+                                type: 'error',
+                            }),
+                        );
+                    } else if (info.result) {
                         onChangeValidatorInfo(info.result);
                     }
                     setUpdating(false);
@@ -180,9 +190,8 @@ export const Validator: React.FC<ValidatorProps> = ({
             />
             <ValidatorInfo
                 onRefresh={handleRefresh}
-                disableRefresh={
-                    settings.validator.validatorPath === '' || updating
-                }
+                disableRefresh={settings.validator.validatorPath === ''}
+                updating={updating}
                 validatorInfo={validatorInfo}
             />
             <TextField

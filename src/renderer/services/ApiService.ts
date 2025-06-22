@@ -16,7 +16,7 @@ import {
     IApiStudyDataset,
     DatasetMode,
     MainTask,
-    ProgressInfo,
+    TaskProgress,
     TableRowValue,
     ValidatorConfig,
     ValidateTask,
@@ -746,7 +746,7 @@ class ApiService {
     };
 
     public subscriteToTaskProgress = (
-        callback: (info: ProgressInfo) => void,
+        callback: (info: TaskProgress) => void,
     ) => {
         window.electron.onTaskProgress(callback);
     };

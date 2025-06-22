@@ -337,7 +337,7 @@ const convertXpt = async (
                     });
                     buffer = [];
 
-                    sendMessage(currentRecord / records);
+                    sendMessage((currentRecord / records) * 100);
                 }
             }
 
@@ -350,7 +350,7 @@ const convertXpt = async (
         }
 
         // Send the final message informing that the conversion is done
-        sendMessage(1);
+        sendMessage(100);
 
         return true;
     } catch (error) {
@@ -440,7 +440,7 @@ const datasetJson2Csv = async (
             currentRecord++;
             if (currentRecord % 10000 === 0) {
                 // Report progress periodically
-                sendMessage(currentRecord / records);
+                sendMessage((currentRecord / records) * 100);
             }
         }
 
@@ -453,7 +453,7 @@ const datasetJson2Csv = async (
         });
 
         // Send final progress
-        sendMessage(1);
+        sendMessage(100);
         return true;
     } catch (error) {
         return false;
@@ -523,7 +523,7 @@ const convertJson = async (
                 });
                 buffer = [];
 
-                sendMessage(currentRecord / records);
+                sendMessage((currentRecord / records) * 100);
             }
         }
 
@@ -535,7 +535,7 @@ const convertJson = async (
         });
 
         // Send the final message informing that the conversion is done
-        sendMessage(1);
+        sendMessage(100);
 
         return true;
     } catch (error) {
@@ -594,7 +594,9 @@ const convertSas7bdat = async (
                 currentRecord++;
                 if (currentRecord % 10000 === 0) {
                     sendMessage(
-                        totalRecords > 0 ? currentRecord / totalRecords : 0,
+                        totalRecords > 0
+                            ? (currentRecord / totalRecords) * 100
+                            : 0,
                     );
                 }
             }
@@ -695,7 +697,9 @@ const convertSas7bdat = async (
                     buffer = [];
 
                     sendMessage(
-                        totalRecords > 0 ? currentRecord / totalRecords : 0,
+                        totalRecords > 0
+                            ? (currentRecord / totalRecords) * 100
+                            : 0,
                     );
                 }
             }
@@ -709,7 +713,7 @@ const convertSas7bdat = async (
         }
 
         // Send final progress
-        sendMessage(1);
+        sendMessage(100);
         return true;
     } catch (error) {
         return false;
