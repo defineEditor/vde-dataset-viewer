@@ -149,7 +149,7 @@ export interface ValidatorTaskProgress {
     type: typeof mainTaskTypes.VALIDATE;
     id: string;
     progress: number;
-    result?: ValidateGetInfoResult;
+    result?: ValidateGetInfoResult | string;
     error?: string;
 }
 

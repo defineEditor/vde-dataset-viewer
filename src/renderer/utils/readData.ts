@@ -105,7 +105,7 @@ const openNewDataset = async (
     folderPath?: string,
 ): Promise<IOpenFileWithMetadata> => {
     const result = await apiService.openFile(mode, filePath, folderPath);
-    const { fileId, type, path, errorMessage } = result;
+    const { fileId, type, path, errorMessage, lastModified } = result;
     if (errorMessage) {
         // There was an error reading the file or the operation was cancelled
         return {
@@ -114,6 +114,7 @@ const openNewDataset = async (
             type,
             path,
             errorMessage,
+            lastModified,
         };
     }
     return result;

@@ -37,6 +37,7 @@ class ApiService {
         mode: 'local' | 'remote';
         path: string;
         type: DatasetType;
+        lastModified?: number;
     }[] = [];
 
     // List of opened files metadata
@@ -67,6 +68,7 @@ class ApiService {
                         fileId: file.fileId,
                         type: file.type,
                         path: file.path,
+                        lastModified: file.lastModified || 0,
                     };
                 }
             });
@@ -92,6 +94,7 @@ class ApiService {
                     path: '',
                     metadata: {} as DatasetJsonMetadata,
                     errorMessage: 'API info not provided reading metadata',
+                    lastModified: 0,
                 };
             }
             fileData = await this.openFileRemote(apiInfo);
@@ -125,6 +128,7 @@ class ApiService {
                 type: fileData.type,
                 mode,
                 name: fileData.path,
+                lastModified: fileData.lastModified,
             };
         } else {
             this.openedFiles.push({
@@ -133,6 +137,7 @@ class ApiService {
                 type: fileData.type,
                 mode,
                 name: fileData.path,
+                lastModified: fileData.lastModified,
             });
         }
 
@@ -167,6 +172,7 @@ class ApiService {
                 type: 'json',
                 path: '',
                 errorMessage: 'Failed to open the file',
+                lastModified: 0,
             };
         }
         return response;
@@ -178,10 +184,17 @@ class ApiService {
         dataset: IApiStudyDataset;
     }): Promise<IOpenFile> => {
         // At this stage it is already know that the dataset exists
+        let lastModified = 0;
+        if (apiInfo.dataset.datasetJSONCreationDateTime) {
+            lastModified = new Date(
+                apiInfo.dataset.datasetJSONCreationDateTime,
+            ).getTime();
+        }
         const result: IOpenFile = {
             fileId: `${apiInfo.api.id}-${apiInfo.study.studyOID}-${apiInfo.dataset.itemGroupOID}`,
             type: 'json',
             path: `${apiInfo.api.address}${apiInfo.dataset.href}`,
+            lastModified,
         };
         return result;
     };

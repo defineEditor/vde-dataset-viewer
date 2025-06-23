@@ -140,12 +140,19 @@ export interface ConverterData {
     destinationDir: string;
     sourceDir: string;
 }
+
+export interface ValidationReport {
+    date: string;
+    files: { file: string; lastModified: number }[];
+    output: string;
+}
 export interface ValidatorData {
     info: {
         version: string;
         standards: string[];
         terminology: string[];
     };
+    reports: ValidationReport[];
     configuration: ValidatorConfig;
 }
 

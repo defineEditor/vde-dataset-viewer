@@ -83,6 +83,7 @@ class FileManager {
                     type: 'json',
                     path: '',
                     errorMessage: 'Folder not found',
+                    lastModified: 0,
                 };
             }
         }
@@ -96,6 +97,7 @@ class FileManager {
                     type: 'json',
                     path: '',
                     errorMessage: 'File not found',
+                    lastModified: 0,
                 };
             }
             newFile = { path: filePath };
@@ -111,11 +113,17 @@ class FileManager {
                 type: 'json',
                 path: '',
                 errorMessage: 'cancelled',
+                lastModified: 0,
             };
         }
 
         if (mode === 'remote') {
-            return { fileId: newFile.path, type: 'json', path: newFile.path };
+            return {
+                fileId: newFile.path,
+                type: 'json',
+                path: newFile.path,
+                lastModified: 0,
+            };
         }
 
         const fileId = this.getFileId(newFile.path);
@@ -142,6 +150,7 @@ class FileManager {
                     type: 'json',
                     path: '',
                     errorMessage: 'File extension not supported',
+                    lastModified: 0,
                 };
         }
         let data: DatasetJson | DatasetXpt | DatasetSas7bdat;
@@ -163,11 +172,27 @@ class FileManager {
                 type: 'json',
                 path: '',
                 errorMessage: `An error occurred while opening the file ${newFile.path}: ${(error as Error).message}`,
+                lastModified: 0,
             };
         }
         this.openedFiles[fileId] = data;
 
-        return { fileId, type, path: newFile.path };
+        // Get last modified time
+        let lastModified = 0;
+        try {
+            const stats = fs.statSync(newFile.path);
+            lastModified = stats.mtime.getTime();
+        } catch (error) {
+            return {
+                fileId: '',
+                type: 'json',
+                path: '',
+                errorMessage: `An error occurred while opening the file ${newFile.path}: ${(error as Error).message}`,
+                lastModified: 0,
+            };
+        }
+
+        return { fileId, type, path: newFile.path, lastModified };
     };
 
     public handleFileClose = async (
@@ -376,6 +401,26 @@ class FileManager {
         } catch (error) {
             return null;
         }
+    };
+
+    public getLastModified = (
+        files: string[],
+    ): { file: string; lastModified: number }[] => {
+        const lastModified: { file: string; lastModified: number }[] = [];
+        for (const file of files) {
+            try {
+                const stats = fs.statSync(file);
+                lastModified.push({
+                    file,
+                    lastModified: stats.mtime.getTime(),
+                });
+            } catch (error) {
+                throw new Error(
+                    `Error getting last modified for ${file}: ${(error as Error).message}`,
+                );
+            }
+        }
+        return lastModified;
     };
 }
 

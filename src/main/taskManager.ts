@@ -137,7 +137,7 @@ class TaskManager {
         try {
             // Check destination folder exists
             if (!fs.existsSync(task.options.destinationDir)) {
-                throw new Error('Destination folder does not exist');
+                return { error: 'Destination folder does not exist' };
             }
             task.files.forEach((file, index) => {
                 this.taskQueue.push({

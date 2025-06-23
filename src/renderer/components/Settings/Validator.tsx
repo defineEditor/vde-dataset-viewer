@@ -53,7 +53,7 @@ export const Validator: React.FC<ValidatorProps> = ({
                                 type: 'error',
                             }),
                         );
-                    } else if (info.result) {
+                    } else if (info.result && typeof info.result === 'object') {
                         onChangeValidatorInfo(info.result);
                     }
                     setUpdating(false);

@@ -1,7 +1,7 @@
 import {
     ValidatorProcessTask,
     ValidateSubTask,
-    ProgressInfo,
+    ValidatorTaskProgress,
 } from 'interfaces/common';
 import fs from 'fs';
 import path from 'path';
@@ -242,10 +242,13 @@ const runValidation = async (
                 progressMatch = output.match(/(\d+)/);
                 if (output.startsWith('Output:')) {
                     // Validation finished, send final progress
-                    sendMessage(100);
+                    sendMessage(99);
                 } else if (progressMatch) {
                     const progress = parseInt(progressMatch[1], 10);
-                    if (progress > 0) {
+                    if (progress >= 99) {
+                        // We do not want to report 100 here
+                        sendMessage(99);
+                    } else if (progress > 0) {
                         sendMessage(progress);
                     }
                 }
@@ -256,7 +259,6 @@ const runValidation = async (
         childProcess.on('close', (code) => {
             if (code === 0) {
                 // Validation completed successfully
-                sendMessage(100);
                 resolve(outputFileName);
             } else {
                 reject(
@@ -282,7 +284,7 @@ process.parentPort.once(
     'message',
     async (messageData: {
         data: ValidatorProcessTask;
-    }): Promise<ProgressInfo> => {
+    }): Promise<ValidatorTaskProgress> => {
         const { data } = messageData;
         const { id, options } = data;
         // Use id as the task type since it aligns with ValidateSubTask values
@@ -357,21 +359,31 @@ process.parentPort.once(
                     });
                     break;
                 }
-                case 'validate':
-                    runValidation(
-                        validatorPath,
-                        data.configuration,
-                        data.validationDetails,
-                        data.outputDir || '',
-                        sendMessage,
-                    );
-                    process.parentPort.postMessage({
-                        id: processId,
-                        error: 'Validation not implemented yet',
-                        progress: 100,
-                    });
+                case 'validate': {
+                    try {
+                        const result = await runValidation(
+                            validatorPath,
+                            data.configuration,
+                            data.validationDetails,
+                            data.outputDir || '',
+                            sendMessage,
+                        );
+                        process.parentPort.postMessage({
+                            id: processId,
+                            result,
+                            progress: 100,
+                        });
+                    } catch (error) {
+                        if (error instanceof Error) {
+                            process.parentPort.postMessage({
+                                id: processId,
+                                error: `Validation failed: ${error.message}`,
+                                progress: 100,
+                            });
+                        }
+                    }
                     break;
-
+                }
                 default:
                     process.parentPort.postMessage({
                         id: processId,
