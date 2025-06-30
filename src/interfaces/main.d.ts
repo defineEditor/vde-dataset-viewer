@@ -1,6 +1,7 @@
 import { UpdateCheckResult } from 'electron-updater';
 import { DatasetMetadata } from 'interfaces/datasetJson';
 import { mainTaskTypes } from 'misc/constants';
+import { IssueSummaryItem } from './core.report';
 
 export interface SettingsConverter {
     threads: number;
@@ -145,11 +146,26 @@ export interface ConverterTaskProgress {
     error?: string;
 }
 
+export interface ValidationReport {
+    date: number;
+    files: { file: string; lastModified: number }[];
+    output: string;
+    config: ValidatorConfig;
+    summary: {
+        uniqueIssues: number;
+        totalIssues: number;
+        summary: IssueSummaryItem[];
+        newIssues?: number;
+        resolvedIssues?: number;
+        changedIssues?: number;
+    };
+}
+
 export interface ValidatorTaskProgress {
     type: typeof mainTaskTypes.VALIDATE;
     id: string;
     progress: number;
-    result?: ValidateGetInfoResult | string;
+    result?: ValidateGetInfoResult | ValidationReport;
     error?: string;
 }
 

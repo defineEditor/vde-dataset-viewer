@@ -2,6 +2,8 @@ import {
     ValidatorProcessTask,
     ValidateSubTask,
     ValidatorTaskProgress,
+    ValidationReport,
+    IssueSummaryItem,
 } from 'interfaces/common';
 import fs from 'fs';
 import path from 'path';
@@ -131,7 +133,7 @@ const runValidation = async (
     validationDetails: ValidatorProcessTask['validationDetails'],
     outputDir: string,
     sendMessage: (progress: number) => void,
-): Promise<string> => {
+): Promise<{ fileName: string; date: number }> => {
     // Build command arguments
     const args: string[] = ['validate'];
 
@@ -211,7 +213,7 @@ const runValidation = async (
         baseFileName = path.parse(firstFile).name;
     }
 
-    const outputFileName = `${baseFileName}-${timestamp}-core-validation.json`;
+    const outputFileName = `${baseFileName}-${timestamp}-core-validation`;
 
     // Use system temporary directory
     const outputPath = path.join(outputDir, outputFileName);
@@ -259,7 +261,10 @@ const runValidation = async (
         childProcess.on('close', (code) => {
             if (code === 0) {
                 // Validation completed successfully
-                resolve(outputFileName);
+                resolve({
+                    fileName: `${outputFileName}.json`,
+                    date: now.getTime(),
+                });
             } else {
                 reject(
                     new Error(
@@ -279,6 +284,53 @@ const runValidation = async (
         });
     });
 };
+
+const getLastModified = (
+    files: string[],
+): { file: string; lastModified: number }[] => {
+    const lastModified: { file: string; lastModified: number }[] = [];
+    for (const file of files) {
+        try {
+            const stats = fs.statSync(file);
+            lastModified.push({
+                file,
+                lastModified: stats.mtime.getTime(),
+            });
+        } catch (error) {
+            throw new Error(
+                `Error getting last modified for ${file}: ${(error as Error).message}`,
+            );
+        }
+    }
+    return lastModified;
+};
+
+/**
+ * Reads a validation report JSON file and returns the count of unique issues
+ * and the total number of issues (sum of "issues" attribute for each unique issue).
+ * @param filePath Path to the validation report JSON file
+ */
+export function getIssueSummary(filePath: string): {
+    uniqueIssues: number;
+    totalIssues: number;
+    summary: IssueSummaryItem[];
+} {
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    const report = JSON.parse(raw);
+    const summary: IssueSummaryItem[] = report.Issue_Summary || [];
+    const uniqueIssues = summary.length;
+    const totalIssues = summary.reduce(
+        (acc, item) =>
+            acc + (typeof item.issues === 'number' ? item.issues : 0),
+        0,
+    );
+
+    return {
+        uniqueIssues,
+        totalIssues,
+        summary,
+    };
+}
 
 process.parentPort.once(
     'message',
@@ -361,6 +413,11 @@ process.parentPort.once(
                 }
                 case 'validate': {
                     try {
+                        if (!data.configuration) {
+                            throw new Error(
+                                'Validation configuration is required.',
+                            );
+                        }
                         const result = await runValidation(
                             validatorPath,
                             data.configuration,
@@ -368,9 +425,24 @@ process.parentPort.once(
                             data.outputDir || '',
                             sendMessage,
                         );
+
+                        const summary = getIssueSummary(
+                            path.join(data.outputDir || '', result.fileName),
+                        );
+
+                        // Form validate report record
+                        const report: ValidationReport = {
+                            date: result.date,
+                            files: getLastModified(
+                                data.validationDetails?.files || [],
+                            ),
+                            output: result.fileName,
+                            config: data.configuration,
+                            summary,
+                        };
                         process.parentPort.postMessage({
                             id: processId,
-                            result,
+                            result: report,
                             progress: 100,
                         });
                     } catch (error) {

@@ -6,6 +6,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Configuration from 'renderer/components/Modal/Validator/Configuration';
+import Results from 'renderer/components/Modal/Validator/Results';
 import AppContext from 'renderer/utils/AppContext';
 import { mainTaskTypes } from 'misc/constants';
 import { IUiModal, ValidatorConfig, TaskProgress } from 'interfaces/common';
@@ -15,7 +16,10 @@ import {
     setValidatorTab,
     openSnackbar,
 } from 'renderer/redux/slices/ui';
-import { setValidatorData } from 'renderer/redux/slices/data';
+import {
+    addValidationReport,
+    setValidatorData,
+} from 'renderer/redux/slices/data';
 import ValidationProgress from './ValidationProgress';
 
 const styles = {
@@ -47,10 +51,6 @@ const styles = {
         flexDirection: 'column',
         p: 0,
     },
-};
-
-const Results: React.FC = () => {
-    return null;
 };
 
 const Validator: React.FC<IUiModal> = (props: IUiModal) => {
@@ -111,13 +111,16 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
                                 type: 'error',
                             }),
                         );
-                    } else if (info.result && typeof info.result === 'string') {
-                        // Handle the result, e.g., update state or show results
-                        console.log('Validation result:', info.result);
+                    } else if (info.result) {
+                        // Only dispatch if result is a ValidationReport (has required properties)
+                        if (
+                            info.result &&
+                            typeof info.result === 'object' &&
+                            'date' in info.result
+                        ) {
+                            dispatch(addValidationReport(info.result));
+                        }
                     }
-                } else {
-                    // Update progress, e.g., show a progress bar or spinner
-                    console.log('Validation progress:', info.progress);
                 }
             }
         });

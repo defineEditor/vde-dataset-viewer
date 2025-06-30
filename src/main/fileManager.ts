@@ -402,26 +402,6 @@ class FileManager {
             return null;
         }
     };
-
-    public getLastModified = (
-        files: string[],
-    ): { file: string; lastModified: number }[] => {
-        const lastModified: { file: string; lastModified: number }[] = [];
-        for (const file of files) {
-            try {
-                const stats = fs.statSync(file);
-                lastModified.push({
-                    file,
-                    lastModified: stats.mtime.getTime(),
-                });
-            } catch (error) {
-                throw new Error(
-                    `Error getting last modified for ${file}: ${(error as Error).message}`,
-                );
-            }
-        }
-        return lastModified;
-    };
 }
 
 export default FileManager;
