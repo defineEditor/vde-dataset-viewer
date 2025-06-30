@@ -103,6 +103,8 @@ contextBridge.exposeInMainWorld('electron', {
         initialFolder: string | null,
     ): Promise<string | null> =>
         ipcRenderer.invoke('main:openDirectoryDialog', initialFolder),
+    deleteValidationReport: (fileName: string): Promise<boolean> =>
+        ipcRenderer.invoke('main:deleteValidationReport', fileName),
     isWindows: process.platform === 'win32',
     startTask: (task: MainTask) => ipcRenderer.invoke('main:startTask', task),
     onTaskProgress: (callback: (info: TaskProgress) => void) => {

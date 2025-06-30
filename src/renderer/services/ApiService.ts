@@ -862,6 +862,13 @@ class ApiService {
         const validationResult = this.startTask(validationTask);
         return validationResult;
     };
+
+    public deleteValidationReport = async (
+        fileName: string,
+    ): Promise<boolean> => {
+        const result = await window.electron.deleteValidationReport(fileName);
+        return result;
+    };
 }
 
 export default ApiService;

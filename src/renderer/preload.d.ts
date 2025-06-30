@@ -89,6 +89,7 @@ declare global {
             openDirectoryDialog: (
                 initialFolder: string | null,
             ) => Promise<string>;
+            deleteValidationReport: (fileName: string) => Promise<boolean>;
             getAppVersion: () => Promise<string>;
             isWindows: boolean;
         };

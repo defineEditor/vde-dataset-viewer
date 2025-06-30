@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import AppContext from 'renderer/utils/AppContext';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import {
     List,
@@ -8,9 +9,12 @@ import {
     Typography,
     Stack,
     Box,
+    Paper,
+    TablePagination,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { openSnackbar } from 'renderer/redux/slices/ui';
 import { removeValidationReport } from 'renderer/redux/slices/data';
 import { ValidationReport } from 'interfaces/common';
 
@@ -19,11 +23,23 @@ const styles = {
         p: 2,
         height: '100%',
         overflow: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
     },
     emptyState: {
         textAlign: 'center',
         mt: 4,
         color: 'text.secondary',
+    },
+    listContainer: {
+        flex: '1 1 auto',
+        overflow: 'auto',
+    },
+    pagination: {
+        display: 'flex',
+        flex: '0 1 auto',
+        justifyContent: 'flex-end',
+        mt: 1,
     },
     listItem: {
         border: '1px solid',
@@ -48,6 +64,17 @@ const styles = {
         color: '#4caf50',
         fontWeight: 'medium',
     },
+    listContentContainer: {
+        flexGrow: 1,
+        minHeight: 0,
+        overflowY: 'auto',
+    },
+    paginationPaper: {
+        mt: 'auto',
+        borderTop: 1,
+        borderRadius: 0,
+        borderColor: 'divider',
+    },
 };
 
 interface ResultsProps {}
@@ -55,9 +82,94 @@ interface ResultsProps {}
 const Results: React.FC<ResultsProps> = () => {
     const dispatch = useAppDispatch();
     const validatorData = useAppSelector((state) => state.data.validator);
+    const { apiService } = React.useContext(AppContext);
 
-    const handleDeleteReport = (index: number) => {
+    const [page, setPage] = useState(0);
+    const [itemsPerPage, setItemsPerPage] = useState(6);
+    const listContainerRef = useRef<HTMLDivElement>(null);
+
+    // Calculate items per page based on container height
+    useEffect(() => {
+        const calculateItemsPerPage = () => {
+            if (listContainerRef.current) {
+                const containerHeight =
+                    listContainerRef.current.clientHeight - 16 - 20; // Subtract padding/margin
+                const itemHeight = 80; // Each list item with margin is 80px
+                const calculatedItems = Math.floor(
+                    containerHeight / itemHeight,
+                );
+                // Ensure at least 1 item is shown, and maximum reasonable limit
+                const newItemsPerPage = Math.max(
+                    1,
+                    Math.min(calculatedItems, 50),
+                );
+                setItemsPerPage(newItemsPerPage);
+                // Reset page if current page would be invalid
+                if (page > 0) {
+                    const maxPage = Math.max(
+                        0,
+                        Math.ceil(
+                            validatorData.reports.length / newItemsPerPage,
+                        ) - 1,
+                    );
+                    if (page > maxPage) {
+                        setPage(maxPage);
+                    }
+                }
+            }
+        };
+
+        // Calculate on mount and when container size might change
+        calculateItemsPerPage();
+
+        // Add resize observer to recalculate when container size changes
+        const resizeObserver = new ResizeObserver(calculateItemsPerPage);
+        if (listContainerRef.current) {
+            resizeObserver.observe(listContainerRef.current);
+        }
+
+        return () => {
+            resizeObserver.disconnect();
+        };
+    }, [validatorData.reports.length, page]);
+
+    const handleChangePage = (
+        _event: React.MouseEvent<HTMLButtonElement> | null,
+        newPage: number,
+    ) => {
+        setPage(newPage);
+    };
+
+    const handleDeleteReport = async (index: number) => {
         dispatch(removeValidationReport({ index }));
+        const deleteResult = await apiService.deleteValidationReport(
+            validatorData.reports[index].output,
+        );
+        if (deleteResult === false) {
+            dispatch(
+                openSnackbar({
+                    message: `Error deleting report`,
+                    type: 'error',
+                }),
+            );
+        } else {
+            dispatch(
+                openSnackbar({
+                    message: 'Validation report deleted',
+                    type: 'success',
+                }),
+            );
+        }
+
+        // Reset page to 0 if current page would be empty after deletion
+        const newTotalReports = validatorData.reports.length - 1;
+        const maxPage = Math.max(
+            0,
+            Math.ceil(newTotalReports / itemsPerPage) - 1,
+        );
+        if (page > maxPage) {
+            setPage(maxPage);
+        }
     };
 
     const handleOpenReport = (_report: ValidationReport) => {
@@ -132,16 +244,26 @@ const Results: React.FC<ResultsProps> = () => {
         );
     }
 
+    // Get sorted reports for pagination
+    const sortedReports = validatorData.reports
+        .slice()
+        .sort((a, b) => b.date - a.date);
+
+    const totalReports = sortedReports.length;
+    const paginatedReports = sortedReports.slice(
+        page * itemsPerPage,
+        page * itemsPerPage + itemsPerPage,
+    );
+
     return (
         <Box sx={styles.container}>
             <Typography variant="h6" gutterBottom>
                 Validation Results ({validatorData.reports.length})
             </Typography>
-            <List>
-                {validatorData.reports
-                    .slice()
-                    .sort((a, b) => b.date - a.date)
-                    .map((report, index) => {
+            <Box ref={listContainerRef} sx={styles.listContentContainer}>
+                <List>
+                    {paginatedReports.map((report, _displayIndex) => {
+                        const actualIndex = sortedReports.indexOf(report);
                         const datasetCount = getDatasetCount(report);
                         const {
                             uniqueIssues,
@@ -159,8 +281,28 @@ const Results: React.FC<ResultsProps> = () => {
                             `${String(date.getMinutes()).padStart(2, '0')}:` +
                             `${String(date.getSeconds()).padStart(2, '0')}`;
 
+                        // Use first 5 dataset names and add (+ X more) if applicable
+                        const datasetNames = report.files
+                            ? report.files
+                                  .slice(0, 5)
+                                  .map((file) =>
+                                      file.file
+                                          .replace(
+                                              /.*(?:\/|\\)(.*)\.\w+$/,
+                                              '$1',
+                                          )
+                                          .toUpperCase(),
+                                  )
+                                  .join(', ')
+                            : '';
+                        const additionalCount =
+                            report.files && report.files.length > 5
+                                ? ` (+${report.files.length - 5} more)`
+                                : '';
+
                         const reportTitle =
-                            `${reportDate} (${getTimeAgo(report.date)} ago)` ||
+                            `${datasetNames}${additionalCount || ''} ` +
+                                `${reportDate} (${getTimeAgo(report.date)} ago)` ||
                             'Validation Report';
 
                         const hasComparison =
@@ -195,10 +337,10 @@ const Results: React.FC<ResultsProps> = () => {
                                             edge="end"
                                             aria-label="delete report"
                                             onClick={() =>
-                                                handleDeleteReport(index)
+                                                handleDeleteReport(actualIndex)
                                             }
                                             size="small"
-                                            color="error"
+                                            color="default"
                                         >
                                             <DeleteIcon />
                                         </IconButton>
@@ -243,7 +385,20 @@ const Results: React.FC<ResultsProps> = () => {
                             </ListItem>
                         );
                     })}
-            </List>
+                </List>
+            </Box>
+            {totalReports > itemsPerPage && (
+                <Paper elevation={0} sx={styles.paginationPaper}>
+                    <TablePagination
+                        component="div"
+                        count={totalReports}
+                        page={page}
+                        onPageChange={handleChangePage}
+                        rowsPerPage={itemsPerPage}
+                        rowsPerPageOptions={[]}
+                    />
+                </Paper>
+            )}
         </Box>
     );
 };

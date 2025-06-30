@@ -7,7 +7,7 @@ import {
     ipcMain,
     IpcMainInvokeEvent,
 } from 'electron';
-import StoreManager from 'main/storeManager';
+import StoreManager from 'main/managers/storeManager';
 import { resolveHtmlPath, writeToClipboard } from 'main/util';
 import {
     installExtension,
@@ -15,9 +15,10 @@ import {
     REACT_DEVELOPER_TOOLS,
 } from 'electron-devtools-installer';
 import { checkForUpdates, downloadUpdate } from 'main/appUpdate';
-import FileManager from 'main/fileManager';
-import NetManager from 'main/netManager';
-import TaskManager from 'main/taskManager';
+import FileManager from 'main/managers/fileManager';
+import NetManager from 'main/managers/netManager';
+import TaskManager from 'main/managers/taskManager';
+import ReportManager from 'main/managers/reportManager';
 import { MainTask } from 'interfaces/main';
 
 let mainWindow: BrowserWindow | null = null;
@@ -43,6 +44,11 @@ fileToOpen = getFilePathFromArgs(process.argv);
 
 // Handle file opening from "Open With" on start
 const gotTheLock = app.requestSingleInstanceLock();
+
+const reportsDirectory = path.join(
+    app.getPath('userData'),
+    'validationReports',
+);
 
 if (!gotTheLock) {
     app.quit();
@@ -187,13 +193,18 @@ app.whenReady()
         const fileManager = new FileManager();
         const storeManager = new StoreManager();
         const netManager = new NetManager();
-        const taskManager = new TaskManager();
+        const taskManager = new TaskManager({ reportsDirectory });
+        const reportManager = new ReportManager(reportsDirectory);
         ipcMain.handle('main:openFile', fileManager.handleFileOpen);
         ipcMain.handle('main:fetch', netManager.fetch);
         ipcMain.handle('main:closeFile', fileManager.handleFileClose);
         ipcMain.handle('main:writeToClipboard', writeToClipboard);
         ipcMain.handle('main:checkForUpdates', checkForUpdates);
         ipcMain.handle('main:downloadUpdate', downloadUpdate);
+        ipcMain.handle(
+            'main:deleteValidationReport',
+            reportManager.deleteValidationReport,
+        );
         ipcMain.handle('read:getMetadata', fileManager.handleGetMetadata);
         ipcMain.handle(
             'read:getObservations',

@@ -26,7 +26,8 @@ const styles = {
     dialog: {
         maxWidth: '95%',
         minWidth: { xs: '95%', sm: '95%', md: '90%', lg: '80%', xl: '80%' },
-        height: '80%',
+        height: { xs: '95%', sm: '95%', md: '90%', lg: '85%', xl: '85%' },
+        maxHeight: '95%',
     },
     tabs: {
         flexGrow: 1,
