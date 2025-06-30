@@ -73,7 +73,7 @@ const Execution: React.FC<{
     useEffect(() => {
         apiService.cleanTaskProgressListeners();
 
-        apiService.subscriteToTaskProgress((info: TaskProgress) => {
+        apiService.subscribeToTaskProgress((info: TaskProgress) => {
             if (info.type !== mainTaskTypes.CONVERT) {
                 return;
             }

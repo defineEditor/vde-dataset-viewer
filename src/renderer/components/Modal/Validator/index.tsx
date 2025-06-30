@@ -94,7 +94,7 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
         setConversionProgress(null);
         setValidationProgress(0);
 
-        apiService.subscriteToTaskProgress((info: TaskProgress) => {
+        apiService.subscribeToTaskProgress((info: TaskProgress) => {
             if (info.type !== mainTaskTypes.VALIDATE) {
                 return;
             }

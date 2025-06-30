@@ -758,7 +758,7 @@ class ApiService {
         return result;
     };
 
-    public subscriteToTaskProgress = (
+    public subscribeToTaskProgress = (
         callback: (info: TaskProgress) => void,
     ) => {
         window.electron.onTaskProgress(callback);

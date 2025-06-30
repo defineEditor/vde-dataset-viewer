@@ -38,7 +38,7 @@ export const Validator: React.FC<ValidatorProps> = ({
         (validatorPath: string) => {
             apiService.cleanTaskProgressListeners();
 
-            apiService.subscriteToTaskProgress((info: TaskProgress) => {
+            apiService.subscribeToTaskProgress((info: TaskProgress) => {
                 if (info.type !== mainTaskTypes.VALIDATE) {
                     return;
                 }
