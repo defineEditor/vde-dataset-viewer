@@ -11,8 +11,8 @@ import {
     IFetchResponse,
     FileInfo,
     MainTask,
-    ProgressInfo,
     TableRowValue,
+    TaskProgress,
 } from 'interfaces/common';
 
 declare global {
@@ -29,6 +29,7 @@ declare global {
                 fileId: string;
                 type: DatasetType;
                 path: string;
+                lastModified: number;
             } | null>;
             closeFile: (
                 fileId: string,
@@ -78,7 +79,7 @@ declare global {
             };
             writeToClipboard: (text: string) => Promise<boolean>;
             startTask: (task: MainTask) => Promise<boolean | { error: string }>;
-            onTaskProgress: (callback: (info: ProgressInfo) => void) => void;
+            onTaskProgress: (callback: (info: TaskProgress) => void) => void;
             cleanTaskProgressListeners: () => void;
             openFileDialog: (options: {
                 multiple?: boolean;
@@ -88,6 +89,7 @@ declare global {
             openDirectoryDialog: (
                 initialFolder: string | null,
             ) => Promise<string>;
+            deleteValidationReport: (fileName: string) => Promise<boolean>;
             getAppVersion: () => Promise<string>;
             isWindows: boolean;
         };

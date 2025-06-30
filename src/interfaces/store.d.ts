@@ -4,6 +4,7 @@ import {
     SettingsConverter,
     SettingsValidator,
     ValidatorConfig,
+    ValidationReport,
 } from 'interfaces/main';
 import { modals, ModalType, AllowedPathnames } from 'misc/constants';
 import { ConversionConfig } from 'interfaces/converter';
@@ -140,12 +141,14 @@ export interface ConverterData {
     destinationDir: string;
     sourceDir: string;
 }
+
 export interface ValidatorData {
     info: {
         version: string;
         standards: string[];
         terminology: string[];
     };
+    reports: ValidationReport[];
     configuration: ValidatorConfig;
 }
 

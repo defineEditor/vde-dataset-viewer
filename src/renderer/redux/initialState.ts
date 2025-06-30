@@ -121,6 +121,7 @@ export const validator: ValidatorData = {
         standard: '',
         version: '',
     },
+    reports: [],
 };
 
 export const data: IData = {

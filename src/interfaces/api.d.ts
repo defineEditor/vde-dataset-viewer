@@ -20,6 +20,7 @@ export interface IOpenFile {
     fileId: string;
     type: DatasetType;
     path: string;
+    lastModified: number;
     datasetNames?: string[];
     errorMessage?: string;
 }

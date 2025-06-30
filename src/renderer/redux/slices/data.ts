@@ -1,6 +1,11 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { data as initialData } from 'renderer/redux/initialState';
-import { IRecentFile, BasicFilter, ConverterData } from 'interfaces/common';
+import {
+    IRecentFile,
+    BasicFilter,
+    ConverterData,
+    ValidationReport,
+} from 'interfaces/common';
 import { IMask, ValidatorData } from 'interfaces/store';
 import deepEqual from 'renderer/utils/deepEqual';
 import getFolderName from 'renderer/utils/getFolderName';
@@ -141,6 +146,87 @@ export const dataSlice = createSlice({
             // Reset validator info
             state.validator.info = initialData.validator.info;
         },
+        addValidationReport: (
+            state,
+            action: PayloadAction<ValidationReport>,
+        ) => {
+            const newReport = action.payload;
+
+            // Find reports with exactly the same files
+            const sameFilesReports = state.validator.reports.filter(
+                (report) => {
+                    if (report.files.length !== newReport.files.length) {
+                        return false;
+                    }
+
+                    // Check if all file paths match
+                    return report.files.every((file) =>
+                        newReport.files.some(
+                            (newFile) => newFile.file === file.file,
+                        ),
+                    );
+                },
+            );
+
+            if (sameFilesReports.length > 0) {
+                // Find the most recent report with same files
+                const mostRecentReport = sameFilesReports.reduce(
+                    (latest, current) =>
+                        current.date > latest.date ? current : latest,
+                );
+
+                // Compare summaries to find differences
+                const oldIssues = mostRecentReport.summary?.summary || [];
+                const newIssues = newReport.summary?.summary || [];
+
+                // Create maps for easier comparison using core_id as unique identifier
+                const oldIssueMap = new Map(
+                    oldIssues.map((issue) => [issue.core_id, issue]),
+                );
+                const newIssueMap = new Map(
+                    newIssues.map((issue) => [issue.core_id, issue]),
+                );
+
+                let newIssuesCount = 0;
+                let changedIssuesCount = 0;
+                let resolvedIssuesCount = 0;
+
+                // Find new and changed issues
+                for (const [key, newIssue] of newIssueMap) {
+                    const oldIssue = oldIssueMap.get(key);
+                    if (!oldIssue) {
+                        newIssuesCount++;
+                    } else if (oldIssue.issues !== newIssue.issues) {
+                        changedIssuesCount++;
+                    }
+                }
+
+                // Find resolved issues
+                for (const [key] of oldIssueMap) {
+                    if (!newIssueMap.has(key)) {
+                        resolvedIssuesCount++;
+                    }
+                }
+
+                // Add comparison data to the new report summary
+                newReport.summary.newIssues = newIssuesCount;
+                newReport.summary.changedIssues = changedIssuesCount;
+                newReport.summary.resolvedIssues = resolvedIssuesCount;
+            }
+
+            // Add the new validation report
+            state.validator.reports.push(newReport);
+        },
+        removeValidationReport: (
+            state,
+            action: PayloadAction<{ index: number }>,
+        ) => {
+            // Remove a validation report by index
+            const idx = action.payload.index;
+            if (idx >= 0 && idx < state.validator.reports.length) {
+                state.validator.reports.splice(idx, 1);
+            }
+        },
     },
     extraReducers: (builder) => {
         builder.addCase(openDataset, (state, action) => {
@@ -209,6 +295,8 @@ export const {
     clearMask,
     setValidatorData,
     resetValidatorInfo,
+    addValidationReport,
+    removeValidationReport,
 } = dataSlice.actions;
 
 export default dataSlice.reducer;

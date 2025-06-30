@@ -38,7 +38,7 @@ export const Validator: React.FC<ValidatorProps> = ({
         (validatorPath: string) => {
             apiService.cleanTaskProgressListeners();
 
-            apiService.subscriteToTaskProgress((info: TaskProgress) => {
+            apiService.subscribeToTaskProgress((info: TaskProgress) => {
                 if (info.type !== mainTaskTypes.VALIDATE) {
                     return;
                 }
@@ -53,7 +53,7 @@ export const Validator: React.FC<ValidatorProps> = ({
                                 type: 'error',
                             }),
                         );
-                    } else if (info.result) {
+                    } else if (info.result && typeof info.result === 'object') {
                         onChangeValidatorInfo(info.result);
                     }
                     setUpdating(false);

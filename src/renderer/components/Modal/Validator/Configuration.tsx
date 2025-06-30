@@ -180,7 +180,7 @@ const Configuration: React.FC<{
                     </TextField>
 
                     <TextField
-                        select
+                        select={availableVersions.length > 0}
                         name="version"
                         label="Version"
                         disabled={config.customStandard}

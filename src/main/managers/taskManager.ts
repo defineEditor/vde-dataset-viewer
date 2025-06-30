@@ -20,7 +20,15 @@ class TaskManager {
 
     private mainWindow: BrowserWindow | null;
 
-    constructor() {
+    private reportsDirectory: string;
+
+    constructor({ reportsDirectory }: { reportsDirectory: string }) {
+        this.reportsDirectory = reportsDirectory;
+        if (!fs.existsSync(this.reportsDirectory)) {
+            throw new Error(
+                `Reports directory does not exist: ${this.reportsDirectory}`,
+            );
+        }
         this.processes = new Map();
         this.taskQueue = [];
         this.running = 0;
@@ -58,10 +66,7 @@ class TaskManager {
         } else if (type === mainTaskTypes.VALIDATE) {
             process.postMessage({
                 ...processTask,
-                outputDir: path.join(
-                    app.getPath('userData'),
-                    'validationReports',
-                ),
+                outputDir: this.reportsDirectory,
             });
         }
 
@@ -137,7 +142,7 @@ class TaskManager {
         try {
             // Check destination folder exists
             if (!fs.existsSync(task.options.destinationDir)) {
-                throw new Error('Destination folder does not exist');
+                return { error: 'Destination folder does not exist' };
             }
             task.files.forEach((file, index) => {
                 this.taskQueue.push({
