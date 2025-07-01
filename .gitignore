@@ -23,6 +23,9 @@ release/build
 release/Release*
 .erb/dll
 
+# Tests
+src/__tests__
+
 .idea
 npm-debug.log.*
 *.css.d.ts
