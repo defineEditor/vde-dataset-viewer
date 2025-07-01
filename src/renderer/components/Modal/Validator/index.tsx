@@ -67,6 +67,8 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
 
     const { apiService } = useContext(AppContext);
 
+    const currentFilePath = apiService.getOpenedFiles(currentFileId)[0]?.path;
+
     const handleClose = useCallback(() => {
         dispatch(closeModal({ type }));
     }, [dispatch, type]);
@@ -202,7 +204,7 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
                     )}
                 </Box>
                 <Box hidden={validatorTab !== 1} sx={styles.tabPanel}>
-                    <Results />
+                    <Results filePaths={[currentFilePath]} />
                 </Box>
             </DialogContent>
             <DialogActions sx={styles.actions}>

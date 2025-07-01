@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import AppContext from 'renderer/utils/AppContext';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import {
@@ -77,11 +77,28 @@ const styles = {
     },
 };
 
-interface ResultsProps {}
+interface ResultsProps {
+    filePaths?: string[];
+}
 
-const Results: React.FC<ResultsProps> = () => {
+const Results: React.FC<ResultsProps> = ({ filePaths = [] }) => {
     const dispatch = useAppDispatch();
-    const validatorData = useAppSelector((state) => state.data.validator);
+    const allReports = useAppSelector((state) => state.data.validator.reports);
+    const reports = useMemo(() => {
+        // Keep only those reports, which have include all the file paths
+        if (!filePaths || filePaths.length === 0) {
+            return allReports; // No filtering if no file paths provided
+        }
+        return allReports.filter((report) => {
+            const reportFiles = report.files.map((file) => file.file);
+            if (reportFiles.length < filePaths.length) {
+                return false; // Report doesn't include all file paths
+            }
+            // Check if all file paths match
+            return filePaths.every((file) => reportFiles.includes(file));
+        });
+    }, [allReports, filePaths]);
+
     const { apiService } = React.useContext(AppContext);
 
     const [page, setPage] = useState(0);
@@ -108,9 +125,7 @@ const Results: React.FC<ResultsProps> = () => {
                 if (page > 0) {
                     const maxPage = Math.max(
                         0,
-                        Math.ceil(
-                            validatorData.reports.length / newItemsPerPage,
-                        ) - 1,
+                        Math.ceil(reports.length / newItemsPerPage) - 1,
                     );
                     if (page > maxPage) {
                         setPage(maxPage);
@@ -131,7 +146,7 @@ const Results: React.FC<ResultsProps> = () => {
         return () => {
             resizeObserver.disconnect();
         };
-    }, [validatorData.reports.length, page]);
+    }, [reports.length, page]);
 
     const handleChangePage = (
         _event: React.MouseEvent<HTMLButtonElement> | null,
@@ -143,7 +158,7 @@ const Results: React.FC<ResultsProps> = () => {
     const handleDeleteReport = async (index: number) => {
         dispatch(removeValidationReport({ index }));
         const deleteResult = await apiService.deleteValidationReport(
-            validatorData.reports[index].output,
+            reports[index].output,
         );
         if (deleteResult === false) {
             dispatch(
@@ -162,7 +177,7 @@ const Results: React.FC<ResultsProps> = () => {
         }
 
         // Reset page to 0 if current page would be empty after deletion
-        const newTotalReports = validatorData.reports.length - 1;
+        const newTotalReports = reports.length - 1;
         const maxPage = Math.max(
             0,
             Math.ceil(newTotalReports / itemsPerPage) - 1,
@@ -226,7 +241,7 @@ const Results: React.FC<ResultsProps> = () => {
         return `${years} year${years === 1 ? '' : 's'} ago`;
     };
 
-    if (validatorData.reports.length === 0) {
+    if (reports.length === 0) {
         return (
             <Box sx={styles.container}>
                 <Typography variant="h6" gutterBottom>
@@ -245,9 +260,7 @@ const Results: React.FC<ResultsProps> = () => {
     }
 
     // Get sorted reports for pagination
-    const sortedReports = validatorData.reports
-        .slice()
-        .sort((a, b) => b.date - a.date);
+    const sortedReports = reports.slice().sort((a, b) => b.date - a.date);
 
     const totalReports = sortedReports.length;
     const paginatedReports = sortedReports.slice(
@@ -258,7 +271,7 @@ const Results: React.FC<ResultsProps> = () => {
     return (
         <Box sx={styles.container}>
             <Typography variant="h6" gutterBottom>
-                Validation Results ({validatorData.reports.length})
+                Validation Results ({reports.length})
             </Typography>
             <Box ref={listContainerRef} sx={styles.listContentContainer}>
                 <List>
