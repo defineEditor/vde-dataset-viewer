@@ -6,7 +6,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Configuration from 'renderer/components/Modal/Validator/Configuration';
-import Results from 'renderer/components/Modal/Validator/Results';
+import Results from 'renderer/components/Common/ValidationResults';
 import AppContext from 'renderer/utils/AppContext';
 import { mainTaskTypes } from 'misc/constants';
 import { IUiModal, ValidatorConfig, TaskProgress } from 'interfaces/common';

@@ -161,11 +161,12 @@ const Settings: React.FC = () => {
                     value={tabIndex}
                     onChange={handleTabChange}
                     variant="fullWidth"
+                    sx={styles.tabs}
                 >
-                    <Tab label="Viewer" sx={styles.tab} />
-                    <Tab label="Converter" sx={styles.tab} />
-                    <Tab label="Validation" sx={styles.tab} />
-                    <Tab label="Other" sx={styles.tab} />
+                    <Tab label="VIEWER" />
+                    <Tab label="CONVERTER" />
+                    <Tab label="VALIDATION" />
+                    <Tab label="OTHER" />
                 </Tabs>
                 <Box sx={styles.scrollableContent}>
                     <Box hidden={tabIndex !== 0} sx={styles.tabPanel}>
@@ -201,13 +202,18 @@ const Settings: React.FC = () => {
             </Box>
             <Box sx={styles.fixedButtonBar}>
                 <Stack direction="row" spacing={2} sx={styles.buttonContainer}>
-                    <Button onClick={handleReset} color="primary">
+                    <Button
+                        onClick={handleReset}
+                        color="primary"
+                        variant="contained"
+                    >
                         Reset to default
                     </Button>
                     <Button
                         onClick={handleCancel}
                         disabled={!settingsChanged}
                         color="primary"
+                        variant="contained"
                     >
                         Cancel
                     </Button>
@@ -215,6 +221,7 @@ const Settings: React.FC = () => {
                         onClick={handleSave}
                         disabled={!settingsChanged}
                         color="primary"
+                        variant="contained"
                     >
                         Save
                     </Button>

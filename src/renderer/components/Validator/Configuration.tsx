@@ -1,38 +1,61 @@
-import React, { useContext } from 'react';
+import React, { useState, useContext, useEffect, useMemo } from 'react';
 import {
-    Paper,
     Stack,
     Button,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    IconButton,
     Typography,
+    MenuItem,
+    TextField,
+    FormControlLabel,
+    Switch,
+    Paper,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
 } from '@mui/material';
-import { FileInfo } from 'interfaces/common';
-import DeleteIcon from '@mui/icons-material/Delete';
-import FolderOpenIcon from '@mui/icons-material/FolderOpen';
+import { FileInfo, ConvertedFileInfo } from 'interfaces/common';
+import { ValidatorConfig } from 'interfaces/main';
+import { useAppSelector } from 'renderer/redux/hooks';
 import AppContext from 'renderer/utils/AppContext';
+import FileSelector from 'renderer/components/Common/FileSelector';
+import PathSelector from 'renderer/components/FileSelector';
 
 const styles = {
     container: {
-        p: 0,
+        p: 2,
         height: '100%',
         backgroundColor: 'grey.100',
     },
-    fileActions: {
-        mt: 2,
-        mb: 2,
-    },
-    tableContainer: {
-        mb: 2,
-        flex: 1,
-    },
     validateActions: {
-        mt: 2,
+        p: 0,
+        display: 'flex',
+        justifyContent: 'flex-end',
+        gap: 2,
+    },
+    fileSelector: {
+        p: 2,
+        backgroundColor: 'white',
+        borderRadius: 1,
+        boxShadow: 1,
+        flex: '1 1 auto',
+    },
+    configSection: {
+        p: 2,
+        backgroundColor: 'white',
+        borderRadius: 1,
+        boxShadow: 1,
+        mb: 2,
+    },
+    configRow: {
+        direction: 'row',
+        spacing: 2,
+        alignItems: 'center',
+    },
+    selectInput: {
+        minWidth: 200,
+    },
+    dialogContent: {
+        minWidth: 500,
     },
 };
 
@@ -41,107 +64,207 @@ interface ValidatorConfigurationProps {
     setSelectedFiles: React.Dispatch<React.SetStateAction<FileInfo[]>>;
     validating: boolean;
     onValidate: () => void;
+    config: ValidatorConfig;
+    setConfig: React.Dispatch<React.SetStateAction<ValidatorConfig>>;
 }
+
+const getExtension = (filename: string): string => {
+    const parts = filename.split('.');
+    return parts.length > 1 ? parts.pop()!.toLowerCase() : '';
+};
 
 const ValidatorConfiguration: React.FC<ValidatorConfigurationProps> = ({
     selectedFiles,
     setSelectedFiles,
     validating,
     onValidate,
+    config,
+    setConfig,
 }) => {
     const { apiService } = useContext(AppContext);
+    const validatorData = useAppSelector((state) => state.data.validator);
+    const validatorSettings = useAppSelector(
+        (state) => state.settings.validator,
+    );
+    
+    const [dictionaryModalOpen, setDictionaryModalOpen] = useState(false);
 
-    const handleAddFiles = async () => {
-        if (!apiService?.openFileDialog) return;
-        const result = await apiService.openFileDialog({ multiple: true });
-        if (result && Array.isArray(result)) {
-            setSelectedFiles((prev) => [
+    // Derive version and standard options from the validator info
+    const validatorStandards = useMemo(() => {
+        const standards: {
+            [key: string]: { name: string; versions: string[] };
+        } = {};
+        validatorData.info.standards.forEach((rawStandard) => {
+            const parsedStandard = rawStandard.split(',');
+            const [name, version] = parsedStandard;
+            if (!standards[name]) {
+                standards[name] = { name, versions: [version] };
+            } else {
+                standards[name].versions.push(version);
+            }
+        });
+        return standards;
+    }, [validatorData.info.standards]);
+
+    const availableStandards = useMemo(
+        () => Object.keys(validatorStandards),
+        [validatorStandards],
+    );
+
+    const [availableVersions, setAvailableVersions] = useState<string[]>([]);
+
+    // Update available versions when the standard changes
+    useEffect(() => {
+        const selectedStandard = config.standard;
+        if (validatorStandards[selectedStandard]) {
+            setConfig((prev) => ({
                 ...prev,
-                ...result.filter(
-                    (file: FileInfo) =>
-                        !prev.some((f) => f.fullPath === file.fullPath),
-                ),
-            ]);
+                version: validatorStandards[selectedStandard].versions[0],
+            }));
+            setAvailableVersions(validatorStandards[selectedStandard].versions);
+        } else {
+            setAvailableVersions([]);
         }
+    }, [config.standard, validatorStandards, setConfig]);
+
+    // Helper function to handle path selection
+    const handlePathSelection = async (
+        name: 'whodrugPath' | 'meddraPath' | 'loincPath' | 'medrtPath' | 'uniiPath',
+        reset: boolean = false,
+    ) => {
+        if (reset) {
+            setConfig((prev) => ({
+                ...prev,
+                [name]: '',
+            }));
+            return;
+        }
+
+        const result = await apiService.openDirectoryDialog(config[name]);
+        if (result === null || result === '') {
+            return;
+        }
+
+        setConfig((prev) => ({
+            ...prev,
+            [name]: result,
+        }));
     };
 
-    const handleRemoveFile = (index: number) => {
-        setSelectedFiles((files) => files.filter((_, i) => i !== index));
+    // Handle text input changes
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = event.target;
+        setConfig((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
     };
 
-    const handleClearAll = () => {
-        setSelectedFiles([]);
+    // Handle switch changes
+    const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, checked } = event.target;
+        setConfig((prev) => ({
+            ...prev,
+            [name]: checked,
+        }));
+    };
+    // Convert FileInfo to ConvertedFileInfo for the FileSelector
+    const files: ConvertedFileInfo[] = selectedFiles.map((file) => ({
+        ...file,
+        id: `${file.folder}/${file.filename}`,
+        outputName: ['xpt', 'json'].includes(getExtension(file.filename))
+            ? file.filename
+            : file.filename.replace(/\.[^.]+$/, 'json'), // Convert to JSON if not xpt or json
+    }));
+
+    const handleFilesChange = (newFiles: ConvertedFileInfo[]) => {
+        // Convert back to FileInfo
+        const fileInfos: FileInfo[] = newFiles.map((file) => ({
+            fullPath: file.fullPath,
+            folder: file.folder,
+            filename: file.filename,
+            format: file.format,
+            size: file.size,
+            lastModified: file.lastModified,
+            datasetJsonVersion: file.datasetJsonVersion,
+        }));
+        setSelectedFiles(fileInfos);
     };
 
     return (
         <Stack spacing={2} sx={styles.container}>
-            <Typography variant="h6">Select Files to Validate</Typography>
-            <Stack direction="row" spacing={2} sx={styles.fileActions}>
-                <Button
-                    variant="contained"
-                    onClick={handleAddFiles}
-                    startIcon={<FolderOpenIcon />}
-                >
-                    Add Files
-                </Button>
+            {/* Standard Configuration Section */}
+            <Paper sx={styles.configSection}>
+                <Typography variant="h6" gutterBottom>
+                    Standard Options
+                </Typography>
+                <Stack sx={styles.configRow}>
+                    <TextField
+                        select
+                        name="standard"
+                        label="Standard"
+                        value={config.standard}
+                        onChange={handleChange}
+                        sx={styles.selectInput}
+                        disabled={config.customStandard}
+                    >
+                        {availableStandards.map((std) => (
+                            <MenuItem key={std} value={std}>
+                                {std}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+
+                    <TextField
+                        select={availableVersions.length > 0}
+                        name="version"
+                        label="Version"
+                        disabled={config.customStandard}
+                        value={config.version}
+                        onChange={handleChange}
+                        sx={styles.selectInput}
+                    >
+                        {availableVersions.map((ver) => (
+                            <MenuItem key={ver} value={ver}>
+                                {ver.replace(/-/g, '.')}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={config.customStandard}
+                                onChange={handleSwitchChange}
+                                name="customStandard"
+                                disabled={
+                                    validatorSettings.localRulesPath === ''
+                                }
+                            />
+                        }
+                        label="Use Custom Standard"
+                    />
+                </Stack>
+            </Paper>
+
+            {/* File Selection */}
+            <Paper sx={styles.fileSelector}>
+                <FileSelector
+                    files={files}
+                    onFilesChange={handleFilesChange}
+                    title="Select Files to Validate"
+                    showOutputName={false}
+                />
+            </Paper>
+
+            {/* Actions */}
+            <Stack sx={styles.validateActions}>
                 <Button
                     variant="outlined"
-                    onClick={handleClearAll}
-                    disabled={selectedFiles.length === 0}
+                    onClick={() => setDictionaryModalOpen(true)}
                 >
-                    Clear All
+                    Configure Dictionaries
                 </Button>
-            </Stack>
-            <TableContainer component={Paper} sx={styles.tableContainer}>
-                <Table size="small">
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Filename</TableCell>
-                            <TableCell>Size</TableCell>
-                            <TableCell>Last Modified</TableCell>
-                            <TableCell>Actions</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {selectedFiles.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={4} align="center">
-                                    No files selected.
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            selectedFiles.map((file, idx) => (
-                                <TableRow
-                                    key={file.filename + file.lastModified}
-                                >
-                                    <TableCell>{file.filename}</TableCell>
-                                    <TableCell>
-                                        {file.size ? `${file.size} bytes` : ''}
-                                    </TableCell>
-                                    <TableCell>
-                                        {file.lastModified
-                                            ? new Date(
-                                                  file.lastModified,
-                                              ).toLocaleString()
-                                            : ''}
-                                    </TableCell>
-                                    <TableCell>
-                                        <IconButton
-                                            onClick={() =>
-                                                handleRemoveFile(idx)
-                                            }
-                                            size="small"
-                                        >
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-            <Stack direction="row" spacing={2} sx={styles.validateActions}>
                 <Button
                     variant="contained"
                     color="primary"
@@ -151,6 +274,109 @@ const ValidatorConfiguration: React.FC<ValidatorConfigurationProps> = ({
                     Validate
                 </Button>
             </Stack>
+
+            {/* Dictionary Configuration Modal */}
+            <Dialog
+                open={dictionaryModalOpen}
+                onClose={() => setDictionaryModalOpen(false)}
+                maxWidth="md"
+                fullWidth
+            >
+                <DialogTitle>Dictionary Configuration</DialogTitle>
+                <DialogContent sx={styles.dialogContent}>
+                    <Stack spacing={3} sx={{ mt: 2 }}>
+                        <PathSelector
+                            label="WHODRUG Path"
+                            value={config.whodrugPath}
+                            onSelectDestination={() => {
+                                handlePathSelection('whodrugPath');
+                            }}
+                            onClean={() => {
+                                handlePathSelection('whodrugPath', true);
+                            }}
+                        />
+
+                        <PathSelector
+                            label="MedDRA Path"
+                            value={config.meddraPath}
+                            onSelectDestination={() => {
+                                handlePathSelection('meddraPath');
+                            }}
+                            onClean={() => {
+                                handlePathSelection('meddraPath', true);
+                            }}
+                        />
+
+                        <PathSelector
+                            label="LOINC Path"
+                            value={config.loincPath}
+                            onSelectDestination={() => {
+                                handlePathSelection('loincPath');
+                            }}
+                            onClean={() => {
+                                handlePathSelection('loincPath', true);
+                            }}
+                        />
+
+                        <PathSelector
+                            label="MedRT Path"
+                            value={config.medrtPath}
+                            onSelectDestination={() => {
+                                handlePathSelection('medrtPath');
+                            }}
+                            onClean={() => {
+                                handlePathSelection('medrtPath', true);
+                            }}
+                        />
+
+                        <PathSelector
+                            label="UNII Path"
+                            value={config.uniiPath}
+                            onSelectDestination={() => {
+                                handlePathSelection('uniiPath');
+                            }}
+                            onClean={() => {
+                                handlePathSelection('uniiPath', true);
+                            }}
+                        />
+
+                        <Typography variant="h6" sx={{ mt: 3 }}>
+                            SNOMED Configuration
+                        </Typography>
+
+                        <Stack direction="row" spacing={2}>
+                            <TextField
+                                name="snomedVersion"
+                                label="SNOMED Version"
+                                value={config.snomedVersion}
+                                onChange={handleChange}
+                                fullWidth
+                            />
+
+                            <TextField
+                                name="snomedUrl"
+                                label="SNOMED URL"
+                                value={config.snomedUrl}
+                                onChange={handleChange}
+                                fullWidth
+                            />
+
+                            <TextField
+                                name="snomedEdition"
+                                label="SNOMED Edition"
+                                value={config.snomedEdition}
+                                onChange={handleChange}
+                                fullWidth
+                            />
+                        </Stack>
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDictionaryModalOpen(false)}>
+                        Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Stack>
     );
 };

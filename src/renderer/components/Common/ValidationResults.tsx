@@ -81,7 +81,7 @@ interface ResultsProps {
     filePaths?: string[];
 }
 
-const Results: React.FC<ResultsProps> = ({ filePaths = [] }) => {
+const ValidationResults: React.FC<ResultsProps> = ({ filePaths = [] }) => {
     const dispatch = useAppDispatch();
     const allReports = useAppSelector((state) => state.data.validator.reports);
     const reports = useMemo(() => {
@@ -416,4 +416,4 @@ const Results: React.FC<ResultsProps> = ({ filePaths = [] }) => {
     );
 };
 
-export default Results;
+export default ValidationResults;
