@@ -35,7 +35,7 @@ const Validator: React.FC = () => {
     const [selectedFiles, setSelectedFiles] = useState<FileInfo[]>([]);
     const [validating, setValidating] = useState(false);
     const [tab, setTab] = useState(0);
-    
+
     const validatorData = useAppSelector((state) => state.data.validator);
     const [config, setConfig] = useState<ValidatorConfig>({
         ...validatorData.configuration,

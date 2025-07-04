@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     Stack,
     Button,
@@ -7,18 +7,13 @@ import {
     TextField,
     FormControlLabel,
     Switch,
-    Paper,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
+    Box,
 } from '@mui/material';
 import { FileInfo, ConvertedFileInfo } from 'interfaces/common';
 import { ValidatorConfig } from 'interfaces/main';
 import { useAppSelector } from 'renderer/redux/hooks';
-import AppContext from 'renderer/utils/AppContext';
 import FileSelector from 'renderer/components/Common/FileSelector';
-import PathSelector from 'renderer/components/FileSelector';
+import DictionaryConfigModal from 'renderer/components/Validator/DictionaryConfigModal';
 
 const styles = {
     container: {
@@ -27,24 +22,15 @@ const styles = {
         backgroundColor: 'grey.100',
     },
     validateActions: {
-        p: 0,
-        display: 'flex',
-        justifyContent: 'flex-end',
-        gap: 2,
+        m: 2,
     },
     fileSelector: {
-        p: 2,
-        backgroundColor: 'white',
-        borderRadius: 1,
-        boxShadow: 1,
         flex: '1 1 auto',
     },
     configSection: {
-        p: 2,
-        backgroundColor: 'white',
-        borderRadius: 1,
-        boxShadow: 1,
         mb: 2,
+        border: 0,
+        backgroundColor: 'grey.100',
     },
     configRow: {
         direction: 'row',
@@ -53,9 +39,6 @@ const styles = {
     },
     selectInput: {
         minWidth: 200,
-    },
-    dialogContent: {
-        minWidth: 500,
     },
 };
 
@@ -81,12 +64,11 @@ const ValidatorConfiguration: React.FC<ValidatorConfigurationProps> = ({
     config,
     setConfig,
 }) => {
-    const { apiService } = useContext(AppContext);
     const validatorData = useAppSelector((state) => state.data.validator);
     const validatorSettings = useAppSelector(
         (state) => state.settings.validator,
     );
-    
+
     const [dictionaryModalOpen, setDictionaryModalOpen] = useState(false);
 
     // Derive version and standard options from the validator info
@@ -126,30 +108,6 @@ const ValidatorConfiguration: React.FC<ValidatorConfigurationProps> = ({
             setAvailableVersions([]);
         }
     }, [config.standard, validatorStandards, setConfig]);
-
-    // Helper function to handle path selection
-    const handlePathSelection = async (
-        name: 'whodrugPath' | 'meddraPath' | 'loincPath' | 'medrtPath' | 'uniiPath',
-        reset: boolean = false,
-    ) => {
-        if (reset) {
-            setConfig((prev) => ({
-                ...prev,
-                [name]: '',
-            }));
-            return;
-        }
-
-        const result = await apiService.openDirectoryDialog(config[name]);
-        if (result === null || result === '') {
-            return;
-        }
-
-        setConfig((prev) => ({
-            ...prev,
-            [name]: result,
-        }));
-    };
 
     // Handle text input changes
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -194,11 +152,16 @@ const ValidatorConfiguration: React.FC<ValidatorConfigurationProps> = ({
     return (
         <Stack spacing={2} sx={styles.container}>
             {/* Standard Configuration Section */}
-            <Paper sx={styles.configSection}>
+            <Box sx={styles.configSection}>
                 <Typography variant="h6" gutterBottom>
                     Standard Options
                 </Typography>
-                <Stack sx={styles.configRow}>
+                <Stack
+                    sx={styles.configRow}
+                    direction="row"
+                    spacing={2}
+                    alignItems="center"
+                >
                     <TextField
                         select
                         name="standard"
@@ -244,27 +207,32 @@ const ValidatorConfiguration: React.FC<ValidatorConfigurationProps> = ({
                         }
                         label="Use Custom Standard"
                     />
+                    <Button
+                        variant="contained"
+                        onClick={() => setDictionaryModalOpen(true)}
+                    >
+                        Configure Dictionaries
+                    </Button>
                 </Stack>
-            </Paper>
+            </Box>
 
             {/* File Selection */}
-            <Paper sx={styles.fileSelector}>
+            <Stack spacing={2} sx={styles.fileSelector}>
                 <FileSelector
                     files={files}
                     onFilesChange={handleFilesChange}
                     title="Select Files to Validate"
                     showOutputName={false}
                 />
-            </Paper>
+            </Stack>
 
             {/* Actions */}
-            <Stack sx={styles.validateActions}>
-                <Button
-                    variant="outlined"
-                    onClick={() => setDictionaryModalOpen(true)}
-                >
-                    Configure Dictionaries
-                </Button>
+            <Stack
+                direction="row"
+                spacing={0}
+                sx={styles.validateActions}
+                justifyContent="flex-end"
+            >
                 <Button
                     variant="contained"
                     color="primary"
@@ -276,107 +244,12 @@ const ValidatorConfiguration: React.FC<ValidatorConfigurationProps> = ({
             </Stack>
 
             {/* Dictionary Configuration Modal */}
-            <Dialog
+            <DictionaryConfigModal
                 open={dictionaryModalOpen}
                 onClose={() => setDictionaryModalOpen(false)}
-                maxWidth="md"
-                fullWidth
-            >
-                <DialogTitle>Dictionary Configuration</DialogTitle>
-                <DialogContent sx={styles.dialogContent}>
-                    <Stack spacing={3} sx={{ mt: 2 }}>
-                        <PathSelector
-                            label="WHODRUG Path"
-                            value={config.whodrugPath}
-                            onSelectDestination={() => {
-                                handlePathSelection('whodrugPath');
-                            }}
-                            onClean={() => {
-                                handlePathSelection('whodrugPath', true);
-                            }}
-                        />
-
-                        <PathSelector
-                            label="MedDRA Path"
-                            value={config.meddraPath}
-                            onSelectDestination={() => {
-                                handlePathSelection('meddraPath');
-                            }}
-                            onClean={() => {
-                                handlePathSelection('meddraPath', true);
-                            }}
-                        />
-
-                        <PathSelector
-                            label="LOINC Path"
-                            value={config.loincPath}
-                            onSelectDestination={() => {
-                                handlePathSelection('loincPath');
-                            }}
-                            onClean={() => {
-                                handlePathSelection('loincPath', true);
-                            }}
-                        />
-
-                        <PathSelector
-                            label="MedRT Path"
-                            value={config.medrtPath}
-                            onSelectDestination={() => {
-                                handlePathSelection('medrtPath');
-                            }}
-                            onClean={() => {
-                                handlePathSelection('medrtPath', true);
-                            }}
-                        />
-
-                        <PathSelector
-                            label="UNII Path"
-                            value={config.uniiPath}
-                            onSelectDestination={() => {
-                                handlePathSelection('uniiPath');
-                            }}
-                            onClean={() => {
-                                handlePathSelection('uniiPath', true);
-                            }}
-                        />
-
-                        <Typography variant="h6" sx={{ mt: 3 }}>
-                            SNOMED Configuration
-                        </Typography>
-
-                        <Stack direction="row" spacing={2}>
-                            <TextField
-                                name="snomedVersion"
-                                label="SNOMED Version"
-                                value={config.snomedVersion}
-                                onChange={handleChange}
-                                fullWidth
-                            />
-
-                            <TextField
-                                name="snomedUrl"
-                                label="SNOMED URL"
-                                value={config.snomedUrl}
-                                onChange={handleChange}
-                                fullWidth
-                            />
-
-                            <TextField
-                                name="snomedEdition"
-                                label="SNOMED Edition"
-                                value={config.snomedEdition}
-                                onChange={handleChange}
-                                fullWidth
-                            />
-                        </Stack>
-                    </Stack>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setDictionaryModalOpen(false)}>
-                        Close
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                config={config}
+                setConfig={setConfig}
+            />
         </Stack>
     );
 };
