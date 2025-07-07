@@ -1,4 +1,5 @@
 import DatasetJson from 'js-stream-dataset-json';
+import { InputFileExtension } from 'interfaces/main';
 
 export type DatasetJsonMetadata = Awaited<
     ReturnType<InstanceType<typeof DatasetJson>['getMetadata']>
@@ -65,4 +66,10 @@ export interface IFetchResponse {
     status: number;
     response: Record<string, unknown>;
     errorMessage: string | null;
+}
+
+export interface ValidationTaskFile {
+    filePath: string;
+    fileName: string;
+    extension: InputFileExtension;
 }

@@ -3,6 +3,7 @@ import { ui as initialUi } from 'renderer/redux/initialState';
 import {
     IUiSnackbar,
     IUiModal,
+    IUiValidation,
     AllowedPathnames,
     DatasetType,
     ModalType,
@@ -151,6 +152,28 @@ export const uiSlice = createSlice({
         toggleSidebar: (state) => {
             state.viewer.sidebarOpen = !state.viewer.sidebarOpen;
         },
+        updateValidation: (
+            state,
+            action: PayloadAction<{
+                validationId: string;
+                validation: Partial<IUiValidation>;
+            }>,
+        ) => {
+            const { validationId, validation } = action.payload;
+            if (!state.validation[validationId]) {
+                state.validation[validationId] = {
+                    status: 'not started',
+                    validationProgress: 0,
+                    conversionProgress: null,
+                    ...validation,
+                };
+            } else {
+                state.validation[validationId] = {
+                    ...state.validation[validationId],
+                    ...validation,
+                };
+            }
+        },
     },
 });
 
@@ -170,6 +193,7 @@ export const {
     setValidatorTab,
     setFilterInputMode,
     toggleSidebar,
+    updateValidation,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

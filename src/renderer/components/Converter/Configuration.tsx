@@ -192,9 +192,12 @@ const Converter: React.FC<{
 
     const handleConvert = () => {
         // Implement conversion logic here
+        // Get unique id for the task
+        const taskId = `converter-${Date.now()}`;
+
         const task: ConvertTask = {
             type: mainTaskTypes.CONVERT,
-            idPrefix: 'converter',
+            id: taskId,
             files,
             options: {
                 prettyPrint: options.prettyPrint,

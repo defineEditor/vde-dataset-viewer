@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Box, Tabs, Tab, Paper } from '@mui/material';
 import Results from 'renderer/components/Common/ValidationResults';
-import { FileInfo } from 'interfaces/common';
-import { ValidatorConfig } from 'interfaces/main';
+import {
+    FileInfo,
+    InputFileExtension,
+    ValidatorConfig,
+} from 'interfaces/common';
 import { useAppSelector } from 'renderer/redux/hooks';
 import Configuration from 'renderer/components/Validator/Configuration';
+import AppContext from 'renderer/utils/AppContext';
 
 const styles = {
     container: {
@@ -33,10 +37,23 @@ const styles = {
 
 const Validator: React.FC = () => {
     const [selectedFiles, setSelectedFiles] = useState<FileInfo[]>([]);
-    const [validating, setValidating] = useState(false);
     const [tab, setTab] = useState(0);
 
+    const { apiService } = useContext(AppContext);
     const validatorData = useAppSelector((state) => state.data.validator);
+    const settings = useAppSelector((state) => state.settings);
+    const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+
+    // Get validation state from Redux
+    const validationState = useAppSelector(
+        (state) =>
+            state.ui.validation.globalvalidation || {
+                validationStatus: 'not started',
+                validationProgress: 0,
+                conversionProgress: null,
+            },
+    );
+
     const [config, setConfig] = useState<ValidatorConfig>({
         ...validatorData.configuration,
     });
@@ -49,11 +66,25 @@ const Validator: React.FC = () => {
     };
 
     const handleValidate = async () => {
-        if (selectedFiles.length === 0) return;
-        setValidating(true);
-        // TODO: Dispatch validation action for all files
-        // await dispatch(validateFiles(selectedFiles) as any);
-        setTimeout(() => setValidating(false), 1000); // Simulate
+        if (selectedFiles.length === 0 && !currentFileId) return;
+
+        // Use currentFileId if available, otherwise use the first selected file
+        const fileId = currentFileId || selectedFiles[0]?.fullPath;
+        if (!fileId) return;
+
+        // Start validation with Redux state management
+
+        const files = selectedFiles.map((file) => ({
+            filePath: file.fullPath,
+            fileName: file.filename,
+            extension: file.format as InputFileExtension,
+        }));
+        await apiService.startValidation({
+            files,
+            configuration: config,
+            settings,
+            validationId: 'globalvalidation',
+        });
     };
 
     return (
@@ -73,7 +104,7 @@ const Validator: React.FC = () => {
                 <Configuration
                     selectedFiles={selectedFiles}
                     setSelectedFiles={setSelectedFiles}
-                    validating={validating}
+                    validating={validationState.status === 'validating'}
                     onValidate={handleValidate}
                     config={config}
                     setConfig={setConfig}

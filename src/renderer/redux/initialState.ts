@@ -81,6 +81,7 @@ export const ui: IUi = {
             column: null,
         },
     },
+    validation: {},
 };
 
 export const converter: ConverterData = {

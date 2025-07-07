@@ -730,6 +730,8 @@ process.parentPort.once(
             process.parentPort.postMessage({
                 id,
                 progress,
+                fullPath: file.fullPath,
+                fileName: file.filename,
             });
         };
 

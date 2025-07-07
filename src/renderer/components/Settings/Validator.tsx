@@ -1,6 +1,11 @@
 import React, { useContext, useEffect, useCallback } from 'react';
 import { TextField, Stack, Typography } from '@mui/material';
-import { ISettings, ValidatorData, TaskProgress } from 'interfaces/common';
+import {
+    ISettings,
+    ValidatorData,
+    TaskProgress,
+    ValidateGetInfoResult,
+} from 'interfaces/common';
 import AppContext from 'renderer/utils/AppContext';
 import { useAppDispatch } from 'renderer/redux/hooks';
 import { openSnackbar } from 'renderer/redux/slices/ui';
@@ -42,10 +47,7 @@ export const Validator: React.FC<ValidatorProps> = ({
                 if (info.type !== mainTaskTypes.VALIDATE) {
                     return;
                 }
-                if (
-                    info.id === `${mainTaskTypes.VALIDATE}-validator-getInfo` &&
-                    info.progress === 100
-                ) {
+                if (info.id === `get-validator-info` && info.progress === 100) {
                     if (info.error) {
                         dispatch(
                             openSnackbar({
@@ -54,7 +56,9 @@ export const Validator: React.FC<ValidatorProps> = ({
                             }),
                         );
                     } else if (info.result && typeof info.result === 'object') {
-                        onChangeValidatorInfo(info.result);
+                        onChangeValidatorInfo(
+                            info.result as ValidateGetInfoResult,
+                        );
                     }
                     setUpdating(false);
                 }
@@ -72,7 +76,7 @@ export const Validator: React.FC<ValidatorProps> = ({
                         localRulesPath: '',
                         poolSize: 1,
                     },
-                    idPrefix: 'validator',
+                    id: 'get-validator-info',
                 });
                 if (typeof result === 'object' && 'error' in result) {
                     dispatch(

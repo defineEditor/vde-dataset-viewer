@@ -118,6 +118,12 @@ export interface IUiViewer {
     sidebarOpen: boolean;
 }
 
+export interface IUiValidation {
+    validationProgress: number;
+    status: 'not started' | 'validating' | 'completed';
+    conversionProgress: number | null;
+}
+
 export interface IUi {
     pathname: AllowedPathnames;
     currentFileId: string;
@@ -126,6 +132,7 @@ export interface IUi {
     modals: IUiModal[];
     snackbar: IUiSnackbar;
     control: IUiControl;
+    validation: { [validationId: string]: IUiValidation };
 }
 
 export interface IRecentFile {
