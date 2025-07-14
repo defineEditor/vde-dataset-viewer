@@ -35,6 +35,7 @@ const styles = {
         p: 2,
         height: '100%',
         backgroundColor: 'grey.100',
+        overflowY: 'auto',
     },
     formatSelect: {
         minWidth: 210,
@@ -47,6 +48,10 @@ const styles = {
     },
     noSelect: {
         userSelect: 'none',
+    },
+    button: {
+        maxHeight: '40px',
+        p: 2,
     },
 };
 
@@ -284,7 +289,7 @@ const Converter: React.FC<{
         <Stack spacing={2} sx={styles.container}>
             {/* Conversion Configuration */}
             <Typography variant="h6">Conversion Configuration</Typography>
-            <Stack direction="row" spacing={2}>
+            <Stack direction="row" spacing={2} alignItems="center">
                 <TextField
                     select
                     label="Output Format"
@@ -300,7 +305,11 @@ const Converter: React.FC<{
                     </MenuItem>
                     <MenuItem value="CSV">CSV</MenuItem>
                 </TextField>
-                <Button variant="contained" onClick={handleOptionsOpen}>
+                <Button
+                    variant="contained"
+                    onClick={handleOptionsOpen}
+                    sx={styles.button}
+                >
                     Options
                 </Button>
                 {outputFormat !== 'CSV' && (
@@ -321,6 +330,7 @@ const Converter: React.FC<{
                             variant="contained"
                             onClick={handleMetadataOpen}
                             disabled={!updateMetadata}
+                            sx={styles.button}
                         >
                             Metadata
                         </Button>

@@ -568,6 +568,7 @@ class ApiService {
         records: number;
         type: DatasetType;
         path: string;
+        lastModified: number;
     }[] => {
         // If fileId is not specified return all opened files
         return this.openedFiles
@@ -583,6 +584,7 @@ class ApiService {
                     records: metadata?.records || 0,
                     type: file.type,
                     path: file.path,
+                    lastModified: file.lastModified || 0,
                 };
             });
     };

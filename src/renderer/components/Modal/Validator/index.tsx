@@ -11,6 +11,7 @@ import AppContext from 'renderer/utils/AppContext';
 import {
     InputFileExtension,
     IUiModal,
+    IUiValidation,
     ValidatorConfig,
 } from 'interfaces/common';
 import { Tabs, Tab, Box } from '@mui/material';
@@ -66,18 +67,50 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
     const validationId = `modal-${currentFileId}`;
 
     // Get validation state from Redux
-    const validationState = useAppSelector(
+    const validationState = useAppSelector<IUiValidation>(
         (state) =>
             (validationId !== null && state.ui.validation[validationId]) || {
                 status: 'not started',
                 validationProgress: 0,
                 conversionProgress: null,
+                dateCompleted: null,
             },
     );
 
     const { apiService } = useContext(AppContext);
 
-    const currentFilePath = apiService.getOpenedFiles(currentFileId)[0]?.path;
+    // Get last modified time for the current file
+    const currentFile = apiService.getOpenedFiles(currentFileId)[0];
+    const currentFilePath = currentFile?.path;
+    const currentFileLastModified = currentFile?.lastModified;
+
+    // When opening a modal, check if the validation completion date is before the last modified time of the file
+    useEffect(() => {
+        if (
+            validationState.status === 'completed' &&
+            typeof validationState.dateCompleted === 'number' &&
+            currentFileLastModified &&
+            validationState.dateCompleted < currentFileLastModified
+        ) {
+            // Reset validation state if the file has been modified since the last validation
+            dispatch(
+                updateValidation({
+                    validationId,
+                    validation: {
+                        status: 'not started',
+                        validationProgress: 0,
+                        conversionProgress: null,
+                    },
+                }),
+            );
+        }
+    }, [
+        dispatch,
+        validationState.status,
+        validationState.dateCompleted,
+        currentFileLastModified,
+        validationId,
+    ]);
 
     const handleClose = useCallback(() => {
         dispatch(closeModal({ type }));
@@ -123,7 +156,17 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
 
     const handleReset = useCallback(() => {
         if (typeof validationId === 'string') {
-            dispatch(updateValidation({ validationId, validation: {} }));
+            dispatch(
+                updateValidation({
+                    validationId,
+                    validation: {
+                        status: 'not started',
+                        validationProgress: 0,
+                        conversionProgress: null,
+                        dateCompleted: null,
+                    },
+                }),
+            );
         }
     }, [dispatch, validationId]);
 

@@ -19,13 +19,11 @@ const styles = {
     container: {
         p: 2,
         height: '100%',
+        flex: '1 1 auto',
         backgroundColor: 'grey.100',
     },
     validateActions: {
         m: 2,
-    },
-    fileSelector: {
-        flex: '1 1 auto',
     },
     configSection: {
         mb: 2,
@@ -40,13 +38,14 @@ const styles = {
     selectInput: {
         minWidth: 200,
     },
+    button: {
+        p: 1,
+    },
 };
 
 interface ValidatorConfigurationProps {
     selectedFiles: FileInfo[];
     setSelectedFiles: React.Dispatch<React.SetStateAction<FileInfo[]>>;
-    validating: boolean;
-    onValidate: () => void;
     config: ValidatorConfig;
     setConfig: React.Dispatch<React.SetStateAction<ValidatorConfig>>;
 }
@@ -59,8 +58,6 @@ const getExtension = (filename: string): string => {
 const ValidatorConfiguration: React.FC<ValidatorConfigurationProps> = ({
     selectedFiles,
     setSelectedFiles,
-    validating,
-    onValidate,
     config,
     setConfig,
 }) => {
@@ -210,38 +207,20 @@ const ValidatorConfiguration: React.FC<ValidatorConfigurationProps> = ({
                     <Button
                         variant="contained"
                         onClick={() => setDictionaryModalOpen(true)}
+                        sx={styles.button}
                     >
-                        Configure Dictionaries
+                        Dictionaries
                     </Button>
                 </Stack>
             </Box>
 
             {/* File Selection */}
-            <Stack spacing={2} sx={styles.fileSelector}>
-                <FileSelector
-                    files={files}
-                    onFilesChange={handleFilesChange}
-                    title="Select Files to Validate"
-                    showOutputName={false}
-                />
-            </Stack>
-
-            {/* Actions */}
-            <Stack
-                direction="row"
-                spacing={0}
-                sx={styles.validateActions}
-                justifyContent="flex-end"
-            >
-                <Button
-                    variant="contained"
-                    color="primary"
-                    disabled={selectedFiles.length === 0 || validating}
-                    onClick={onValidate}
-                >
-                    Validate
-                </Button>
-            </Stack>
+            <FileSelector
+                files={files}
+                onFilesChange={handleFilesChange}
+                title="Select Files to Validate"
+                showOutputName={false}
+            />
 
             {/* Dictionary Configuration Modal */}
             <DictionaryConfigModal

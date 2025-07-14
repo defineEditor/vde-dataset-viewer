@@ -122,6 +122,7 @@ export interface IUiValidation {
     validationProgress: number;
     status: 'not started' | 'validating' | 'completed';
     conversionProgress: number | null;
+    dateCompleted: number | null;
 }
 
 export interface IUi {

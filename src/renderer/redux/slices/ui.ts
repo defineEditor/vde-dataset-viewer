@@ -165,6 +165,7 @@ export const uiSlice = createSlice({
                     status: 'not started',
                     validationProgress: 0,
                     conversionProgress: null,
+                    dateCompleted: null,
                     ...validation,
                 };
             } else {

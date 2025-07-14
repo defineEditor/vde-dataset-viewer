@@ -1,14 +1,17 @@
 import React, { useState, useContext } from 'react';
-import { Box, Tabs, Tab, Paper } from '@mui/material';
+import { Box, Tabs, Tab, Paper, Button, Stack } from '@mui/material';
 import Results from 'renderer/components/Common/ValidationResults';
 import {
     FileInfo,
     InputFileExtension,
+    IUiValidation,
     ValidatorConfig,
 } from 'interfaces/common';
-import { useAppSelector } from 'renderer/redux/hooks';
+import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
+import { updateValidation } from 'renderer/redux/slices/ui';
 import Configuration from 'renderer/components/Validator/Configuration';
 import AppContext from 'renderer/utils/AppContext';
+import ValidationProgress from 'renderer/components/Modal/Validator/ValidationProgress';
 
 const styles = {
     container: {
@@ -21,8 +24,18 @@ const styles = {
         backgroundColor: 'grey.100',
     },
     tabPanel: {
-        height: 'calc(100% - 48px)',
         overflow: 'auto',
+        flex: '1 1 auto',
+    },
+    mainBody: {
+        flex: '1 1 99%',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'auto',
+    },
+    configuration: {
+        display: 'flex',
+        height: '100%',
     },
     paper: {
         mb: 0,
@@ -32,6 +45,14 @@ const styles = {
         background:
             'radial-gradient(circle farthest-corner at bottom center,#eeeeee,#e5e4e4)',
         textTransform: 'none',
+    },
+    actions: {
+        display: 'flex',
+        justifyContent: 'flex-end',
+        mt: 2,
+        p: 2,
+        backgroundColor: 'grey.100',
+        borderTop: '1px solid #e0e0e0',
     },
 };
 
@@ -45,14 +66,16 @@ const Validator: React.FC = () => {
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
 
     // Get validation state from Redux
-    const validationState = useAppSelector(
+    const validationState = useAppSelector<IUiValidation>(
         (state) =>
             state.ui.validation.globalvalidation || {
-                validationStatus: 'not started',
+                status: 'not started',
                 validationProgress: 0,
                 conversionProgress: null,
+                dateCompleted: null,
             },
     );
+    const dispatch = useAppDispatch();
 
     const [config, setConfig] = useState<ValidatorConfig>({
         ...validatorData.configuration,
@@ -87,6 +110,20 @@ const Validator: React.FC = () => {
         });
     };
 
+    const handleReset = () => {
+        dispatch(
+            updateValidation({
+                validationId: 'globalvalidation',
+                validation: {
+                    status: 'not started',
+                    validationProgress: 0,
+                    conversionProgress: null,
+                    dateCompleted: null,
+                },
+            }),
+        );
+    };
+
     return (
         <Box sx={styles.container}>
             <Paper sx={styles.paper}>
@@ -101,14 +138,57 @@ const Validator: React.FC = () => {
                 </Tabs>
             </Paper>
             <Box hidden={tab !== 0} sx={styles.tabPanel}>
-                <Configuration
-                    selectedFiles={selectedFiles}
-                    setSelectedFiles={setSelectedFiles}
-                    validating={validationState.status === 'validating'}
-                    onValidate={handleValidate}
-                    config={config}
-                    setConfig={setConfig}
-                />
+                <Stack spacing={0} sx={styles.configuration}>
+                    <Box sx={styles.mainBody}>
+                        {['completed', 'validating'].includes(
+                            validationState.status,
+                        ) ? (
+                            <ValidationProgress
+                                conversionProgress={
+                                    validationState.conversionProgress
+                                }
+                                validationProgress={
+                                    validationState.validationProgress
+                                }
+                            />
+                        ) : (
+                            <Configuration
+                                selectedFiles={selectedFiles}
+                                setSelectedFiles={setSelectedFiles}
+                                config={config}
+                                setConfig={setConfig}
+                            />
+                        )}
+                    </Box>
+                    <Box sx={styles.actions}>
+                        {['completed', 'validating'].includes(
+                            validationState.status,
+                        ) ? (
+                            <Button
+                                onClick={handleReset}
+                                color="primary"
+                                variant="contained"
+                                disabled={
+                                    validationState.status !== 'completed'
+                                }
+                            >
+                                Done
+                            </Button>
+                        ) : (
+                            <Button
+                                onClick={handleValidate}
+                                color="primary"
+                                variant="contained"
+                                disabled={
+                                    selectedFiles.length === 0 ||
+                                    validationState.status === 'validating'
+                                }
+                            >
+                                Validate
+                            </Button>
+                        )}
+                    </Box>
+                </Stack>
             </Box>
             <Box hidden={tab !== 1} sx={styles.tabPanel}>
                 <Results />

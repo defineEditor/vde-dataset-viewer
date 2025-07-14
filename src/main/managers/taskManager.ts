@@ -143,7 +143,10 @@ class TaskManager {
     ): Promise<boolean | { error: string }> {
         try {
             // Check destination folder exists
-            if (!fs.existsSync(task.options.destinationDir)) {
+            if (
+                task.options.destinationDir !== '__TEMP__' &&
+                !fs.existsSync(task.options.destinationDir)
+            ) {
                 return { error: 'Destination folder does not exist' };
             }
             task.files.forEach((file, index) => {

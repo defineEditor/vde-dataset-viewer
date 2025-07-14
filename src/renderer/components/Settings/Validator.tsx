@@ -118,11 +118,15 @@ export const Validator: React.FC<ValidatorProps> = ({
             settings.validator.validatorPath
         ) {
             handleUpdateData(settings.validator.validatorPath);
+        } else if (!settings.validator.validatorPath) {
+            // Reset validator info if the path is empty
+            onChangeValidatorInfo(initialValidator.info);
         }
     }, [
         settings.validator.validatorPath,
         handleUpdateData,
         initialValidatorPath,
+        onChangeValidatorInfo,
     ]);
 
     const handleSelectDestination = (

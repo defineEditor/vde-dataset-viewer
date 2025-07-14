@@ -138,7 +138,10 @@ export const startValidation = async (
                 store.dispatch(
                     updateValidation({
                         validationId,
-                        validation: { status: 'completed' },
+                        validation: {
+                            status: 'completed',
+                            dateCompleted: new Date().getTime(),
+                        },
                     }),
                 );
                 if (info.error) {
@@ -204,14 +207,19 @@ export const startValidation = async (
 
     // For files which are converter, update the output name and path
     let filesToValidate: string[] = [];
+    // Original file - used in the report of which files were validated
+    const originalFiles: string[] = files.map((file) => file.filePath);
     if (conversionTask) {
         filesToValidate = files.map((file) => {
             const convertedFile = conversionTask.files.find((ctFile) => {
                 return file.filePath === ctFile.fullPath;
             });
             if (convertedFile) {
-                return (conversionTask.options.destinationDir +
-                    convertedFile.outputName) as string;
+                // Get OS delimiter for the path
+                const pathDelimiter = window.electron.isWindows ? '\\' : '/';
+                return `${conversionTask.options.destinationDir}${pathDelimiter}${
+                    convertedFile.outputName
+                }` as string;
             }
             return file.filePath;
         });
@@ -228,6 +236,7 @@ export const startValidation = async (
         configuration,
         validationDetails: {
             files: filesToValidate,
+            originalFiles,
             folders: [],
         },
     };
@@ -238,6 +247,14 @@ export const startValidation = async (
         if (conversionResult === true) {
             const validationResult = context.startTask(validationTask);
             return validationResult;
+        }
+        if (typeof conversionResult === 'object' && conversionResult.error) {
+            store.dispatch(
+                openSnackbar({
+                    message: conversionResult.error,
+                    type: 'error',
+                }),
+            );
         }
 
         return conversionResult;

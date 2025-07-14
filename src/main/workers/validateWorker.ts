@@ -9,6 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { tmpdir } from 'os';
 
 const execAsync = promisify(exec);
 
@@ -140,7 +141,18 @@ const runValidation = async (
     // Add files to validate
     if (validationDetails?.files && validationDetails.files.length > 0) {
         validationDetails.files.forEach((file: string) => {
-            args.push('--dataset-path', `"${file}"`);
+            // Check if any paths contain __TEMP__ in the path name as a folder, replace it with the system temp directory
+            if (file.startsWith('__TEMP__')) {
+                args.push(
+                    '--dataset-path',
+                    file.replace(
+                        '__TEMP__',
+                        path.join(tmpdir(), 'vde-convert'),
+                    ),
+                );
+            } else {
+                args.push('--dataset-path', `"${file}"`);
+            }
         });
     }
 
@@ -209,8 +221,16 @@ const runValidation = async (
     // Get filename from the first file in validation details or use 'validation'
     let baseFileName = 'validation';
     if (validationDetails?.files && validationDetails.files.length > 0) {
-        const firstFile = validationDetails.files[0];
-        baseFileName = path.parse(firstFile).name;
+        // Take the first file's name as base
+        // If there are more than 5 files, use the first 5 file names
+        const fileNames = validationDetails.files
+            .slice(0, 5)
+            .map((file) => path.basename(file).split('.')[0]);
+        const totalCount = validationDetails.files.length;
+        baseFileName = path.parse(
+            fileNames.join('_') +
+                (totalCount > 5 ? `+${totalCount - 5}_datasets` : ''),
+        ).name;
     }
 
     const outputFileName = `${baseFileName}-${timestamp}-core-validation`;
@@ -435,7 +455,7 @@ process.parentPort.once(
                         const report: ValidationReport = {
                             date: result.date,
                             files: getLastModified(
-                                data.validationDetails?.files || [],
+                                data.validationDetails?.originalFiles || [],
                             ),
                             output: result.fileName,
                             config: data.configuration,

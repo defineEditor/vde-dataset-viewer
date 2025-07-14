@@ -108,6 +108,7 @@ export interface ValidateTask {
     configuration?: ValidatorConfig;
     validationDetails?: {
         files: string[];
+        originalFiles: string[];
         folders: string[];
     };
 }

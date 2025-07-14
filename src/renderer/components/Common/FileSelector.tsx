@@ -33,7 +33,7 @@ const getHumanReadableSize = (bytes: number): string => {
 
 const styles = {
     controls: {
-        direction: 'row' as const,
+        direction: 'row',
         spacing: 2,
     },
     tableContainer: {
@@ -108,13 +108,19 @@ const FileSelector: React.FC<FileSelectorProps> = ({
             return;
         }
 
+        // If a file with the same name is already selected, replace it
+        const existingFiles = files.filter(
+            (file) =>
+                !result.some((newFile) => newFile.filename === file.filename),
+        );
+
         const newFiles = result.map((file: FileInfo) => ({
             ...file,
             id: `${file.folder}/${file.filename}`,
             outputName: file.filename,
         }));
 
-        onFilesChange([...files, ...newFiles]);
+        onFilesChange([...existingFiles, ...newFiles]);
     };
 
     const handleDeleteFile = (fullPath: string) => {
@@ -130,7 +136,6 @@ const FileSelector: React.FC<FileSelectorProps> = ({
         setOrder(isAsc ? 'desc' : 'asc');
         setOrderBy(property);
     };
-
     const sortedFiles = useMemo(() => {
         return [...files].sort((a, b) => {
             let aVal = a[orderBy];
