@@ -125,6 +125,10 @@ export interface IUiValidation {
     dateCompleted: number | null;
 }
 
+export interface IUiValidationReport {
+    currentReportId: string | null;
+}
+
 export interface IUi {
     pathname: AllowedPathnames;
     currentFileId: string;
@@ -134,6 +138,7 @@ export interface IUi {
     snackbar: IUiSnackbar;
     control: IUiControl;
     validation: { [validationId: string]: IUiValidation };
+    validationReport: IUiValidationReport;
 }
 
 export interface IRecentFile {
