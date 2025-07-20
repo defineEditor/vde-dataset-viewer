@@ -174,7 +174,7 @@ const ColumnsInfo: React.FC<{
                                             onClick={() =>
                                                 handleShowInfo(column.name)
                                             }
-                                            id="goto"
+                                            id="info"
                                             size="small"
                                         >
                                             <InfoIcon sx={styles.actionIcon} />

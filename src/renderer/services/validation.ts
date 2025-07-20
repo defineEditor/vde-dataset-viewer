@@ -245,7 +245,7 @@ export const startValidation = async (
     if (conversionTask) {
         const conversionResult = await context.startTask(conversionTask);
         if (conversionResult === true) {
-            const validationResult = context.startTask(validationTask);
+            const validationResult = await context.startTask(validationTask);
             return validationResult;
         }
         if (typeof conversionResult === 'object' && conversionResult.error) {
@@ -259,7 +259,7 @@ export const startValidation = async (
 
         return conversionResult;
     }
-    const validationResult = context.startTask(validationTask);
+    const validationResult = await context.startTask(validationTask);
     return validationResult;
 };
 
