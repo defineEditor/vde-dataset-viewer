@@ -66,9 +66,20 @@ const DatasetSidebar: React.FC<{
 
     const [selectedIndex, setSelectedIndex] = useState(0);
 
-    const filteredFiles = openedFiles.filter((file) =>
-        file.name?.toLowerCase().includes(filterText.toLowerCase()),
-    );
+    const filteredFiles = openedFiles
+        .filter((file) =>
+            file.name?.toLowerCase().includes(filterText.toLowerCase()),
+        )
+        .map((file) => {
+            // Get the last folder name from the file path
+            const separator = window.electron.isWindows ? '\\' : '/';
+            const folderName = file.path.split(separator).at(-2);
+
+            return {
+                ...file,
+                folderName,
+            };
+        });
 
     // When sidebar is open, set the current file as selected
     useEffect(() => {
@@ -181,7 +192,7 @@ const DatasetSidebar: React.FC<{
                         >
                             <ListItemText
                                 primary={file.name}
-                                secondary={file.type}
+                                secondary={file.folderName}
                                 slotProps={{
                                     secondary: { sx: styles.type },
                                 }}
