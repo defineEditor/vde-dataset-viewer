@@ -63,7 +63,6 @@ const Validator: React.FC = () => {
     const { apiService } = useContext(AppContext);
     const validatorData = useAppSelector((state) => state.data.validator);
     const settings = useAppSelector((state) => state.settings);
-    const currentFileId = useAppSelector((state) => state.ui.currentFileId);
 
     // Get validation state from Redux
     const validationState = useAppSelector<IUiValidation>(
@@ -89,14 +88,9 @@ const Validator: React.FC = () => {
     };
 
     const handleValidate = async () => {
-        if (selectedFiles.length === 0 && !currentFileId) return;
-
-        // Use currentFileId if available, otherwise use the first selected file
-        const fileId = currentFileId || selectedFiles[0]?.fullPath;
-        if (!fileId) return;
+        if (selectedFiles.length === 0) return;
 
         // Start validation with Redux state management
-
         const files = selectedFiles.map((file) => ({
             filePath: file.fullPath,
             fileName: file.filename,
