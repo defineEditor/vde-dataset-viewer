@@ -77,10 +77,10 @@ export interface ConvertTaskOptions extends SettingsConverter {
 }
 
 export interface ConvertTask {
+    id: string;
     type: typeof mainTaskTypes.CONVERT;
     files: ConvertedFileInfo[];
     options: ConvertTaskOptions;
-    idPrefix: string;
 }
 
 export type ValidateSubTask = 'validate' | 'getInfo';
@@ -101,15 +101,16 @@ export interface ValidatorConfig {
 }
 
 export interface ValidateTask {
+    id: string;
     type: typeof mainTaskTypes.VALIDATE;
     options: SettingsValidator;
     task: ValidateSubTask;
     configuration?: ValidatorConfig;
     validationDetails?: {
         files: string[];
+        originalFiles: string[];
         folders: string[];
     };
-    idPrefix: 'converter' | 'validator';
 }
 
 export interface ConverterProcessTask {
@@ -143,6 +144,8 @@ export interface ConverterTaskProgress {
     type: typeof mainTaskTypes.CONVERT;
     id: string;
     progress: number;
+    fullPath: string;
+    fileName: string;
     error?: string;
 }
 

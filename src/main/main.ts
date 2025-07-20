@@ -139,7 +139,7 @@ const createWindow = async () => {
         if (!mainWindow) {
             throw new Error('"mainWindow" is not defined');
         }
-        if (process.env.START_MINIMIZED || isDebug) {
+        if (process.env.START_MINIMIZED) {
             mainWindow.minimize();
         } else {
             mainWindow.maximize();

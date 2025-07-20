@@ -17,6 +17,7 @@ export const paths = {
     SETTINGS: '/settings',
     ABOUT: '/about',
     CONVERTER: '/converter',
+    VALIDATOR: '/validator',
 } as const;
 
 export const mainTaskTypes = {

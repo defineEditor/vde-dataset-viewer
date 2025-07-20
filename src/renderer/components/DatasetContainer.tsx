@@ -97,8 +97,12 @@ const DatasetContainer: React.FC = () => {
             const rows = table.data;
             // In case mask is used, we need to get the index of the column with mask applied
             let updatedColumnIndex = columnIndex;
-            if (currentMask !== null && currentMask.columns.length > 0) {
-                const originalId = table.header[columnIndex - 1].id;
+            if (
+                currentMask !== null &&
+                currentMask.columns.length > 0 &&
+                currentMask.columns.length >= columnIndex
+            ) {
+                const originalId = currentMask.columns[columnIndex - 1];
                 updatedColumnIndex =
                     table.header.findIndex((item) => item.id === originalId) +
                     1;

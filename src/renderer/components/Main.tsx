@@ -7,6 +7,7 @@ import WysiwygIcon from '@mui/icons-material/Wysiwyg';
 import InfoIcon from '@mui/icons-material/Info';
 import SettingsIcon from '@mui/icons-material/Settings';
 import KeyboardIcon from '@mui/icons-material/Keyboard';
+import FactCheckIcon from '@mui/icons-material/FactCheck';
 import { DashboardLayout } from '@toolpad/core/DashboardLayout';
 import SelectDataset from 'renderer/components/SelectDataset';
 import Api from 'renderer/components/Api';
@@ -24,6 +25,7 @@ import { AllowedPathnames } from 'interfaces/common';
 import ViewerToolbar from 'renderer/components/ViewerToolbar';
 import Shortcuts from 'renderer/components/Shortcuts';
 import Converter from 'renderer/components/Converter';
+import Validator from 'renderer/components/Validator';
 import About from 'renderer/components/About';
 import { paths } from 'misc/constants';
 import { saveStore } from 'renderer/redux/stateUtils';
@@ -73,6 +75,11 @@ const NAVIGATION: Navigation = [
         segment: 'converter',
         title: 'Converter',
         icon: <CachedIcon />,
+    },
+    {
+        segment: 'validator',
+        title: 'Validator',
+        icon: <FactCheckIcon />,
     },
     {
         kind: 'divider',
@@ -163,11 +170,18 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                     case 'F4':
                         dispatch(
                             setPathname({
-                                pathname: paths.SETTINGS,
+                                pathname: paths.VALIDATOR,
                             }),
                         );
                         break;
                     case 'F5':
+                        dispatch(
+                            setPathname({
+                                pathname: paths.SETTINGS,
+                            }),
+                        );
+                        break;
+                    case 'F6':
                         dispatch(
                             setPathname({
                                 pathname: paths.ABOUT,
@@ -294,6 +308,7 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                     {pathname === paths.SETTINGS && <Settings />}
                     {pathname === paths.API && <Api />}
                     {pathname === paths.CONVERTER && <Converter />}
+                    {pathname === paths.VALIDATOR && <Validator />}
                     {pathname === paths.ABOUT && <About />}
                 </Stack>
                 <Shortcuts

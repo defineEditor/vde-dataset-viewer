@@ -102,6 +102,8 @@ class TaskManager {
                         type: mainTaskTypes.CONVERT,
                         id: progressResult.id,
                         progress: progressResult.progress,
+                        fullPath: progressResult.fullPath,
+                        fileName: progressResult.fileName,
                     });
                 }
             });
@@ -141,13 +143,16 @@ class TaskManager {
     ): Promise<boolean | { error: string }> {
         try {
             // Check destination folder exists
-            if (!fs.existsSync(task.options.destinationDir)) {
+            if (
+                task.options.destinationDir !== '__TEMP__' &&
+                !fs.existsSync(task.options.destinationDir)
+            ) {
                 return { error: 'Destination folder does not exist' };
             }
             task.files.forEach((file, index) => {
                 this.taskQueue.push({
                     type: task.type,
-                    id: `${task.idPrefix}-${task.type}-${index.toString()}`,
+                    id: `${task.id}-${index}`,
                     file,
                     options: task.options,
                 });
@@ -188,7 +193,7 @@ class TaskManager {
             }
             this.taskQueue.push({
                 type: task.type,
-                id: `${task.idPrefix}-${task.task}`,
+                id: task.id,
                 options: task.options,
                 configuration: task.configuration,
                 validationDetails: task.validationDetails,

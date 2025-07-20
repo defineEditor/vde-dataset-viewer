@@ -5,28 +5,18 @@ import {
     TextField,
     MenuItem,
     Box,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Paper,
-    IconButton,
     FormControlLabel,
     InputAdornment,
     Typography,
     Switch,
+    IconButton,
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
-import TableSortLabel from '@mui/material/TableSortLabel';
 import AppContext from 'renderer/utils/AppContext';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { openSnackbar } from 'renderer/redux/slices/ui';
 import { setConverterData } from 'renderer/redux/slices/data';
 import {
-    FileInfo,
     ConvertedFileInfo,
     OutputFormat,
     ConvertTask,
@@ -38,27 +28,14 @@ import {
 import { mainTaskTypes } from 'misc/constants';
 import Metadata from 'renderer/components/Converter/Metadata';
 import Options from 'renderer/components/Converter/Options';
-
-const getFormattedDate = (timestamp: number): string => {
-    return new Date(timestamp).toISOString().split('.')[0].replace('T', ' ');
-};
-
-const getHumanReadableSize = (bytes: number): string => {
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-    if (bytes === 0) return '0 B';
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return `${Math.round(bytes / 1024 ** i)} ${sizes[i]}`;
-};
+import FileSelector from 'renderer/components/Common/FileSelector';
 
 const styles = {
     container: {
         p: 2,
         height: '100%',
         backgroundColor: 'grey.100',
-    },
-    controls: {
-        direction: 'row',
-        spacing: 2,
+        overflowY: 'auto',
     },
     formatSelect: {
         minWidth: 210,
@@ -71,6 +48,10 @@ const styles = {
     },
     noSelect: {
         userSelect: 'none',
+    },
+    button: {
+        maxHeight: '40px',
+        p: 2,
     },
 };
 
@@ -91,8 +72,6 @@ const Converter: React.FC<{
     });
     const { apiService } = useContext(AppContext);
     const dispatch = useAppDispatch();
-    const [order, setOrder] = useState<'asc' | 'desc'>('asc');
-    const [orderBy, setOrderBy] = useState<keyof ConvertedFileInfo>('filename');
     const [isMetadataOpen, setIsMetadataOpen] = useState(false);
     const [metadata, setMetadata] = useState<Partial<DatasetMetadata>>({});
     const [updateMetadata, setUpdateMetadata] = useState(false);
@@ -104,70 +83,33 @@ const Converter: React.FC<{
         setOutputFormat(event.target.value as OutputFormat);
     };
 
-    const handleAddFiles = () => {
-        const addFiles = async () => {
-            const result = await apiService.openFileDialog({
-                multiple: true,
-                initialFolder: converterData.sourceDir,
-                filters: [
-                    {
-                        name: 'All supported formats',
-                        extensions: [
-                            'xpt',
-                            'json',
-                            'ndjson',
-                            'dsjc',
-                            'sas7bdat',
-                        ],
-                    },
-                    {
-                        name: 'JSON',
-                        extensions: ['json'],
-                    },
-                    {
-                        name: 'NDJSON',
-                        extensions: ['ndjson'],
-                    },
-                    {
-                        name: 'Compressed JSON',
-                        extensions: ['dsjc'],
-                    },
-                    {
-                        name: 'XPT',
-                        extensions: ['xpt'],
-                    },
-                ],
-            });
-            if (result === null) {
-                dispatch(
-                    openSnackbar({
-                        message: 'Error while selecting the files',
-                        type: 'error',
-                    }),
-                );
-                return;
+    const handleFilesChange = (newFiles: ConvertedFileInfo[]) => {
+        // Ensure output names are set correctly for new files
+        const filesWithOutputNames = newFiles.map((file) => {
+            if (!file.outputName) {
+                let extension: OutputFileExtension;
+                if (outputFormat === 'DJ1.1') {
+                    extension = 'json';
+                } else if (outputFormat === 'DNJ1.1') {
+                    extension = 'ndjson';
+                } else if (outputFormat === 'CSV') {
+                    extension = 'csv';
+                } else if (outputFormat === 'DJC1.1') {
+                    extension = 'dsjc';
+                } else {
+                    extension = 'json'; // fallback
+                }
+                return {
+                    ...file,
+                    outputName: file.filename.replace(
+                        /(.*\.)\w+$/,
+                        `$1${extension}`,
+                    ),
+                };
             }
-            let extension: OutputFileExtension;
-            if (outputFormat === 'DJ1.1') {
-                extension = 'json';
-            } else if (outputFormat === 'DNJ1.1') {
-                extension = 'ndjson';
-            } else if (outputFormat === 'CSV') {
-                extension = 'csv';
-            } else {
-                extension = 'dsjc';
-            }
-            const newFiles = result.map((file: FileInfo) => ({
-                ...file,
-                id: `${file.folder}/${file.filename}`,
-                outputName: file.filename.replace(
-                    /(.*\.)\w+$/,
-                    `$1${extension}`,
-                ),
-            }));
-            setFiles([...files, ...newFiles]);
-        };
-        addFiles();
+            return file;
+        });
+        setFiles(filesWithOutputNames);
     };
 
     const handleSelectDestination = () => {
@@ -188,14 +130,6 @@ const Converter: React.FC<{
             }
         };
         selectDestination();
-    };
-
-    const handleDeleteFile = (fullPath: string) => {
-        setFiles(files.filter((file) => file.fullPath !== fullPath));
-    };
-
-    const handleClearAll = () => {
-        setFiles([]);
     };
 
     // Rename files when rename pattern or replacement changes
@@ -261,35 +195,14 @@ const Converter: React.FC<{
         }
     }, [options.renameFiles, outputFormat]);
 
-    const handleRequestSort = (property: keyof ConvertedFileInfo) => {
-        const isAsc = orderBy === property && order === 'asc';
-        setOrder(isAsc ? 'desc' : 'asc');
-        setOrderBy(property);
-    };
-
-    const sortedFiles = React.useMemo(() => {
-        return [...files].sort((a, b) => {
-            let aVal = a[orderBy];
-            let bVal = b[orderBy];
-            if (order === 'desc') {
-                aVal = b[orderBy];
-                bVal = a[orderBy];
-            }
-            if (typeof aVal === 'string' && typeof bVal === 'string') {
-                return aVal.localeCompare(bVal);
-            }
-            if (typeof aVal === 'number' && typeof bVal === 'number') {
-                return aVal - bVal;
-            }
-            return 0;
-        });
-    }, [files, order, orderBy]);
-
     const handleConvert = () => {
         // Implement conversion logic here
+        // Get unique id for the task
+        const taskId = `converter-${Date.now()}`;
+
         const task: ConvertTask = {
             type: mainTaskTypes.CONVERT,
-            idPrefix: 'converter',
+            id: taskId,
             files,
             options: {
                 prettyPrint: options.prettyPrint,
@@ -376,7 +289,7 @@ const Converter: React.FC<{
         <Stack spacing={2} sx={styles.container}>
             {/* Conversion Configuration */}
             <Typography variant="h6">Conversion Configuration</Typography>
-            <Stack direction="row" spacing={2}>
+            <Stack direction="row" spacing={2} alignItems="center">
                 <TextField
                     select
                     label="Output Format"
@@ -392,7 +305,11 @@ const Converter: React.FC<{
                     </MenuItem>
                     <MenuItem value="CSV">CSV</MenuItem>
                 </TextField>
-                <Button variant="contained" onClick={handleOptionsOpen}>
+                <Button
+                    variant="contained"
+                    onClick={handleOptionsOpen}
+                    sx={styles.button}
+                >
                     Options
                 </Button>
                 {outputFormat !== 'CSV' && (
@@ -413,6 +330,7 @@ const Converter: React.FC<{
                             variant="contained"
                             onClick={handleMetadataOpen}
                             disabled={!updateMetadata}
+                            sx={styles.button}
                         >
                             Metadata
                         </Button>
@@ -420,136 +338,13 @@ const Converter: React.FC<{
                 )}
             </Stack>
 
-            <Typography variant="h6">Files</Typography>
-            {/* Table Controls */}
-            <Stack direction="row" spacing={2} sx={styles.controls}>
-                <Button
-                    variant="contained"
-                    onClick={handleAddFiles}
-                    startIcon={<FolderOpenIcon />}
-                    size="medium"
-                >
-                    Add Files
-                </Button>
-                <Button
-                    variant="outlined"
-                    onClick={handleClearAll}
-                    size="medium"
-                >
-                    Clear All
-                </Button>
-            </Stack>
-
-            {/* Table */}
-            <TableContainer component={Paper} sx={{ flexGrow: 1 }}>
-                <Table stickyHeader>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>
-                                <TableSortLabel
-                                    active={orderBy === 'folder'}
-                                    direction={
-                                        orderBy === 'folder' ? order : 'asc'
-                                    }
-                                    onClick={() => handleRequestSort('folder')}
-                                >
-                                    Folder
-                                </TableSortLabel>
-                            </TableCell>
-                            <TableCell>
-                                <TableSortLabel
-                                    active={orderBy === 'filename'}
-                                    direction={
-                                        orderBy === 'filename' ? order : 'asc'
-                                    }
-                                    onClick={() =>
-                                        handleRequestSort('filename')
-                                    }
-                                >
-                                    Filename
-                                </TableSortLabel>
-                            </TableCell>
-                            <TableCell>
-                                <TableSortLabel
-                                    active={orderBy === 'format'}
-                                    direction={
-                                        orderBy === 'format' ? order : 'asc'
-                                    }
-                                    onClick={() => handleRequestSort('format')}
-                                >
-                                    Format
-                                </TableSortLabel>
-                            </TableCell>
-                            <TableCell>
-                                <TableSortLabel
-                                    active={orderBy === 'size'}
-                                    direction={
-                                        orderBy === 'size' ? order : 'asc'
-                                    }
-                                    onClick={() => handleRequestSort('size')}
-                                >
-                                    Size
-                                </TableSortLabel>
-                            </TableCell>
-                            <TableCell>
-                                <TableSortLabel
-                                    active={orderBy === 'lastModified'}
-                                    direction={
-                                        orderBy === 'lastModified'
-                                            ? order
-                                            : 'asc'
-                                    }
-                                    onClick={() =>
-                                        handleRequestSort('lastModified')
-                                    }
-                                >
-                                    Last Modified
-                                </TableSortLabel>
-                            </TableCell>
-                            <TableCell>
-                                <TableSortLabel
-                                    active={orderBy === 'outputName'}
-                                    direction={
-                                        orderBy === 'outputName' ? order : 'asc'
-                                    }
-                                    onClick={() =>
-                                        handleRequestSort('outputName')
-                                    }
-                                >
-                                    Output Name
-                                </TableSortLabel>
-                            </TableCell>
-                            <TableCell>Actions</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {sortedFiles.map((file) => (
-                            <TableRow key={file.fullPath}>
-                                <TableCell>{file.folder}</TableCell>
-                                <TableCell>{file.filename}</TableCell>
-                                <TableCell>{file.format}</TableCell>
-                                <TableCell>
-                                    {getHumanReadableSize(file.size)}
-                                </TableCell>
-                                <TableCell>
-                                    {getFormattedDate(file.lastModified)}
-                                </TableCell>
-                                <TableCell>{file.outputName}</TableCell>
-                                <TableCell>
-                                    <IconButton
-                                        onClick={() =>
-                                            handleDeleteFile(file.fullPath)
-                                        }
-                                        size="small"
-                                    >
-                                        <DeleteIcon />
-                                    </IconButton>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+            <FileSelector
+                files={files}
+                onFilesChange={handleFilesChange}
+                title="Files"
+                showOutputName
+                initialFolder={converterData.sourceDir}
+            />
 
             {/* Destination Directory */}
             <Box>

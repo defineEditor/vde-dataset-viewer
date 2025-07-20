@@ -8,6 +8,7 @@ import DatasetJson, { ItemDataArray } from 'js-stream-dataset-json';
 import DatasetSas7bdat from 'js-stream-sas7bdat';
 import path from 'path';
 import fs from 'fs';
+import { tmpdir } from 'os';
 import { DatasetJsonMetadata, ItemType } from 'interfaces/common';
 
 const processSasMetadata = (
@@ -730,8 +731,19 @@ process.parentPort.once(
             process.parentPort.postMessage({
                 id,
                 progress,
+                fullPath: file.fullPath,
+                fileName: file.filename,
             });
         };
+
+        // If destination directory is __TEMP__, use the temp directory
+        if (options.destinationDir === '__TEMP__') {
+            const tempDir = path.join(tmpdir(), 'vde-convert');
+            if (!fs.existsSync(tempDir)) {
+                fs.mkdirSync(tempDir, { recursive: true });
+            }
+            options.destinationDir = tempDir;
+        }
 
         if (file.format === 'xpt') {
             await convertXpt(file, options, sendMessage);

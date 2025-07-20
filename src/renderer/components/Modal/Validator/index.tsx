@@ -6,20 +6,20 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Configuration from 'renderer/components/Modal/Validator/Configuration';
-import Results from 'renderer/components/Modal/Validator/Results';
+import Results from 'renderer/components/Common/ValidationResults';
 import AppContext from 'renderer/utils/AppContext';
-import { mainTaskTypes } from 'misc/constants';
-import { IUiModal, ValidatorConfig, TaskProgress } from 'interfaces/common';
+import {
+    InputFileExtension,
+    IUiModal,
+    IUiValidation,
+    ValidatorConfig,
+} from 'interfaces/common';
 import { Tabs, Tab, Box } from '@mui/material';
 import {
     closeModal,
     setValidatorTab,
-    openSnackbar,
+    updateValidation,
 } from 'renderer/redux/slices/ui';
-import {
-    addValidationReport,
-    setValidatorData,
-} from 'renderer/redux/slices/data';
 import ValidationProgress from './ValidationProgress';
 
 const styles = {
@@ -64,8 +64,53 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
     const settings = useAppSelector((state) => state.settings);
 
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+    const validationId = `modal-${currentFileId}`;
+
+    // Get validation state from Redux
+    const validationState = useAppSelector<IUiValidation>(
+        (state) =>
+            (validationId !== null && state.ui.validation[validationId]) || {
+                status: 'not started',
+                validationProgress: 0,
+                conversionProgress: null,
+                dateCompleted: null,
+            },
+    );
 
     const { apiService } = useContext(AppContext);
+
+    // Get last modified time for the current file
+    const currentFile = apiService.getOpenedFiles(currentFileId)[0];
+    const currentFilePath = currentFile?.path;
+    const currentFileLastModified = currentFile?.lastModified;
+
+    // When opening a modal, check if the validation completion date is before the last modified time of the file
+    useEffect(() => {
+        if (
+            validationState.status === 'completed' &&
+            typeof validationState.dateCompleted === 'number' &&
+            currentFileLastModified &&
+            validationState.dateCompleted < currentFileLastModified
+        ) {
+            // Reset validation state if the file has been modified since the last validation
+            dispatch(
+                updateValidation({
+                    validationId,
+                    validation: {
+                        status: 'not started',
+                        validationProgress: 0,
+                        conversionProgress: null,
+                    },
+                }),
+            );
+        }
+    }, [
+        dispatch,
+        validationState.status,
+        validationState.dateCompleted,
+        currentFileLastModified,
+        validationId,
+    ]);
 
     const handleClose = useCallback(() => {
         dispatch(closeModal({ type }));
@@ -79,77 +124,51 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
         ...validatorData.configuration,
     });
 
-    const [validationStatus, setValidationStatus] = useState<
-        'not started' | 'validating' | 'completed'
-    >('not started');
-    const [conversionProgress, setConversionProgress] = useState<number | null>(
-        null,
-    );
-    const [validationProgress, setValidationProgress] = useState<number>(0);
-
     // Save configuration and trigger validation
     const handleValidate = useCallback(() => {
-        apiService.cleanTaskProgressListeners();
-
-        setConversionProgress(null);
-        setValidationProgress(0);
-
-        apiService.subscribeToTaskProgress((info: TaskProgress) => {
-            if (info.type !== mainTaskTypes.VALIDATE) {
-                return;
-            }
-            if (info.id.startsWith(`${mainTaskTypes.VALIDATE}-convert`)) {
-                setConversionProgress(info.progress);
-            } else if (
-                info.id.startsWith(`${mainTaskTypes.VALIDATE}-validator`)
-            ) {
-                setValidationProgress(info.progress);
-                if (info.progress === 100) {
-                    if (info.error) {
-                        dispatch(
-                            openSnackbar({
-                                message: info.error,
-                                type: 'error',
-                            }),
-                        );
-                    } else if (info.result) {
-                        // Only dispatch if result is a ValidationReport (has required properties)
-                        if (
-                            info.result &&
-                            typeof info.result === 'object' &&
-                            'date' in info.result
-                        ) {
-                            dispatch(addValidationReport(info.result));
-                        }
-                    }
-                }
-            }
-        });
-
         const runTask = async () => {
-            setValidationStatus('validating');
-            // Save the configuration
-            dispatch(
-                setValidatorData({
-                    configuration: config,
-                }),
-            );
-            // Start validation
+            // Start validation with Redux state management
+            // Get fileInfo
+            const file = apiService.getOpenedFiles(currentFileId);
+            if (file.length === 0) return;
+
+            // Get extension
+            const extension = file[0].path
+                .split('.')
+                .pop() as InputFileExtension;
+
             await apiService.startValidation({
-                fileId: currentFileId,
+                files: [
+                    {
+                        filePath: file[0].path,
+                        fileName: file[0].name,
+                        extension,
+                    },
+                ],
                 configuration: config,
                 settings,
+                validationId,
             });
-
-            setValidationStatus('completed');
         };
 
         runTask();
+    }, [apiService, config, currentFileId, settings, validationId]);
 
-        return () => {
-            apiService.cleanTaskProgressListeners();
-        };
-    }, [apiService, dispatch, config, currentFileId, settings]);
+    const handleReset = useCallback(() => {
+        if (typeof validationId === 'string') {
+            dispatch(
+                updateValidation({
+                    validationId,
+                    validation: {
+                        status: 'not started',
+                        validationProgress: 0,
+                        conversionProgress: null,
+                        dateCompleted: null,
+                    },
+                }),
+            );
+        }
+    }, [dispatch, validationId]);
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -192,21 +211,27 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
                     <Tab label="Results" sx={styles.tab} />
                 </Tabs>
                 <Box hidden={validatorTab !== 0} sx={styles.tabPanel}>
-                    {['completed', 'validating'].includes(validationStatus) ? (
+                    {['completed', 'validating'].includes(
+                        validationState.status,
+                    ) ? (
                         <ValidationProgress
-                            conversionProgress={conversionProgress}
-                            validationProgress={validationProgress}
+                            conversionProgress={
+                                validationState.conversionProgress
+                            }
+                            validationProgress={
+                                validationState.validationProgress
+                            }
                         />
                     ) : (
                         <Configuration config={config} setConfig={setConfig} />
                     )}
                 </Box>
                 <Box hidden={validatorTab !== 1} sx={styles.tabPanel}>
-                    <Results />
+                    <Results filePaths={[currentFilePath]} />
                 </Box>
             </DialogContent>
             <DialogActions sx={styles.actions}>
-                {validationStatus === 'not started' && (
+                {validationState.status === 'not started' && (
                     <Button
                         onClick={handleValidate}
                         color="primary"
@@ -215,12 +240,12 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
                         Validate
                     </Button>
                 )}
-                {(validationStatus === 'completed' ||
-                    validationStatus === 'validating') && (
+                {(validationState.status === 'completed' ||
+                    validationState.status === 'validating') && (
                     <Button
-                        onClick={() => setValidationStatus('not started')}
+                        onClick={handleReset}
                         color="primary"
-                        disabled={validationStatus !== 'completed'}
+                        disabled={validationState.status !== 'completed'}
                     >
                         Done
                     </Button>
