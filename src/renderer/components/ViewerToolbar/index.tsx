@@ -331,7 +331,9 @@ const Header: React.FC = () => {
                 >
                     <FactCheckIcon
                         sx={{
-                            color: 'primary.main',
+                            color: validatorVersion
+                                ? 'primary.main'
+                                : 'grey.500',
                         }}
                     />
                 </IconButton>
