@@ -193,8 +193,8 @@ app.whenReady()
         const fileManager = new FileManager();
         const storeManager = new StoreManager();
         const netManager = new NetManager();
-        const taskManager = new TaskManager({ reportsDirectory });
         const reportManager = new ReportManager(reportsDirectory);
+        const taskManager = new TaskManager({ reportsDirectory });
         ipcMain.handle('main:openFile', fileManager.handleFileOpen);
         ipcMain.handle('main:fetch', netManager.fetch);
         ipcMain.handle('main:closeFile', fileManager.handleFileClose);
