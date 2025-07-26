@@ -116,6 +116,7 @@ export interface ValidateTask {
 export interface ConverterProcessTask {
     type: ConvertTask['type'];
     id: string;
+    webContentsId: string;
     file: ConvertedFileInfo;
     options: ConvertTask['options'];
 }
@@ -123,6 +124,7 @@ export interface ConverterProcessTask {
 export interface ValidatorProcessTask {
     type: ValidateTask['type'];
     id: string;
+    webContentsId: string;
     options: SettingsValidator;
     configuration?: ValidatorConfig;
     validationDetails?: ValidateTask['validationDetails'];

@@ -1,7 +1,6 @@
 import {
     ItemDataArray,
     DatasetJsonMetadata,
-    DatasetType,
     IOpenFile,
     BasicFilter,
     ColumnMetadata,
@@ -14,12 +13,13 @@ import {
     IApiRecord,
     IApiStudy,
     IApiStudyDataset,
-    DatasetMode,
     MainTask,
     TaskProgress,
     TableRowValue,
     ValidatorConfig,
     ValidationTaskFile,
+    ApiOpenedFile,
+    ApiOpenedFileWithMetadata,
 } from 'interfaces/common';
 import store from 'renderer/redux/store';
 import transformData from 'renderer/services/transformData';
@@ -32,14 +32,7 @@ import {
 
 class ApiService {
     // List of opened files with basic information
-    private openedFiles: {
-        fileId: string;
-        name: string;
-        mode: 'local' | 'remote';
-        path: string;
-        type: DatasetType;
-        lastModified?: number;
-    }[] = [];
+    private openedFiles: ApiOpenedFile[] = [];
 
     // List of opened files metadata
     private openedFilesMetadata: {
@@ -557,19 +550,7 @@ class ApiService {
     };
 
     // Get all opened files
-    public getOpenedFiles = (
-        fileId?: string,
-    ): {
-        fileId: string;
-        name: string;
-        label: string;
-        mode: DatasetMode;
-        nCols: number;
-        records: number;
-        type: DatasetType;
-        path: string;
-        lastModified: number;
-    }[] => {
+    public getOpenedFiles = (fileId?: string): ApiOpenedFileWithMetadata[] => {
         // If fileId is not specified return all opened files
         return this.openedFiles
             .filter((file) => (fileId ? file.fileId === fileId : true))
@@ -670,6 +651,7 @@ class ApiService {
         return result;
     };
 
+    // Retrieve datasets via API
     public getApiAbout = async (
         apiRecord: IApiRecord,
     ): Promise<IApiAbout | null> => {
@@ -756,6 +738,7 @@ class ApiService {
         return result;
     };
 
+    // Tasks
     public startTask = async (task: MainTask) => {
         const result = await window.electron.startTask(task);
         return result;
@@ -771,11 +754,7 @@ class ApiService {
         window.electron.cleanTaskProgressListeners();
     };
 
-    public getAppVersion = async (): Promise<string> => {
-        const result = await window.electron.getAppVersion();
-        return result;
-    };
-
+    // Validation
     public startValidation = async ({
         files,
         configuration,
@@ -799,6 +778,16 @@ class ApiService {
         fileName: string,
     ): Promise<boolean> => {
         return deleteValidationReport(fileName);
+    };
+
+    // Misc
+    public getAppVersion = async (): Promise<string> => {
+        const result = await window.electron.getAppVersion();
+        return result;
+    };
+
+    public openInNewWindow = async (filePath: string): Promise<void> => {
+        await window.electron.openInNewWindow(filePath);
     };
 }
 

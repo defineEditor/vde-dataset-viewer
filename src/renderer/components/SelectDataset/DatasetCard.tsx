@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import CloseIcon from '@mui/icons-material/Close';
-import { DatasetType } from 'interfaces/api';
+import AppContext from 'renderer/utils/AppContext';
+import { ApiOpenedFileWithMetadata } from 'interfaces/api';
 
 const styles = {
     card: (theme) => ({
@@ -71,14 +73,7 @@ const styles = {
 };
 
 const DatasetCard: React.FC<{
-    file: {
-        fileId: string;
-        name: string;
-        label: string;
-        nCols: number;
-        records: number;
-        type: DatasetType;
-    };
+    file: ApiOpenedFileWithMetadata;
     handleSelectFileClick: (_file: { fileId: string }) => void;
     handleDatasetClose: (_fileId: string) => void;
 }> = ({ file, handleSelectFileClick, handleDatasetClose }) => {
@@ -86,6 +81,7 @@ const DatasetCard: React.FC<{
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     const typeStyle = type === 'xpt' ? styles.typeXpt : styles.typeOther;
+    const { apiService } = useContext(AppContext);
 
     const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
         event.stopPropagation();
@@ -99,6 +95,12 @@ const DatasetCard: React.FC<{
     const handleCloseClick = (event: React.MouseEvent<HTMLElement>) => {
         event.stopPropagation();
         handleDatasetClose(fileId);
+        handleMenuClose();
+    };
+
+    const handleOpenClick = (event: React.MouseEvent<HTMLElement>) => {
+        event.stopPropagation();
+        apiService.openInNewWindow(file.path);
         handleMenuClose();
     };
 
@@ -134,6 +136,13 @@ const DatasetCard: React.FC<{
                     open={Boolean(anchorEl)}
                     onClose={handleMenuClose}
                 >
+                    <MenuItem onClick={handleOpenClick}>
+                        <OpenInNewIcon
+                            fontSize="small"
+                            sx={{ marginRight: 1 }}
+                        />
+                        Open in New Window
+                    </MenuItem>
                     <MenuItem onClick={handleCloseClick}>
                         <CloseIcon fontSize="small" sx={{ marginRight: 1 }} />
                         Close

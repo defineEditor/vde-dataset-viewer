@@ -16,6 +16,23 @@ export {
 } from 'js-array-filter';
 
 export type DatasetType = 'json' | 'xpt' | 'sas7bdat';
+export type DatasetMode = 'local' | 'remote';
+
+export interface ApiOpenedFile {
+    fileId: string;
+    name: string;
+    mode: DatasetMode;
+    path: string;
+    type: DatasetType;
+    lastModified?: number;
+}
+
+export interface ApiOpenedFileWithMetadata extends ApiOpenedFile {
+    nCols: number;
+    label: string;
+    records: number;
+    lastModified: number;
+}
 
 export interface IOpenFile {
     fileId: string;

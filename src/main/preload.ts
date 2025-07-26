@@ -119,6 +119,8 @@ contextBridge.exposeInMainWorld('electron', {
         ipcRenderer.removeAllListeners('renderer:taskProgress');
     },
     getAppVersion: () => ipcRenderer.invoke('main:getVersion'),
+    openInNewWindow: (filePath: string) =>
+        ipcRenderer.invoke('main:openInNewWindow', filePath),
     ipcRenderer: {
         sendMessage(channel: Channels, args: unknown[]) {
             ipcRenderer.send(channel, args);

@@ -147,8 +147,6 @@ export interface IRecentFile {
     path: string;
 }
 
-export type DatasetMode = 'local' | 'remote';
-
 export interface ConverterData {
     configuration: ConversionConfig;
     destinationDir: string;
