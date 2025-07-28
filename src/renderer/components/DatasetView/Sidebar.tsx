@@ -10,8 +10,10 @@ import {
     ListItemText,
     IconButton,
     Drawer,
+    Stack,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 const styles = {
     drawer: {
@@ -41,7 +43,7 @@ const styles = {
     filterInput: {
         py: 1,
     },
-    closeIcon: {
+    actionIcon: {
         fontSize: '24px',
     },
 };
@@ -120,6 +122,18 @@ const DatasetSidebar: React.FC<{
         setSelectedIndex(newFileIndex);
     };
 
+    const handleOpenInNewWindow = (
+        event: React.MouseEvent<HTMLElement>,
+        fileId: string,
+        filePath: string,
+    ) => {
+        event.stopPropagation();
+        // Close the dataset in the current window
+        handleCloseDataset(event, fileId);
+        // Open the dataset in a new window
+        apiService.openInNewWindow(filePath);
+    };
+
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (filteredFiles.length === 0) return;
 
@@ -173,16 +187,32 @@ const DatasetSidebar: React.FC<{
                         key={file.fileId}
                         sx={styles.item}
                         secondaryAction={
-                            <IconButton
-                                onClick={(event) =>
-                                    handleCloseDataset(event, file.fileId)
-                                }
-                            >
-                                <CloseIcon
-                                    fontSize="small"
-                                    sx={styles.closeIcon}
-                                />
-                            </IconButton>
+                            <Stack direction="row" spacing={1}>
+                                <IconButton
+                                    onClick={(event) =>
+                                        handleOpenInNewWindow(
+                                            event,
+                                            file.fileId,
+                                            file.path,
+                                        )
+                                    }
+                                >
+                                    <OpenInNewIcon
+                                        fontSize="small"
+                                        sx={styles.actionIcon}
+                                    />
+                                </IconButton>
+                                <IconButton
+                                    onClick={(event) =>
+                                        handleCloseDataset(event, file.fileId)
+                                    }
+                                >
+                                    <CloseIcon
+                                        fontSize="small"
+                                        sx={styles.actionIcon}
+                                    />
+                                </IconButton>
+                            </Stack>
                         }
                     >
                         <ListItemButton

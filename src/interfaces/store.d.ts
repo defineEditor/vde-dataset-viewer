@@ -16,6 +16,8 @@ export interface IMask {
     sticky?: boolean;
 }
 
+export type ClipboardCopyFormat = 'tab' | 'csv' | 'json';
+
 export interface ISettings {
     viewer: {
         pageSize: number;
@@ -26,7 +28,7 @@ export interface ISettings {
         roundNumbers: boolean;
         maxPrecision?: number;
         applyDateFormat: boolean;
-        copyFormat: 'tab' | 'csv' | 'json';
+        copyFormat: ClipboardCopyFormat;
         showTypeIcons: boolean;
     };
     converter: SettingsConverter;

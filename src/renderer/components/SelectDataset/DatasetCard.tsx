@@ -4,11 +4,11 @@ import Stack from '@mui/material/Stack';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import CloseIcon from '@mui/icons-material/Close';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import AppContext from 'renderer/utils/AppContext';
 import { ApiOpenedFileWithMetadata } from 'interfaces/api';
 
@@ -98,8 +98,13 @@ const DatasetCard: React.FC<{
         handleMenuClose();
     };
 
-    const handleOpenClick = (event: React.MouseEvent<HTMLElement>) => {
+    const handleOpenInNewWindowClick = (
+        event: React.MouseEvent<HTMLElement>,
+    ) => {
         event.stopPropagation();
+        // Close the dataset in the current window
+        handleDatasetClose(fileId);
+        // Open the dataset in a new window
         apiService.openInNewWindow(file.path);
         handleMenuClose();
     };
@@ -136,7 +141,7 @@ const DatasetCard: React.FC<{
                     open={Boolean(anchorEl)}
                     onClose={handleMenuClose}
                 >
-                    <MenuItem onClick={handleOpenClick}>
+                    <MenuItem onClick={handleOpenInNewWindowClick}>
                         <OpenInNewIcon
                             fontSize="small"
                             sx={{ marginRight: 1 }}

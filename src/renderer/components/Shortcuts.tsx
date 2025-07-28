@@ -60,6 +60,7 @@ const shortcuts = {
         'Ctrl + E': 'Column Visibility',
         'Ctrl + I': 'Dataset Information',
         'Ctrl + C': 'Copy selected cells',
+        'Ctrl + Alt + C': 'Copy selected cells with headers',
         'Ctrl + `': 'Toggle opened dataset selection',
     },
 };

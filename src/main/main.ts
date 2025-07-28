@@ -23,6 +23,7 @@ import { MainTask } from 'interfaces/main';
 
 let mainWindow: BrowserWindow | null = null;
 let fileToOpen: string | null = null;
+const openedWindows = new Set<BrowserWindow>();
 
 // Get file path from command line arguments
 function getFilePathFromArgs(args: string[]): string | null {
@@ -111,7 +112,6 @@ app.whenReady()
     });
 
 const createWindow = async (
-    isMain: boolean,
     filePath?: string | null,
 ): Promise<BrowserWindow | null> => {
     const RESOURCES_PATH = app.isPackaged
@@ -129,12 +129,13 @@ const createWindow = async (
         icon: getAssetPath('icon.png'),
         autoHideMenuBar: true,
         webPreferences: {
-            sandbox: false,
             preload: app.isPackaged
                 ? path.join(__dirname, 'preload.js')
                 : path.join(__dirname, '../../.erb/dll/preload.js'),
         },
     });
+
+    openedWindows.add(newWindow);
 
     newWindow.loadURL(resolveHtmlPath('index.html'));
 
@@ -157,18 +158,28 @@ const createWindow = async (
 
     newWindow.on('close', async (event) => {
         event.preventDefault();
-        if (newWindow && isMain) {
+        if (newWindow && newWindow === mainWindow) {
             ipcMain.once('main:storeSaved', () => {
                 if (newWindow) {
                     newWindow.destroy();
                 }
             });
             newWindow.webContents.send('renderer:saveStore');
+        } else if (newWindow) {
+            newWindow.destroy();
         }
     });
 
     newWindow.on('closed', () => {
-        newWindow = null;
+        if (newWindow) {
+            openedWindows.delete(newWindow);
+            if (mainWindow === newWindow) {
+                // Set next window as main if available
+                const nextWindow = openedWindows.values().next().value || null;
+                mainWindow = nextWindow || null;
+            }
+            newWindow = null;
+        }
     });
 
     // Open urls in the user's browser
@@ -185,7 +196,7 @@ const handleOpenInNewWindow = async (
     _event: IpcMainInvokeEvent,
     filePath: string,
 ): Promise<void> => {
-    createWindow(false, filePath);
+    createWindow(filePath);
 };
 
 /**
@@ -237,7 +248,7 @@ app.whenReady()
         ipcMain.handle(
             'main:startTask',
             (event: IpcMainInvokeEvent, task: MainTask) => {
-                if (mainWindow === null) {
+                if (!event.sender) {
                     return Promise.resolve(false);
                 }
                 return taskManager.handleTask(task, event.sender);
@@ -246,12 +257,12 @@ app.whenReady()
         ipcMain.handle('main:getVersion', (_event: IpcMainInvokeEvent) => {
             return app.getVersion();
         });
-        mainWindow = await createWindow(true, fileToOpen);
+        mainWindow = await createWindow(fileToOpen);
         app.on('activate', async () => {
             // On macOS it's common to re-create a window in the app when the
             // dock icon is clicked and there are no other windows open.
             if (mainWindow === null) {
-                mainWindow = await createWindow(true, fileToOpen);
+                mainWindow = await createWindow(fileToOpen);
             }
         });
     })
