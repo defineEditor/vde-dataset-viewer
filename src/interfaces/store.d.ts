@@ -16,6 +16,8 @@ export interface IMask {
     sticky?: boolean;
 }
 
+export type ClipboardCopyFormat = 'tab' | 'csv' | 'json';
+
 export interface ISettings {
     viewer: {
         pageSize: number;
@@ -26,7 +28,7 @@ export interface ISettings {
         roundNumbers: boolean;
         maxPrecision?: number;
         applyDateFormat: boolean;
-        copyFormat: 'tab' | 'csv' | 'json';
+        copyFormat: ClipboardCopyFormat;
         showTypeIcons: boolean;
     };
     converter: SettingsConverter;
@@ -125,6 +127,10 @@ export interface IUiValidation {
     dateCompleted: number | null;
 }
 
+export interface IUiValidationReport {
+    currentReportId: string | null;
+}
+
 export interface IUi {
     pathname: AllowedPathnames;
     currentFileId: string;
@@ -134,6 +140,7 @@ export interface IUi {
     snackbar: IUiSnackbar;
     control: IUiControl;
     validation: { [validationId: string]: IUiValidation };
+    validationReport: IUiValidationReport;
 }
 
 export interface IRecentFile {
@@ -141,8 +148,6 @@ export interface IRecentFile {
     label: string;
     path: string;
 }
-
-export type DatasetMode = 'local' | 'remote';
 
 export interface ConverterData {
     configuration: ConversionConfig;

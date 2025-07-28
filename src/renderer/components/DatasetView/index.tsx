@@ -219,6 +219,20 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     );
 
     const handleMouseDown = (rowIndex: number, columnIndex: number) => {
+        if (rowIndex === -1 && columnIndex === -1) {
+            // If user clicks on the header row number, select the entire table
+            const newHighlightedCells: { row: number; column: number }[] = [];
+            for (let row = 0; row < rows.length; row++) {
+                for (let column = 0; column < visibleColumns.length; column++) {
+                    newHighlightedCells.push({ row, column });
+                }
+            }
+            setHighlightedCells(newHighlightedCells);
+            setSelecting(false);
+            setStartCell(null);
+            return;
+        }
+        // If user clicks on a cell, start selecting
         setSelecting(true);
         setStartCell({ row: rowIndex, column: columnIndex });
         setHighlightedCells([{ row: rowIndex, column: columnIndex }]);
@@ -259,99 +273,129 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         setStartCell(null);
     };
 
-    const handleCopyToClipboard = useCallback(() => {
-        if (highlightedCells.length > 0) {
-            const rowIndices = [
-                ...new Set(highlightedCells.map((cell) => cell.row)),
-            ];
-            const columnIndices = [
-                ...new Set(highlightedCells.map((cell) => cell.column)),
-            ];
+    const handleCopyToClipboard = useCallback(
+        (withHeaders: boolean) => {
+            if (highlightedCells.length > 0) {
+                const rowIndices = [
+                    ...new Set(highlightedCells.map((cell) => cell.row)),
+                ];
+                const columnIndices = [
+                    ...new Set(highlightedCells.map((cell) => cell.column)),
+                ];
 
-            rowIndices.sort((a, b) => a - b);
-            columnIndices.sort((a, b) => a - b);
+                rowIndices.sort((a, b) => a - b);
+                columnIndices.sort((a, b) => a - b);
 
-            // Check if row or column indeces exists
-            let invalidIndeces = false;
-            rowIndices.some((rowIndex) => {
-                if (rows[rowIndex] === undefined) {
-                    // Row index is out of bounds
-                    invalidIndeces = true;
-                    return true;
-                }
-                return false;
-            });
-            columnIndices.some((columnIndex) => {
-                if (visibleColumns[columnIndex] === undefined) {
-                    // Column index is out of bounds
-                    invalidIndeces = true;
-                    return true;
-                }
-                return false;
-            });
-
-            // If any index is invalid, do not proceed
-            if (invalidIndeces) {
-                return;
-            }
-
-            let selectedData = '';
-            if (settings.copyFormat === 'tab') {
-                selectedData = rowIndices
-                    .map((rowIndex) => {
-                        const row = rows[rowIndex];
-                        return columnIndices
-                            .map((columnIndex) => {
-                                const cell = row.getVisibleCells()[columnIndex];
-                                return cell.getValue();
-                            })
-                            .join('\t');
-                    })
-                    .join('\n');
-            } else if (settings.copyFormat === 'csv') {
-                selectedData = rowIndices
-                    .map((rowIndex) => {
-                        const row = rows[rowIndex];
-                        return columnIndices
-                            .map((columnIndex) => {
-                                const cell = row.getVisibleCells()[columnIndex];
-                                return `"${(cell.getValue() as string).toString().replace(/"/g, '""')}"`;
-                            })
-                            .join(',');
-                    })
-                    .join('\n');
-            } else if (settings.copyFormat === 'json') {
-                const selectedRows = rowIndices.map((rowIndex) => {
-                    const row = rows[rowIndex];
-                    const selectedColumns = columnIndices.map((columnIndex) => {
-                        const cell = row.getVisibleCells()[columnIndex];
-                        return {
-                            [visibleColumns[columnIndex].id]: cell.getValue(),
-                        };
-                    });
-                    return selectedColumns.reduce((acc, curr) => {
-                        return { ...acc, ...curr };
-                    }, {});
+                // Check if row or column indeces exists
+                let invalidIndeces = false;
+                rowIndices.some((rowIndex) => {
+                    if (rows[rowIndex] === undefined) {
+                        // Row index is out of bounds
+                        invalidIndeces = true;
+                        return true;
+                    }
+                    return false;
                 });
-                selectedData = JSON.stringify(selectedRows, null, 2);
-            }
+                columnIndices.some((columnIndex) => {
+                    if (visibleColumns[columnIndex] === undefined) {
+                        // Column index is out of bounds
+                        invalidIndeces = true;
+                        return true;
+                    }
+                    return false;
+                });
 
-            window.electron.writeToClipboard(selectedData);
-            dispatch(
-                openSnackbar({
-                    message: 'Copied to clipboard',
-                    type: 'success',
-                    props: { duration: 1000 },
-                }),
-            );
-        }
-    }, [highlightedCells, rows, dispatch, settings.copyFormat, visibleColumns]);
+                // If any index is invalid, do not proceed
+                if (invalidIndeces) {
+                    return;
+                }
+
+                let selectedData = '';
+                if (settings.copyFormat === 'tab') {
+                    selectedData = rowIndices
+                        .map((rowIndex) => {
+                            const row = rows[rowIndex];
+                            return columnIndices
+                                .map((columnIndex) => {
+                                    const cell =
+                                        row.getVisibleCells()[columnIndex];
+                                    return cell.getValue();
+                                })
+                                .join('\t');
+                        })
+                        .join('\n');
+                    // If withHeaders is true, add headers
+                    if (withHeaders) {
+                        const headerRow = visibleColumns
+                            .filter((_, index) => columnIndices.includes(index))
+                            .map((column) => column.id)
+                            .join('\t');
+                        selectedData = `${headerRow}\n${selectedData}`;
+                    }
+                } else if (settings.copyFormat === 'csv') {
+                    selectedData = rowIndices
+                        .map((rowIndex) => {
+                            const row = rows[rowIndex];
+                            return columnIndices
+                                .map((columnIndex) => {
+                                    const cell =
+                                        row.getVisibleCells()[columnIndex];
+                                    return `"${(cell.getValue() as string).toString().replace(/"/g, '""')}"`;
+                                })
+                                .join(',');
+                        })
+                        .join('\n');
+                    // If withHeaders is true, add headers
+                    if (withHeaders) {
+                        const headerRow = visibleColumns
+                            .filter((_, index) => columnIndices.includes(index))
+                            .map(
+                                (column) =>
+                                    `"${column.id.replace(/"/g, '""')}"`,
+                            )
+                            .join(',');
+                        selectedData = `${headerRow}\n${selectedData}`;
+                    }
+                } else if (settings.copyFormat === 'json') {
+                    const selectedRows = rowIndices.map((rowIndex) => {
+                        const row = rows[rowIndex];
+                        const selectedColumns = columnIndices.map(
+                            (columnIndex) => {
+                                const cell = row.getVisibleCells()[columnIndex];
+                                return {
+                                    [visibleColumns[columnIndex].id]:
+                                        cell.getValue(),
+                                };
+                            },
+                        );
+                        return selectedColumns.reduce((acc, curr) => {
+                            return { ...acc, ...curr };
+                        }, {});
+                    });
+                    selectedData = JSON.stringify(selectedRows, null, 2);
+                }
+
+                window.electron.writeToClipboard(selectedData);
+                dispatch(
+                    openSnackbar({
+                        message: 'Copied to clipboard',
+                        type: 'success',
+                        props: { duration: 1000 },
+                    }),
+                );
+            }
+        },
+        [highlightedCells, rows, dispatch, settings.copyFormat, visibleColumns],
+    );
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.ctrlKey && event.key === 'c') {
+            if (event.ctrlKey && event.altKey && event.key === 'c') {
+                // Ctrl + Alt + C to copy selected cells to clipboard
+                handleCopyToClipboard(true);
+            } else if (event.ctrlKey && event.key === 'c') {
                 // Ctrl + C to copy selected cells to clipboard
-                handleCopyToClipboard();
+                handleCopyToClipboard(false);
             } else if (event.key === 'Escape') {
                 // Escape to clear selection
                 setHighlightedCells([]);

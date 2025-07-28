@@ -82,6 +82,9 @@ export const ui: IUi = {
         },
     },
     validation: {},
+    validationReport: {
+        currentReportId: null,
+    },
 };
 
 export const converter: ConverterData = {

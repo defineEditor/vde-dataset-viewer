@@ -327,11 +327,13 @@ const Header: React.FC = () => {
                     onClick={handleValidateClick}
                     id="validateData"
                     size="small"
-                    disabled={pathname !== paths.VIEWFILE && !validatorVersion}
+                    disabled={pathname !== paths.VIEWFILE || !validatorVersion}
                 >
                     <FactCheckIcon
                         sx={{
-                            color: 'primary.main',
+                            color: validatorVersion
+                                ? 'primary.main'
+                                : 'grey.500',
                         }}
                     />
                 </IconButton>

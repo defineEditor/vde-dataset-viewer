@@ -168,6 +168,14 @@ export const dataSlice = createSlice({
                 },
             );
 
+            // Remove summary message, as it is not needed in the redux
+            newReport.summary.summary = newReport.summary.summary.map(
+                (summary) => ({
+                    ...summary,
+                    message: '',
+                }),
+            );
+
             if (sameFilesReports.length > 0) {
                 // Find the most recent report with same files
                 const mostRecentReport = sameFilesReports.reduce(

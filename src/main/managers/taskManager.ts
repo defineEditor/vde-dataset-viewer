@@ -1,4 +1,4 @@
-import { UtilityProcess, utilityProcess, app, BrowserWindow } from 'electron';
+import { UtilityProcess, utilityProcess, app, WebContents } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import {
@@ -18,7 +18,7 @@ class TaskManager {
 
     private maxThreads: number;
 
-    private mainWindow: BrowserWindow | null;
+    private taskWebContents: Map<string, WebContents>;
 
     private reportsDirectory: string;
 
@@ -33,7 +33,7 @@ class TaskManager {
         this.taskQueue = [];
         this.running = 0;
         this.maxThreads = 1;
-        this.mainWindow = null;
+        this.taskWebContents = new Map();
     }
 
     private hasPendingTasks(): boolean {
@@ -51,7 +51,7 @@ class TaskManager {
     }
 
     private async startProcess(processTask: MainProcessTask): Promise<void> {
-        const { type, id, options } = processTask;
+        const { type, id, webContentsId, options } = processTask;
         const process = this.createProcess(type);
         this.processes.set(id, process);
         // Add AppVersion as it is available only in main process
@@ -72,33 +72,28 @@ class TaskManager {
 
         return new Promise((resolve) => {
             process.on('message', (progressResult) => {
-                if (this.mainWindow === null) {
+                const webContents = this.taskWebContents.get(webContentsId);
+                if (webContents === undefined || webContents.isDestroyed()) {
                     return;
                 }
                 if (type === mainTaskTypes.VALIDATE) {
                     if (progressResult.progress === 100) {
-                        this.mainWindow.webContents.send(
-                            'renderer:taskProgress',
-                            {
-                                type: mainTaskTypes.VALIDATE,
-                                id: progressResult.id,
-                                progress: progressResult.progress,
-                                result: progressResult.result,
-                                error: progressResult.error,
-                            },
-                        );
+                        webContents.send('renderer:taskProgress', {
+                            type: mainTaskTypes.VALIDATE,
+                            id: progressResult.id,
+                            progress: progressResult.progress,
+                            result: progressResult.result,
+                            error: progressResult.error,
+                        });
                     } else {
-                        this.mainWindow.webContents.send(
-                            'renderer:taskProgress',
-                            {
-                                type: mainTaskTypes.VALIDATE,
-                                id: progressResult.id,
-                                progress: progressResult.progress,
-                            },
-                        );
+                        webContents.send('renderer:taskProgress', {
+                            type: mainTaskTypes.VALIDATE,
+                            id: progressResult.id,
+                            progress: progressResult.progress,
+                        });
                     }
                 } else if (type === mainTaskTypes.CONVERT) {
-                    this.mainWindow.webContents.send('renderer:taskProgress', {
+                    webContents.send('renderer:taskProgress', {
                         type: mainTaskTypes.CONVERT,
                         id: progressResult.id,
                         progress: progressResult.progress,
@@ -122,17 +117,19 @@ class TaskManager {
 
     public async handleTask(
         task: MainTask,
-        mainWindow: BrowserWindow,
+        webContents: WebContents,
     ): Promise<boolean | { error: string }> {
-        this.mainWindow = mainWindow;
+        this.taskWebContents.set(task.id, webContents);
         if (task.type === mainTaskTypes.CONVERT) {
             this.maxThreads = task.options?.threads || 1;
             const result = await this.handleConveterTask(task);
+            this.taskWebContents.delete(task.id);
             return result;
         }
         if (task.type === mainTaskTypes.VALIDATE) {
             this.maxThreads = task.options?.poolSize || 1;
             const result = await this.handleValidateTask(task);
+            this.taskWebContents.delete(task.id);
             return result;
         }
         return false;
@@ -153,6 +150,7 @@ class TaskManager {
                 this.taskQueue.push({
                     type: task.type,
                     id: `${task.id}-${index}`,
+                    webContentsId: task.id,
                     file,
                     options: task.options,
                 });
@@ -194,6 +192,7 @@ class TaskManager {
             this.taskQueue.push({
                 type: task.type,
                 id: task.id,
+                webContentsId: task.id,
                 options: task.options,
                 configuration: task.configuration,
                 validationDetails: task.validationDetails,
@@ -281,6 +280,7 @@ class TaskManager {
             process.kill();
         });
         this.processes.clear();
+        this.taskWebContents.clear();
         this.running = 0;
     }
 }

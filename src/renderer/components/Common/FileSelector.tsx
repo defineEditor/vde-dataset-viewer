@@ -117,7 +117,7 @@ const FileSelector: React.FC<FileSelectorProps> = ({
         const newFiles = result.map((file: FileInfo) => ({
             ...file,
             id: `${file.folder}/${file.filename}`,
-            outputName: file.filename,
+            outputName: showOutputName ? '' : file.filename,
         }));
 
         onFilesChange([...existingFiles, ...newFiles]);

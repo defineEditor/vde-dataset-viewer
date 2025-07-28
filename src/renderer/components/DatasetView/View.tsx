@@ -259,6 +259,9 @@ const DatasetViewUI: React.FC<{
                                         width: visibleColumns[0].getSize(),
                                         ...styles.headerRowNumberCell,
                                     }}
+                                    onClick={() => {
+                                        handleMouseDown(-1, -1);
+                                    }}
                                 >
                                     <Box sx={styles.tableHeaderLabel}>
                                         {flexRender(
@@ -311,9 +314,16 @@ const DatasetViewUI: React.FC<{
                                                     },
                                                 ]);
                                             }}
-                                            onMouseDown={() =>
-                                                handleMouseDown(0, vc.index + 1)
-                                            }
+                                            onMouseDown={(
+                                                event: React.MouseEvent,
+                                            ) => {
+                                                if (event.button === 0) {
+                                                    handleMouseDown(
+                                                        0,
+                                                        vc.index + 1,
+                                                    );
+                                                }
+                                            }}
                                             onMouseOver={() =>
                                                 handleMouseOver(0, vc.index + 1)
                                             }

@@ -23,6 +23,7 @@ import { MainTask } from 'interfaces/main';
 
 let mainWindow: BrowserWindow | null = null;
 let fileToOpen: string | null = null;
+const openedWindows = new Set<BrowserWindow>();
 
 // Get file path from command line arguments
 function getFilePathFromArgs(args: string[]): string | null {
@@ -110,7 +111,9 @@ app.whenReady()
         console.log('An error occurred: ', err);
     });
 
-const createWindow = async () => {
+const createWindow = async (
+    filePath?: string | null,
+): Promise<BrowserWindow | null> => {
     const RESOURCES_PATH = app.isPackaged
         ? path.join(process.resourcesPath, 'assets')
         : path.join(__dirname, '../../assets');
@@ -119,61 +122,81 @@ const createWindow = async () => {
         return path.join(RESOURCES_PATH, ...paths);
     };
 
-    mainWindow = new BrowserWindow({
+    let newWindow: BrowserWindow | null = new BrowserWindow({
         show: false,
         width: 1024,
         height: 728,
         icon: getAssetPath('icon.png'),
         autoHideMenuBar: true,
         webPreferences: {
-            sandbox: false,
             preload: app.isPackaged
                 ? path.join(__dirname, 'preload.js')
                 : path.join(__dirname, '../../.erb/dll/preload.js'),
         },
     });
 
-    mainWindow.loadURL(resolveHtmlPath('index.html'));
+    openedWindows.add(newWindow);
 
-    mainWindow.on('ready-to-show', () => {
-        if (!mainWindow) {
-            throw new Error('"mainWindow" is not defined');
+    newWindow.loadURL(resolveHtmlPath('index.html'));
+
+    newWindow.on('ready-to-show', () => {
+        if (!newWindow) {
+            throw new Error('"newWindow" is not defined');
         }
         if (process.env.START_MINIMIZED) {
-            mainWindow.minimize();
+            newWindow.minimize();
         } else {
-            mainWindow.maximize();
-            mainWindow.showInactive();
+            newWindow.maximize();
+            newWindow.showInactive();
         }
 
         // Open file if one was provided
-        if (fileToOpen) {
-            mainWindow.webContents.send('renderer:openFile', fileToOpen);
-            fileToOpen = null;
+        if (filePath) {
+            newWindow.webContents.send('renderer:openFile', filePath);
         }
     });
 
-    mainWindow.on('close', async (event) => {
+    newWindow.on('close', async (event) => {
         event.preventDefault();
-        if (mainWindow) {
+        if (newWindow && newWindow === mainWindow) {
             ipcMain.once('main:storeSaved', () => {
-                if (mainWindow) {
-                    mainWindow.destroy();
+                if (newWindow) {
+                    newWindow.destroy();
                 }
             });
-            mainWindow.webContents.send('renderer:saveStore');
+            newWindow.webContents.send('renderer:saveStore');
+        } else if (newWindow) {
+            newWindow.destroy();
         }
     });
 
-    mainWindow.on('closed', () => {
-        mainWindow = null;
+    newWindow.on('closed', () => {
+        if (newWindow) {
+            openedWindows.delete(newWindow);
+            if (mainWindow === newWindow) {
+                // Set next window as main if available
+                const nextWindow = openedWindows.values().next().value || null;
+                mainWindow = nextWindow || null;
+            }
+            newWindow = null;
+        }
     });
 
     // Open urls in the user's browser
-    mainWindow.webContents.setWindowOpenHandler((edata) => {
+    newWindow.webContents.setWindowOpenHandler((edata) => {
         shell.openExternal(edata.url);
         return { action: 'deny' };
     });
+
+    return newWindow;
+};
+
+// Function to handle opening dataset in new window
+const handleOpenInNewWindow = async (
+    _event: IpcMainInvokeEvent,
+    filePath: string,
+): Promise<void> => {
+    createWindow(filePath);
 };
 
 /**
@@ -189,18 +212,19 @@ app.on('window-all-closed', () => {
 });
 
 app.whenReady()
-    .then(() => {
+    .then(async () => {
         const fileManager = new FileManager();
         const storeManager = new StoreManager();
         const netManager = new NetManager();
-        const taskManager = new TaskManager({ reportsDirectory });
         const reportManager = new ReportManager(reportsDirectory);
+        const taskManager = new TaskManager({ reportsDirectory });
         ipcMain.handle('main:openFile', fileManager.handleFileOpen);
         ipcMain.handle('main:fetch', netManager.fetch);
         ipcMain.handle('main:closeFile', fileManager.handleFileClose);
         ipcMain.handle('main:writeToClipboard', writeToClipboard);
         ipcMain.handle('main:checkForUpdates', checkForUpdates);
         ipcMain.handle('main:downloadUpdate', downloadUpdate);
+        ipcMain.handle('main:openInNewWindow', handleOpenInNewWindow);
         ipcMain.handle(
             'main:deleteValidationReport',
             reportManager.deleteValidationReport,
@@ -223,21 +247,23 @@ app.whenReady()
         );
         ipcMain.handle(
             'main:startTask',
-            (_event: IpcMainInvokeEvent, task: MainTask) => {
-                if (mainWindow === null) {
+            (event: IpcMainInvokeEvent, task: MainTask) => {
+                if (!event.sender) {
                     return Promise.resolve(false);
                 }
-                return taskManager.handleTask(task, mainWindow);
+                return taskManager.handleTask(task, event.sender);
             },
         );
         ipcMain.handle('main:getVersion', (_event: IpcMainInvokeEvent) => {
             return app.getVersion();
         });
-        createWindow();
-        app.on('activate', () => {
+        mainWindow = await createWindow(fileToOpen);
+        app.on('activate', async () => {
             // On macOS it's common to re-create a window in the app when the
             // dock icon is clicked and there are no other windows open.
-            if (mainWindow === null) createWindow();
+            if (mainWindow === null) {
+                mainWindow = await createWindow(fileToOpen);
+            }
         });
     })
     .catch(console.log);

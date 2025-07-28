@@ -7,11 +7,10 @@ class ReportManager {
 
     constructor(reportsDirectory: string) {
         this.reportsDirectory = reportsDirectory;
-        // Ensure the reports directory exists
+        // Check if the reports directory exists
         if (!fs.existsSync(this.reportsDirectory)) {
-            throw new Error(
-                `Reports directory does not exist: ${this.reportsDirectory}`,
-            );
+            // If not, create it
+            fs.mkdirSync(this.reportsDirectory, { recursive: true });
         }
     }
 
