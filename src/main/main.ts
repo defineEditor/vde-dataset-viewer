@@ -8,7 +8,7 @@ import {
     IpcMainInvokeEvent,
 } from 'electron';
 import StoreManager from 'main/managers/storeManager';
-import { resolveHtmlPath, writeToClipboard } from 'main/util';
+import { resolveHtmlPath, writeToClipboard, resizeWindow } from 'main/util';
 import {
     installExtension,
     REDUX_DEVTOOLS,
@@ -113,6 +113,7 @@ app.whenReady()
 
 const createWindow = async (
     filePath?: string | null,
+    position?: 'top' | 'bottom' | 'left' | 'right',
 ): Promise<BrowserWindow | null> => {
     const RESOURCES_PATH = app.isPackaged
         ? path.join(process.resourcesPath, 'assets')
@@ -145,6 +146,9 @@ const createWindow = async (
         }
         if (process.env.START_MINIMIZED) {
             newWindow.minimize();
+        } else if (position) {
+            resizeWindow(position, newWindow.webContents);
+            newWindow.showInactive();
         } else {
             newWindow.maximize();
             newWindow.showInactive();
@@ -195,8 +199,20 @@ const createWindow = async (
 const handleOpenInNewWindow = async (
     _event: IpcMainInvokeEvent,
     filePath: string,
+    position?: 'top' | 'bottom' | 'left' | 'right',
 ): Promise<void> => {
-    createWindow(filePath);
+    createWindow(filePath, position);
+};
+
+// Function to handle resizing and positioning the current window
+const handleResizeWindow = async (
+    event: IpcMainInvokeEvent,
+    position: 'top' | 'bottom' | 'left' | 'right',
+): Promise<void> => {
+    if (!event.sender) {
+        return Promise.resolve();
+    }
+    return resizeWindow(position, event.sender);
 };
 
 /**
@@ -225,6 +241,7 @@ app.whenReady()
         ipcMain.handle('main:checkForUpdates', checkForUpdates);
         ipcMain.handle('main:downloadUpdate', downloadUpdate);
         ipcMain.handle('main:openInNewWindow', handleOpenInNewWindow);
+        ipcMain.handle('main:resizeWindow', handleResizeWindow);
         ipcMain.handle(
             'main:deleteValidationReport',
             reportManager.deleteValidationReport,

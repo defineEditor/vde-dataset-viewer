@@ -786,8 +786,17 @@ class ApiService {
         return result;
     };
 
-    public openInNewWindow = async (filePath: string): Promise<void> => {
-        await window.electron.openInNewWindow(filePath);
+    public openInNewWindow = async (
+        filePath: string,
+        position?: 'top' | 'bottom' | 'left' | 'right',
+    ): Promise<void> => {
+        await window.electron.openInNewWindow(filePath, position);
+    };
+
+    public resizeWindow = async (
+        position: 'top' | 'bottom' | 'left' | 'right',
+    ): Promise<void> => {
+        await window.electron.resizeWindow(position);
     };
 }
 

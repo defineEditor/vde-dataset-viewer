@@ -131,7 +131,16 @@ const DatasetSidebar: React.FC<{
         // Close the dataset in the current window
         handleCloseDataset(event, fileId);
         // Open the dataset in a new window
-        apiService.openInNewWindow(filePath);
+        // If Ctrl key is pressed, resize the current window to the top half of the screen and the new window to the bottom half
+        if (event.shiftKey) {
+            apiService.openInNewWindow(filePath, 'right');
+            apiService.resizeWindow('left');
+        } else if (event.ctrlKey) {
+            apiService.openInNewWindow(filePath, 'bottom');
+            apiService.resizeWindow('top');
+        } else {
+            apiService.openInNewWindow(filePath);
+        }
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

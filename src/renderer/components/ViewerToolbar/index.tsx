@@ -199,7 +199,11 @@ const Header: React.FC = () => {
                         handleOpenClick();
                         break;
                     case 'f':
-                        handleFilterClick();
+                        if (event.altKey) {
+                            handleFilterReset();
+                        } else {
+                            handleFilterClick();
+                        }
                         break;
                     case 'i':
                         handleDataSetInfoClick();

@@ -91,8 +91,14 @@ declare global {
             ) => Promise<string>;
             deleteValidationReport: (fileName: string) => Promise<boolean>;
             getAppVersion: () => Promise<string>;
-            openInNewWindow: (filePath: string) => Promise<void>;
+            openInNewWindow: (
+                filePath: string,
+                position?: 'top' | 'bottom' | 'left' | 'right',
+            ) => Promise<void>;
             isWindows: boolean;
+            resizeWindow: (
+                position: 'top' | 'bottom' | 'left' | 'right',
+            ) => Promise<void>;
         };
     }
 }

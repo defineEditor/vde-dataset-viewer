@@ -119,8 +119,12 @@ contextBridge.exposeInMainWorld('electron', {
         ipcRenderer.removeAllListeners('renderer:taskProgress');
     },
     getAppVersion: () => ipcRenderer.invoke('main:getVersion'),
-    openInNewWindow: (filePath: string) =>
-        ipcRenderer.invoke('main:openInNewWindow', filePath),
+    openInNewWindow: (
+        filePath: string,
+        position?: 'top' | 'bottom' | 'left' | 'right',
+    ) => ipcRenderer.invoke('main:openInNewWindow', filePath, position),
+    resizeWindow: (position: 'top' | 'bottom' | 'left' | 'right') =>
+        ipcRenderer.invoke('main:resizeWindow', position),
     ipcRenderer: {
         sendMessage(channel: Channels, args: unknown[]) {
             ipcRenderer.send(channel, args);
