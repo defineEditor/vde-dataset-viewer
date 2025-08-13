@@ -60,6 +60,26 @@ class ReportManager {
             return false;
         }
     };
+
+    public getValidationReport = (
+        _event: IpcMainInvokeEvent,
+        fileName: string,
+    ): string | null => {
+        try {
+            const filePath = path.join(this.reportsDirectory, fileName);
+
+            if (!fs.existsSync(filePath)) {
+                return null;
+            }
+
+            // Try to serialize
+            const report = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+            return report;
+        } catch (error) {
+            // Error reading report file
+            return null;
+        }
+    };
 }
 
 export default ReportManager;

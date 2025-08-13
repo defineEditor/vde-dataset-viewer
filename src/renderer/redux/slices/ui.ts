@@ -4,6 +4,7 @@ import {
     IUiSnackbar,
     IUiModal,
     IUiValidation,
+    IUiValidationPage,
     AllowedPathnames,
     DatasetType,
     ModalType,
@@ -152,6 +153,15 @@ export const uiSlice = createSlice({
         toggleSidebar: (state) => {
             state.viewer.sidebarOpen = !state.viewer.sidebarOpen;
         },
+        setValidationTab: (
+            state,
+            action: PayloadAction<IUiValidationPage['currentTab']>,
+        ) => {
+            state.validationPage.currentTab = action.payload;
+        },
+        setValidationReport: (state, action: PayloadAction<string | null>) => {
+            state.validationPage.currentReportId = action.payload;
+        },
         updateValidation: (
             state,
             action: PayloadAction<{
@@ -195,6 +205,8 @@ export const {
     setFilterInputMode,
     toggleSidebar,
     updateValidation,
+    setValidationReport,
+    setValidationTab,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

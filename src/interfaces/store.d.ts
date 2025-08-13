@@ -127,7 +127,8 @@ export interface IUiValidation {
     dateCompleted: number | null;
 }
 
-export interface IUiValidationReport {
+export interface IUiValidationPage {
+    currentTab: 'validation' | 'results' | 'report';
     currentReportId: string | null;
 }
 
@@ -140,7 +141,7 @@ export interface IUi {
     snackbar: IUiSnackbar;
     control: IUiControl;
     validation: { [validationId: string]: IUiValidation };
-    validationReport: IUiValidationReport;
+    validationPage: IUiValidationPage;
 }
 
 export interface IRecentFile {

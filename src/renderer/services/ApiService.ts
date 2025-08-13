@@ -20,6 +20,7 @@ import {
     ValidationTaskFile,
     ApiOpenedFile,
     ApiOpenedFileWithMetadata,
+    ParsedValidationReport,
 } from 'interfaces/common';
 import store from 'renderer/redux/store';
 import transformData from 'renderer/services/transformData';
@@ -28,6 +29,7 @@ import { setLoadedRecords } from 'renderer/redux/slices/data';
 import {
     startValidation,
     deleteValidationReport,
+    getValidationReport,
 } from 'renderer/services/validation';
 
 class ApiService {
@@ -778,6 +780,12 @@ class ApiService {
         fileName: string,
     ): Promise<boolean> => {
         return deleteValidationReport(fileName);
+    };
+
+    public getValidationReport = async (
+        fileName: string,
+    ): Promise<ParsedValidationReport | null> => {
+        return getValidationReport(fileName);
     };
 
     // Misc

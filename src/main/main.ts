@@ -246,6 +246,10 @@ app.whenReady()
             'main:deleteValidationReport',
             reportManager.deleteValidationReport,
         );
+        ipcMain.handle(
+            'main:getValidationReport',
+            reportManager.getValidationReport,
+        );
         ipcMain.handle('read:getMetadata', fileManager.handleGetMetadata);
         ipcMain.handle(
             'read:getObservations',

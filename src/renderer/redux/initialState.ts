@@ -82,7 +82,8 @@ export const ui: IUi = {
         },
     },
     validation: {},
-    validationReport: {
+    validationPage: {
+        currentTab: 'validation',
         currentReportId: null,
     },
 };

@@ -13,10 +13,15 @@ import {
     TablePagination,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import { openSnackbar } from 'renderer/redux/slices/ui';
+import {
+    openSnackbar,
+    setValidationReport,
+    setValidationTab,
+    setPathname,
+} from 'renderer/redux/slices/ui';
 import { removeValidationReport } from 'renderer/redux/slices/data';
 import { ValidationReport } from 'interfaces/common';
+import { paths } from 'misc/constants';
 
 const styles = {
     container: {
@@ -86,17 +91,20 @@ const ValidationResults: React.FC<ResultsProps> = ({ filePaths = [] }) => {
     const allReports = useAppSelector((state) => state.data.validator.reports);
     const reports = useMemo(() => {
         // Keep only those reports, which have include all the file paths
+        const result = allReports.slice();
         if (!filePaths || filePaths.length === 0) {
-            return allReports; // No filtering if no file paths provided
+            return result.sort((a, b) => b.date - a.date);
         }
-        return allReports.filter((report) => {
-            const reportFiles = report.files.map((file) => file.file);
-            if (reportFiles.length < filePaths.length) {
-                return false; // Report doesn't include all file paths
-            }
-            // Check if all file paths match
-            return filePaths.every((file) => reportFiles.includes(file));
-        });
+        return result
+            .filter((report) => {
+                const reportFiles = report.files.map((file) => file.file);
+                if (reportFiles.length < filePaths.length) {
+                    return false; // Report doesn't include all file paths
+                }
+                // Check if all file paths match
+                return filePaths.every((file) => reportFiles.includes(file));
+            })
+            .sort((a, b) => b.date - a.date);
     }, [allReports, filePaths]);
 
     const { apiService } = React.useContext(AppContext);
@@ -187,8 +195,14 @@ const ValidationResults: React.FC<ResultsProps> = ({ filePaths = [] }) => {
         }
     };
 
-    const handleOpenReport = (_report: ValidationReport) => {
-        // TODO: Implement open report functionality
+    const handleOpenReport = (index: number) => {
+        dispatch(setValidationReport(reports[index].output));
+        dispatch(setValidationTab('report'));
+        dispatch(
+            setPathname({
+                pathname: paths.VALIDATOR,
+            }),
+        );
     };
 
     const getDatasetCount = (report: ValidationReport): number => {
@@ -260,10 +274,9 @@ const ValidationResults: React.FC<ResultsProps> = ({ filePaths = [] }) => {
     }
 
     // Get sorted reports for pagination
-    const sortedReports = reports.slice().sort((a, b) => b.date - a.date);
 
-    const totalReports = sortedReports.length;
-    const paginatedReports = sortedReports.slice(
+    const totalReports = reports.length;
+    const paginatedReports = reports.slice(
         page * itemsPerPage,
         page * itemsPerPage + itemsPerPage,
     );
@@ -276,7 +289,7 @@ const ValidationResults: React.FC<ResultsProps> = ({ filePaths = [] }) => {
             <Box ref={listContainerRef} sx={styles.listContentContainer}>
                 <List>
                     {paginatedReports.map((report, _displayIndex) => {
-                        const actualIndex = sortedReports.indexOf(report);
+                        const actualIndex = reports.indexOf(report);
                         const datasetCount = getDatasetCount(report);
                         const {
                             uniqueIssues,
@@ -329,6 +342,7 @@ const ValidationResults: React.FC<ResultsProps> = ({ filePaths = [] }) => {
                         return (
                             <ListItem
                                 key={report.date}
+                                onClick={() => handleOpenReport(actualIndex)}
                                 sx={
                                     uniqueIssues === 0
                                         ? styles.listItemSuccess
@@ -336,16 +350,6 @@ const ValidationResults: React.FC<ResultsProps> = ({ filePaths = [] }) => {
                                 }
                                 secondaryAction={
                                     <Stack direction="row" spacing={1}>
-                                        <IconButton
-                                            edge="end"
-                                            aria-label="open report"
-                                            onClick={() =>
-                                                handleOpenReport(report)
-                                            }
-                                            size="small"
-                                        >
-                                            <OpenInNewIcon />
-                                        </IconButton>
                                         <IconButton
                                             edge="end"
                                             aria-label="delete report"

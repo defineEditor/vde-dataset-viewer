@@ -4,127 +4,160 @@ import {
     IpcRendererEvent,
     webUtils,
 } from 'electron';
-import {
-    BasicFilter,
-    ColumnMetadata,
-    ILocalStore,
-    FileInfo,
-    MainTask,
-    TableRowValue,
-    TaskProgress,
-} from 'interfaces/common';
+import { TaskProgress } from 'interfaces/common';
+import { ElectronApi, Channels } from 'interfaces/electron.api';
 
-export type Channels = 'ipc-example';
+const openFile: ElectronApi['openFile'] = (mode, fileSettings) =>
+    ipcRenderer.invoke('main:openFile', mode, fileSettings);
+
+const writeToClipboard: ElectronApi['writeToClipboard'] = (text) =>
+    ipcRenderer.invoke('main:writeToClipboard', text);
+
+const closeFile: ElectronApi['closeFile'] = (fileId, mode) =>
+    ipcRenderer.invoke('main:closeFile', fileId, mode);
+
+const getMetadata: ElectronApi['getMetadata'] = (fileId) =>
+    ipcRenderer.invoke('read:getMetadata', fileId);
+
+const getData: ElectronApi['getData'] = (
+    fileId,
+    start,
+    length,
+    filterColumns,
+    filterData,
+    columns,
+) =>
+    ipcRenderer.invoke(
+        'read:getObservations',
+        fileId,
+        start,
+        length,
+        filterColumns,
+        filterData,
+        columns,
+    );
+
+const getUniqueValues: ElectronApi['getUniqueValues'] = (
+    fileId,
+    columnIds,
+    limit,
+    addCount,
+) =>
+    ipcRenderer.invoke(
+        'read:getUniqueValues',
+        fileId,
+        columnIds,
+        limit,
+        addCount,
+    );
+
+const saveLocalStore: ElectronApi['saveLocalStore'] = (localStore) =>
+    ipcRenderer.invoke('store:save', localStore);
+
+const loadLocalStore: ElectronApi['loadLocalStore'] = () =>
+    ipcRenderer.invoke('store:load');
+
+const checkForUpdates: ElectronApi['checkForUpdates'] = () =>
+    ipcRenderer.invoke('main:checkForUpdates');
+
+const downloadUpdate: ElectronApi['downloadUpdate'] = () =>
+    ipcRenderer.invoke('main:downloadUpdate');
+
+const onSaveStore: ElectronApi['onSaveStore'] = (callback) => {
+    ipcRenderer.on('renderer:saveStore', async () => {
+        await callback();
+        ipcRenderer.send('main:storeSaved');
+    });
+};
+
+const onFileOpen: ElectronApi['onFileOpen'] = (callback) => {
+    ipcRenderer.on(
+        'renderer:openFile',
+        (_event: IpcRendererEvent, filePath: string) => {
+            callback(filePath);
+        },
+    );
+};
+
+const removeFileOpenListener: ElectronApi['removeFileOpenListener'] = () => {
+    ipcRenderer.removeAllListeners('renderer:openFile');
+};
+
+const pathForFile: ElectronApi['pathForFile'] = (file) =>
+    webUtils.getPathForFile(file);
+
+const fetch: ElectronApi['fetch'] = (input, init) =>
+    ipcRenderer.invoke('main:fetch', input, init);
+
+const openFileDialog: ElectronApi['openFileDialog'] = (options) =>
+    ipcRenderer.invoke('main:openFileDialog', options);
+
+const openDirectoryDialog: ElectronApi['openDirectoryDialog'] = (
+    initialFolder,
+) => ipcRenderer.invoke('main:openDirectoryDialog', initialFolder);
+
+const deleteValidationReport: ElectronApi['deleteValidationReport'] = (
+    fileName,
+) => ipcRenderer.invoke('main:deleteValidationReport', fileName);
+
+const getValidationReport: ElectronApi['getValidationReport'] = (fileName) =>
+    ipcRenderer.invoke('main:getValidationReport', fileName);
+
+const isWindows: ElectronApi['isWindows'] = process.platform === 'win32';
+
+const startTask: ElectronApi['startTask'] = (task) =>
+    ipcRenderer.invoke('main:startTask', task);
+
+const onTaskProgress: ElectronApi['onTaskProgress'] = (callback) => {
+    ipcRenderer.on(
+        'renderer:taskProgress',
+        async (_event: IpcRendererEvent, info: TaskProgress) => {
+            callback(info);
+        },
+    );
+};
+
+const cleanTaskProgressListeners: ElectronApi['cleanTaskProgressListeners'] =
+    () => {
+        ipcRenderer.removeAllListeners('renderer:taskProgress');
+    };
+
+const getAppVersion: ElectronApi['getAppVersion'] = () =>
+    ipcRenderer.invoke('main:getVersion');
+
+const openInNewWindow: ElectronApi['openInNewWindow'] = (filePath, position) =>
+    ipcRenderer.invoke('main:openInNewWindow', filePath, position);
+
+const resizeWindow: ElectronApi['resizeWindow'] = (position) =>
+    ipcRenderer.invoke('main:resizeWindow', position);
 
 contextBridge.exposeInMainWorld('electron', {
-    openFile: (
-        mode: 'local' | 'remote',
-        fileSettings: {
-            encoding: BufferEncoding;
-            filePath?: string;
-            folderPath?: string;
-        } = { encoding: 'utf8' },
-    ) => ipcRenderer.invoke('main:openFile', mode, fileSettings),
-    writeToClipboard: (text: string) =>
-        ipcRenderer.invoke('main:writeToClipboard', text),
-    closeFile: (fileId: string, mode: 'local' | 'remote') =>
-        ipcRenderer.invoke('main:closeFile', fileId, mode),
-    getMetadata: (fileId: string) =>
-        ipcRenderer.invoke('read:getMetadata', fileId),
-    getData: (
-        fileId: string,
-        start: number,
-        length: number,
-        filterColumns?: string[],
-        filterData?: BasicFilter,
-        columns?: ColumnMetadata[],
-    ) =>
-        ipcRenderer.invoke(
-            'read:getObservations',
-            fileId,
-            start,
-            length,
-            filterColumns,
-            filterData,
-            columns,
-        ),
-    getUniqueValues: (
-        fileId: string,
-        columnIds: string[],
-        limit?: number,
-        addCount?: boolean,
-    ): Promise<{
-        [columnId: string]: {
-            values: TableRowValue[];
-            counts: { [name: string]: number };
-        };
-    } | null> => {
-        return ipcRenderer.invoke(
-            'read:getUniqueValues',
-            fileId,
-            columnIds,
-            limit,
-            addCount,
-        );
-    },
-    saveLocalStore: (localStore: ILocalStore) =>
-        ipcRenderer.invoke('store:save', localStore),
-    loadLocalStore: (): Promise<ILocalStore> =>
-        ipcRenderer.invoke('store:load'),
-    checkForUpdates: () => ipcRenderer.invoke('main:checkForUpdates'),
-    downloadUpdate: () => ipcRenderer.invoke('main:downloadUpdate'),
-    onSaveStore: (callback: () => Promise<void>) => {
-        ipcRenderer.on('renderer:saveStore', async () => {
-            await callback();
-            ipcRenderer.send('main:storeSaved');
-        });
-    },
-    onFileOpen: (callback: (filePath: string) => void) => {
-        ipcRenderer.on(
-            'renderer:openFile',
-            (_event: IpcRendererEvent, filePath: string) => {
-                callback(filePath);
-            },
-        );
-    },
-    removeFileOpenListener: () => {
-        ipcRenderer.removeAllListeners('renderer:openFile');
-    },
-    pathForFile: (file: File) => webUtils.getPathForFile(file),
-    fetch: (input: RequestInfo | URL, init?: RequestInit) =>
-        ipcRenderer.invoke('main:fetch', input, init),
-    openFileDialog: (options: {
-        multiple?: boolean;
-        initialFolder?: string;
-        filters?: { name: string; extensions: string[] }[];
-    }): Promise<FileInfo[] | null> =>
-        ipcRenderer.invoke('main:openFileDialog', options),
-    openDirectoryDialog: (
-        initialFolder: string | null,
-    ): Promise<string | null> =>
-        ipcRenderer.invoke('main:openDirectoryDialog', initialFolder),
-    deleteValidationReport: (fileName: string): Promise<boolean> =>
-        ipcRenderer.invoke('main:deleteValidationReport', fileName),
-    isWindows: process.platform === 'win32',
-    startTask: (task: MainTask) => ipcRenderer.invoke('main:startTask', task),
-    onTaskProgress: (callback: (info: TaskProgress) => void) => {
-        ipcRenderer.on(
-            'renderer:taskProgress',
-            async (_event: IpcRendererEvent, info: TaskProgress) => {
-                callback(info);
-            },
-        );
-    },
-    cleanTaskProgressListeners: () => {
-        ipcRenderer.removeAllListeners('renderer:taskProgress');
-    },
-    getAppVersion: () => ipcRenderer.invoke('main:getVersion'),
-    openInNewWindow: (
-        filePath: string,
-        position?: 'top' | 'bottom' | 'left' | 'right',
-    ) => ipcRenderer.invoke('main:openInNewWindow', filePath, position),
-    resizeWindow: (position: 'top' | 'bottom' | 'left' | 'right') =>
-        ipcRenderer.invoke('main:resizeWindow', position),
+    openFile,
+    writeToClipboard,
+    closeFile,
+    getMetadata,
+    getData,
+    getUniqueValues,
+    saveLocalStore,
+    loadLocalStore,
+    checkForUpdates,
+    downloadUpdate,
+    onSaveStore,
+    onFileOpen,
+    removeFileOpenListener,
+    pathForFile,
+    fetch,
+    openFileDialog,
+    openDirectoryDialog,
+    deleteValidationReport,
+    getValidationReport,
+    isWindows,
+    startTask,
+    onTaskProgress,
+    cleanTaskProgressListeners,
+    getAppVersion,
+    openInNewWindow,
+    resizeWindow,
     ipcRenderer: {
         sendMessage(channel: Channels, args: unknown[]) {
             ipcRenderer.send(channel, args);

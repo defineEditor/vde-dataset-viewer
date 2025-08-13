@@ -7,6 +7,7 @@ import {
     ConvertedFileInfo,
     ValidationTaskFile,
     MainTask,
+    ParsedValidationReport,
 } from 'interfaces/common';
 import store from 'renderer/redux/store';
 import { mainTaskTypes } from 'misc/constants';
@@ -267,5 +268,12 @@ export const deleteValidationReport = async (
     fileName: string,
 ): Promise<boolean> => {
     const result = await window.electron.deleteValidationReport(fileName);
+    return result;
+};
+
+export const getValidationReport = async (
+    fileName: string,
+): Promise<ParsedValidationReport | null> => {
+    const result = await window.electron.getValidationReport(fileName);
     return result;
 };
