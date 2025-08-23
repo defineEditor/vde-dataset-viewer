@@ -22,7 +22,7 @@ import FontDownloadIcon from '@mui/icons-material/FontDownload';
 import LooksOneIcon from '@mui/icons-material/LooksOne';
 import AccessTimeIcon from '@mui/icons-material/HourglassFull';
 import { VirtualItem, Virtualizer } from '@tanstack/react-virtual';
-import { ITableRow } from 'interfaces/common';
+import { ITableRow, TableSettings } from 'interfaces/common';
 import Loading from 'renderer/components/Loading';
 
 const styles = {
@@ -195,11 +195,11 @@ const DatasetViewUI: React.FC<{
     handleMouseOver: (rowIndex: number, columnIndex: number) => void;
     handleResizeEnd: () => void;
     isLoading: boolean;
-    dynamicRowHeight: boolean;
     rowVirtualizer: Virtualizer<HTMLDivElement, Element>;
     sorting: ISortingState;
     onSortingChange: (updater: IUpdater<ISortingState>) => void;
     hasPagination: boolean;
+    settings: TableSettings;
     handleContextMenu?: (
         event: React.MouseEvent<HTMLTableCellElement, MouseEvent>,
         rowIndex: number,
@@ -207,8 +207,6 @@ const DatasetViewUI: React.FC<{
     ) => void;
     filteredColumns?: string[];
     containerStyle?: React.CSSProperties;
-    hideRowNumbers?: boolean;
-    showTypeIcons?: boolean;
 }> = ({
     table,
     tableContainerRef,
@@ -224,7 +222,7 @@ const DatasetViewUI: React.FC<{
     handleMouseOver,
     handleResizeEnd,
     isLoading,
-    dynamicRowHeight,
+    settings,
     rowVirtualizer,
     sorting,
     onSortingChange,
@@ -232,8 +230,6 @@ const DatasetViewUI: React.FC<{
     handleContextMenu = (_event, _rowIndex, _columnIndex) => {},
     filteredColumns = [],
     containerStyle = undefined,
-    hideRowNumbers = false,
-    showTypeIcons = false,
 }) => {
     return (
         <Paper
@@ -252,7 +248,7 @@ const DatasetViewUI: React.FC<{
                             key={headerGroup.id}
                             style={styles.headerColumn}
                         >
-                            {!hideRowNumbers && (
+                            {!settings.hideRowNumbers && (
                                 <TableCell
                                     sx={{
                                         ...styles.tableHeaderCell,
@@ -350,7 +346,7 @@ const DatasetViewUI: React.FC<{
                                                     header.getContext(),
                                                 )}
                                             </Box>
-                                            {showTypeIcons &&
+                                            {settings.showTypeIcons &&
                                                 getTypeIcon(
                                                     header.column.columnDef.meta
                                                         ?.type,
@@ -424,12 +420,12 @@ const DatasetViewUI: React.FC<{
                             return (
                                 <TableRow
                                     data-index={
-                                        dynamicRowHeight
+                                        settings.dynamicRowHeight
                                             ? virtualRow.index
                                             : undefined
                                     }
                                     ref={(node) =>
-                                        dynamicRowHeight
+                                        settings.dynamicRowHeight
                                             ? rowVirtualizer.measureElement(
                                                   node,
                                               )
@@ -438,7 +434,7 @@ const DatasetViewUI: React.FC<{
                                     key={row.id}
                                     sx={{
                                         ...styles.tableRow,
-                                        ...(dynamicRowHeight
+                                        ...(settings.dynamicRowHeight
                                             ? {}
                                             : {
                                                   height: `${virtualRow.size}px`,
@@ -446,10 +442,10 @@ const DatasetViewUI: React.FC<{
                                         transform: `translateY(${virtualRow.start}px)`,
                                     }}
                                 >
-                                    {!hideRowNumbers && (
+                                    {!settings.hideRowNumbers && (
                                         <TableCell
                                             sx={{
-                                                ...(dynamicRowHeight
+                                                ...(settings.dynamicRowHeight
                                                     ? styles.tableCellDynamic
                                                     : styles.tableCellFixed),
                                                 width: visibleCells[0].column.getSize(),
@@ -503,7 +499,7 @@ const DatasetViewUI: React.FC<{
                                             <TableCell
                                                 key={cell.id}
                                                 sx={{
-                                                    ...(dynamicRowHeight
+                                                    ...(settings.dynamicRowHeight
                                                         ? styles.tableCellDynamic
                                                         : styles.tableCellFixed),
                                                     width: cell.column.getSize(),

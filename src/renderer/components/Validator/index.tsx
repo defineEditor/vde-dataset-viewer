@@ -129,70 +129,76 @@ const Validator: React.FC = () => {
                     variant="fullWidth"
                     sx={styles.tabs}
                 >
-                    <Tab label="Configuration" value="validation" />
+                    <Tab label="Validation" value="validation" />
                     <Tab label="Results" value="results" />
                     <Tab label="Report" value="report" />
                 </Tabs>
             </Paper>
-            <Box hidden={tab !== 'validation'} sx={styles.tabPanel}>
-                <Stack spacing={0} sx={styles.configuration}>
-                    <Box sx={styles.mainBody}>
-                        {['completed', 'validating'].includes(
-                            validationState.status,
-                        ) ? (
-                            <ValidationProgress
-                                conversionProgress={
-                                    validationState.conversionProgress
-                                }
-                                validationProgress={
-                                    validationState.validationProgress
-                                }
-                            />
-                        ) : (
-                            <Configuration
-                                selectedFiles={selectedFiles}
-                                setSelectedFiles={setSelectedFiles}
-                                config={config}
-                                setConfig={setConfig}
-                            />
-                        )}
-                    </Box>
-                    <Box sx={styles.actions}>
-                        {['completed', 'validating'].includes(
-                            validationState.status,
-                        ) ? (
-                            <Button
-                                onClick={handleReset}
-                                color="primary"
-                                variant="contained"
-                                disabled={
-                                    validationState.status !== 'completed'
-                                }
-                            >
-                                Done
-                            </Button>
-                        ) : (
-                            <Button
-                                onClick={handleValidate}
-                                color="primary"
-                                variant="contained"
-                                disabled={
-                                    selectedFiles.length === 0 ||
-                                    validationState.status === 'validating'
-                                }
-                            >
-                                Validate
-                            </Button>
-                        )}
-                    </Box>
-                </Stack>
-            </Box>
-            <Box hidden={tab !== 'results'} sx={styles.tabPanel}>
-                <Results />
-            </Box>
-            <Box hidden={tab !== 'report'} sx={styles.tabPanel}>
-                <Report />
-            </Box>
+            {tab === 'validation' && (
+                <Box sx={styles.tabPanel}>
+                    <Stack spacing={0} sx={styles.configuration}>
+                        <Box sx={styles.mainBody}>
+                            {['completed', 'validating'].includes(
+                                validationState.status,
+                            ) ? (
+                                <ValidationProgress
+                                    conversionProgress={
+                                        validationState.conversionProgress
+                                    }
+                                    validationProgress={
+                                        validationState.validationProgress
+                                    }
+                                />
+                            ) : (
+                                <Configuration
+                                    selectedFiles={selectedFiles}
+                                    setSelectedFiles={setSelectedFiles}
+                                    config={config}
+                                    setConfig={setConfig}
+                                />
+                            )}
+                        </Box>
+                        <Box sx={styles.actions}>
+                            {['completed', 'validating'].includes(
+                                validationState.status,
+                            ) ? (
+                                <Button
+                                    onClick={handleReset}
+                                    color="primary"
+                                    variant="contained"
+                                    disabled={
+                                        validationState.status !== 'completed'
+                                    }
+                                >
+                                    Done
+                                </Button>
+                            ) : (
+                                <Button
+                                    onClick={handleValidate}
+                                    color="primary"
+                                    variant="contained"
+                                    disabled={
+                                        selectedFiles.length === 0 ||
+                                        validationState.status === 'validating'
+                                    }
+                                >
+                                    Validate
+                                </Button>
+                            )}
+                        </Box>
+                    </Stack>
+                </Box>
+            )}
+            {tab === 'results' && (
+                <Box hidden={tab !== 'results'} sx={styles.tabPanel}>
+                    <Results />
+                </Box>
+            )}
+            {tab === 'report' && (
+                <Box hidden={tab !== 'report'} sx={styles.tabPanel}>
+                    <Report />
+                </Box>
+            )}
         </Box>
     );
 };

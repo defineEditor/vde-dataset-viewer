@@ -5,7 +5,7 @@ import React, {
     useMemo,
     useRef,
 } from 'react';
-import { ITableData, ItemType } from 'interfaces/common';
+import { ITableData, ItemType, IMask, TableSettings } from 'interfaces/common';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { openSnackbar, setGoTo, setSelect } from 'renderer/redux/slices/ui';
@@ -39,26 +39,36 @@ interface DatasetViewProps {
         rowIndex: number,
         columnIndex: number,
     ) => void;
+    settings: TableSettings;
+    currentPage?: number;
+    currentMask?: IMask | null;
 }
 
 const DatasetView: React.FC<DatasetViewProps> = ({
     tableData,
     isLoading,
     handleContextMenu,
+    settings,
+    currentPage = 0,
+    currentMask = null,
 }) => {
     const dispatch = useAppDispatch();
-    const settings = useAppSelector((state) => state.settings.viewer);
-    const currentPage = useAppSelector((state) => state.ui.currentPage);
-    const currentMask = useAppSelector(
-        (state) => state.data.maskData.currentMask,
-    );
     const [sorting, setSorting] = useState<ISortingState>([]);
 
     const columns = useMemo<ColumnDef<ITableRow>[]>(() => {
         const result = tableData.header.map((column) => {
-            return {
+            const headerCell: {
+                accessorKey: string;
+                header: string;
+                size?: number;
+                enableResizing?: boolean;
+                meta: {
+                    type?: ItemType | 'rowNumber';
+                };
+                cell?: ColumnDef<ITableRow>['cell'];
+            } = {
                 accessorKey: column.id,
-                header: column.id,
+                header: settings.showLabel ? column.label : column.id,
                 size: column.size,
                 enableResizing: true,
                 meta: {
@@ -67,6 +77,11 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                         : column.type || 'string',
                 },
             };
+            if (column.cell) {
+                headerCell.cell =
+                    column.cell as unknown as ColumnDef<ITableRow>['cell'];
+            }
+            return headerCell;
         });
         // Add row number column
         result.unshift({
@@ -77,7 +92,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             meta: { type: 'integer' },
         });
         return result;
-    }, [tableData.header]);
+    }, [tableData.header, settings]);
 
     // Create column visibility state based on current mask
     const columnVisibility = useMemo<VisibilityState>(() => {
@@ -543,13 +558,12 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             handleContextMenu={handleContextMenu}
             handleResizeEnd={columnVirtualizer.measure}
             isLoading={isLoading}
-            dynamicRowHeight={settings.dynamicRowHeight}
+            settings={settings}
             rowVirtualizer={rowVirtualizer}
             sorting={sorting}
             onSortingChange={setSorting}
             hasPagination={tableData?.metadata?.records > settings.pageSize}
             filteredColumns={filteredColumns}
-            showTypeIcons={settings.showTypeIcons}
         />
     );
 };

@@ -241,8 +241,9 @@ const runValidation = async (
     // Add output parameter
     args.push('--output', `"${outputPath}"`);
 
-    // Output in JSON format
+    // Output in both JSON and XLSX formats (XLSX to it can be saved by a user)
     args.push('--output-format', 'JSON');
+    args.push('--output-format', 'XLSX');
 
     // Build the full command
     const command = `"${validatorPath}" ${args.join(' ')}`;

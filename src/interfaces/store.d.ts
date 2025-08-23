@@ -18,19 +18,21 @@ export interface IMask {
 
 export type ClipboardCopyFormat = 'tab' | 'csv' | 'json';
 
+export interface SettingsViewer {
+    pageSize: number;
+    estimateWidthRows: number;
+    dynamicRowHeight: boolean;
+    maxColWidth: number;
+    dateFormat: 'ISO8601' | 'DDMONYEAR';
+    roundNumbers: boolean;
+    maxPrecision?: number;
+    applyDateFormat: boolean;
+    copyFormat: ClipboardCopyFormat;
+    showTypeIcons: boolean;
+}
+
 export interface ISettings {
-    viewer: {
-        pageSize: number;
-        estimateWidthRows: number;
-        dynamicRowHeight: boolean;
-        maxColWidth: number;
-        dateFormat: 'ISO8601' | 'DDMONYEAR';
-        roundNumbers: boolean;
-        maxPrecision?: number;
-        applyDateFormat: boolean;
-        copyFormat: ClipboardCopyFormat;
-        showTypeIcons: boolean;
-    };
+    viewer: SettingsViewer;
     converter: SettingsConverter;
     validator: SettingsValidator;
     other: {
@@ -129,6 +131,7 @@ export interface IUiValidation {
 
 export interface IUiValidationPage {
     currentTab: 'validation' | 'results' | 'report';
+    currentReportTab: 'summary' | 'details' | 'rules';
     currentReportId: string | null;
 }
 

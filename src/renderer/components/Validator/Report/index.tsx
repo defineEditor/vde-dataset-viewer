@@ -10,11 +10,10 @@ import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import { openSnackbar } from 'renderer/redux/slices/ui';
-import { ParsedValidationReport } from 'interfaces/core.report';
 import AppContext from 'renderer/utils/AppContext';
-import IssueSummary from 'renderer/components/Validator/Report/IssueSummary';
-import IssueDetails from 'renderer/components/Validator/Report/IssueDetails';
-import RuleReports from 'renderer/components/Validator/Report/RuleReports';
+import { ITableData, ParsedValidationReport } from 'interfaces/common';
+import convertToDataset from 'renderer/components/Validator/Report/convertToDataset';
+import DatasetContainer from 'renderer/components/Validator/Report/DatasetContainer';
 
 const styles = {
     container: {
@@ -29,24 +28,37 @@ const styles = {
         mt: 8,
         color: 'text.secondary',
     },
+    tabs: {
+        width: '100%',
+        background:
+            'radial-gradient(circle farthest-corner at bottom center,#eeeeee,#e5e4e4)',
+        textTransform: 'none',
+    },
+    root: {
+        display: 'flex',
+        flex: '1 1 auto',
+        px: 0,
+        backgroundColor: 'grey.300',
+    },
+    tabPanel: {
+        p: 0,
+    },
+    loading: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flex: '1 1 auto',
+    },
+    mainStack: {
+        display: 'flex',
+        flex: '1 1 auto',
+        mb: 1,
+    },
 };
 
 const StyledTab = styled(Tab)({
     textTransform: 'none',
 });
-
-const Loading = () => (
-    <Box
-        sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flex: '1 1 auto',
-        }}
-    >
-        <CircularProgress variant="indeterminate" size={55} />
-    </Box>
-);
 
 const ValidationReportPage: React.FC = () => {
     const [tab, setTab] = useState('1');
@@ -55,6 +67,11 @@ const ValidationReportPage: React.FC = () => {
     const dispatch = useAppDispatch();
 
     const [report, setReport] = useState<ParsedValidationReport | null>(null);
+    const [tables, setTables] = useState<{
+        details: ITableData;
+        summary: ITableData;
+        rules: ITableData;
+    } | null>(null);
 
     const reportId = useAppSelector(
         (state) => state.ui.validationPage.currentReportId,
@@ -73,7 +90,22 @@ const ValidationReportPage: React.FC = () => {
                         }),
                     );
                 } else {
+                    // Convert everything to dataset-json format
                     setReport(newReport);
+                    const details = convertToDataset(
+                        newReport,
+                        'Issue_Details',
+                    );
+                    const summary = convertToDataset(
+                        newReport,
+                        'Issue_Summary',
+                    );
+                    const rules = convertToDataset(newReport, 'Rules_Report');
+                    setTables({
+                        details,
+                        summary,
+                        rules,
+                    });
                 }
             }
         };
@@ -103,42 +135,31 @@ const ValidationReportPage: React.FC = () => {
     }
 
     if (!report) {
-        return <Loading />;
+        return (
+            <Box sx={styles.loading}>
+                <CircularProgress variant="indeterminate" size={55} />
+            </Box>
+        );
     }
 
     return (
-        <Stack
-            spacing={0}
-            justifyContent="space-between"
-            sx={{
-                display: 'flex',
-                flex: '1 1 auto',
-                px: 2,
-                backgroundColor: 'grey.300',
-            }}
-        >
-            <Stack
-                spacing={2}
-                justifyContent="flex-start"
-                sx={{ display: 'flex', flex: '1 1 auto', mb: 1 }}
-            >
-                <TabContext value={tab}>
-                    <TabList onChange={handleTabChange}>
-                        <StyledTab label="Issue Summary" value="1" />
-                        <StyledTab label="Issue Details" value="2" />
-                        <StyledTab label="Rules Report" value="3" />
-                    </TabList>
-                    <TabPanel value="1" sx={{ p: 0 }}>
-                        <IssueSummary report={report} />
-                    </TabPanel>
-                    <TabPanel value="2" sx={{ p: 0 }}>
-                        <IssueDetails report={report} />
-                    </TabPanel>
-                    <TabPanel value="3" sx={{ p: 0 }}>
-                        <RuleReports report={report} />
-                    </TabPanel>
-                </TabContext>
-            </Stack>
+        <Stack spacing={0} justifyContent="space-between" sx={styles.root}>
+            <TabContext value={tab}>
+                <TabList onChange={handleTabChange} sx={styles.tabs}>
+                    <StyledTab label="Issue Summary" value="1" />
+                    <StyledTab label="Issue Details" value="2" />
+                    <StyledTab label="Rules Report" value="3" />
+                </TabList>
+                <TabPanel value="1" sx={styles.tabPanel}>
+                    <DatasetContainer data={tables?.summary} />
+                </TabPanel>
+                <TabPanel value="2" sx={styles.tabPanel}>
+                    <DatasetContainer data={tables?.details} />
+                </TabPanel>
+                <TabPanel value="3" sx={styles.tabPanel}>
+                    <DatasetContainer data={tables?.rules} />
+                </TabPanel>
+            </TabContext>
         </Stack>
     );
 };

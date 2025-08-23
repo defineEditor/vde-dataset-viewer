@@ -333,8 +333,11 @@ const DatasetContainer: React.FC = () => {
                     <DatasetView
                         key={`${fileId}:${page}`} // Add key prop to force unmount/remount
                         tableData={table}
+                        settings={settings.viewer}
                         isLoading={isLoading}
                         handleContextMenu={handleContextMenu}
+                        currentPage={page}
+                        currentMask={currentMask}
                     />
                     <ContextMenu
                         open={contextMenu.open}
