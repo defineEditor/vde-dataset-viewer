@@ -131,6 +131,12 @@ const openInNewWindow: ElectronApi['openInNewWindow'] = (filePath, position) =>
 const resizeWindow: ElectronApi['resizeWindow'] = (position) =>
     ipcRenderer.invoke('main:resizeWindow', position);
 
+const setZoom: ElectronApi['setZoom'] = (zoomLevel) =>
+    ipcRenderer.invoke('main:setZoom', zoomLevel);
+
+const getZoom: ElectronApi['getZoom'] = () =>
+    ipcRenderer.invoke('main:getZoom');
+
 contextBridge.exposeInMainWorld('electron', {
     openFile,
     writeToClipboard,
@@ -158,6 +164,8 @@ contextBridge.exposeInMainWorld('electron', {
     getAppVersion,
     openInNewWindow,
     resizeWindow,
+    setZoom,
+    getZoom,
     ipcRenderer: {
         sendMessage(channel: Channels, args: unknown[]) {
             ipcRenderer.send(channel, args);

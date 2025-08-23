@@ -49,8 +49,9 @@ const shortcuts = {
         'Ctrl + F5': 'Open Settings',
         'Ctrl + F6': 'Open About',
         'Ctrl + /': 'Open Shortcuts',
-        Escape: 'Escape/Cancel/Close',
         'Ctrl + S': 'Save Settings/Filter/etc.',
+        'Ctrl + Scroll': 'Zoom In/Out',
+        Escape: 'Escape/Cancel/Close',
         F11: 'Toggle Fullscreen',
     },
     Viewer: {

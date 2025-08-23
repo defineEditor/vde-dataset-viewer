@@ -139,6 +139,7 @@ export interface IUi {
     pathname: AllowedPathnames;
     currentFileId: string;
     currentPage: number;
+    zoomLevel: number;
     viewer: IUiViewer;
     modals: IUiModal[];
     snackbar: IUiSnackbar;

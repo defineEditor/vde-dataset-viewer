@@ -806,6 +806,14 @@ class ApiService {
     ): Promise<void> => {
         await window.electron.resizeWindow(position);
     };
+
+    public setZoom = async (level: number): Promise<void> => {
+        await window.electron.setZoom(level);
+    };
+
+    public getZoom = async (): Promise<number> => {
+        return await window.electron.getZoom();
+    };
 }
 
 export default ApiService;

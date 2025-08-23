@@ -20,9 +20,11 @@ import {
     openDataset,
     closeDataset,
     openSnackbar,
+    setZoomLevel,
 } from 'renderer/redux/slices/ui';
 import { AllowedPathnames } from 'interfaces/common';
 import ViewerToolbar from 'renderer/components/ViewerToolbar';
+import ToolbarActions from 'renderer/components/ToolbarActions';
 import Shortcuts from 'renderer/components/Shortcuts';
 import Converter from 'renderer/components/Converter';
 import Validator from 'renderer/components/Validator';
@@ -209,6 +211,41 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
         };
     }, [dispatch, apiService]);
 
+    // Add zoom functionality with Ctrl + Mouse wheel
+    const currentZoom = useAppSelector((state) => state.ui.zoomLevel);
+    useEffect(() => {
+        const handleZoom = async (event: WheelEvent) => {
+            if (event.ctrlKey || event.metaKey) {
+                event.preventDefault();
+
+                const zoomStep = 0.1;
+                const minZoom = -5; // ~25% zoom
+                const maxZoom = 3; // ~800% zoom
+
+                let newZoom: number;
+                if (event.deltaY < 0) {
+                    // Zoom in (wheel up)
+                    newZoom = Math.min(currentZoom + zoomStep, maxZoom);
+                } else {
+                    // Zoom out (wheel down)
+                    newZoom = Math.max(currentZoom - zoomStep, minZoom);
+                }
+
+                dispatch(setZoomLevel(newZoom));
+            }
+        };
+
+        window.addEventListener('wheel', handleZoom, { passive: false });
+
+        return () => {
+            window.removeEventListener('wheel', handleZoom);
+        };
+    }, [dispatch, currentZoom]);
+
+    useEffect(() => {
+        apiService.setZoom(currentZoom);
+    }, [currentZoom, apiService]);
+
     // Handle "Open With" file opening events from the OS
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
 
@@ -296,8 +333,11 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                     pathname === paths.VIEWFILE && isDataLoaded
                         ? {
                               appTitle: ViewerToolbar,
+                              toolbarActions: ToolbarActions,
                           }
-                        : {}
+                        : {
+                              toolbarActions: ToolbarActions,
+                          }
                 }
             >
                 <Stack sx={styles.main} id="main">

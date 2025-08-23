@@ -86,4 +86,6 @@ export interface ElectronApi {
     resizeWindow: (
         position: 'top' | 'bottom' | 'left' | 'right',
     ) => Promise<void>;
+    setZoom: (zoomLevel: number) => Promise<void>;
+    getZoom: () => Promise<number>;
 }

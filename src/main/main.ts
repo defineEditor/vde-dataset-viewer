@@ -215,6 +215,25 @@ const handleResizeWindow = async (
     return resizeWindow(position, event.sender);
 };
 
+// Function to handle zoom level setting
+const handleSetZoom = async (
+    event: IpcMainInvokeEvent,
+    zoomLevel: number,
+): Promise<void> => {
+    if (!event.sender) {
+        return Promise.resolve();
+    }
+    event.sender.setZoomLevel(zoomLevel);
+};
+
+// Function to handle getting current zoom level
+const handleGetZoom = async (event: IpcMainInvokeEvent): Promise<number> => {
+    if (!event.sender) {
+        return Promise.resolve(0);
+    }
+    return event.sender.getZoomLevel();
+};
+
 /**
  * Add event listeners...
  */
@@ -242,6 +261,8 @@ app.whenReady()
         ipcMain.handle('main:downloadUpdate', downloadUpdate);
         ipcMain.handle('main:openInNewWindow', handleOpenInNewWindow);
         ipcMain.handle('main:resizeWindow', handleResizeWindow);
+        ipcMain.handle('main:setZoom', handleSetZoom);
+        ipcMain.handle('main:getZoom', handleGetZoom);
         ipcMain.handle(
             'main:deleteValidationReport',
             reportManager.deleteValidationReport,

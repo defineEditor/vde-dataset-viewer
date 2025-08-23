@@ -58,6 +58,7 @@ export const ui: IUi = {
     pathname: paths.SELECT,
     currentFileId: '',
     currentPage: 0,
+    zoomLevel: 0,
     viewer: {
         datasetInfoTab: 0,
         validatorTab: 0,
@@ -84,6 +85,7 @@ export const ui: IUi = {
     validation: {},
     validationPage: {
         currentTab: 'validation',
+        currentReportTab: 'summary',
         currentReportId: null,
     },
 };

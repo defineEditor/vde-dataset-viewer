@@ -162,6 +162,9 @@ export const uiSlice = createSlice({
         setValidationReport: (state, action: PayloadAction<string | null>) => {
             state.validationPage.currentReportId = action.payload;
         },
+        setZoomLevel: (state, action: PayloadAction<number>) => {
+            state.zoomLevel = action.payload;
+        },
         updateValidation: (
             state,
             action: PayloadAction<{
@@ -207,6 +210,7 @@ export const {
     updateValidation,
     setValidationReport,
     setValidationTab,
+    setZoomLevel,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;
