@@ -52,8 +52,7 @@ export interface ITableData {
 }
 
 export interface TableSettings extends SettingsViewer {
-    widthUnit?: 'px' | '%';
     hideRowNumbers?: boolean;
     showLabel?: boolean;
-    useFlex?: boolean;
+    height?: number;
 }

@@ -3,15 +3,18 @@ import DatasetView from 'renderer/components/DatasetView';
 import { ITableData } from 'interfaces/common';
 import { useAppSelector } from 'renderer/redux/hooks';
 
-const DatasetContainer: React.FC<{ data?: ITableData }> = ({ data = null }) => {
+const DatasetContainer: React.FC<{
+    data?: ITableData;
+    dimentions: { height: number; width: number };
+}> = ({ data = null, dimentions }) => {
     const settings = useAppSelector((state) => state.settings.viewer);
     const updatedSettings = {
         ...settings,
         showTypeIcons: false,
         dynamicRowHeight: true,
-        useFlex: true,
         hideRowNumbers: true,
         showLabel: true,
+        baseHeight: `${dimentions.height}px`,
     };
 
     if (!data) {
@@ -20,7 +23,7 @@ const DatasetContainer: React.FC<{ data?: ITableData }> = ({ data = null }) => {
 
     return (
         <DatasetView
-            key="issue-summary"
+            key="report"
             tableData={data}
             isLoading={false}
             settings={updatedSettings}

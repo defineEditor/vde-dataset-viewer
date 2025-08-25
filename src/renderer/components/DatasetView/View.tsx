@@ -25,6 +25,28 @@ import { VirtualItem, Virtualizer } from '@tanstack/react-virtual';
 import { ITableRow, TableSettings } from 'interfaces/common';
 import Loading from 'renderer/components/Loading';
 
+const getContainerStyle = (height?: number): React.CSSProperties => {
+    return {
+        overflow: 'auto',
+        position: 'relative',
+        height: height ? `${height}px` : '100vh',
+        userSelect: 'none',
+    };
+};
+
+const getLoadingStyle = (height?: number): React.CSSProperties => {
+    return {
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        display: 'flex',
+        flexDirection: 'column',
+        transform: 'translate(-50%, -50%)',
+        zIndex: 999,
+        scale: height && height > 400 ? '1' : height ? height / 400 : '1',
+    };
+};
+
 const styles = {
     header: {
         backgroundColor: '#f4f4f4',
@@ -36,18 +58,6 @@ const styles = {
     headerColumn: {
         display: 'flex',
         width: '100%',
-    },
-    containerWithPage: {
-        overflow: 'auto',
-        position: 'relative',
-        height: 'calc(100vh - 116px)', // 116px - toolbar + pagination
-        userSelect: 'none',
-    },
-    containerWithoutPage: {
-        overflow: 'auto',
-        position: 'relative',
-        height: 'calc(100vh - 64px)', // 64 - toolbar
-        userSelect: 'none',
     },
     table: {
         display: 'grid',
@@ -140,15 +150,7 @@ const styles = {
         maxHeight: '100%',
         textAlign: 'center',
     },
-    loading: {
-        position: 'fixed',
-        top: '50%',
-        left: '50%',
-        display: 'flex',
-        flexDirection: 'column',
-        transform: 'translate(-50%, -50%)',
-        zIndex: 999,
-    },
+    loading: {},
     sponsored: {
         marginTop: '10px',
         fontSize: '14px',
@@ -198,7 +200,6 @@ const DatasetViewUI: React.FC<{
     rowVirtualizer: Virtualizer<HTMLDivElement, Element>;
     sorting: ISortingState;
     onSortingChange: (updater: IUpdater<ISortingState>) => void;
-    hasPagination: boolean;
     settings: TableSettings;
     handleContextMenu?: (
         event: React.MouseEvent<HTMLTableCellElement, MouseEvent>,
@@ -226,7 +227,6 @@ const DatasetViewUI: React.FC<{
     rowVirtualizer,
     sorting,
     onSortingChange,
-    hasPagination,
     handleContextMenu = (_event, _rowIndex, _columnIndex) => {},
     filteredColumns = [],
     containerStyle = undefined,
@@ -234,12 +234,7 @@ const DatasetViewUI: React.FC<{
     return (
         <Paper
             ref={tableContainerRef}
-            sx={
-                containerStyle ||
-                (hasPagination
-                    ? styles.containerWithPage
-                    : styles.containerWithoutPage)
-            }
+            sx={containerStyle || getContainerStyle(settings.height)}
         >
             <Table sx={styles.table}>
                 <TableHead sx={styles.header}>
@@ -554,7 +549,7 @@ const DatasetViewUI: React.FC<{
                 </TableBody>
             </Table>
             {isLoading && (
-                <Box sx={styles.loading}>
+                <Box sx={getLoadingStyle(settings.height)}>
                     <Loading />
                     <Box sx={styles.sponsored}>Sponsored by:</Box>
                 </Box>

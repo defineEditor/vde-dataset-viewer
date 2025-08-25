@@ -5,11 +5,13 @@ import React, {
     useMemo,
     useRef,
 } from 'react';
+import { Box } from '@mui/material';
 import { ITableData, ItemType, IMask, TableSettings } from 'interfaces/common';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { openSnackbar, setGoTo, setSelect } from 'renderer/redux/slices/ui';
 import View from 'renderer/components/DatasetView/View';
+import useTableHeight from 'renderer/components/DatasetView/useTableHeight';
 import {
     ColumnDef,
     getCoreRowModel,
@@ -30,6 +32,12 @@ declare module '@tanstack/table-core' {
 interface ITableRow {
     [key: string]: string | number | boolean | null;
 }
+
+const styles = {
+    fullHeight: {
+        height: '100%',
+    },
+};
 
 interface DatasetViewProps {
     tableData: ITableData;
@@ -124,7 +132,10 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             .map((column) => column.id);
     }, [tableData.header]);
 
-    // Inital rows;
+    // Height measurements
+    const { tableHeight, viewContainerRef } = useTableHeight();
+
+    // Initial rows;
     const { data } = tableData;
     const table = useReactTable({
         data: isLoading ? [] : data,
@@ -541,30 +552,36 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         settings.pageSize,
     ]);
 
+    const updatedSettings = { ...settings, height: tableHeight };
+
     return (
-        <View
-            table={table}
-            tableContainerRef={tableContainerRef}
-            visibleColumns={visibleColumns}
-            virtualPaddingLeft={virtualPaddingLeft}
-            virtualPaddingRight={virtualPaddingRight}
-            virtualColumns={virtualColumns}
-            virtualRows={virtualRows}
-            rows={rows}
-            highlightedCells={highlightedCells}
-            handleCellClick={handleCellClick}
-            handleMouseDown={handleMouseDown}
-            handleMouseOver={handleMouseOver}
-            handleContextMenu={handleContextMenu}
-            handleResizeEnd={columnVirtualizer.measure}
-            isLoading={isLoading}
-            settings={settings}
-            rowVirtualizer={rowVirtualizer}
-            sorting={sorting}
-            onSortingChange={setSorting}
-            hasPagination={tableData?.metadata?.records > settings.pageSize}
-            filteredColumns={filteredColumns}
-        />
+        <Box ref={viewContainerRef} style={styles.fullHeight}>
+            {/* If height is not measured yet, do not render */}
+            {tableHeight !== 0 && (
+                <View
+                    table={table}
+                    tableContainerRef={tableContainerRef}
+                    visibleColumns={visibleColumns}
+                    virtualPaddingLeft={virtualPaddingLeft}
+                    virtualPaddingRight={virtualPaddingRight}
+                    virtualColumns={virtualColumns}
+                    virtualRows={virtualRows}
+                    rows={rows}
+                    highlightedCells={highlightedCells}
+                    handleCellClick={handleCellClick}
+                    handleMouseDown={handleMouseDown}
+                    handleMouseOver={handleMouseOver}
+                    handleContextMenu={handleContextMenu}
+                    handleResizeEnd={columnVirtualizer.measure}
+                    isLoading={isLoading}
+                    settings={updatedSettings}
+                    rowVirtualizer={rowVirtualizer}
+                    sorting={sorting}
+                    onSortingChange={setSorting}
+                    filteredColumns={filteredColumns}
+                />
+            )}
+        </Box>
     );
 };
 

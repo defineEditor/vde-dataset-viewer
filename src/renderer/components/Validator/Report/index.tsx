@@ -1,4 +1,10 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, {
+    useState,
+    useContext,
+    useEffect,
+    useRef,
+    useCallback,
+} from 'react';
 import { styled } from '@mui/material/styles';
 import Stack from '@mui/material/Stack';
 import Tab from '@mui/material/Tab';
@@ -13,7 +19,7 @@ import { openSnackbar } from 'renderer/redux/slices/ui';
 import AppContext from 'renderer/utils/AppContext';
 import { ITableData, ParsedValidationReport } from 'interfaces/common';
 import convertToDataset from 'renderer/components/Validator/Report/convertToDataset';
-import DatasetContainer from 'renderer/components/Validator/Report/DatasetContainer';
+import DatasetContainer from 'renderer/components/Validator/Report/ReportDatasetContainer';
 
 const styles = {
     container: {
@@ -39,8 +45,13 @@ const styles = {
         flex: '1 1 auto',
         px: 0,
         backgroundColor: 'grey.300',
+        height: '100%',
+    },
+    fullHeight: {
+        height: '100%',
     },
     tabPanel: {
+        height: '100%',
         p: 0,
     },
     loading: {
@@ -62,6 +73,8 @@ const StyledTab = styled(Tab)({
 
 const ValidationReportPage: React.FC = () => {
     const [tab, setTab] = useState('1');
+    const [dimensions, setDimensions] = useState({ height: 600, width: 800 });
+    const tabContainerRef = useRef<HTMLDivElement>(null);
 
     const { apiService } = useContext(AppContext);
     const dispatch = useAppDispatch();
@@ -76,6 +89,35 @@ const ValidationReportPage: React.FC = () => {
     const reportId = useAppSelector(
         (state) => state.ui.validationPage.currentReportId,
     );
+
+    // Function to measure TabPanel dimensions
+    const measureTabPanel = useCallback(() => {
+        if (tabContainerRef.current) {
+            const rect = tabContainerRef.current.getBoundingClientRect();
+            setDimensions({
+                height: rect.height,
+                width: rect.width,
+            });
+        }
+    }, []);
+
+    // Use ResizeObserver to track dimension changes
+    useEffect(() => {
+        const resizeObserver = new ResizeObserver(() => {
+            measureTabPanel();
+        });
+
+        if (tabContainerRef.current) {
+            resizeObserver.observe(tabContainerRef.current);
+        }
+
+        // Initial measurement
+        measureTabPanel();
+
+        return () => {
+            resizeObserver.disconnect();
+        };
+    }, [measureTabPanel, tab]); // Re-run when tab changes
 
     useEffect(() => {
         const getReport = async () => {
@@ -143,22 +185,33 @@ const ValidationReportPage: React.FC = () => {
     }
 
     return (
-        <Stack spacing={0} justifyContent="space-between" sx={styles.root}>
+        <Stack spacing={0} justifyContent="flex-start" sx={styles.root}>
             <TabContext value={tab}>
                 <TabList onChange={handleTabChange} sx={styles.tabs}>
                     <StyledTab label="Issue Summary" value="1" />
                     <StyledTab label="Issue Details" value="2" />
                     <StyledTab label="Rules Report" value="3" />
                 </TabList>
-                <TabPanel value="1" sx={styles.tabPanel}>
-                    <DatasetContainer data={tables?.summary} />
-                </TabPanel>
-                <TabPanel value="2" sx={styles.tabPanel}>
-                    <DatasetContainer data={tables?.details} />
-                </TabPanel>
-                <TabPanel value="3" sx={styles.tabPanel}>
-                    <DatasetContainer data={tables?.rules} />
-                </TabPanel>
+                <Box ref={tabContainerRef} style={styles.fullHeight}>
+                    <TabPanel value="1" sx={styles.tabPanel}>
+                        <DatasetContainer
+                            data={tables?.summary}
+                            dimentions={dimensions}
+                        />
+                    </TabPanel>
+                    <TabPanel value="2" sx={styles.tabPanel}>
+                        <DatasetContainer
+                            data={tables?.details}
+                            dimentions={dimensions}
+                        />
+                    </TabPanel>
+                    <TabPanel value="3" sx={styles.tabPanel}>
+                        <DatasetContainer
+                            data={tables?.rules}
+                            dimentions={dimensions}
+                        />
+                    </TabPanel>
+                </Box>
             </TabContext>
         </Stack>
     );

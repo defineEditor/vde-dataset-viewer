@@ -1,24 +1,32 @@
-import React, { useState, useMemo, useCallback, useContext } from 'react';
+import React, {
+    useState,
+    useMemo,
+    useCallback,
+    useContext,
+    useRef,
+    useEffect,
+} from 'react';
 import Stack from '@mui/material/Stack';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ContextMenu from 'renderer/components/DatasetView/ContextMenu';
 import AppContext from 'renderer/utils/AppContext';
-import { ITableRow, IHeaderCell } from 'interfaces/common';
-import { Typography, LinearProgress } from '@mui/material';
 import {
-    useReactTable,
-    getCoreRowModel,
-    getSortedRowModel,
-    createColumnHelper,
-    SortingState,
-} from '@tanstack/react-table';
-import { useVirtualizer } from '@tanstack/react-virtual';
-import ViewWithSelection from 'renderer/components/DatasetView/ViewWithSelection';
+    IHeaderCell,
+    ITableData,
+    DatasetJsonMetadata,
+} from 'interfaces/common';
+import { Typography, LinearProgress } from '@mui/material';
+import DatasetView from 'renderer/components/DatasetView';
 import { useAppSelector } from 'renderer/redux/hooks';
 
 const styles = {
+    container: {
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
+    },
     sectionTitle: {
         '&&': {
             mt: 2,
@@ -32,13 +40,6 @@ const styles = {
             mb: 1,
         },
         height: '100%',
-    },
-    table: {
-        width: '100%',
-        height: '40vh',
-        overflowX: 'auto',
-        boxShadow: 'none',
-        userSelect: 'none',
     },
 };
 
@@ -97,6 +98,7 @@ const UniqueValues: React.FC<{
     counts: { [value: string]: number };
     hasAllValues: boolean;
     totalRecords: number;
+    loading: boolean;
     onGetValues: () => void;
     onClose: () => void;
     columnId: string;
@@ -105,19 +107,15 @@ const UniqueValues: React.FC<{
     counts,
     hasAllValues,
     onGetValues,
+    loading,
     onClose,
     totalRecords,
     columnId,
     searchTerm = '',
 }) => {
-    const [sorting, setSorting] = useState<SortingState>([
-        { id: 'count', desc: true },
-    ]);
-    const tableContainerRef = React.useRef<HTMLDivElement>(null);
-
     const { apiService } = useContext(AppContext);
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
-    const metadata = apiService.getOpenedFileMetadata(currentFileId);
+    const datasetMetadata = apiService.getOpenedFileMetadata(currentFileId);
     // Transform counts object into array for table
     const data = useMemo(() => {
         const entries = Object.entries(counts);
@@ -136,77 +134,79 @@ const UniqueValues: React.FC<{
         return result;
     }, [counts, totalRecords, searchTerm]);
 
-    const columnHelper = createColumnHelper<ITableRow>();
+    const metadata: DatasetJsonMetadata = useMemo(() => {
+        return {
+            datasetJSONCreationDateTime: new Date().toISOString(),
+            datasetJSONVersion: '1.1',
+            records: data.length,
+            name: `unique_values`,
+            label: 'Unique values',
+            columns: [
+                {
+                    itemOID: 'value',
+                    name: 'value',
+                    label: 'Value',
+                    dataType: 'string',
+                },
+                {
+                    itemOID: 'Frequency',
+                    name: 'frequency',
+                    label: 'Frequency',
+                    dataType: 'string',
+                },
+            ],
+        };
+    }, [data]);
 
-    const valueColumnWidth =
-        (tableContainerRef?.current?.clientWidth || 510) - 310;
+    // Form header;
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [containerWidth, setContainerWidth] = useState<number>(0);
 
-    const columns = [
-        columnHelper.accessor('#', {
-            id: '#',
-            header: '#',
-            size: 1,
-        }),
-        columnHelper.accessor('value', {
-            header: 'Value',
-            size: valueColumnWidth,
-        }),
-        columnHelper.accessor('count', {
-            header: 'Frequency',
-            size: 250,
-            cell: renderFrequencyCell,
-        }),
-    ];
+    // Create observable for the container width
+    useEffect(() => {
+        const resizeObserver = new ResizeObserver(() => {
+            if (containerRef.current) {
+                setContainerWidth(containerRef.current.clientWidth);
+            }
+        });
+        if (containerRef.current) {
+            resizeObserver.observe(containerRef.current);
+        }
+        // Initial measure
+        setContainerWidth(containerRef.current?.clientWidth || 0);
+        return () => {
+            resizeObserver.disconnect();
+        };
+    }, []);
 
-    const table = useReactTable({
-        data,
-        columns,
-        state: {
-            sorting,
-        },
-        onSortingChange: setSorting,
-        getCoreRowModel: getCoreRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        debugTable: true,
-        columnResizeMode: 'onEnd',
-        initialState: {
-            columnPinning: {
-                left: ['#'],
+    const header: ITableData['header'] = useMemo(
+        () => [
+            {
+                id: 'value',
+                label: 'Value',
+                size:
+                    (containerWidth || 510) -
+                    Math.max(150, containerWidth * 0.3),
             },
-        },
-    });
+            {
+                id: 'frequency',
+                label: 'Frequency',
+                cell: renderFrequencyCell,
+                size: Math.max(150, containerWidth * 0.3),
+            },
+        ],
+        [containerWidth],
+    );
 
-    // Set up row virtualization
-    const { rows } = table.getRowModel();
-    const rowVirtualizer = useVirtualizer({
-        count: rows.length,
-        getScrollElement: () => tableContainerRef.current,
-        estimateSize: () => 38,
-        overscan: 15,
-    });
-
-    // Get visible columns and set up column virtualization
-    const visibleColumns = table.getVisibleLeafColumns();
-    const columnVirtualizer = useVirtualizer({
-        count: visibleColumns.length - 1, // Exclude the first column
-        estimateSize: (index) => visibleColumns[index + 1].getSize(),
-        getScrollElement: () => tableContainerRef.current,
-        horizontal: true,
-        overscan: 3,
-    });
-
-    const virtualColumns = columnVirtualizer.getVirtualItems();
-    const virtualRows = rowVirtualizer.getVirtualItems();
-
-    let virtualPaddingLeft: number | undefined;
-    let virtualPaddingRight: number | undefined;
-
-    if (columnVirtualizer && virtualColumns?.length) {
-        virtualPaddingLeft = virtualColumns[0]?.start ?? 0;
-        virtualPaddingRight =
-            columnVirtualizer.getTotalSize() -
-            (virtualColumns[virtualColumns.length - 1]?.end ?? 0);
-    }
+    const uniqueValuesData: ITableData = useMemo(() => {
+        return {
+            header,
+            data,
+            metadata,
+            appliedFilter: null,
+            fileId: '',
+        };
+    }, [data, metadata, header]);
 
     const [contextMenu, setContextMenu] = useState<{
         position: { top: number; left: number };
@@ -228,7 +228,7 @@ const UniqueValues: React.FC<{
             if (rowIndex === -1) return; // Ignore header row
 
             // In case mask is used, we need to get the index of the column with mask applied
-            const header: IHeaderCell = {
+            const cellHeader: IHeaderCell = {
                 id: columnId,
                 label: '',
             };
@@ -237,7 +237,7 @@ const UniqueValues: React.FC<{
             setContextMenu({
                 position: { top: event.clientY, left: event.clientX },
                 value,
-                header,
+                header: cellHeader,
                 open: true,
                 isHeader: false,
             });
@@ -255,8 +255,21 @@ const UniqueValues: React.FC<{
         setContextMenu((prev) => ({ ...prev, open: false }));
     };
 
+    const settings = useAppSelector((state) => state.settings.viewer);
+    const updatedSettings = {
+        ...settings,
+        showTypeIcons: false,
+        hideRowNumbers: true,
+        showLabel: true,
+    };
+
     return (
-        <Stack direction="column" width="100%" spacing={2}>
+        <Stack
+            direction="column"
+            sx={styles.container}
+            spacing={2}
+            ref={containerRef}
+        >
             <Stack direction="row" spacing={4}>
                 <Typography variant="h6" sx={styles.sectionTitle}>
                     Unique Values {data.length > 0 ? `(${data.length})` : ''}
@@ -282,32 +295,21 @@ const UniqueValues: React.FC<{
                     </Stack>
                 )}
             </Stack>
-            <ViewWithSelection
-                table={table}
-                tableContainerRef={tableContainerRef}
-                visibleColumns={visibleColumns}
-                virtualPaddingLeft={virtualPaddingLeft}
-                virtualPaddingRight={virtualPaddingRight}
-                virtualColumns={virtualColumns}
-                virtualRows={virtualRows}
-                rows={rows}
-                isLoading={false}
-                dynamicRowHeight={false}
-                rowVirtualizer={rowVirtualizer}
-                sorting={sorting}
-                onSortingChange={setSorting}
-                hasPagination={false}
-                filteredColumns={[]}
-                containerStyle={styles.table}
-                hideRowNumbers
+            <DatasetView
+                key="unique-values"
+                tableData={uniqueValuesData}
+                isLoading={loading}
+                settings={updatedSettings}
                 handleContextMenu={handleContextMenu}
+                currentPage={1}
+                currentMask={null}
             />
             <ContextMenu
                 open={contextMenu.open}
                 anchorPosition={contextMenu.position}
                 onClose={handleCloseContextMenu}
                 value={contextMenu.value}
-                metadata={metadata}
+                metadata={datasetMetadata}
                 header={contextMenu.header}
                 isHeader={contextMenu.isHeader}
             />

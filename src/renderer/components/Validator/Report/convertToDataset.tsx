@@ -162,11 +162,9 @@ const convertToDataset = (
             id: string;
             label: string;
             cell?: (cell: any) => React.JSX.Element;
-            flex: string;
         } = {
             id: col.itemOID,
             label: col.label,
-            flex: `1 1 ${col.length}%`,
         };
 
         if (col.itemOID === 'status') {
