@@ -190,7 +190,7 @@ const convertMetadataToDataset = (
     const columnWidths = calculateColumnWidth(
         columns,
         true,
-        containerWidth ? containerWidth - 15 : undefined,
+        containerWidth || undefined,
         500,
         1000,
         false,

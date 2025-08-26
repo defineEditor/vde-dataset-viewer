@@ -7,6 +7,7 @@ import { DatasetJsonMetadata } from 'interfaces/common';
 import DatasetView from 'renderer/components/DatasetView';
 import convertMetadataToDataset from 'renderer/components/Modal/DatasetInfo/convertMetadataToDataset';
 import useWidth from 'renderer/components/hooks/useWidth';
+import useScrollbarWidth from 'renderer/components/hooks/useScrollbarWidth';
 
 const styles = {
     container: {
@@ -37,13 +38,14 @@ const ColumnsInfo: React.FC<{
 
     const containerRef = useRef<HTMLDivElement | null>(null);
     const containerWidth = useWidth(containerRef);
+    const scrollbarWidth = useScrollbarWidth();
 
     const columnsData = convertMetadataToDataset(
         metadata,
         handleGoToClick,
         handleShowInfo,
         searchTerm,
-        containerWidth,
+        containerWidth - scrollbarWidth,
     );
 
     const settings = useAppSelector((state) => state.settings.viewer);

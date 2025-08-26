@@ -25,16 +25,20 @@ import { VirtualItem, Virtualizer } from '@tanstack/react-virtual';
 import { ITableRow, TableSettings } from 'interfaces/common';
 import Loading from 'renderer/components/Loading';
 
-const getContainerStyle = (height?: number): React.CSSProperties => {
-    return {
+const getContainerStyle = (settings: TableSettings): React.CSSProperties => {
+    const result: React.CSSProperties = {
         overflow: 'auto',
         position: 'relative',
-        height: height ? `${height}px` : '100vh',
+        height: settings.height ? `${settings.height}px` : '100vh',
         userSelect: 'none',
     };
+    if (settings.width) {
+        result.width = `${settings.width}px`;
+    }
+    return result;
 };
 
-const getLoadingStyle = (height?: number): React.CSSProperties => {
+const getLoadingStyle = (settings: TableSettings): React.CSSProperties => {
     return {
         position: 'fixed',
         top: '50%',
@@ -43,7 +47,12 @@ const getLoadingStyle = (height?: number): React.CSSProperties => {
         flexDirection: 'column',
         transform: 'translate(-50%, -50%)',
         zIndex: 999,
-        scale: height && height > 400 ? '1' : height ? height / 400 : '1',
+        scale:
+            settings.height && settings.height > 400
+                ? '1'
+                : settings.height
+                  ? settings.height / 400
+                  : '1',
     };
 };
 
@@ -234,7 +243,7 @@ const DatasetViewUI: React.FC<{
     return (
         <Paper
             ref={tableContainerRef}
-            sx={containerStyle || getContainerStyle(settings.height)}
+            sx={containerStyle || getContainerStyle(settings)}
         >
             <Table sx={styles.table}>
                 <TableHead sx={styles.header}>
@@ -549,7 +558,7 @@ const DatasetViewUI: React.FC<{
                 </TableBody>
             </Table>
             {isLoading && (
-                <Box sx={getLoadingStyle(settings.height)}>
+                <Box sx={getLoadingStyle(settings)}>
                     <Loading />
                     <Box sx={styles.sponsored}>Sponsored by:</Box>
                 </Box>

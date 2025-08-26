@@ -4,7 +4,6 @@ import React, {
     useCallback,
     useContext,
     useRef,
-    useEffect,
 } from 'react';
 import Stack from '@mui/material/Stack';
 import Box from '@mui/material/Box';
@@ -20,12 +19,14 @@ import {
 import { Typography, LinearProgress } from '@mui/material';
 import DatasetView from 'renderer/components/DatasetView';
 import { useAppSelector } from 'renderer/redux/hooks';
+import useWidth from 'renderer/components/hooks/useWidth';
+import useScrollbarWidth from 'renderer/components/hooks/useScrollbarWidth';
 
 const styles = {
     container: {
         width: '100%',
         height: '100%',
-        overflow: 'hidden',
+        overflow: 'none',
     },
     sectionTitle: {
         '&&': {
@@ -158,27 +159,14 @@ const UniqueValues: React.FC<{
         };
     }, [data]);
 
-    // Form header;
+    // Form header with dynamic scrollbar width measurement
     const containerRef = useRef<HTMLDivElement>(null);
-    const [containerWidth, setContainerWidth] = useState<number>(0);
+    const containerWidth = useWidth(containerRef);
 
-    // Create observable for the container width
-    useEffect(() => {
-        const resizeObserver = new ResizeObserver(() => {
-            if (containerRef.current) {
-                setContainerWidth(containerRef.current.clientWidth);
-            }
-        });
-        if (containerRef.current) {
-            resizeObserver.observe(containerRef.current);
-        }
-        // Initial measure
-        setContainerWidth(containerRef.current?.clientWidth || 0);
-        return () => {
-            resizeObserver.disconnect();
-        };
-    }, []);
+    // Use the hook instead of inline measurement
+    const scrollbarWidth = useScrollbarWidth();
 
+    // Account for scrollbar width in column sizing
     const header: ITableData['header'] = useMemo(
         () => [
             {
@@ -186,7 +174,8 @@ const UniqueValues: React.FC<{
                 label: 'Value',
                 size:
                     (containerWidth || 510) -
-                    Math.max(150, containerWidth * 0.3),
+                    Math.max(150, containerWidth * 0.3) -
+                    scrollbarWidth,
             },
             {
                 id: 'frequency',
@@ -195,7 +184,7 @@ const UniqueValues: React.FC<{
                 size: Math.max(150, containerWidth * 0.3),
             },
         ],
-        [containerWidth],
+        [containerWidth, scrollbarWidth],
     );
 
     const uniqueValuesData: ITableData = useMemo(() => {
@@ -261,6 +250,7 @@ const UniqueValues: React.FC<{
         showTypeIcons: false,
         hideRowNumbers: true,
         showLabel: true,
+        width: containerWidth || undefined,
     };
 
     return (
