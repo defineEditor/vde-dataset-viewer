@@ -27,6 +27,12 @@ export interface IHeaderCell {
     defaultOrder?: SortOrder;
     /** Size in px */
     size?: number;
+    /** Minimum size in px */
+    minSize?: number;
+    /** Maximum size in px */
+    maxSize?: number;
+    /** Padding */
+    padding?: number;
     /** Type */
     type?: ItemType;
     /** Filter is applied to the column */

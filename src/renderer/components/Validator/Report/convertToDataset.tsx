@@ -5,12 +5,15 @@ import {
     DatasetJsonMetadata,
     ITableRow,
 } from 'interfaces/common';
+import { CoreCell } from '@tanstack/react-table';
 import { Typography } from '@mui/material';
 
-const Status: React.FC<{ cell: any }> = ({ cell }) => {
-    // Ensure we render a string/primitive (React cannot render plain objects)
-    const content = cell.getValue();
-    return <Typography>{content}</Typography>;
+const Status: React.FC<{ status: string }> = ({ status }) => {
+    return <Typography>{status}</Typography>;
+};
+
+const renderStatus = (info: CoreCell<ITableRow, unknown>) => {
+    return <Status status={info.getValue() as string} />;
 };
 
 const convertToDataset = (
@@ -161,14 +164,14 @@ const convertToDataset = (
         const item: {
             id: string;
             label: string;
-            cell?: (cell: any) => React.JSX.Element;
+            cell?: (cell: CoreCell<ITableRow, unknown>) => React.JSX.Element;
         } = {
             id: col.itemOID,
             label: col.label,
         };
 
         if (col.itemOID === 'status') {
-            item.cell = ({ cell }: { cell: any }) => <Status cell={cell} />;
+            item.cell = renderStatus;
         }
 
         return item;
