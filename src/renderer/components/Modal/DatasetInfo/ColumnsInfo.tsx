@@ -53,7 +53,7 @@ const ColumnsInfo: React.FC<{
         ...settings,
         showTypeIcons: false,
         dynamicRowHeight: true,
-        hideRowNumbers: true,
+        hideRowNumbers: false,
         showLabel: true,
     };
 

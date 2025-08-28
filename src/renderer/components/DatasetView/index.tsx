@@ -91,14 +91,16 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             }
             return headerCell;
         });
-        // Add row number column
-        result.unshift({
-            accessorKey: '#',
-            header: '#',
-            size: 60,
-            enableResizing: false,
-            meta: { type: 'integer' },
-        });
+        // Add row number column if not present
+        if (!result.find((col) => col.accessorKey === '#')) {
+            result.unshift({
+                accessorKey: '#',
+                header: '#',
+                size: 60,
+                enableResizing: false,
+                meta: { type: 'integer' },
+            });
+        }
         return result;
     }, [tableData.header, settings]);
 
@@ -404,7 +406,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                 window.electron.writeToClipboard(selectedData);
                 dispatch(
                     openSnackbar({
-                        message: 'Copied to clipboard',
+                        message: `Copied to clipboard ${withHeaders ? 'with headers' : ''}`,
                         type: 'success',
                         props: { duration: 1000 },
                     }),

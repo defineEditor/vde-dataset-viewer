@@ -1,6 +1,5 @@
 import React from 'react';
-import { IconButton, Stack, Tooltip, Button } from '@mui/material';
-import EastIcon from '@mui/icons-material/East';
+import { Tooltip, Button } from '@mui/material';
 import {
     ITableData,
     DatasetJsonMetadata,
@@ -26,11 +25,16 @@ const styles = {
 
 const columns: IHeaderCell[] = [
     {
+        id: '#',
+        label: '#',
+        type: 'string',
+        size: 45,
+    },
+    {
         id: 'name',
         label: 'Name',
         type: 'string',
-        minSize: 120,
-        padding: 24,
+        minSize: 100,
     },
     {
         id: 'label',
@@ -83,50 +87,60 @@ const columns: IHeaderCell[] = [
 
 const VariableName: React.FC<{
     name: string;
-    onGoToClick: (column: string) => void;
     onShowInfo: (id: string) => void;
-}> = ({ name, onGoToClick, onShowInfo }) => {
+}> = ({ name, onShowInfo }) => {
     return (
-        <Stack
-            direction="row"
-            spacing={1}
-            style={styles.actions}
-            justifyContent="space-between"
-            alignItems="center"
-        >
-            <Tooltip title="Show column info">
-                <Button
-                    variant="text"
-                    onClick={() => onShowInfo(name)}
-                    id="info"
-                    sx={styles.nameButton}
-                >
-                    {name}
-                </Button>
-            </Tooltip>
-            <Tooltip title="Go to column">
-                <IconButton
-                    onClick={() => onGoToClick(name)}
-                    id="goto"
-                    size="small"
-                >
-                    <EastIcon sx={styles.actionIcon} />
-                </IconButton>
-            </Tooltip>
-        </Stack>
+        <Tooltip title="Show column info">
+            <Button
+                variant="text"
+                onClick={() => onShowInfo(name)}
+                id="info"
+                sx={styles.nameButton}
+            >
+                {name}
+            </Button>
+        </Tooltip>
     );
 };
 
-const renderVariableName = (
-    onGoToClick: (column: string) => void,
-    onShowInfo: (id: string) => void,
-) => {
+const VariableNumber: React.FC<{
+    number: number;
+    name: string;
+    onGoToClick: (column: string) => void;
+}> = ({ number, name, onGoToClick }) => {
+    return (
+        <Tooltip title="Go to column">
+            <Button
+                variant="text"
+                onClick={() => onGoToClick(name)}
+                id="goto"
+                sx={styles.nameButton}
+            >
+                {number}
+            </Button>
+        </Tooltip>
+    );
+};
+
+const renderVariableName = (onShowInfo: (id: string) => void) => {
     const renderFunction = (info: CoreCell<ITableRow, unknown>) => {
         return (
             <VariableName
                 name={info?.row?.original?.name as string}
-                onGoToClick={onGoToClick}
                 onShowInfo={onShowInfo}
+            />
+        );
+    };
+    return renderFunction;
+};
+
+const renderVariableNumber = (onGoToClick: (column: string) => void) => {
+    const renderFunction = (info: CoreCell<ITableRow, unknown>) => {
+        return (
+            <VariableNumber
+                number={info?.row?.original?.['#'] as number}
+                name={info?.row?.original?.name as string}
+                onGoToClick={onGoToClick}
             />
         );
     };
@@ -162,14 +176,20 @@ const convertMetadataToDataset = (
         };
 
         if (col.id === 'name') {
-            item.cell = renderVariableName(onGoToClick, onShowInfo);
+            item.cell = renderVariableName(onShowInfo);
+        }
+        if (col.id === '#') {
+            item.cell = renderVariableNumber(onGoToClick);
         }
 
         return item;
     });
 
     const filteredData: ITableRow[] = data.columns
-        .map((column) => ({ ...column }) as unknown as ITableRow)
+        .map(
+            (column, index) =>
+                ({ '#': index + 1, ...column }) as unknown as ITableRow,
+        )
         .filter((column) => {
             if (!searchTerm) {
                 return true;

@@ -8,6 +8,7 @@ import {
     Paper,
     Box,
     TableSortLabel,
+    IconButton,
 } from '@mui/material';
 import {
     flexRender,
@@ -17,6 +18,7 @@ import {
     SortingState as ISortingState,
     Updater as IUpdater,
 } from '@tanstack/react-table';
+import SelectAllIcon from '@mui/icons-material/SelectAll';
 import FilterIcon from '@mui/icons-material/FilterAlt';
 import FontDownloadIcon from '@mui/icons-material/FontDownload';
 import LooksOneIcon from '@mui/icons-material/LooksOne';
@@ -176,6 +178,13 @@ const styles = {
         color: 'grey.600',
         ml: '4px',
     },
+    squareIconButton: {
+        aspectRatio: '1 / 1',
+        minWidth: 0,
+        textAlign: 'center',
+        flex: 1,
+        justifyContent: 'center',
+    },
 };
 
 const getTypeIcon = (type: string | undefined) => {
@@ -259,17 +268,15 @@ const DatasetViewUI: React.FC<{
                                         width: visibleColumns[0].getSize(),
                                         ...styles.headerRowNumberCell,
                                     }}
-                                    onClick={() => {
-                                        handleMouseDown(-1, -1);
-                                    }}
                                 >
-                                    <Box sx={styles.tableHeaderLabel}>
-                                        {flexRender(
-                                            headerGroup.headers[0].column
-                                                .columnDef.header,
-                                            headerGroup.headers[0].getContext(),
-                                        )}
-                                    </Box>
+                                    <IconButton
+                                        sx={styles.squareIconButton}
+                                        onClick={() => {
+                                            handleMouseDown(-1, -1);
+                                        }}
+                                    >
+                                        <SelectAllIcon />
+                                    </IconButton>
                                 </TableCell>
                             )}
                             {virtualPaddingLeft ? (

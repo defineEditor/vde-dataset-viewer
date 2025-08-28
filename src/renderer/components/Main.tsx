@@ -214,21 +214,42 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
     // Add zoom functionality with Ctrl + Mouse wheel
     const currentZoom = useAppSelector((state) => state.ui.zoomLevel);
     useEffect(() => {
-        const handleZoom = async (event: WheelEvent) => {
+        const handleZoom = async (event: WheelEvent | KeyboardEvent) => {
             if (event.ctrlKey || event.metaKey) {
-                event.preventDefault();
-
                 const zoomStep = 0.1;
                 const minZoom = -5; // ~25% zoom
                 const maxZoom = 3; // ~800% zoom
 
-                let newZoom: number;
-                if (event.deltaY < 0) {
-                    // Zoom in (wheel up)
-                    newZoom = Math.min(currentZoom + zoomStep, maxZoom);
+                let newZoom: number = currentZoom;
+                if (event instanceof WheelEvent) {
+                    event.preventDefault();
+                    // If it is wheel event
+                    if (event.deltaY < 0) {
+                        // Zoom in (wheel up)
+                        newZoom = Math.min(currentZoom + zoomStep, maxZoom);
+                    } else {
+                        // Zoom out (wheel down)
+                        newZoom = Math.max(currentZoom - zoomStep, minZoom);
+                    }
                 } else {
-                    // Zoom out (wheel down)
-                    newZoom = Math.max(currentZoom - zoomStep, minZoom);
+                    switch (event.key) {
+                        case '+':
+                        case '=': // Handle both + and = keys (= is + without shift)
+                            event.preventDefault();
+                            newZoom = Math.min(currentZoom + zoomStep, maxZoom);
+                            break;
+                        case '-':
+                        case '_': // Handle both - and _ keys (_ is - with shift)
+                            event.preventDefault();
+                            newZoom = Math.max(currentZoom - zoomStep, minZoom);
+                            break;
+                        case '0':
+                            event.preventDefault();
+                            newZoom = 0; // Reset to default zoom
+                            break;
+                        default:
+                            break;
+                    }
                 }
 
                 dispatch(setZoomLevel(newZoom));
@@ -236,9 +257,11 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
         };
 
         window.addEventListener('wheel', handleZoom, { passive: false });
+        window.addEventListener('keydown', handleZoom);
 
         return () => {
             window.removeEventListener('wheel', handleZoom);
+            window.removeEventListener('keydown', handleZoom);
         };
     }, [dispatch, currentZoom]);
 
