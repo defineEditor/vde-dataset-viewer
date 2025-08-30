@@ -22,6 +22,7 @@ import {
     Stack,
     TextField,
     InputAdornment,
+    Typography,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { closeModal, setDatasetInfoTab } from 'renderer/redux/slices/ui';
@@ -49,6 +50,9 @@ const styles = {
     title: {
         backgroundColor: 'primary.main',
         color: 'grey.100',
+    },
+    label: {
+        py: 0.5,
     },
     actions: {
         m: 1,
@@ -132,7 +136,9 @@ const DatasetInfo: React.FC<IUiModal> = (props: IUiModal) => {
                     alignItems="center"
                     justifyContent="space-between"
                 >
-                    Dataset Information
+                    <Typography variant="h6" sx={styles.label}>
+                        Dataset Information
+                    </Typography>
                     {datasetInfoTab === 1 && (
                         <TextField
                             placeholder="Ctrl + F to search"

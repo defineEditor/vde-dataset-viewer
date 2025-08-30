@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextField, Stack, Button, MenuItem } from '@mui/material';
+import { TextField, Stack, Button, MenuItem, Box } from '@mui/material';
 import { styles } from 'renderer/components/Settings/styles';
 import CircularProgress from '@mui/material/CircularProgress';
 import { ValidatorData } from 'interfaces/store';
@@ -73,18 +73,23 @@ export const ValidatorInfo: React.FC<ValidatorInfoProps> = ({
                     </MenuItem>
                 ))}
             </TextField>
-            <Button
-                variant="contained"
-                onClick={onRefresh}
-                disabled={disableRefresh}
-                sx={styles.refreshButton}
-            >
-                {updating ? (
-                    <CircularProgress size={24} sx={styles.circularProgress} />
-                ) : (
-                    <span>Refresh</span>
-                )}
-            </Button>
+            <Box sx={styles.refreshContainer}>
+                <Button
+                    variant="contained"
+                    onClick={onRefresh}
+                    disabled={disableRefresh}
+                    sx={styles.refreshButton}
+                >
+                    {updating ? (
+                        <CircularProgress
+                            size={24}
+                            sx={styles.circularProgress}
+                        />
+                    ) : (
+                        <span>Refresh</span>
+                    )}
+                </Button>
+            </Box>
         </Stack>
     );
 };

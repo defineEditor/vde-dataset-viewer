@@ -9,6 +9,7 @@ import {
     Box,
     TableSortLabel,
     IconButton,
+    Tooltip,
 } from '@mui/material';
 import {
     flexRender,
@@ -269,14 +270,19 @@ const DatasetViewUI: React.FC<{
                                         ...styles.headerRowNumberCell,
                                     }}
                                 >
-                                    <IconButton
-                                        sx={styles.squareIconButton}
-                                        onClick={() => {
-                                            handleMouseDown(-1, -1);
-                                        }}
+                                    <Tooltip
+                                        title="Select All"
+                                        enterDelay={1000}
                                     >
-                                        <SelectAllIcon />
-                                    </IconButton>
+                                        <IconButton
+                                            sx={styles.squareIconButton}
+                                            onClick={() => {
+                                                handleMouseDown(-1, -1);
+                                            }}
+                                        >
+                                            <SelectAllIcon />
+                                        </IconButton>
+                                    </Tooltip>
                                 </TableCell>
                             )}
                             {virtualPaddingLeft ? (

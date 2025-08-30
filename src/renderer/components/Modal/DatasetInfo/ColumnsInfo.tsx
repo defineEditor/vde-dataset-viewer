@@ -1,9 +1,9 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { Box } from '@mui/material';
 import { setGoTo, openModal } from 'renderer/redux/slices/ui';
 import { modals } from 'misc/constants';
-import { DatasetJsonMetadata } from 'interfaces/common';
+import { DatasetJsonMetadata, ITableData, ITableRow } from 'interfaces/common';
 import DatasetView from 'renderer/components/DatasetView';
 import convertMetadataToDataset from 'renderer/components/Modal/DatasetInfo/convertMetadataToDataset';
 import useWidth from 'renderer/components/hooks/useWidth';
@@ -22,31 +22,78 @@ const ColumnsInfo: React.FC<{
 }> = ({ metadata, onClose, searchTerm }) => {
     const dispatch = useAppDispatch();
 
-    const handleGoToClick = (column: string) => {
-        dispatch(setGoTo({ column }));
-        onClose();
-    };
-
-    const handleShowInfo = (id: string) => {
-        dispatch(
-            openModal({
-                type: modals.VARIABLEINFO,
-                data: { columnId: id },
-            }),
-        );
-    };
-
+    // Get width for the table
     const containerRef = useRef<HTMLDivElement | null>(null);
     const containerWidth = useWidth(containerRef);
     const scrollbarWidth = useScrollbarWidth();
 
-    const columnsData = convertMetadataToDataset(
+    const [columnsData, setColumnsData] = useState<ITableData | null>(null);
+
+    const handleGoToClick = useCallback(
+        (column: string) => {
+            dispatch(setGoTo({ column }));
+            onClose();
+        },
+        [dispatch, onClose],
+    );
+
+    const handleShowInfo = useCallback(
+        (id: string) => {
+            dispatch(
+                openModal({
+                    type: modals.VARIABLEINFO,
+                    data: { columnId: id },
+                }),
+            );
+        },
+        [dispatch],
+    );
+
+    useEffect(() => {
+        setColumnsData(
+            convertMetadataToDataset(
+                metadata,
+                handleGoToClick,
+                handleShowInfo,
+                containerWidth - scrollbarWidth,
+            ),
+        );
+    }, [
         metadata,
         handleGoToClick,
         handleShowInfo,
-        searchTerm,
-        containerWidth - scrollbarWidth,
-    );
+        containerWidth,
+        scrollbarWidth,
+    ]);
+
+    // Search update
+    useEffect(() => {
+        if (!columnsData?.header) return;
+
+        const filteredData: ITableRow[] = metadata.columns
+            .map(
+                (column, index) =>
+                    ({ '#': index + 1, ...column }) as unknown as ITableRow,
+            )
+            .filter((column) => {
+                if (!searchTerm) {
+                    return true;
+                }
+
+                const searchTermLower = searchTerm.toLowerCase();
+                return columnsData?.header.some((item) => {
+                    const value = column[item.id];
+                    return (
+                        value !== null &&
+                        value !== undefined &&
+                        String(value).toLowerCase().includes(searchTermLower)
+                    );
+                });
+            });
+        setColumnsData((prev) =>
+            prev ? { ...prev, data: filteredData } : null,
+        );
+    }, [metadata.columns, searchTerm, columnsData?.header]);
 
     const settings = useAppSelector((state) => state.settings.viewer);
     const updatedSettings = {
@@ -59,15 +106,17 @@ const ColumnsInfo: React.FC<{
 
     return (
         <Box sx={styles.container} ref={containerRef}>
-            <DatasetView
-                key="report"
-                tableData={columnsData}
-                isLoading={false}
-                settings={updatedSettings}
-                handleContextMenu={() => {}}
-                currentPage={0}
-                currentMask={null}
-            />
+            {columnsData !== null && (
+                <DatasetView
+                    key="report"
+                    tableData={columnsData}
+                    isLoading={false}
+                    settings={updatedSettings}
+                    handleContextMenu={() => {}}
+                    currentPage={0}
+                    currentMask={null}
+                />
+            )}
         </Box>
     );
 };
