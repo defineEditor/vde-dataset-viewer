@@ -294,9 +294,6 @@ const ValidationResults: React.FC<ResultsProps> = ({ filePaths = [] }) => {
                         const {
                             uniqueIssues,
                             totalIssues,
-                            newIssues,
-                            changedIssues,
-                            resolvedIssues,
                         } = report.summary;
                         const date = new Date(report.date);
                         const reportDate =
@@ -331,13 +328,11 @@ const ValidationResults: React.FC<ResultsProps> = ({ filePaths = [] }) => {
                                 `${reportDate} (${getTimeAgo(report.date)} ago)` ||
                             'Validation Report';
 
-                        const hasComparison =
-                            newIssues !== undefined ||
-                            changedIssues !== undefined ||
-                            resolvedIssues !== undefined;
-                        const comparisonText = hasComparison
-                            ? ` (resolved: ${resolvedIssues || 0}, changed: ${changedIssues || 0}, new: ${newIssues || 0})`
-                            : '';
+                        let comparisonText = '';
+                        if (report.summary.changes) {
+                            const { newIssues, changedIssues, resolvedIssues } = report.summary.changes;
+                            comparisonText =` (resolved: ${resolvedIssues || 0}, changed: ${changedIssues || 0}, new: ${newIssues || 0})`;
+                        }
 
                         return (
                             <ListItem

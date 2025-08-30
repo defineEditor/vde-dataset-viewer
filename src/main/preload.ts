@@ -100,6 +100,16 @@ const deleteValidationReport: ElectronApi['deleteValidationReport'] = (
     fileName,
 ) => ipcRenderer.invoke('main:deleteValidationReport', fileName);
 
+const compareValidationReports: ElectronApi['compareValidationReports'] = (
+    fileNameBase,
+    fileNameComp,
+) =>
+    ipcRenderer.invoke(
+        'main:compareValidationReports',
+        fileNameBase,
+        fileNameComp,
+    );
+
 const getValidationReport: ElectronApi['getValidationReport'] = (fileName) =>
     ipcRenderer.invoke('main:getValidationReport', fileName);
 
@@ -156,6 +166,7 @@ contextBridge.exposeInMainWorld('electron', {
     openFileDialog,
     openDirectoryDialog,
     deleteValidationReport,
+    compareValidationReports,
     getValidationReport,
     isWindows,
     startTask,

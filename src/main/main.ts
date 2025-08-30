@@ -271,6 +271,10 @@ app.whenReady()
             'main:getValidationReport',
             reportManager.getValidationReport,
         );
+        ipcMain.handle(
+            'main:compareValidationReports',
+            reportManager.compareValidationReports,
+        );
         ipcMain.handle('read:getMetadata', fileManager.handleGetMetadata);
         ipcMain.handle(
             'read:getObservations',

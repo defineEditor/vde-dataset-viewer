@@ -21,6 +21,7 @@ import {
     ApiOpenedFile,
     ApiOpenedFileWithMetadata,
     ParsedValidationReport,
+    ValidationReportCompare,
 } from 'interfaces/common';
 import store from 'renderer/redux/store';
 import transformData from 'renderer/services/transformData';
@@ -29,6 +30,7 @@ import { setLoadedRecords } from 'renderer/redux/slices/data';
 import {
     startValidation,
     deleteValidationReport,
+    compareValidationReports,
     getValidationReport,
 } from 'renderer/services/validation';
 
@@ -786,6 +788,13 @@ class ApiService {
         fileName: string,
     ): Promise<ParsedValidationReport | null> => {
         return getValidationReport(fileName);
+    };
+
+    public compareValidationReports = async (
+        fileNameBase: string,
+        fileNameComp: string,
+    ): Promise<ValidationReportCompare | null> => {
+        return compareValidationReports(fileNameBase, fileNameComp);
     };
 
     // Misc

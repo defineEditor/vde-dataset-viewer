@@ -5,6 +5,7 @@ import {
     BasicFilter,
     ConverterData,
     ValidationReport,
+    ValidationReportCompare,
 } from 'interfaces/common';
 import { IMask, ValidatorData } from 'interfaces/store';
 import deepEqual from 'renderer/utils/deepEqual';
@@ -150,80 +151,7 @@ export const dataSlice = createSlice({
             state,
             action: PayloadAction<ValidationReport>,
         ) => {
-            const newReport = action.payload;
-
-            // Find reports with exactly the same files
-            const sameFilesReports = state.validator.reports.filter(
-                (report) => {
-                    if (report.files.length !== newReport.files.length) {
-                        return false;
-                    }
-
-                    // Check if all file paths match
-                    return report.files.every((file) =>
-                        newReport.files.some(
-                            (newFile) => newFile.file === file.file,
-                        ),
-                    );
-                },
-            );
-
-            // Remove summary message, as it is not needed in the redux
-            newReport.summary.summary = newReport.summary.summary.map(
-                (summary) => ({
-                    ...summary,
-                    message: '',
-                }),
-            );
-
-            if (sameFilesReports.length > 0) {
-                // Find the most recent report with same files
-                const mostRecentReport = sameFilesReports.reduce(
-                    (latest, current) =>
-                        current.date > latest.date ? current : latest,
-                );
-
-                // Compare summaries to find differences
-                const oldIssues = mostRecentReport.summary?.summary || [];
-                const newIssues = newReport.summary?.summary || [];
-
-                // Create maps for easier comparison using core_id as unique identifier
-                const oldIssueMap = new Map(
-                    oldIssues.map((issue) => [issue.core_id, issue]),
-                );
-                const newIssueMap = new Map(
-                    newIssues.map((issue) => [issue.core_id, issue]),
-                );
-
-                let newIssuesCount = 0;
-                let changedIssuesCount = 0;
-                let resolvedIssuesCount = 0;
-
-                // Find new and changed issues
-                for (const [key, newIssue] of newIssueMap) {
-                    const oldIssue = oldIssueMap.get(key);
-                    if (!oldIssue) {
-                        newIssuesCount++;
-                    } else if (oldIssue.issues !== newIssue.issues) {
-                        changedIssuesCount++;
-                    }
-                }
-
-                // Find resolved issues
-                for (const [key] of oldIssueMap) {
-                    if (!newIssueMap.has(key)) {
-                        resolvedIssuesCount++;
-                    }
-                }
-
-                // Add comparison data to the new report summary
-                newReport.summary.newIssues = newIssuesCount;
-                newReport.summary.changedIssues = changedIssuesCount;
-                newReport.summary.resolvedIssues = resolvedIssuesCount;
-            }
-
-            // Add the new validation report
-            state.validator.reports.push(newReport);
+            state.validator.reports.push(action.payload);
         },
         removeValidationReport: (
             state,

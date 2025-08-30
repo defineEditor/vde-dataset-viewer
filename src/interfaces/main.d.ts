@@ -159,8 +159,8 @@ export interface ValidationReport {
     summary: {
         uniqueIssues: number;
         totalIssues: number;
-        summary: IssueSummaryItem[];
         newIssues?: number;
+        changes?: ValidationReportCompare['counts'] | null;
         resolvedIssues?: number;
         changedIssues?: number;
     };
@@ -175,3 +175,11 @@ export interface ValidatorTaskProgress {
 }
 
 export type TaskProgress = ValidatorTaskProgress | ConverterTaskProgress;
+
+export interface ValidationReportCompare {
+    counts: {
+        newIssues: number;
+        changedIssues: number;
+        resolvedIssues: number;
+    };
+}

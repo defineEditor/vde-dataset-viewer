@@ -334,7 +334,6 @@ const getLastModified = (
 export function getIssueSummary(filePath: string): {
     uniqueIssues: number;
     totalIssues: number;
-    summary: IssueSummaryItem[];
 } {
     const raw = fs.readFileSync(filePath, 'utf-8');
     const report = JSON.parse(raw);
@@ -349,7 +348,6 @@ export function getIssueSummary(filePath: string): {
     return {
         uniqueIssues,
         totalIssues,
-        summary,
     };
 }
 

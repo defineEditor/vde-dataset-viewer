@@ -12,6 +12,7 @@ import {
     TableRowValue,
     TaskProgress,
     ParsedValidationReport,
+    ValidationReportCompare,
 } from 'interfaces/common';
 
 export type Channels = 'ipc-vde';
@@ -77,6 +78,10 @@ export interface ElectronApi {
     getValidationReport: (
         fileName: string,
     ) => Promise<ParsedValidationReport | null>;
+    compareValidationReports: (
+        fileNameBase: string,
+        fileNameComp: string,
+    ) => Promise<ValidationReportCompare | null>;
     getAppVersion: () => Promise<string>;
     openInNewWindow: (
         filePath: string,

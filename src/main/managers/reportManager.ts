@@ -1,5 +1,9 @@
 import { IpcMainInvokeEvent } from 'electron';
 import fs from 'fs';
+import {
+    ParsedValidationReport,
+    ValidationReportCompare,
+} from 'interfaces/common';
 import path from 'path';
 
 class ReportManager {
@@ -54,6 +58,16 @@ class ReportManager {
             }
 
             fs.unlinkSync(filePath);
+
+            // Delete the XLSX file if present
+            const xlsxFileName = path.join(
+                this.reportsDirectory,
+                fileName.replace('.json', '.xlsx'),
+            );
+            if (fs.existsSync(xlsxFileName)) {
+                fs.unlinkSync(xlsxFileName);
+            }
+
             return true;
         } catch (error) {
             // Error deleting report file
@@ -64,7 +78,7 @@ class ReportManager {
     public getValidationReport = (
         _event: IpcMainInvokeEvent,
         fileName: string,
-    ): string | null => {
+    ): ParsedValidationReport | null => {
         try {
             const filePath = path.join(this.reportsDirectory, fileName);
 
@@ -79,6 +93,63 @@ class ReportManager {
             // Error reading report file
             return null;
         }
+    };
+
+    // Compare reports
+    public compareValidationReports = (
+        _event: IpcMainInvokeEvent,
+        fileNameBase: string,
+        fileNameComp: string,
+    ): ValidationReportCompare | null => {
+        const reportBase = this.getValidationReport(_event, fileNameBase);
+        const reportComp = this.getValidationReport(_event, fileNameComp);
+
+        if (!reportBase || !reportComp) {
+            return null;
+        }
+
+        // Compare summaries to find differences
+        const oldIssues = reportBase.Issue_Summary;
+        const newIssues = reportComp.Issue_Summary;
+
+        // Create maps for easier comparison using core_id as unique identifier
+        const oldIssueMap = new Map(
+            oldIssues.map((issue) => [issue.core_id, issue]),
+        );
+        const newIssueMap = new Map(
+            newIssues.map((issue) => [issue.core_id, issue]),
+        );
+
+        let newIssuesCount = 0;
+        let changedIssuesCount = 0;
+        let resolvedIssuesCount = 0;
+
+        // Find new and changed issues
+        for (const [key, newIssue] of newIssueMap) {
+            const oldIssue = oldIssueMap.get(key);
+            if (!oldIssue) {
+                newIssuesCount++;
+            } else if (oldIssue.issues !== newIssue.issues) {
+                changedIssuesCount++;
+            }
+        }
+
+        // Find resolved issues
+        for (const [key] of oldIssueMap) {
+            if (!newIssueMap.has(key)) {
+                resolvedIssuesCount++;
+            }
+        }
+
+        const result = {
+            counts: {
+                newIssues: newIssuesCount,
+                changedIssues: changedIssuesCount,
+                resolvedIssues: resolvedIssuesCount,
+            },
+        };
+
+        return result;
     };
 }
 
