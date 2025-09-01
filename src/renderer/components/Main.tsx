@@ -21,8 +21,9 @@ import {
     closeDataset,
     openSnackbar,
     setZoomLevel,
+    setGoTo,
 } from 'renderer/redux/slices/ui';
-import { AllowedPathnames } from 'interfaces/common';
+import { AllowedPathnames, NewWindowProps } from 'interfaces/common';
 import ViewerToolbar from 'renderer/components/ViewerToolbar';
 import ToolbarActions from 'renderer/components/ToolbarActions';
 import Shortcuts from 'renderer/components/Shortcuts';
@@ -273,7 +274,10 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
 
     useEffect(() => {
-        const handleFileOpen = async (filePath: string) => {
+        const handleFileOpen = async (
+            filePath: string,
+            newWindowProps?: NewWindowProps,
+        ) => {
             try {
                 // Check if the requested file is already open
                 if (currentFileId) {
@@ -323,6 +327,14 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                         currentFileId,
                     }),
                 );
+                if (newWindowProps && newWindowProps.goTo) {
+                    dispatch(
+                        setGoTo({
+                            column: newWindowProps.goTo.column,
+                            row: newWindowProps.goTo.row,
+                        }),
+                    );
+                }
             } catch (error) {
                 if (error instanceof Error) {
                     dispatch(

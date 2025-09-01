@@ -162,8 +162,9 @@ export const startValidation = async (
                         'date' in info.result
                     ) {
                         // First we need to compare with the previous reports
-                        const allReports =
-                            store.getState().data.validator.reports;
+                        const allReports = Object.values(
+                            store.getState().data.validator.reports,
+                        );
                         const newReport = info.result;
 
                         // Find reports with exactly the same files

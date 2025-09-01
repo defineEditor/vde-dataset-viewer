@@ -152,6 +152,7 @@ export interface ConverterTaskProgress {
 }
 
 export interface ValidationReport {
+    id: string;
     date: number;
     files: { file: string; lastModified: number }[];
     output: string;
@@ -181,5 +182,29 @@ export interface ValidationReportCompare {
         newIssues: number;
         changedIssues: number;
         resolvedIssues: number;
+        skippedIssues: number;
+        byDataset?: {
+            [dataset: string]: {
+                newIssues: string[];
+                changedIssues: string[];
+                resolvedIssues: string[];
+                skippedIssues: string[];
+            };
+        };
+        byIssue?: {
+            [core_id: string]: {
+                newDatasets: string[];
+                changedDatasets: string[];
+                resolvedDatasets: string[];
+                skippedDatasets: string[];
+            };
+        };
+    };
+}
+
+export interface NewWindowProps {
+    goTo?: {
+        row?: number;
+        column?: string;
     };
 }

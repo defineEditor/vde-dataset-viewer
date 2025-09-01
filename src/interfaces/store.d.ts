@@ -131,8 +131,15 @@ export interface IUiValidation {
 
 export interface IUiValidationPage {
     currentTab: 'validation' | 'results' | 'report';
-    currentReportTab: 'summary' | 'details' | 'rules';
+    currentReportTab:
+        | 'overview'
+        | 'summary'
+        | 'details'
+        | 'rules'
+        | 'configuration';
     currentReportId: string | null;
+    showOnlyDatasetsWithIssues: boolean;
+    reportSummaryType: 'datasets' | 'issues';
 }
 
 export interface IUi {
@@ -166,7 +173,7 @@ export interface ValidatorData {
         standards: string[];
         terminology: string[];
     };
-    reports: ValidationReport[];
+    reports: { [id: string]: ValidationReport };
     configuration: ValidatorConfig;
 }
 

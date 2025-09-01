@@ -1,10 +1,4 @@
-import React, {
-    useState,
-    useContext,
-    useEffect,
-    useRef,
-    useCallback,
-} from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { styled } from '@mui/material/styles';
 import Stack from '@mui/material/Stack';
 import Tab from '@mui/material/Tab';
@@ -15,11 +9,19 @@ import TabPanel from '@mui/lab/TabPanel';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
-import { openSnackbar } from 'renderer/redux/slices/ui';
+import { openSnackbar, setValidationReportTab } from 'renderer/redux/slices/ui';
 import AppContext from 'renderer/utils/AppContext';
-import { ITableData, ParsedValidationReport } from 'interfaces/common';
+import {
+    ITableData,
+    IUiValidationPage,
+    NewWindowProps,
+    ParsedValidationReport,
+} from 'interfaces/common';
 import convertToDataset from 'renderer/components/Validator/Report/convertToDataset';
 import DatasetContainer from 'renderer/components/Validator/Report/ReportDatasetContainer';
+import Configuration from 'renderer/components/Validator/Report/Configuration';
+import IssueOverview from 'renderer/components/Validator/Report/IssueOverview';
+import transformReport from 'renderer/components/Validator/Report/transformReport';
 
 const styles = {
     container: {
@@ -49,6 +51,7 @@ const styles = {
     },
     fullHeight: {
         height: '100%',
+        width: '100%',
     },
     tabPanel: {
         height: '100%',
@@ -72,12 +75,11 @@ const StyledTab = styled(Tab)({
 });
 
 const ValidationReportPage: React.FC = () => {
-    const [tab, setTab] = useState('1');
-    const [dimensions, setDimensions] = useState({ height: 600, width: 800 });
-    const tabContainerRef = useRef<HTMLDivElement>(null);
-
     const { apiService } = useContext(AppContext);
     const dispatch = useAppDispatch();
+    const tab = useAppSelector(
+        (state) => state.ui.validationPage.currentReportTab,
+    );
 
     const [report, setReport] = useState<ParsedValidationReport | null>(null);
     const [tables, setTables] = useState<{
@@ -90,34 +92,30 @@ const ValidationReportPage: React.FC = () => {
         (state) => state.ui.validationPage.currentReportId,
     );
 
-    // Function to measure TabPanel dimensions
-    const measureTabPanel = useCallback(() => {
-        if (tabContainerRef.current) {
-            const rect = tabContainerRef.current.getBoundingClientRect();
-            setDimensions({
-                height: rect.height,
-                width: rect.width,
-            });
-        }
-    }, []);
+    const validationReportInfo = useAppSelector(
+        (state) => state.data.validator.reports[reportId || ''],
+    );
 
-    // Use ResizeObserver to track dimension changes
-    useEffect(() => {
-        const resizeObserver = new ResizeObserver(() => {
-            measureTabPanel();
-        });
-
-        if (tabContainerRef.current) {
-            resizeObserver.observe(tabContainerRef.current);
-        }
-
-        // Initial measurement
-        measureTabPanel();
-
-        return () => {
-            resizeObserver.disconnect();
-        };
-    }, [measureTabPanel, tab]); // Re-run when tab changes
+    const handleOpenFile = React.useCallback(
+        (id: string, row?: number, column?: string) => {
+            // Find filename by ID
+            const filePath = validationReportInfo?.files.find(
+                (file) =>
+                    file.file
+                        .replace(/.*?([^\\/]+)\.[^/.]+$/, '$1')
+                        .toUpperCase() === id,
+            )?.file;
+            if (filePath) {
+                // Form properties
+                const props: NewWindowProps = {};
+                if (row || column) {
+                    props.goTo = { row, column };
+                }
+                apiService.openInNewWindow(filePath, undefined, props);
+            }
+        },
+        [validationReportInfo, apiService],
+    );
 
     useEffect(() => {
         const getReport = async () => {
@@ -133,16 +131,23 @@ const ValidationReportPage: React.FC = () => {
                     );
                 } else {
                     // Convert everything to dataset-json format
-                    setReport(newReport);
+                    const transformedReport = transformReport(newReport);
+                    setReport(transformedReport);
                     const details = convertToDataset(
-                        newReport,
+                        transformedReport,
                         'Issue_Details',
+                        handleOpenFile,
                     );
                     const summary = convertToDataset(
-                        newReport,
+                        transformedReport,
                         'Issue_Summary',
+                        handleOpenFile,
                     );
-                    const rules = convertToDataset(newReport, 'Rules_Report');
+                    const rules = convertToDataset(
+                        transformedReport,
+                        'Rules_Report',
+                        handleOpenFile,
+                    );
                     setTables({
                         details,
                         summary,
@@ -152,13 +157,13 @@ const ValidationReportPage: React.FC = () => {
             }
         };
         getReport();
-    }, [reportId, apiService, dispatch]);
+    }, [reportId, apiService, dispatch, handleOpenFile]);
 
     const handleTabChange = (
         _event: React.SyntheticEvent,
-        newValue: string,
+        newValue: IUiValidationPage['currentReportTab'],
     ) => {
-        setTab(newValue);
+        dispatch(setValidationReportTab(newValue));
     };
 
     if (!reportId) {
@@ -187,29 +192,38 @@ const ValidationReportPage: React.FC = () => {
     return (
         <Stack spacing={0} justifyContent="flex-start" sx={styles.root}>
             <TabContext value={tab}>
-                <TabList onChange={handleTabChange} sx={styles.tabs}>
-                    <StyledTab label="Issue Summary" value="1" />
-                    <StyledTab label="Issue Details" value="2" />
-                    <StyledTab label="Rules Report" value="3" />
+                <TabList
+                    onChange={handleTabChange}
+                    sx={styles.tabs}
+                    variant="fullWidth"
+                >
+                    <StyledTab label="Overview" value="overview" />
+                    <StyledTab label="Issue Summary" value="summary" />
+                    <StyledTab label="Issue Details" value="details" />
+                    <StyledTab label="Rules Report" value="rules" />
+                    <StyledTab label="Configuration" value="configuration" />
                 </TabList>
-                <Box ref={tabContainerRef} style={styles.fullHeight}>
-                    <TabPanel value="1" sx={styles.tabPanel}>
+                <Box style={styles.fullHeight}>
+                    <TabPanel value="overview" sx={styles.tabPanel}>
+                        <IssueOverview parsedReport={report} />
+                    </TabPanel>
+                    <TabPanel value="summary" sx={styles.tabPanel}>
                         <DatasetContainer
                             data={tables?.summary}
-                            dimentions={dimensions}
+                            type="summary"
                         />
                     </TabPanel>
-                    <TabPanel value="2" sx={styles.tabPanel}>
+                    <TabPanel value="details" sx={styles.tabPanel}>
                         <DatasetContainer
                             data={tables?.details}
-                            dimentions={dimensions}
+                            type="details"
                         />
                     </TabPanel>
-                    <TabPanel value="3" sx={styles.tabPanel}>
-                        <DatasetContainer
-                            data={tables?.rules}
-                            dimentions={dimensions}
-                        />
+                    <TabPanel value="rules" sx={styles.tabPanel}>
+                        <DatasetContainer data={tables?.rules} type="rules" />
+                    </TabPanel>
+                    <TabPanel value="configuration" sx={styles.tabPanel}>
+                        <Configuration report={report} />
                     </TabPanel>
                 </Box>
             </TabContext>

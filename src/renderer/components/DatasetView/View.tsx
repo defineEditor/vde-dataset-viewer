@@ -504,6 +504,14 @@ const DatasetViewUI: React.FC<{
                                     ) : null}
                                     {virtualColumns.map((vc) => {
                                         const cell = visibleCells[vc.index + 1]; // Adjust index for row number
+
+                                        let cellStyle: React.CSSProperties = {
+                                            ...(settings.dynamicRowHeight
+                                                ? styles.tableCellDynamic
+                                                : styles.tableCellFixed),
+                                            width: cell.column.getSize(),
+                                        };
+
                                         const isHighlighted =
                                             highlightedCells.some(
                                                 (highlightedCell) =>
@@ -512,18 +520,25 @@ const DatasetViewUI: React.FC<{
                                                     highlightedCell.column ===
                                                         vc.index + 1,
                                             );
+                                        if (isHighlighted) {
+                                            cellStyle = {
+                                                ...cellStyle,
+                                                ...styles.highlightedCell,
+                                            };
+                                        }
+
+                                        if (cell.column.columnDef.meta?.style) {
+                                            cellStyle = {
+                                                ...cellStyle,
+                                                ...cell.column.columnDef.meta
+                                                    .style,
+                                            };
+                                        }
+
                                         return (
                                             <TableCell
                                                 key={cell.id}
-                                                sx={{
-                                                    ...(settings.dynamicRowHeight
-                                                        ? styles.tableCellDynamic
-                                                        : styles.tableCellFixed),
-                                                    width: cell.column.getSize(),
-                                                    ...(isHighlighted
-                                                        ? styles.highlightedCell
-                                                        : {}),
-                                                }}
+                                                sx={cellStyle}
                                                 onClick={() =>
                                                     handleCellClick(
                                                         virtualRow.index,

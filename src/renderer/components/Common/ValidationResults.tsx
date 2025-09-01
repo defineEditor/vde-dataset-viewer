@@ -91,7 +91,7 @@ const ValidationResults: React.FC<ResultsProps> = ({ filePaths = [] }) => {
     const allReports = useAppSelector((state) => state.data.validator.reports);
     const reports = useMemo(() => {
         // Keep only those reports, which have include all the file paths
-        const result = allReports.slice();
+        const result = Object.values(allReports).slice();
         if (!filePaths || filePaths.length === 0) {
             return result.sort((a, b) => b.date - a.date);
         }
@@ -163,8 +163,12 @@ const ValidationResults: React.FC<ResultsProps> = ({ filePaths = [] }) => {
         setPage(newPage);
     };
 
-    const handleDeleteReport = async (index: number) => {
-        dispatch(removeValidationReport({ index }));
+    const handleDeleteReport = async (
+        event: React.MouseEvent<HTMLButtonElement>,
+        index: number,
+    ) => {
+        event.stopPropagation();
+        dispatch(removeValidationReport({ id: reports[index].id }));
         const deleteResult = await apiService.deleteValidationReport(
             reports[index].output,
         );
@@ -291,10 +295,7 @@ const ValidationResults: React.FC<ResultsProps> = ({ filePaths = [] }) => {
                     {paginatedReports.map((report, _displayIndex) => {
                         const actualIndex = reports.indexOf(report);
                         const datasetCount = getDatasetCount(report);
-                        const {
-                            uniqueIssues,
-                            totalIssues,
-                        } = report.summary;
+                        const { uniqueIssues, totalIssues } = report.summary;
                         const date = new Date(report.date);
                         const reportDate =
                             `${date.getFullYear()}` +
@@ -330,8 +331,9 @@ const ValidationResults: React.FC<ResultsProps> = ({ filePaths = [] }) => {
 
                         let comparisonText = '';
                         if (report.summary.changes) {
-                            const { newIssues, changedIssues, resolvedIssues } = report.summary.changes;
-                            comparisonText =` (resolved: ${resolvedIssues || 0}, changed: ${changedIssues || 0}, new: ${newIssues || 0})`;
+                            const { newIssues, changedIssues, resolvedIssues } =
+                                report.summary.changes;
+                            comparisonText = ` (resolved: ${resolvedIssues || 0}, changed: ${changedIssues || 0}, new: ${newIssues || 0})`;
                         }
 
                         return (
@@ -348,8 +350,11 @@ const ValidationResults: React.FC<ResultsProps> = ({ filePaths = [] }) => {
                                         <IconButton
                                             edge="end"
                                             aria-label="delete report"
-                                            onClick={() =>
-                                                handleDeleteReport(actualIndex)
+                                            onClick={(event) =>
+                                                handleDeleteReport(
+                                                    event,
+                                                    actualIndex,
+                                                )
                                             }
                                             size="small"
                                             color="default"

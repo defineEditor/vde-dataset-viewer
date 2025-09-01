@@ -452,6 +452,7 @@ process.parentPort.once(
 
                         // Form validate report record
                         const report: ValidationReport = {
+                            id: result.fileName,
                             date: result.date,
                             files: getLastModified(
                                 data.validationDetails?.originalFiles || [],

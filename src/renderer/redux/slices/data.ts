@@ -5,7 +5,6 @@ import {
     BasicFilter,
     ConverterData,
     ValidationReport,
-    ValidationReportCompare,
 } from 'interfaces/common';
 import { IMask, ValidatorData } from 'interfaces/store';
 import deepEqual from 'renderer/utils/deepEqual';
@@ -151,16 +150,18 @@ export const dataSlice = createSlice({
             state,
             action: PayloadAction<ValidationReport>,
         ) => {
-            state.validator.reports.push(action.payload);
+            state.validator.reports = {
+                ...state.validator.reports,
+                [action.payload.id]: action.payload,
+            };
         },
         removeValidationReport: (
             state,
-            action: PayloadAction<{ index: number }>,
+            action: PayloadAction<{ id: string }>,
         ) => {
             // Remove a validation report by index
-            const idx = action.payload.index;
-            if (idx >= 0 && idx < state.validator.reports.length) {
-                state.validator.reports.splice(idx, 1);
+            if (state.validator.reports[action.payload.id]) {
+                delete state.validator.reports[action.payload.id];
             }
         },
     },

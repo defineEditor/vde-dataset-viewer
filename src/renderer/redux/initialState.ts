@@ -87,6 +87,8 @@ export const ui: IUi = {
         currentTab: 'validation',
         currentReportTab: 'summary',
         currentReportId: null,
+        showOnlyDatasetsWithIssues: false,
+        reportSummaryType: 'datasets',
     },
 };
 

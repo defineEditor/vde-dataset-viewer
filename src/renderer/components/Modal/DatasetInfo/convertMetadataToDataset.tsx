@@ -50,7 +50,7 @@ const convertMetadataToDataset = (
     // Get columns metadata
     const columnWidths = calculateColumnWidth(
         columnDefs,
-        true,
+        'expand',
         containerWidth || undefined,
         500,
         1000,

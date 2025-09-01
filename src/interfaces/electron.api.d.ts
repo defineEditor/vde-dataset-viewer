@@ -13,6 +13,7 @@ import {
     TaskProgress,
     ParsedValidationReport,
     ValidationReportCompare,
+    NewWindowProps,
 } from 'interfaces/common';
 
 export type Channels = 'ipc-vde';
@@ -60,7 +61,9 @@ export interface ElectronApi {
     saveLocalStore: (localStore: ILocalStore) => void;
     loadLocalStore: () => Promise<ILocalStore>;
     onSaveStore: (callback: () => Promise<void>) => void;
-    onFileOpen: (callback: (filePath: string) => void) => void;
+    onFileOpen: (
+        callback: (filePath: string, props?: NewWindowProps) => void,
+    ) => void;
     removeFileOpenListener: () => void;
     checkForUpdates: () => Promise<ICheckUpdateResult>;
     downloadUpdate: () => Promise<boolean>;
@@ -86,6 +89,7 @@ export interface ElectronApi {
     openInNewWindow: (
         filePath: string,
         position?: 'top' | 'bottom' | 'left' | 'right',
+        props?: NewWindowProps,
     ) => Promise<void>;
     isWindows: boolean;
     resizeWindow: (

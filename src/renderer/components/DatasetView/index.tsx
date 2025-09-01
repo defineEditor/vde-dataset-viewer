@@ -26,6 +26,8 @@ declare module '@tanstack/table-core' {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     interface ColumnMeta<TData extends RowData, TValue> {
         type?: ItemType | 'rowNumber';
+        align?: 'right' | 'left' | 'center' | 'justify';
+        style?: React.CSSProperties;
     }
 }
 
@@ -72,6 +74,8 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                 enableResizing?: boolean;
                 meta: {
                     type?: ItemType | 'rowNumber';
+                    align?: 'right' | 'left' | 'center' | 'justify';
+                    style?: React.CSSProperties;
                 };
                 cell?: ColumnDef<ITableRow>['cell'];
             } = {
@@ -85,6 +89,26 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                         : column.type || 'string',
                 },
             };
+
+            let style: React.CSSProperties = {};
+            if (column.style) {
+                style = column.style;
+            }
+
+            if (column.align) {
+                style = { ...style, textAlign: column.align };
+            } else if (
+                ['integer', 'float', 'double', 'decimal'].includes(
+                    column.type || '',
+                )
+            ) {
+                style = { ...style, textAlign: 'right' };
+            }
+
+            if (Object.keys(style).length > 0) {
+                headerCell.meta.style = style;
+            }
+
             if (column.cell) {
                 headerCell.cell =
                     column.cell as unknown as ColumnDef<ITableRow>['cell'];
@@ -451,7 +475,8 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             goTo.row !== null &&
             currentPage ===
                 Math.floor(Math.max(goTo.row - 1, 0) / settings.pageSize) &&
-            isLoading === false
+            isLoading === false &&
+            tableHeight > 0
         ) {
             const row = (goTo.row - 1) % settings.pageSize;
             rowVirtualizer.scrollToIndex(row, { align: 'center' });
@@ -483,10 +508,11 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         currentPage,
         handleCellClick,
         isLoading,
+        tableHeight,
     ]);
 
     useEffect(() => {
-        if (goTo.column !== null && goTo.row === null) {
+        if (goTo.column !== null && goTo.row === null && tableHeight > 0) {
             // Add +1 as the first column is the row number
             const columnIndex =
                 tableData.header.findIndex(
@@ -512,13 +538,17 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         columnVirtualizer,
         dispatch,
         handleColumnSelect,
+        tableHeight,
     ]);
 
     // Select control
     const select = useAppSelector((state) => state.ui.control.select);
 
     useEffect(() => {
-        if (select.row !== null || select.column !== null) {
+        if (
+            select.row !== null ||
+            (select.column !== null && tableHeight > 0)
+        ) {
             let columnIndex = -1;
             if (select.column !== null) {
                 // Add +1 as the first column is the row number
@@ -552,6 +582,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         handleCellClick,
         handleColumnSelect,
         settings.pageSize,
+        tableHeight,
     ]);
 
     const updatedSettings = { ...settings, height: tableHeight };

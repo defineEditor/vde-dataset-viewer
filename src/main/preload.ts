@@ -4,7 +4,7 @@ import {
     IpcRendererEvent,
     webUtils,
 } from 'electron';
-import { TaskProgress } from 'interfaces/common';
+import { TaskProgress, NewWindowProps } from 'interfaces/common';
 import { ElectronApi, Channels } from 'interfaces/electron.api';
 
 const openFile: ElectronApi['openFile'] = (mode, fileSettings) =>
@@ -73,8 +73,12 @@ const onSaveStore: ElectronApi['onSaveStore'] = (callback) => {
 const onFileOpen: ElectronApi['onFileOpen'] = (callback) => {
     ipcRenderer.on(
         'renderer:openFile',
-        (_event: IpcRendererEvent, filePath: string) => {
-            callback(filePath);
+        (
+            _event: IpcRendererEvent,
+            filePath: string,
+            props?: NewWindowProps,
+        ) => {
+            callback(filePath, props);
         },
     );
 };
@@ -135,8 +139,11 @@ const cleanTaskProgressListeners: ElectronApi['cleanTaskProgressListeners'] =
 const getAppVersion: ElectronApi['getAppVersion'] = () =>
     ipcRenderer.invoke('main:getVersion');
 
-const openInNewWindow: ElectronApi['openInNewWindow'] = (filePath, position) =>
-    ipcRenderer.invoke('main:openInNewWindow', filePath, position);
+const openInNewWindow: ElectronApi['openInNewWindow'] = (
+    filePath,
+    position,
+    props,
+) => ipcRenderer.invoke('main:openInNewWindow', filePath, position, props);
 
 const resizeWindow: ElectronApi['resizeWindow'] = (position) =>
     ipcRenderer.invoke('main:resizeWindow', position);

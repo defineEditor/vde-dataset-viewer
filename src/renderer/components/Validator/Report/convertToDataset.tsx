@@ -1,24 +1,18 @@
-import React from 'react';
 import {
     ITableData,
     ParsedValidationReport,
     DatasetJsonMetadata,
-    ITableRow,
 } from 'interfaces/common';
-import { CoreCell } from '@tanstack/react-table';
-import { Typography } from '@mui/material';
-
-const Status: React.FC<{ status: string }> = ({ status }) => {
-    return <Typography>{status}</Typography>;
-};
-
-const renderStatus = (info: CoreCell<ITableRow, unknown>) => {
-    return <Status status={info.getValue() as string} />;
-};
+import renderRuleStatus from 'renderer/components/Validator/Report/Formatters/RuleStatus';
+import renderExecutability from 'renderer/components/Validator/Report/Formatters/Executable';
+import renderRow from 'renderer/components/Validator/Report/Formatters/Row';
+import renderVariables from 'renderer/components/Validator/Report/Formatters/Variables';
+import columnDefs from 'renderer/components/Validator/Report/columnDefs';
 
 const convertToDataset = (
     data: ParsedValidationReport,
     type: 'Issue_Details' | 'Issue_Summary' | 'Rules_Report',
+    onOpenFile: (id: string) => void,
 ): ITableData => {
     // Implement conversion logic here
     const metadata: DatasetJsonMetadata = {
@@ -30,155 +24,62 @@ const convertToDataset = (
         columns: [],
     };
 
+    let header: ITableData['header'] = [];
     // Get columns metadata
     if (type === 'Issue_Details') {
-        metadata.columns = [
-            {
-                itemOID: 'dataset',
-                name: 'dataset',
-                label: 'Dataset',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'core_id',
-                name: 'core_id',
-                label: 'Core ID',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'message',
-                name: 'message',
-                label: 'Message',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'executability',
-                name: 'executability',
-                label: 'Executability',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'USUBJID',
-                name: 'USUBJID',
-                label: 'USUBJID',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'row',
-                name: 'row',
-                label: 'Row',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'SEQ',
-                name: 'SEQ',
-                label: 'SEQ',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'variables',
-                name: 'variables',
-                label: 'Variables',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'values',
-                name: 'values',
-                label: 'Values',
-                dataType: 'string',
-            },
-        ];
-    } else if (type === 'Issue_Summary') {
-        metadata.columns = [
-            {
-                itemOID: 'dataset',
-                name: 'dataset',
-                label: 'Dataset',
-                dataType: 'string',
-                length: 5,
-            },
-            {
-                itemOID: 'core_id',
-                name: 'core_id',
-                label: 'Core ID',
-                dataType: 'string',
-                length: 5,
-            },
-            {
-                itemOID: 'message',
-                name: 'message',
-                label: 'Message',
-                dataType: 'string',
-                length: 85,
-            },
-            {
-                itemOID: 'issues',
-                name: 'issues',
-                label: 'Issues',
-                dataType: 'integer',
-                length: 5,
-            },
-        ];
-    } else if (type === 'Rules_Report') {
-        metadata.columns = [
-            {
-                itemOID: 'core_id',
-                name: 'core_id',
-                label: 'Core ID',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'version',
-                name: 'version',
-                label: 'Version',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'cdisc_rule_id',
-                name: 'cdisc_rule_id',
-                label: 'CDISC Rule ID',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'fda_rule_id',
-                name: 'fda_rule_id',
-                label: 'FDA Rule ID',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'message',
-                name: 'message',
-                label: 'Message',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'status',
-                name: 'status',
-                label: 'Status',
-                dataType: 'string',
-            },
-        ];
-    }
-    // Form header;
-    const header: ITableData['header'] = metadata.columns.map((col) => {
-        const item: {
-            id: string;
-            label: string;
-            cell?: (cell: CoreCell<ITableRow, unknown>) => React.JSX.Element;
-        } = {
-            id: col.itemOID,
+        metadata.columns = columnDefs.details.map((col) => ({
+            itemOID: col.id,
+            name: col.id,
             label: col.label,
-        };
-
-        if (col.itemOID === 'status') {
-            item.cell = renderStatus;
-        }
-
-        return item;
-    });
+            dataType: col.type || 'string',
+        }));
+        header = columnDefs.details.map((col) => {
+            return col;
+        });
+        header = columnDefs.details.map((col) => {
+            const item = col;
+            if (col.id === 'executability') {
+                item.cell = renderExecutability;
+            }
+            if (col.id === 'variables') {
+                item.cell = renderVariables(onOpenFile);
+            }
+            if (col.id === 'row') {
+                item.cell = renderRow(onOpenFile);
+            }
+            return item;
+        });
+    } else if (type === 'Issue_Summary') {
+        metadata.columns = columnDefs.summary.map((col) => ({
+            itemOID: col.id,
+            name: col.id,
+            label: col.label,
+            dataType: col.type || 'string',
+        }));
+        header = columnDefs.summary.map((col) => {
+            return col;
+        });
+    } else if (type === 'Rules_Report') {
+        metadata.columns = columnDefs.rules.map((col) => ({
+            itemOID: col.id,
+            name: col.id,
+            label: col.label,
+            dataType: col.type || 'string',
+        }));
+        header = columnDefs.rules.map((col) => {
+            const item = col;
+            if (col.id === 'status') {
+                item.cell = renderRuleStatus;
+            }
+            return item;
+        });
+    }
 
     // Add row number
-    const updatedData = data[type] as unknown as ITableRow[];
+    const updatedData = data[type].map((row, index) => ({
+        ...row,
+        '#': index + 1,
+    }));
 
     const result: ITableData = {
         header,

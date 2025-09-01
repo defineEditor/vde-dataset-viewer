@@ -31,6 +31,8 @@ export interface IHeaderCell {
     minSize?: number;
     /** Maximum size in px */
     maxSize?: number;
+    /** Size in percents */
+    sizePct?: number;
     /** Padding */
     padding?: number;
     /** Type */
@@ -41,6 +43,8 @@ export interface IHeaderCell {
     numericDatetimeType?: 'date' | 'time' | 'datetime';
     /** Cell render */
     cell?: (cell: any) => React.JSX.Element;
+    /** Style */
+    style?: React.CSSProperties;
 }
 
 export type TableRowValue = string | number | boolean | null;

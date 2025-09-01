@@ -109,35 +109,76 @@ class ReportManager {
         }
 
         // Compare summaries to find differences
-        const oldIssues = reportBase.Issue_Summary;
-        const newIssues = reportComp.Issue_Summary;
 
         // Create maps for easier comparison using core_id as unique identifier
-        const oldIssueMap = new Map(
-            oldIssues.map((issue) => [issue.core_id, issue]),
-        );
-        const newIssueMap = new Map(
-            newIssues.map((issue) => [issue.core_id, issue]),
-        );
+        // Each core_id can have multiple issues (one per dataset)
+        const oldIssueMap = new Map<
+            string,
+            ParsedValidationReport['Issue_Summary']
+        >();
+        const newIssueMap = new Map<
+            string,
+            ParsedValidationReport['Issue_Summary']
+        >();
+
+        // Group old issues by core_id
+        reportComp.Issue_Summary.forEach((issue) => {
+            if (!oldIssueMap.has(issue.core_id)) {
+                oldIssueMap.set(issue.core_id, []);
+            }
+            oldIssueMap.get(issue.core_id)!.push(issue);
+        });
+
+        // Group new issues by core_id
+        reportBase.Issue_Summary.forEach((issue) => {
+            if (!newIssueMap.has(issue.core_id)) {
+                newIssueMap.set(issue.core_id, []);
+            }
+            newIssueMap.get(issue.core_id)!.push(issue);
+        });
+
+        // Get a list of all skipped issues in the new report
+        const skippedIssues = reportBase.Rules_Report.filter(
+            (issue) => issue.status === 'SKIPPED',
+        ).map((issue) => issue.core_id);
 
         let newIssuesCount = 0;
         let changedIssuesCount = 0;
         let resolvedIssuesCount = 0;
+        let skippedIssueCount = 0;
 
         // Find new and changed issues
-        for (const [key, newIssue] of newIssueMap) {
-            const oldIssue = oldIssueMap.get(key);
-            if (!oldIssue) {
+        for (const [key, newIssueArray] of newIssueMap) {
+            const oldIssueArray = oldIssueMap.get(key);
+            if (!oldIssueArray) {
+                // This is a completely new issue (rule didn't exist before)
                 newIssuesCount++;
-            } else if (oldIssue.issues !== newIssue.issues) {
-                changedIssuesCount++;
+            } else {
+                // Compare the total issue counts for this rule across all datasets
+                const oldTotalIssues = oldIssueArray.reduce(
+                    (sum, issue) => sum + issue.issues,
+                    0,
+                );
+                const newTotalIssues = newIssueArray.reduce(
+                    (sum, issue) => sum + issue.issues,
+                    0,
+                );
+
+                if (oldTotalIssues !== newTotalIssues) {
+                    changedIssuesCount++;
+                }
             }
         }
 
-        // Find resolved issues
+        // Find resolved and skipped issues
         for (const [key] of oldIssueMap) {
             if (!newIssueMap.has(key)) {
-                resolvedIssuesCount++;
+                // Check if the rule was skipped in the new report
+                if (skippedIssues.includes(key)) {
+                    skippedIssueCount++;
+                } else {
+                    resolvedIssuesCount++;
+                }
             }
         }
 
@@ -146,6 +187,7 @@ class ReportManager {
                 newIssues: newIssuesCount,
                 changedIssues: changedIssuesCount,
                 resolvedIssues: resolvedIssuesCount,
+                skippedIssues: skippedIssueCount,
             },
         };
 

@@ -45,13 +45,20 @@ export interface IssueSummaryItem {
     issues: number; // Number of issues found for this rule in this dataset
 }
 
+export type IssueExecutability =
+    | 'fully executable'
+    | 'not executable'
+    | 'partially executable'
+    | 'partially executable - possible overreporting'
+    | 'partially executable - possible underreporting';
+
 /**
  * Detailed issue item showing specific validation errors
  */
 export interface IssueDetailItem {
     core_id: string; // Rule identifier, e.g., "CORE-000289"
     message: string; // Rule violation message
-    executability: string; // e.g., "fully executable"
+    executability: IssueExecutability; // e.g., "fully executable"
     dataset: string; // Dataset filename
     USUBJID: string; // Subject identifier (can be empty string)
     row: number | string; // Row number where the issue occurred (can be empty string)
@@ -69,7 +76,7 @@ export interface RulesReportItem {
     cdisc_rule_id: string; // CDISC rule references, e.g., "CG0176, TIG0405"
     fda_rule_id: string; // FDA rule references (can be empty string)
     message: string; // Rule description/message
-    status: string; // Execution status: "SUCCESS" or "SKIPPED"
+    status: 'SUCCESS' | 'SKIPPED'; // Execution status: "SUCCESS" or "SKIPPED"
 }
 
 /**

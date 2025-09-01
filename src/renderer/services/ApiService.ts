@@ -22,6 +22,7 @@ import {
     ApiOpenedFileWithMetadata,
     ParsedValidationReport,
     ValidationReportCompare,
+    NewWindowProps,
 } from 'interfaces/common';
 import store from 'renderer/redux/store';
 import transformData from 'renderer/services/transformData';
@@ -806,8 +807,9 @@ class ApiService {
     public openInNewWindow = async (
         filePath: string,
         position?: 'top' | 'bottom' | 'left' | 'right',
+        props?: NewWindowProps,
     ): Promise<void> => {
-        await window.electron.openInNewWindow(filePath, position);
+        await window.electron.openInNewWindow(filePath, position, props);
     };
 
     public resizeWindow = async (
