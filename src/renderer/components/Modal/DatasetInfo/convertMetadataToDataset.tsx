@@ -26,10 +26,12 @@ const convertMetadataToDataset = (
         const item: {
             id: string;
             label: string;
+            style?: React.CSSProperties;
             cell?: (cell: CoreCell<ITableRow, unknown>) => React.JSX.Element;
         } = {
             id: col.id,
             label: col.label,
+            style: col.style,
         };
 
         if (col.id === 'name') {

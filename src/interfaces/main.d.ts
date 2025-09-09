@@ -97,6 +97,7 @@ export interface ValidatorConfig {
     customStandard: boolean;
     defineVersion: string;
     standard: string;
+    ctPackages: string[];
     version: string;
 }
 

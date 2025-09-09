@@ -128,9 +128,10 @@ export const validator: ValidatorData = {
         customStandard: false,
         defineVersion: '',
         standard: '',
+        ctPackages: [],
         version: '',
     },
-    reports: [],
+    reports: {},
 };
 
 export const data: IData = {

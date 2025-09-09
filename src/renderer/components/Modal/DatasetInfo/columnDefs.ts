@@ -12,6 +12,7 @@ const columnDefs: IHeaderCell[] = [
         label: 'Name',
         type: 'string',
         minSize: 100,
+        style: { padding: 0 },
     },
     {
         id: 'label',

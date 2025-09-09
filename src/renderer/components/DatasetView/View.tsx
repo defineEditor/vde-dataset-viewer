@@ -107,7 +107,7 @@ const styles = {
     tableCellDynamic: {
         border: '1px solid rgba(224, 224, 224, 1)',
         fontFamily: 'Roboto Mono',
-        whiteSpace: 'pre',
+        whiteSpace: 'pre-wrap',
         cursor: 'pointer',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
