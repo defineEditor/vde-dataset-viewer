@@ -107,6 +107,7 @@ const styles = {
     tableCellDynamic: {
         border: '1px solid rgba(224, 224, 224, 1)',
         fontFamily: 'Roboto Mono',
+        whiteSpace: 'pre',
         cursor: 'pointer',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
@@ -116,7 +117,7 @@ const styles = {
     tableCellFixed: {
         border: '1px solid rgba(224, 224, 224, 1)',
         fontFamily: 'Roboto Mono',
-        whiteSpace: 'nowrap',
+        whiteSpace: 'pre',
         cursor: 'pointer',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
