@@ -174,6 +174,13 @@ const runValidation = async (
         args.push('--define-version', configuration.defineVersion);
     }
 
+    // Specify CT packages if provided
+    if (configuration?.ctPackages && configuration.ctPackages.length > 0) {
+        configuration.ctPackages.forEach((ct) => {
+            args.push('-ct', ct);
+        });
+    }
+
     // Add dictionary paths if provided
     if (configuration?.whodrugPath) {
         args.push('--whodrug', `"${configuration.whodrugPath}"`);

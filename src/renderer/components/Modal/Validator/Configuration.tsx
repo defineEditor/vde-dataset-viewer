@@ -121,7 +121,7 @@ const Configuration: React.FC<{
                 .replace('DEFINE-XML', 'Define-XML')
                 .replace('GLOSSARY', 'Glossary');
             const date = entry.replace(/(.*)(\d{4}-\d{2}-\d{2}).*/, '$2');
-            result[entry] = `${name} ${date}`;
+            result[entry] = { name, date, label: `${name} ${date}` };
         });
         return result;
     }, [validatorData.info.terminology]);
@@ -243,11 +243,40 @@ const Configuration: React.FC<{
                     <Autocomplete
                         multiple
                         sx={styles.ctInput}
-                        options={Object.keys(availableCtPackages).map((ct) => {
-                            return { label: availableCtPackages[ct], id: ct };
-                        })}
+                        options={Object.keys(availableCtPackages)
+                            .map((ct) => {
+                                return {
+                                    label: availableCtPackages[ct].label,
+                                    name: availableCtPackages[ct].name,
+                                    date: availableCtPackages[ct].date,
+                                    id: ct,
+                                };
+                            })
+                            .sort((a, b) => {
+                                // Show CTs of the current standard first
+                                const updatedStdName = config.standard.replace(
+                                    /^(\w+)IG.*$/,
+                                    '$1',
+                                );
+                                const isCurrentA =
+                                    a.name.toUpperCase() === updatedStdName;
+                                const isCurrentB =
+                                    b.name.toUpperCase() === updatedStdName;
+                                if (isCurrentA && !isCurrentB) return -1;
+                                if (!isCurrentA && isCurrentB) return 1;
+                                // First compare by standard name
+                                if (a.name < b.name) return -1;
+                                if (a.name > b.name) return 1;
+                                // If names are the same, compare by date (newest first)
+                                if (a.date > b.date) return -1;
+                                if (a.date < b.date) return 1;
+                                return 0;
+                            })}
                         value={config.ctPackages.map((ct) => {
-                            return { label: availableCtPackages[ct], id: ct };
+                            return {
+                                label: availableCtPackages[ct].label,
+                                id: ct,
+                            };
                         })}
                         onChange={handleCtChange}
                         renderInput={(params) => (
@@ -255,7 +284,6 @@ const Configuration: React.FC<{
                                 {...params}
                                 name="ctPackages"
                                 label="CT Packages"
-                                placeholder="Select CT Packages"
                                 fullWidth
                             />
                         )}
