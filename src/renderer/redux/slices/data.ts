@@ -188,6 +188,9 @@ export const dataSlice = createSlice({
                 [action.payload.reportTab]: action.payload.filter,
             };
         },
+        resetReportFilter: (state) => {
+            state.validator.reportFilters = {};
+        },
     },
     extraReducers: (builder) => {
         builder.addCase(openDataset, (state, action) => {
@@ -260,6 +263,7 @@ export const {
     removeValidationReport,
     setReport,
     setReportFilter,
+    resetReportFilter,
 } = dataSlice.actions;
 
 export default dataSlice.reducer;

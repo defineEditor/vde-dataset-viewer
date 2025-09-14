@@ -8,7 +8,10 @@ import InfoIcon from '@mui/icons-material/Info';
 import SettingsIcon from '@mui/icons-material/Settings';
 import KeyboardIcon from '@mui/icons-material/Keyboard';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
-import { DashboardLayout } from '@toolpad/core/DashboardLayout';
+import {
+    DashboardLayout,
+    DashboardLayoutSlots,
+} from '@toolpad/core/DashboardLayout';
 import SelectDataset from 'renderer/components/SelectDataset';
 import Api from 'renderer/components/Api';
 import AppContext from 'renderer/utils/AppContext';
@@ -24,7 +27,8 @@ import {
     setGoTo,
 } from 'renderer/redux/slices/ui';
 import { AllowedPathnames, NewWindowProps } from 'interfaces/common';
-import ViewerToolbar from 'renderer/components/ViewerToolbar';
+import ViewerToolbar from 'renderer/components/Toolbars/ViewerToolbar';
+import ReportToolbar from 'renderer/components/Toolbars/ReportToolbar';
 import ToolbarActions from 'renderer/components/ToolbarActions';
 import Shortcuts from 'renderer/components/Shortcuts';
 import Converter from 'renderer/components/Converter';
@@ -355,6 +359,22 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
         };
     }, [apiService, dispatch, currentFileId]);
 
+    const slots: DashboardLayoutSlots = {
+        toolbarActions: ToolbarActions,
+    };
+
+    if (pathname === paths.VIEWFILE && isDataLoaded) {
+        slots.appTitle = ViewerToolbar;
+    }
+
+    const currentValidatorTab = useAppSelector(
+        (state) => state.ui.validationPage.currentTab,
+    );
+
+    if (pathname === paths.VALIDATOR && currentValidatorTab === 'report') {
+        slots.appTitle = ReportToolbar;
+    }
+
     return (
         <AppProvider
             navigation={NAVIGATION}
@@ -362,19 +382,7 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
             router={useAppRouter()}
             branding={{ title, logo: <Logo /> }}
         >
-            <DashboardLayout
-                defaultSidebarCollapsed
-                slots={
-                    pathname === paths.VIEWFILE && isDataLoaded
-                        ? {
-                              appTitle: ViewerToolbar,
-                              toolbarActions: ToolbarActions,
-                          }
-                        : {
-                              toolbarActions: ToolbarActions,
-                          }
-                }
-            >
+            <DashboardLayout defaultSidebarCollapsed slots={slots}>
                 <Stack sx={styles.main} id="main">
                     {pathname === paths.SELECT && <SelectDataset />}
                     {pathname === paths.VIEWFILE && isDataLoaded && (
