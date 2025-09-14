@@ -132,6 +132,8 @@ export const validator: ValidatorData = {
         version: '',
     },
     reports: {},
+    reportData: {},
+    reportFilters: {},
 };
 
 export const data: IData = {

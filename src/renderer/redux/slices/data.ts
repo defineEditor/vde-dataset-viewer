@@ -5,8 +5,9 @@ import {
     BasicFilter,
     ConverterData,
     ValidationReport,
+    ParsedValidationReport,
 } from 'interfaces/common';
-import { IMask, ValidatorData } from 'interfaces/store';
+import { IMask, IUiValidationPage, ValidatorData } from 'interfaces/common';
 import deepEqual from 'renderer/utils/deepEqual';
 import getFolderName from 'renderer/utils/getFolderName';
 import { closeDataset, openDataset } from 'renderer/redux/slices/ui';
@@ -164,6 +165,29 @@ export const dataSlice = createSlice({
                 delete state.validator.reports[action.payload.id];
             }
         },
+        setReport: (
+            state,
+            action: PayloadAction<{
+                reportId: string;
+                report: ParsedValidationReport;
+            }>,
+        ) => {
+            // Keep only one report in memory
+            state.validator.reportData = {
+                [action.payload.reportId]: action.payload.report,
+            };
+        },
+        setReportFilter: (
+            state,
+            action: PayloadAction<{
+                filter: BasicFilter | null;
+                reportTab: IUiValidationPage['currentReportTab'];
+            }>,
+        ) => {
+            state.validator.reportFilters = {
+                [action.payload.reportTab]: action.payload.filter,
+            };
+        },
     },
     extraReducers: (builder) => {
         builder.addCase(openDataset, (state, action) => {
@@ -234,6 +258,8 @@ export const {
     resetValidatorInfo,
     addValidationReport,
     removeValidationReport,
+    setReport,
+    setReportFilter,
 } = dataSlice.actions;
 
 export default dataSlice.reducer;

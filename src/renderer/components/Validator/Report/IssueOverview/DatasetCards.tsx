@@ -10,6 +10,7 @@ import {
     Chip,
     Box,
     IconButton,
+    ButtonBase,
     Collapse,
     List,
     ListItem,
@@ -24,7 +25,8 @@ import {
     ParsedValidationReport,
     IssueSummaryItem,
     DatasetDetail,
-} from 'interfaces/core.report';
+    IUiValidationPage,
+} from 'interfaces/common';
 
 const styles = {
     actions: {
@@ -41,6 +43,13 @@ const styles = {
     cardHeader: {
         px: 2,
         py: 1,
+    },
+    datasetButton: {
+        textTransform: 'none',
+        color: 'primary.main',
+        fontSize: '1.5rem',
+        fontWeight: '500',
+        p: 0.5,
     },
 };
 
@@ -71,11 +80,17 @@ interface DatasetIssue {
 interface DatasetCardsProps {
     parsedReport: ParsedValidationReport;
     showOnlyDatasetsWithIssues: boolean;
+    onUpdateFilter: (
+        value: string,
+        variable: string,
+        reportTab: IUiValidationPage['currentReportTab'],
+    ) => void;
 }
 
 const DatasetCards: React.FC<DatasetCardsProps> = ({
     parsedReport,
     showOnlyDatasetsWithIssues,
+    onUpdateFilter,
 }) => {
     const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
 
@@ -134,12 +149,6 @@ const DatasetCards: React.FC<DatasetCardsProps> = ({
         );
     }, [parsedReport, showOnlyDatasetsWithIssues]);
 
-    const handleShowIssues = (dataset: string) => {
-        if (dataset) {
-            // open issues
-        }
-    };
-
     return (
         <Grid2 container spacing={2}>
             {datasetIssues.map((datasetIssue) => (
@@ -152,12 +161,21 @@ const DatasetCards: React.FC<DatasetCardsProps> = ({
                                     alignItems="center"
                                     spacing={2}
                                 >
-                                    <Typography
-                                        variant="h5"
-                                        color="primary.main"
+                                    <ButtonBase
+                                        sx={styles.datasetButton}
+                                        onClick={() =>
+                                            onUpdateFilter(
+                                                datasetIssue.dataset,
+                                                'dataset',
+                                                'summary',
+                                            )
+                                        }
+                                        disabled={
+                                            datasetIssue.totalIssues === 0
+                                        }
                                     >
                                         {datasetIssue.dataset}
-                                    </Typography>
+                                    </ButtonBase>
                                     <Typography
                                         variant="body2"
                                         color="text.primary"
@@ -210,11 +228,16 @@ const DatasetCards: React.FC<DatasetCardsProps> = ({
                                 <Tooltip title="Show issue details">
                                     <IconButton
                                         onClick={() =>
-                                            handleShowIssues(
+                                            onUpdateFilter(
                                                 datasetIssue.dataset,
+                                                'dataset',
+                                                'details',
                                             )
                                         }
                                         aria-label="show issues"
+                                        disabled={
+                                            datasetIssue.totalIssues === 0
+                                        }
                                     >
                                         <ArrowCircleRightOutlinedIcon />
                                     </IconButton>

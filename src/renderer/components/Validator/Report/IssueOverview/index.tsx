@@ -15,9 +15,13 @@ import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import {
     toggleShowOnlyDatasetsWithIssues,
     setReportSummaryType,
+    setValidationReportTab,
 } from 'renderer/redux/slices/ui';
 import DatasetCards from 'renderer/components/Validator/Report/IssueOverview/DatasetCards';
 import IssueCards from 'renderer/components/Validator/Report/IssueOverview/IssueCards';
+import { BasicFilter } from 'js-array-filter';
+import { setReportFilter } from 'renderer/redux/slices/data';
+import { IUiValidationPage } from 'interfaces/common';
 
 const RotatingIcon = styled(
     (props: { rotate: boolean } & React.ComponentProps<typeof IconButton>) => {
@@ -77,6 +81,30 @@ const IssueOverview: React.FC<IssueOverviewProps> = ({ parsedReport }) => {
         (state) => state.ui.validationPage.showOnlyDatasetsWithIssues,
     );
 
+    const handleUpdateFilter = (
+        value: string,
+        variable: string,
+        reportTab: IUiValidationPage['currentReportTab'],
+    ) => {
+        if (value) {
+            // Set filter to show only issues for this dataset
+            const newFilter: BasicFilter = {
+                conditions: [
+                    {
+                        variable,
+                        operator: 'eq',
+                        value,
+                    },
+                ],
+                connectors: [],
+            };
+            // Update the filter
+            dispatch(setReportFilter({ filter: newFilter, reportTab }));
+            // Switch to details tab
+            dispatch(setValidationReportTab(reportTab));
+        }
+    };
+
     return (
         <Box sx={styles.container}>
             <Stack
@@ -118,9 +146,13 @@ const IssueOverview: React.FC<IssueOverviewProps> = ({ parsedReport }) => {
                 <DatasetCards
                     parsedReport={parsedReport}
                     showOnlyDatasetsWithIssues={showOnlyDatasetsWithIssues}
+                    onUpdateFilter={handleUpdateFilter}
                 />
             ) : (
-                <IssueCards parsedReport={parsedReport} />
+                <IssueCards
+                    parsedReport={parsedReport}
+                    onUpdateFilter={handleUpdateFilter}
+                />
             )}
         </Box>
     );

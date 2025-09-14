@@ -10,6 +10,7 @@ import {
     Chip,
     Box,
     IconButton,
+    ButtonBase,
     Collapse,
     List,
     ListItem,
@@ -23,7 +24,8 @@ import { styled } from '@mui/material/styles';
 import {
     ParsedValidationReport,
     IssueSummaryItem,
-} from 'interfaces/core.report';
+    IUiValidationPage,
+} from 'interfaces/common';
 
 const styles = {
     actions: {
@@ -52,6 +54,14 @@ const styles = {
     cardHeader: {
         px: 2,
         py: 1,
+    },
+    issueButton: {
+        textTransform: 'none',
+        color: 'primary.main',
+        fontSize: '1.5rem',
+        fontWeight: '500',
+        pr: 0.5,
+        py: 0.5,
     },
 };
 
@@ -120,11 +130,17 @@ interface IssueGroup {
 
 interface IssueCardsProps {
     parsedReport: ParsedValidationReport;
+    onUpdateFilter: (
+        value: string,
+        variable: string,
+        reportTab: IUiValidationPage['currentReportTab'],
+    ) => void;
     showOnlyIssuesWithHighCount?: boolean;
 }
 
 const IssueCards: React.FC<IssueCardsProps> = ({
     parsedReport,
+    onUpdateFilter,
     showOnlyIssuesWithHighCount = false,
 }) => {
     const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
@@ -185,12 +201,6 @@ const IssueCards: React.FC<IssueCardsProps> = ({
         return groups;
     }, [parsedReport, showOnlyIssuesWithHighCount]);
 
-    const handleShowIssueDetails = (ruleId: string) => {
-        if (ruleId) {
-            // open issue details
-        }
-    };
-
     return (
         <Grid2 container spacing={2}>
             {issueGroups.map((issueGroup) => (
@@ -201,13 +211,29 @@ const IssueCards: React.FC<IssueCardsProps> = ({
                                 <Stack
                                     direction="row"
                                     alignItems="center"
+                                    justifyContent="space-between"
                                     spacing={2}
                                 >
-                                    <Typography
-                                        variant="h5"
-                                        color="primary.main"
+                                    <ButtonBase
+                                        sx={styles.issueButton}
+                                        onClick={() =>
+                                            onUpdateFilter(
+                                                issueGroup.ruleId,
+                                                'core_id',
+                                                'summary',
+                                            )
+                                        }
                                     >
                                         {issueGroup.ruleId}
+                                    </ButtonBase>
+                                    <Typography
+                                        variant="body2"
+                                        color="text.primary"
+                                    >
+                                        {issueGroup.totalIssues} issue
+                                        {issueGroup.totalIssues !== 1
+                                            ? 's'
+                                            : ''}
                                     </Typography>
                                 </Stack>
                             }
@@ -229,8 +255,10 @@ const IssueCards: React.FC<IssueCardsProps> = ({
                                 <Tooltip title="Show issue details">
                                     <IconButton
                                         onClick={() =>
-                                            handleShowIssueDetails(
+                                            onUpdateFilter(
                                                 issueGroup.ruleId,
+                                                'core_id',
+                                                'details',
                                             )
                                         }
                                         aria-label="show issue details"

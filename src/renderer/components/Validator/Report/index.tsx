@@ -10,12 +10,13 @@ import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import { openSnackbar, setValidationReportTab } from 'renderer/redux/slices/ui';
+import { setReport, setReportFilter } from 'renderer/redux/slices/data';
 import AppContext from 'renderer/utils/AppContext';
 import {
     ITableData,
     IUiValidationPage,
     NewWindowProps,
-    ParsedValidationReport,
+    BasicFilter,
 } from 'interfaces/common';
 import convertToDataset from 'renderer/components/Validator/Report/convertToDataset';
 import DatasetContainer from 'renderer/components/Validator/Report/ReportDatasetContainer';
@@ -81,13 +82,6 @@ const ValidationReportPage: React.FC = () => {
         (state) => state.ui.validationPage.currentReportTab,
     );
 
-    const [report, setReport] = useState<ParsedValidationReport | null>(null);
-    const [tables, setTables] = useState<{
-        details: ITableData;
-        summary: ITableData;
-        rules: ITableData;
-    } | null>(null);
-
     const reportId = useAppSelector(
         (state) => state.ui.validationPage.currentReportId,
     );
@@ -117,9 +111,31 @@ const ValidationReportPage: React.FC = () => {
         [validationReportInfo, apiService],
     );
 
+    const handleFilterIssues = React.useCallback(
+        (
+            filter: BasicFilter,
+            reportTab: IUiValidationPage['currentReportTab'],
+        ) => {
+            if (filter) {
+                dispatch(setReportFilter({ filter, reportTab }));
+                // Switch to details tab
+                dispatch(setValidationReportTab(reportTab));
+            }
+        },
+        [dispatch],
+    );
+
+    const report = useAppSelector(
+        (state) => state.data.validator.reportData[reportId || ''] || null,
+    );
+
     useEffect(() => {
         const getReport = async () => {
             if (reportId) {
+                // Check if report is already loaded;
+                if (report) {
+                    return;
+                }
                 const newReport =
                     await apiService.getValidationReport(reportId);
                 if (newReport === null) {
@@ -132,32 +148,61 @@ const ValidationReportPage: React.FC = () => {
                 } else {
                     // Convert everything to dataset-json format
                     const transformedReport = transformReport(newReport);
-                    setReport(transformedReport);
-                    const details = convertToDataset(
-                        transformedReport,
-                        'Issue_Details',
-                        handleOpenFile,
+                    dispatch(
+                        setReport({ reportId, report: transformedReport }),
                     );
-                    const summary = convertToDataset(
-                        transformedReport,
-                        'Issue_Summary',
-                        handleOpenFile,
-                    );
-                    const rules = convertToDataset(
-                        transformedReport,
-                        'Rules_Report',
-                        handleOpenFile,
-                    );
-                    setTables({
-                        details,
-                        summary,
-                        rules,
-                    });
                 }
             }
         };
         getReport();
-    }, [reportId, apiService, dispatch, handleOpenFile]);
+    }, [reportId, report, apiService, dispatch]);
+
+    const [tables, setTables] = useState<{
+        details: ITableData;
+        summary: ITableData;
+        rules: ITableData;
+    } | null>(null);
+
+    const reportFilters = useAppSelector(
+        (state) => state.data.validator.reportFilters,
+    );
+
+    useEffect(() => {
+        if (report) {
+            const details = convertToDataset(
+                report,
+                'Issue_Details',
+                {
+                    onOpenFile: handleOpenFile,
+                    onFilterIssues: handleFilterIssues,
+                },
+                reportFilters?.details || null,
+            );
+            const summary = convertToDataset(
+                report,
+                'Issue_Summary',
+                {
+                    onOpenFile: handleOpenFile,
+                    onFilterIssues: handleFilterIssues,
+                },
+                reportFilters?.summary || null,
+            );
+            const rules = convertToDataset(
+                report,
+                'Rules_Report',
+                {
+                    onOpenFile: handleOpenFile,
+                    onFilterIssues: handleFilterIssues,
+                },
+                reportFilters?.rules || null,
+            );
+            setTables({
+                details,
+                summary,
+                rules,
+            });
+        }
+    }, [report, reportFilters, handleOpenFile, handleFilterIssues]);
 
     const handleTabChange = (
         _event: React.SyntheticEvent,

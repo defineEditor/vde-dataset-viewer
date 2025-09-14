@@ -6,6 +6,7 @@ import {
     ValidatorConfig,
     ValidationReport,
 } from 'interfaces/main';
+import { ParsedValidationReport } from 'interfaces/core.report';
 import { modals, ModalType, AllowedPathnames } from 'misc/constants';
 import { ConversionConfig } from 'interfaces/converter';
 
@@ -88,8 +89,14 @@ export interface IUiModalVariableInfo extends IUiModalBase {
     data: { columnId: string };
 }
 
+export interface IUiModalFilter extends IUiModalBase {
+    type: typeof modals.FILTER;
+    filterType: 'dataset' | 'report';
+}
+
 export type IUiModal =
     | IUiModalAppUpdate
+    | IUiModalFilter
     | IUiModalVariableInfo
     | IUiModalGeneral
     | IUiModalEditApi
@@ -174,6 +181,10 @@ export interface ValidatorData {
         terminology: string[];
     };
     reports: { [id: string]: ValidationReport };
+    reportData: { [id: string]: ParsedValidationReport };
+    reportFilters: {
+        [id: string]: BasicFilter | null;
+    };
     configuration: ValidatorConfig;
 }
 
