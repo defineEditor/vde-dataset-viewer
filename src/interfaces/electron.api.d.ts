@@ -81,6 +81,10 @@ export interface ElectronApi {
     getValidationReport: (
         fileName: string,
     ) => Promise<ParsedValidationReport | null>;
+    downloadValidationReport: (
+        fileName: string,
+        initialFolder?: string,
+    ) => Promise<string | false>;
     compareValidationReports: (
         fileNameBase: string,
         fileNameComp: string,

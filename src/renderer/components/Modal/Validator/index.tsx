@@ -227,7 +227,10 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
                     )}
                 </Box>
                 <Box hidden={validatorTab !== 1} sx={styles.tabPanel}>
-                    <Results filePaths={[currentFilePath]} />
+                    <Results
+                        filePaths={[currentFilePath]}
+                        closeValidationModal
+                    />
                 </Box>
             </DialogContent>
             <DialogActions sx={styles.actions}>

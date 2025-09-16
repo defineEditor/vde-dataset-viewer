@@ -102,7 +102,18 @@ const DatasetContainer: React.FC = () => {
                 currentMask.columns.length > 0 &&
                 currentMask.columns.length >= columnIndex
             ) {
-                const originalId = currentMask.columns[columnIndex - 1];
+                // Find id with the mask applied
+                const allIds = table.header.map((header) => header.id);
+                // Mask order can be different from original dataset
+                const maskOrderedColumns = currentMask.columns
+                    .slice()
+                    .sort((a, b) => {
+                        return allIds.indexOf(a) - allIds.indexOf(b);
+                    });
+                // Mask might contain variables not in the dataset
+                const originalId = maskOrderedColumns.filter((id) =>
+                    allIds.includes(id),
+                )[columnIndex - 1];
                 updatedColumnIndex =
                     table.header.findIndex((item) => item.id === originalId) +
                     1;

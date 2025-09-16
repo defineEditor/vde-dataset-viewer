@@ -1,9 +1,15 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useContext } from 'react';
 import { Typography, Tooltip, IconButton, Stack } from '@mui/material';
 import FilterIcon from '@mui/icons-material/FilterAlt';
-import { openModal } from 'renderer/redux/slices/ui';
-import { resetReportFilter } from 'renderer/redux/slices/data';
+import DownloadIcon from '@mui/icons-material/Download';
+import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
+import { openModal, openSnackbar } from 'renderer/redux/slices/ui';
+import {
+    resetReportFilter,
+    setReportLastSaveFolder,
+} from 'renderer/redux/slices/data';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
+import AppContext from 'renderer/utils/AppContext';
 import { modals } from 'misc/constants';
 
 const styles = {
@@ -20,6 +26,7 @@ const styles = {
 
 const Header: React.FC = () => {
     const dispatch = useAppDispatch();
+    const { apiService } = useContext(AppContext);
 
     const currentReportTab = useAppSelector(
         (state) => state.ui.validationPage.currentReportTab,
@@ -54,6 +61,7 @@ const Header: React.FC = () => {
 
     const isFilterEnabled = useAppSelector(
         (state) =>
+            state.data.validator.reportFilters?.[currentReportTab] &&
             state.data.validator.reportFilters?.[currentReportTab] !== null,
     );
 
@@ -64,6 +72,50 @@ const Header: React.FC = () => {
             openModal({ type: modals.FILTER, filterType: 'report', data: {} }),
         );
     }, [dispatch]);
+
+    const handleResetFilter = useCallback(() => {
+        dispatch(resetReportFilter());
+    }, [dispatch]);
+
+    const lastReportSaveFolder = useAppSelector(
+        (state) => state.data.validator.lastReportSaveFolder,
+    );
+
+    const handleDownloadReport = useCallback(() => {
+        const downloadReport = async () => {
+            const result = await apiService.downloadValidationReport(
+                report.output,
+                lastReportSaveFolder,
+            );
+            if (result === false) {
+                dispatch(
+                    openSnackbar({
+                        type: 'error',
+                        message: 'Failed to download report.',
+                    }),
+                );
+            } else if (result === '') {
+                // User canceled the folder selection
+                dispatch(
+                    openSnackbar({
+                        type: 'info',
+                        message: 'Canceled.',
+                    }),
+                );
+            } else if (typeof result === 'string') {
+                dispatch(
+                    openSnackbar({
+                        type: 'success',
+                        message: `Report saved to ${result}`,
+                    }),
+                );
+                dispatch(
+                    setReportLastSaveFolder(result), // Save last used folder
+                );
+            }
+        };
+        downloadReport();
+    }, [dispatch, apiService, lastReportSaveFolder, report.output]);
 
     const handleFilterReset = useCallback(() => {
         dispatch(resetReportFilter());
@@ -120,6 +172,31 @@ const Header: React.FC = () => {
                                 : 'primary.main',
                         }}
                     />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Reset Filter" enterDelay={1000}>
+                <IconButton
+                    onClick={handleResetFilter}
+                    id="resetFilter"
+                    size="small"
+                    disabled={!isFilterEnabled}
+                >
+                    <FilterAltOffIcon
+                        sx={{
+                            color: isFilterEnabled
+                                ? 'primary.main'
+                                : 'primary.disabled',
+                        }}
+                    />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Download Report" enterDelay={1000}>
+                <IconButton
+                    onClick={handleDownloadReport}
+                    id="downloadReport"
+                    size="small"
+                >
+                    <DownloadIcon sx={{ color: 'primary.main' }} />
                 </IconButton>
             </Tooltip>
         </Stack>

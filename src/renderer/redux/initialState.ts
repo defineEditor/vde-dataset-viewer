@@ -21,6 +21,7 @@ export const settings: ISettings = {
         copyFormat: 'tab',
         applyDateFormat: true,
         showTypeIcons: false,
+        copyWithHeaders: false,
     },
     converter: {
         threads: 2,
@@ -134,6 +135,7 @@ export const validator: ValidatorData = {
     reports: {},
     reportData: {},
     reportFilters: {},
+    lastReportSaveFolder: '',
 };
 
 export const data: IData = {

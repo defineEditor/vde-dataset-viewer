@@ -1,10 +1,12 @@
 import { IpcMainInvokeEvent } from 'electron';
 import fs from 'fs';
+import fsPromises from 'fs/promises';
+import path from 'path';
 import {
     ParsedValidationReport,
     ValidationReportCompare,
 } from 'interfaces/common';
-import path from 'path';
+import FileManager from 'main/managers/fileManager';
 
 class ReportManager {
     private reportsDirectory: string;
@@ -75,10 +77,10 @@ class ReportManager {
         }
     };
 
-    public getValidationReport = (
+    public getValidationReport = async (
         _event: IpcMainInvokeEvent,
         fileName: string,
-    ): ParsedValidationReport | null => {
+    ): Promise<ParsedValidationReport | null> => {
         try {
             const filePath = path.join(this.reportsDirectory, fileName);
 
@@ -87,7 +89,8 @@ class ReportManager {
             }
 
             // Try to serialize
-            const report = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+            const rawData = await fsPromises.readFile(filePath, 'utf-8');
+            const report = JSON.parse(rawData);
             return report;
         } catch (error) {
             // Error reading report file
@@ -96,13 +99,13 @@ class ReportManager {
     };
 
     // Compare reports
-    public compareValidationReports = (
+    public compareValidationReports = async (
         _event: IpcMainInvokeEvent,
         fileNameBase: string,
         fileNameComp: string,
-    ): ValidationReportCompare | null => {
-        const reportBase = this.getValidationReport(_event, fileNameBase);
-        const reportComp = this.getValidationReport(_event, fileNameComp);
+    ): Promise<ValidationReportCompare | null> => {
+        const reportBase = await this.getValidationReport(_event, fileNameBase);
+        const reportComp = await this.getValidationReport(_event, fileNameComp);
 
         if (!reportBase || !reportComp) {
             return null;
@@ -192,6 +195,45 @@ class ReportManager {
         };
 
         return result;
+    };
+
+    public downloadValidationReport = async (
+        event: IpcMainInvokeEvent,
+        fileName: string,
+        initialFolder: string,
+    ): Promise<string | boolean> => {
+        try {
+            // Get folder
+            const fileManager = new FileManager();
+            const destination = await fileManager.openFolder(event, {
+                initialFolder,
+            });
+            if (destination) {
+                // If user canceled folder selection, return empty string
+                if (destination.length === 0) {
+                    return '';
+                }
+                // Copy Excel file to the destination folder
+                const xlsxFileName = fileName.replace('.json', '.xlsx');
+                const xlsxFilePath = path.join(
+                    this.reportsDirectory,
+                    xlsxFileName,
+                );
+                if (fs.existsSync(xlsxFilePath)) {
+                    const destXlsxPath = path.join(
+                        destination[0],
+                        xlsxFileName,
+                    );
+                    await fsPromises.copyFile(xlsxFilePath, destXlsxPath);
+                    return destination[0];
+                } else {
+                    return false;
+                }
+            }
+            return false;
+        } catch (error) {
+            return false;
+        }
     };
 }
 

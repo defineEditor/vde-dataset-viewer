@@ -11,14 +11,19 @@ const styles = {
 };
 
 const Row: React.FC<{
-    value: string;
+    value: number;
     dataset: string;
-    onOpenFile: (id: string, row?: string, columns?: string) => void;
+    onOpenFile: (
+        event: React.MouseEvent<HTMLButtonElement>,
+        id: string,
+        row?: number,
+        columns?: string,
+    ) => void;
 }> = ({ value, dataset, onOpenFile }) => {
     return (
         <Button
             variant="text"
-            onClick={() => onOpenFile(dataset, value)}
+            onClick={(event) => onOpenFile(event, dataset, value)}
             id="info"
             sx={styles.button}
         >
@@ -27,11 +32,18 @@ const Row: React.FC<{
     );
 };
 
-const renderRow = (onOpenFile: (id: string) => void) => {
+const renderRow = (
+    onOpenFile: (
+        event: React.MouseEvent<HTMLButtonElement>,
+        id: string,
+        row?: number,
+        columns?: string,
+    ) => void,
+) => {
     const renderFunction = (cell: CoreCell<ITableRow, unknown>) => {
         return (
             <Row
-                value={cell.getValue() as string}
+                value={cell.getValue() as number}
                 dataset={cell.row?.original?.dataset as string}
                 onOpenFile={onOpenFile}
             />

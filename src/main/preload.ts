@@ -117,6 +117,16 @@ const compareValidationReports: ElectronApi['compareValidationReports'] = (
 const getValidationReport: ElectronApi['getValidationReport'] = (fileName) =>
     ipcRenderer.invoke('main:getValidationReport', fileName);
 
+const downloadValidationReport: ElectronApi['downloadValidationReport'] = (
+    fileName,
+    initialFolder,
+) =>
+    ipcRenderer.invoke(
+        'main:downloadValidationReport',
+        fileName,
+        initialFolder,
+    );
+
 const isWindows: ElectronApi['isWindows'] = process.platform === 'win32';
 
 const startTask: ElectronApi['startTask'] = (task) =>
@@ -175,6 +185,7 @@ contextBridge.exposeInMainWorld('electron', {
     deleteValidationReport,
     compareValidationReports,
     getValidationReport,
+    downloadValidationReport,
     isWindows,
     startTask,
     onTaskProgress,

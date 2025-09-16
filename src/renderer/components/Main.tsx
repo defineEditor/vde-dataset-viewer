@@ -18,14 +18,7 @@ import AppContext from 'renderer/utils/AppContext';
 import ViewFile from 'renderer/components/ViewFile';
 import Settings from 'renderer/components/Settings';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
-import {
-    setPathname,
-    openDataset,
-    closeDataset,
-    openSnackbar,
-    setZoomLevel,
-    setGoTo,
-} from 'renderer/redux/slices/ui';
+import { setPathname, setZoomLevel } from 'renderer/redux/slices/ui';
 import { AllowedPathnames, NewWindowProps } from 'interfaces/common';
 import ViewerToolbar from 'renderer/components/Toolbars/ViewerToolbar';
 import ReportToolbar from 'renderer/components/Toolbars/ReportToolbar';
@@ -36,8 +29,7 @@ import Validator from 'renderer/components/Validator';
 import About from 'renderer/components/About';
 import { paths } from 'misc/constants';
 import { saveStore } from 'renderer/redux/stateUtils';
-import { openNewDataset } from 'renderer/utils/readData';
-import { addRecent } from 'renderer/redux/slices/data';
+import handleOpenDataset from 'renderer/utils/handleOpenDataset';
 
 const styles = {
     main: {
@@ -282,80 +274,20 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
             filePath: string,
             newWindowProps?: NewWindowProps,
         ) => {
-            try {
-                // Check if the requested file is already open
-                if (currentFileId) {
-                    const currentFile =
-                        apiService.getOpenedFiles(currentFileId)[0];
-                    if (currentFile && currentFile.path === filePath) {
-                        // We need to close it first
-                        dispatch(
-                            closeDataset({
-                                fileId: currentFileId,
-                            }),
-                        );
-                        await apiService.close(currentFileId);
-                    }
-                }
-                const newDataInfo = await openNewDataset(
-                    apiService,
-                    'local',
-                    filePath,
-                );
-                if (newDataInfo.errorMessage) {
-                    if (newDataInfo.errorMessage !== 'cancelled') {
-                        dispatch(
-                            openSnackbar({
-                                type: 'error',
-                                message: newDataInfo.errorMessage,
-                            }),
-                        );
-                    }
-                    return;
-                }
-                dispatch(
-                    addRecent({
-                        name: newDataInfo.metadata.name,
-                        label: newDataInfo.metadata.label,
-                        path: newDataInfo.path,
-                    }),
-                );
-                dispatch(
-                    openDataset({
-                        fileId: newDataInfo.fileId,
-                        type: newDataInfo.type,
-                        name: newDataInfo.metadata.name,
-                        label: newDataInfo.metadata.label,
-                        mode: 'local',
-                        totalRecords: newDataInfo.metadata.records,
-                        currentFileId,
-                    }),
-                );
-                if (newWindowProps && newWindowProps.goTo) {
-                    dispatch(
-                        setGoTo({
-                            column: newWindowProps.goTo.column,
-                            row: newWindowProps.goTo.row,
-                        }),
-                    );
-                }
-            } catch (error) {
-                if (error instanceof Error) {
-                    dispatch(
-                        openSnackbar({
-                            message: `Error opening file: ${error.message || 'Unknown error'}`,
-                            type: 'error',
-                        }),
-                    );
-                }
-            }
+            return handleOpenDataset(
+                filePath,
+                currentFileId,
+                dispatch,
+                apiService,
+                newWindowProps,
+            );
         };
 
-        window.electron.onFileOpen(handleFileOpen);
+        apiService.onFileOpen(handleFileOpen);
 
         // Clean up listener on unmount
         return () => {
-            window.electron.removeFileOpenListener();
+            apiService.removeFileOpenListener();
         };
     }, [apiService, dispatch, currentFileId]);
 

@@ -3,8 +3,8 @@ import { useState, useEffect, RefObject } from 'react';
 const useWidth = <T extends HTMLElement>(ref: RefObject<T> | null) => {
     const [width, setWidth] = useState(0);
 
+    const element = ref?.current;
     useEffect(() => {
-        const element = ref?.current;
         if (!element) return () => {};
 
         const resizeObserver = new ResizeObserver((entries) => {
@@ -20,7 +20,7 @@ const useWidth = <T extends HTMLElement>(ref: RefObject<T> | null) => {
 
         // Cleanup function for useEffect
         return () => resizeObserver.disconnect();
-    }, [ref]);
+    }, [element]);
 
     return width;
 };

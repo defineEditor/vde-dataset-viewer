@@ -274,6 +274,10 @@ app.whenReady()
             reportManager.getValidationReport,
         );
         ipcMain.handle(
+            'main:downloadValidationReport',
+            reportManager.downloadValidationReport,
+        );
+        ipcMain.handle(
             'main:compareValidationReports',
             reportManager.compareValidationReports,
         );

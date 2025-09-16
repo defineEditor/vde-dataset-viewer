@@ -23,6 +23,7 @@ import DatasetContainer from 'renderer/components/Validator/Report/ReportDataset
 import Configuration from 'renderer/components/Validator/Report/Configuration';
 import IssueOverview from 'renderer/components/Validator/Report/IssueOverview';
 import transformReport from 'renderer/components/Validator/Report/transformReport';
+import handleOpenDataset from 'renderer/utils/handleOpenDataset';
 
 const styles = {
     container: {
@@ -90,8 +91,15 @@ const ValidationReportPage: React.FC = () => {
         (state) => state.data.validator.reports[reportId || ''],
     );
 
+    const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+
     const handleOpenFile = React.useCallback(
-        (id: string, row?: number, column?: string) => {
+        (
+            event: React.MouseEvent<HTMLButtonElement>,
+            id: string,
+            row?: number,
+            column?: string,
+        ) => {
             // Find filename by ID
             const filePath = validationReportInfo?.files.find(
                 (file) =>
@@ -105,10 +113,22 @@ const ValidationReportPage: React.FC = () => {
                 if (row || column) {
                     props.goTo = { row, column };
                 }
-                apiService.openInNewWindow(filePath, undefined, props);
+                // If Ctrl or Cmd key is pressed, open in new window
+                if (event.ctrlKey || event.metaKey) {
+                    apiService.openInNewWindow(filePath, undefined, props);
+                } else {
+                    // Open in the same window
+                    handleOpenDataset(
+                        filePath,
+                        currentFileId,
+                        dispatch,
+                        apiService,
+                        props,
+                    );
+                }
             }
         },
-        [validationReportInfo, apiService],
+        [validationReportInfo, apiService, currentFileId, dispatch],
     );
 
     const handleFilterIssues = React.useCallback(
@@ -211,7 +231,7 @@ const ValidationReportPage: React.FC = () => {
         dispatch(setValidationReportTab(newValue));
     };
 
-    if (!reportId) {
+    if (!reportId || tables === null) {
         return (
             <Box sx={styles.container}>
                 <Box sx={styles.emptyState}>

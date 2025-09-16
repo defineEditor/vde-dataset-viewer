@@ -30,6 +30,7 @@ export interface SettingsViewer {
     applyDateFormat: boolean;
     copyFormat: ClipboardCopyFormat;
     showTypeIcons: boolean;
+    copyWithHeaders: boolean;
 }
 
 export interface ISettings {
@@ -185,6 +186,7 @@ export interface ValidatorData {
     reportFilters: {
         [id: string]: BasicFilter | null;
     };
+    lastReportSaveFolder: string;
     configuration: ValidatorConfig;
 }
 

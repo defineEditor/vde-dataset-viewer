@@ -328,3 +328,14 @@ export const compareValidationReports = async (
     );
     return result;
 };
+
+export const downloadValidationReport = async (
+    fileName: string,
+    initialFolder?: string,
+): Promise<string | false> => {
+    const result = await window.electron.downloadValidationReport(
+        fileName,
+        initialFolder,
+    );
+    return result;
+};

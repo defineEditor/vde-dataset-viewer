@@ -33,6 +33,7 @@ import {
     deleteValidationReport,
     compareValidationReports,
     getValidationReport,
+    downloadValidationReport,
 } from 'renderer/services/validation';
 
 class ApiService {
@@ -791,6 +792,13 @@ class ApiService {
         return getValidationReport(fileName);
     };
 
+    public downloadValidationReport = async (
+        fileName: string,
+        initialFolder?: string,
+    ): Promise<string | false> => {
+        return downloadValidationReport(fileName, initialFolder);
+    };
+
     public compareValidationReports = async (
         fileNameBase: string,
         fileNameComp: string,
@@ -824,6 +832,16 @@ class ApiService {
 
     public getZoom = async (): Promise<number> => {
         return await window.electron.getZoom();
+    };
+
+    public onFileOpen = (
+        callback: (filePath: string, newWindowProps?: NewWindowProps) => void,
+    ) => {
+        window.electron.onFileOpen(callback);
+    };
+
+    public removeFileOpenListener = () => {
+        window.electron.removeFileOpenListener();
     };
 }
 

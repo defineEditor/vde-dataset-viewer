@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Stack } from '@mui/material';
+import { Button, Stack, Box } from '@mui/material';
 import { ITableRow } from 'interfaces/common';
 import { CoreCell } from '@tanstack/react-table';
 
@@ -10,14 +10,23 @@ const styles = {
     button: {
         textTransform: 'none',
         minWidth: '1px',
+        p: 0.5,
+    },
+    text: {
+        p: 0.5,
     },
 };
 
 const Variables: React.FC<{
     variables: string[];
-    row: string;
+    row: number;
     dataset: string;
-    onOpenFile: (id: string, row?: string, columns?: string) => void;
+    onOpenFile: (
+        event: React.MouseEvent<HTMLButtonElement>,
+        id: string,
+        row?: number,
+        columns?: string,
+    ) => void;
 }> = ({ variables, row, dataset, onOpenFile }) => {
     if (!variables || variables.length === 0) {
         return null;
@@ -32,7 +41,9 @@ const Variables: React.FC<{
                     return (
                         <Button
                             variant="text"
-                            onClick={() => onOpenFile(dataset, row, item)}
+                            onClick={(event) =>
+                                onOpenFile(event, dataset, row, item)
+                            }
                             id="info"
                             sx={styles.button}
                         >
@@ -40,18 +51,25 @@ const Variables: React.FC<{
                         </Button>
                     );
                 }
-                return <span>{item}</span>;
+                return <Box sx={styles.text}>{item}</Box>;
             })}
         </Stack>
     );
 };
 
-const renderVariables = (onOpenFile: (id: string) => void) => {
+const renderVariables = (
+    onOpenFile: (
+        event: React.MouseEvent<HTMLButtonElement>,
+        id: string,
+        row?: number,
+        columns?: string,
+    ) => void,
+) => {
     const renderFunction = (cell: CoreCell<ITableRow, unknown>) => {
         return (
             <Variables
                 variables={cell.getValue() as string[]}
-                row={cell.row?.original?.row as string}
+                row={cell.row?.original?.row as number}
                 dataset={cell.row?.original?.dataset as string}
                 onOpenFile={onOpenFile}
             />

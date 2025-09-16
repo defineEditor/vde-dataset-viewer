@@ -60,15 +60,17 @@ const DatasetContainer: React.FC<{
 
     return (
         <Box ref={tabContainerRef} sx={styles.container}>
-            <DatasetView
-                key="report"
-                tableData={updatedData}
-                isLoading={false}
-                settings={updatedSettings}
-                handleContextMenu={() => {}}
-                currentPage={1}
-                currentMask={null}
-            />
+            {width > 0 && (
+                <DatasetView
+                    key="report"
+                    tableData={updatedData}
+                    isLoading={false}
+                    settings={updatedSettings}
+                    handleContextMenu={() => {}}
+                    currentPage={1}
+                    currentMask={null}
+                />
+            )}
         </Box>
     );
 };

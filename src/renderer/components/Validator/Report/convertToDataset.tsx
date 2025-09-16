@@ -1,3 +1,4 @@
+import { MouseEvent } from 'react';
 import {
     ITableData,
     ParsedValidationReport,
@@ -17,7 +18,12 @@ const convertToDataset = (
     data: ParsedValidationReport,
     type: 'Issue_Details' | 'Issue_Summary' | 'Rules_Report',
     handlers: {
-        onOpenFile: (id: string) => void;
+        onOpenFile: (
+            event: MouseEvent<HTMLButtonElement>,
+            id: string,
+            row?: number,
+            columns?: string,
+        ) => void;
         onFilterIssues: (
             filter: BasicFilter,
             reportTab: IUiValidationPage['currentReportTab'],

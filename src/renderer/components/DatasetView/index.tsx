@@ -444,10 +444,10 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.ctrlKey && event.altKey && event.key === 'c') {
                 // Ctrl + Alt + C to copy selected cells to clipboard
-                handleCopyToClipboard(true);
+                handleCopyToClipboard(!settings.copyWithHeaders);
             } else if (event.ctrlKey && event.key === 'c') {
                 // Ctrl + C to copy selected cells to clipboard
-                handleCopyToClipboard(false);
+                handleCopyToClipboard(settings.copyWithHeaders);
             } else if (event.key === 'Escape') {
                 // Escape to clear selection
                 setHighlightedCells([]);
@@ -457,7 +457,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [highlightedCells, handleCopyToClipboard]);
+    }, [highlightedCells, handleCopyToClipboard, settings.copyWithHeaders]);
 
     useEffect(() => {
         document.addEventListener('mouseup', handleMouseUp);
