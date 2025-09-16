@@ -16,8 +16,8 @@ import columnDefs from 'renderer/components/Validator/Report/columnDefs';
 
 const convertToDataset = (
     data: ParsedValidationReport,
-    type: 'Issue_Details' | 'Issue_Summary' | 'Rules_Report',
-    handlers: {
+    type: 'details' | 'summary' | 'rules',
+    handlers?: {
         onOpenFile: (
             event: MouseEvent<HTMLButtonElement>,
             id: string,
@@ -32,12 +32,18 @@ const convertToDataset = (
     filter: BasicFilter | null = null,
 ): ITableData => {
     // Implement conversion logic here
+    const reportSection: 'Issue_Details' | 'Issue_Summary' | 'Rules_Report' =
+        type === 'details'
+            ? 'Issue_Details'
+            : type === 'summary'
+              ? 'Issue_Summary'
+              : 'Rules_Report';
     const metadata: DatasetJsonMetadata = {
         datasetJSONCreationDateTime: new Date().toISOString(),
         datasetJSONVersion: '1.1',
-        records: data[type].length,
+        records: data[reportSection].length,
         name: `core_report_${type}`,
-        label: `CORE Report ${type}`,
+        label: `CORE Report ${reportSection.replace(/_/g, ' ')}`,
         columns: [],
     };
 
@@ -47,7 +53,7 @@ const convertToDataset = (
     }
     let header: ITableData['header'] = [];
     // Get columns metadata
-    if (type === 'Issue_Details') {
+    if (type === 'details') {
         metadata.columns = columnDefs.details.map((col) => ({
             itemOID: col.id,
             name: col.id,
@@ -62,15 +68,15 @@ const convertToDataset = (
             if (col.id === 'executability') {
                 item.cell = renderExecutability;
             }
-            if (col.id === 'variables') {
+            if (col.id === 'variables' && handlers?.onOpenFile) {
                 item.cell = renderVariables(handlers.onOpenFile);
             }
-            if (col.id === 'row') {
+            if (col.id === 'row' && handlers?.onOpenFile) {
                 item.cell = renderRow(handlers.onOpenFile);
             }
             return item;
         });
-    } else if (type === 'Issue_Summary') {
+    } else if (type === 'summary') {
         metadata.columns = columnDefs.summary.map((col) => ({
             itemOID: col.id,
             name: col.id,
@@ -82,12 +88,12 @@ const convertToDataset = (
             if (filtertedColumns.includes(col.id)) {
                 item = { ...item, isFiltered: true };
             }
-            if (col.id === 'issues') {
+            if (col.id === 'issues' && handlers?.onFilterIssues) {
                 item.cell = renderSummaryIssues(handlers.onFilterIssues);
             }
             return item;
         });
-    } else if (type === 'Rules_Report') {
+    } else if (type === 'rules') {
         metadata.columns = columnDefs.rules.map((col) => ({
             itemOID: col.id,
             name: col.id,
@@ -107,7 +113,7 @@ const convertToDataset = (
     }
 
     // Add row number
-    let updatedData = data[type].map((row, index) => ({
+    let updatedData = data[reportSection].map((row, index) => ({
         ...row,
         '#': index + 1,
     }));

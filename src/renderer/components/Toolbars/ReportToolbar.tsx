@@ -149,6 +149,10 @@ const Header: React.FC = () => {
         };
     }, [handleFilterClick, handleFilterReset, isModalOpen]);
 
+    const tabHasFilter = ['details', 'summary', 'rules'].includes(
+        currentReportTab,
+    );
+
     return (
         <Stack
             sx={styles.main}
@@ -164,12 +168,15 @@ const Header: React.FC = () => {
                     onClick={handleFilterClick}
                     id="filterData"
                     size="small"
+                    disabled={!tabHasFilter}
                 >
                     <FilterIcon
                         sx={{
                             color: isFilterEnabled
                                 ? 'success.main'
-                                : 'primary.main',
+                                : tabHasFilter
+                                  ? 'primary.main'
+                                  : 'primary.disabled',
                         }}
                     />
                 </IconButton>

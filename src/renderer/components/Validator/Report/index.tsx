@@ -191,7 +191,7 @@ const ValidationReportPage: React.FC = () => {
         if (report) {
             const details = convertToDataset(
                 report,
-                'Issue_Details',
+                'details',
                 {
                     onOpenFile: handleOpenFile,
                     onFilterIssues: handleFilterIssues,
@@ -200,7 +200,7 @@ const ValidationReportPage: React.FC = () => {
             );
             const summary = convertToDataset(
                 report,
-                'Issue_Summary',
+                'summary',
                 {
                     onOpenFile: handleOpenFile,
                     onFilterIssues: handleFilterIssues,
@@ -209,7 +209,7 @@ const ValidationReportPage: React.FC = () => {
             );
             const rules = convertToDataset(
                 report,
-                'Rules_Report',
+                'rules',
                 {
                     onOpenFile: handleOpenFile,
                     onFilterIssues: handleFilterIssues,
