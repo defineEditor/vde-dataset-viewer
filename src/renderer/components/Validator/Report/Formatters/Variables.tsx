@@ -51,7 +51,11 @@ const Variables: React.FC<{
                         </Button>
                     );
                 }
-                return <Box sx={styles.text}>{item}</Box>;
+                return (
+                    <Box sx={styles.text} key={item}>
+                        {item}
+                    </Box>
+                );
             })}
         </Stack>
     );

@@ -10,7 +10,7 @@ import {
     TableContainer,
     TableRow,
 } from '@mui/material';
-import { ParsedValidationReport } from 'interfaces/core.report';
+import { ParsedValidationReport } from 'interfaces/common';
 
 const styles = {
     container: {

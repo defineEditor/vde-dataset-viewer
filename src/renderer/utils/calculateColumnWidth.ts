@@ -49,7 +49,7 @@ const calculateColumnWidth = (
                 col.maxSize &&
                 estimateWidths[colId] > col.maxSize
             ) {
-                estimateWidth[colId] = col.maxSize;
+                estimateWidths[colId] = col.maxSize;
                 totalFixedWidth += col.maxSize;
                 fixedWidthColumns.push(colId);
             }
