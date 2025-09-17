@@ -102,7 +102,9 @@ const Header: React.FC = () => {
     }, [dispatch]);
 
     const handleFilterClick = useCallback(() => {
-        dispatch(openModal({ type: modals.FILTER, data: {} }));
+        dispatch(
+            openModal({ type: modals.FILTER, filterType: 'dataset', data: {} }),
+        );
     }, [dispatch]);
 
     const handleFilterReset = useCallback(() => {
@@ -199,7 +201,11 @@ const Header: React.FC = () => {
                         handleOpenClick();
                         break;
                     case 'f':
-                        handleFilterClick();
+                        if (event.altKey) {
+                            handleFilterReset();
+                        } else {
+                            handleFilterClick();
+                        }
                         break;
                     case 'i':
                         handleDataSetInfoClick();

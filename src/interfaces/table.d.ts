@@ -1,4 +1,5 @@
 import { DatasetJsonMetadata } from 'interfaces/api.d';
+import { SettingsViewer } from 'interfaces/store.d';
 import { ItemType } from 'interfaces/datasetJson.d';
 import { BasicFilter } from 'js-array-filter';
 
@@ -26,12 +27,24 @@ export interface IHeaderCell {
     defaultOrder?: SortOrder;
     /** Size in px */
     size?: number;
+    /** Minimum size in px */
+    minSize?: number;
+    /** Maximum size in px */
+    maxSize?: number;
+    /** Size in percents */
+    sizePct?: number;
+    /** Padding */
+    padding?: number;
     /** Type */
     type?: ItemType;
     /** Filter is applied to the column */
     isFiltered?: boolean;
     /** Numeric variable with datetime format */
     numericDatetimeType?: 'date' | 'time' | 'datetime';
+    /** Cell render */
+    cell?: (cell: any) => React.JSX.Element;
+    /** Style */
+    style?: React.CSSProperties;
 }
 
 export type TableRowValue = string | number | boolean | null;
@@ -46,4 +59,11 @@ export interface ITableData {
     data: ITableRow[];
     appliedFilter: BasicFilter | null;
     fileId: string;
+}
+
+export interface TableSettings extends SettingsViewer {
+    hideRowNumbers?: boolean;
+    showLabel?: boolean;
+    height?: number;
+    width?: number;
 }

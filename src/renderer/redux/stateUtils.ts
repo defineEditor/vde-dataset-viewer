@@ -47,7 +47,14 @@ export const dehydrateState = (state: IStore): IStore => {
     newData.loadedRecords = data.loadedRecords;
     // Remove filter if it was applied
     newData.filterData = { ...newData.filterData, currentFilter: null };
-    const newUi: IUi = { ...ui, validation: {} };
+    // Remove validation filter and current report
+    newData.validator = {
+        ...newData.validator,
+        reportFilters: {},
+        reportData: {},
+    };
+    // Keep zoom level between sessions
+    const newUi: IUi = { ...ui, validation: {}, zoomLevel: state.ui.zoomLevel };
     // Remove all but API records
     const newApi: IApi = { ...api, apiRecords: state.api.apiRecords };
 

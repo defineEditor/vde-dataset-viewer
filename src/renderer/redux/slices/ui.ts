@@ -4,6 +4,7 @@ import {
     IUiSnackbar,
     IUiModal,
     IUiValidation,
+    IUiValidationPage,
     AllowedPathnames,
     DatasetType,
     ModalType,
@@ -152,6 +153,34 @@ export const uiSlice = createSlice({
         toggleSidebar: (state) => {
             state.viewer.sidebarOpen = !state.viewer.sidebarOpen;
         },
+        setValidationTab: (
+            state,
+            action: PayloadAction<IUiValidationPage['currentTab']>,
+        ) => {
+            state.validationPage.currentTab = action.payload;
+        },
+        setValidationReport: (state, action: PayloadAction<string | null>) => {
+            state.validationPage.currentReportId = action.payload;
+        },
+        setValidationReportTab: (
+            state,
+            action: PayloadAction<IUiValidationPage['currentReportTab']>,
+        ) => {
+            state.validationPage.currentReportTab = action.payload;
+        },
+        toggleShowOnlyDatasetsWithIssues: (state) => {
+            state.validationPage.showOnlyDatasetsWithIssues =
+                !state.validationPage.showOnlyDatasetsWithIssues;
+        },
+        setReportSummaryType: (
+            state,
+            action: PayloadAction<IUiValidationPage['reportSummaryType']>,
+        ) => {
+            state.validationPage.reportSummaryType = action.payload;
+        },
+        setZoomLevel: (state, action: PayloadAction<number>) => {
+            state.zoomLevel = action.payload;
+        },
         updateValidation: (
             state,
             action: PayloadAction<{
@@ -195,6 +224,12 @@ export const {
     setFilterInputMode,
     toggleSidebar,
     updateValidation,
+    setValidationReport,
+    setValidationTab,
+    setValidationReportTab,
+    toggleShowOnlyDatasetsWithIssues,
+    setReportSummaryType,
+    setZoomLevel,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

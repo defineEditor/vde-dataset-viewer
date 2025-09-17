@@ -376,6 +376,42 @@ class FileManager {
         }
     };
 
+    // Open directory dialog
+    public openFolder = async (
+        _event: IpcMainInvokeEvent,
+        options: {
+            multiple?: boolean;
+            initialFolder?: string;
+        },
+    ): Promise<string[] | null> => {
+        try {
+            const { initialFolder, multiple } = options;
+            let startFolder = initialFolder;
+            // Check if initialFolder exists;
+            if (initialFolder !== undefined) {
+                if (fs.existsSync(initialFolder) === false) {
+                    startFolder = undefined;
+                }
+            }
+            const properties: Array<'openDirectory' | 'multiSelections'> = [
+                'openDirectory',
+            ];
+            if (multiple) {
+                properties.push('multiSelections');
+            }
+            const result = await dialog.showOpenDialog({
+                properties,
+                defaultPath: startFolder,
+            });
+            if (result.canceled) {
+                return [];
+            }
+            return result.filePaths;
+        } catch (error) {
+            return null;
+        }
+    };
+
     public openDirectoryDialog = async (
         _event: IpcMainInvokeEvent,
         initialFolder: string | null,

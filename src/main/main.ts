@@ -8,7 +8,7 @@ import {
     IpcMainInvokeEvent,
 } from 'electron';
 import StoreManager from 'main/managers/storeManager';
-import { resolveHtmlPath, writeToClipboard } from 'main/util';
+import { resolveHtmlPath, writeToClipboard, resizeWindow } from 'main/util';
 import {
     installExtension,
     REDUX_DEVTOOLS,
@@ -19,7 +19,7 @@ import FileManager from 'main/managers/fileManager';
 import NetManager from 'main/managers/netManager';
 import TaskManager from 'main/managers/taskManager';
 import ReportManager from 'main/managers/reportManager';
-import { MainTask } from 'interfaces/main';
+import { MainTask, NewWindowProps } from 'interfaces/main';
 
 let mainWindow: BrowserWindow | null = null;
 let fileToOpen: string | null = null;
@@ -113,6 +113,8 @@ app.whenReady()
 
 const createWindow = async (
     filePath?: string | null,
+    position?: 'top' | 'bottom' | 'left' | 'right',
+    props?: NewWindowProps,
 ): Promise<BrowserWindow | null> => {
     const RESOURCES_PATH = app.isPackaged
         ? path.join(process.resourcesPath, 'assets')
@@ -145,6 +147,9 @@ const createWindow = async (
         }
         if (process.env.START_MINIMIZED) {
             newWindow.minimize();
+        } else if (position) {
+            resizeWindow(position, newWindow.webContents);
+            newWindow.showInactive();
         } else {
             newWindow.maximize();
             newWindow.showInactive();
@@ -152,7 +157,7 @@ const createWindow = async (
 
         // Open file if one was provided
         if (filePath) {
-            newWindow.webContents.send('renderer:openFile', filePath);
+            newWindow.webContents.send('renderer:openFile', filePath, props);
         }
     });
 
@@ -195,8 +200,40 @@ const createWindow = async (
 const handleOpenInNewWindow = async (
     _event: IpcMainInvokeEvent,
     filePath: string,
+    position?: 'top' | 'bottom' | 'left' | 'right',
+    props?: NewWindowProps,
 ): Promise<void> => {
-    createWindow(filePath);
+    createWindow(filePath, position, props);
+};
+
+// Function to handle resizing and positioning the current window
+const handleResizeWindow = async (
+    event: IpcMainInvokeEvent,
+    position: 'top' | 'bottom' | 'left' | 'right',
+): Promise<void> => {
+    if (!event.sender) {
+        return Promise.resolve();
+    }
+    return resizeWindow(position, event.sender);
+};
+
+// Function to handle zoom level setting
+const handleSetZoom = async (
+    event: IpcMainInvokeEvent,
+    zoomLevel: number,
+): Promise<void> => {
+    if (!event.sender) {
+        return Promise.resolve();
+    }
+    event.sender.setZoomLevel(zoomLevel);
+};
+
+// Function to handle getting current zoom level
+const handleGetZoom = async (event: IpcMainInvokeEvent): Promise<number> => {
+    if (!event.sender) {
+        return Promise.resolve(0);
+    }
+    return event.sender.getZoomLevel();
 };
 
 /**
@@ -225,9 +262,24 @@ app.whenReady()
         ipcMain.handle('main:checkForUpdates', checkForUpdates);
         ipcMain.handle('main:downloadUpdate', downloadUpdate);
         ipcMain.handle('main:openInNewWindow', handleOpenInNewWindow);
+        ipcMain.handle('main:resizeWindow', handleResizeWindow);
+        ipcMain.handle('main:setZoom', handleSetZoom);
+        ipcMain.handle('main:getZoom', handleGetZoom);
         ipcMain.handle(
             'main:deleteValidationReport',
             reportManager.deleteValidationReport,
+        );
+        ipcMain.handle(
+            'main:getValidationReport',
+            reportManager.getValidationReport,
+        );
+        ipcMain.handle(
+            'main:downloadValidationReport',
+            reportManager.downloadValidationReport,
+        );
+        ipcMain.handle(
+            'main:compareValidationReports',
+            reportManager.compareValidationReports,
         );
         ipcMain.handle('read:getMetadata', fileManager.handleGetMetadata);
         ipcMain.handle(

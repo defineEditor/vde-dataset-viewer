@@ -8,6 +8,8 @@ import {
     Paper,
     Box,
     TableSortLabel,
+    IconButton,
+    Tooltip,
 } from '@mui/material';
 import {
     flexRender,
@@ -17,13 +19,45 @@ import {
     SortingState as ISortingState,
     Updater as IUpdater,
 } from '@tanstack/react-table';
+import SelectAllIcon from '@mui/icons-material/SelectAll';
 import FilterIcon from '@mui/icons-material/FilterAlt';
 import FontDownloadIcon from '@mui/icons-material/FontDownload';
 import LooksOneIcon from '@mui/icons-material/LooksOne';
 import AccessTimeIcon from '@mui/icons-material/HourglassFull';
 import { VirtualItem, Virtualizer } from '@tanstack/react-virtual';
-import { ITableRow } from 'interfaces/common';
+import { ITableRow, TableSettings } from 'interfaces/common';
 import Loading from 'renderer/components/Loading';
+
+const getContainerStyle = (settings: TableSettings): React.CSSProperties => {
+    const result: React.CSSProperties = {
+        overflow: 'auto',
+        position: 'relative',
+        height: settings.height ? `${settings.height}px` : '100vh',
+        userSelect: 'none',
+    };
+    if (settings.width) {
+        result.width = `${settings.width}px`;
+    }
+    return result;
+};
+
+const getLoadingStyle = (settings: TableSettings): React.CSSProperties => {
+    return {
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        display: 'flex',
+        flexDirection: 'column',
+        transform: 'translate(-50%, -50%)',
+        zIndex: 999,
+        scale:
+            settings.height && settings.height > 400
+                ? '1'
+                : settings.height
+                  ? settings.height / 400
+                  : '1',
+    };
+};
 
 const styles = {
     header: {
@@ -36,18 +70,6 @@ const styles = {
     headerColumn: {
         display: 'flex',
         width: '100%',
-    },
-    containerWithPage: {
-        overflow: 'auto',
-        position: 'relative',
-        height: 'calc(100vh - 116px)', // 116px - toolbar + pagination
-        userSelect: 'none',
-    },
-    containerWithoutPage: {
-        overflow: 'auto',
-        position: 'relative',
-        height: 'calc(100vh - 64px)', // 64 - toolbar
-        userSelect: 'none',
     },
     table: {
         display: 'grid',
@@ -85,6 +107,7 @@ const styles = {
     tableCellDynamic: {
         border: '1px solid rgba(224, 224, 224, 1)',
         fontFamily: 'Roboto Mono',
+        whiteSpace: 'pre-wrap',
         cursor: 'pointer',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
@@ -94,7 +117,7 @@ const styles = {
     tableCellFixed: {
         border: '1px solid rgba(224, 224, 224, 1)',
         fontFamily: 'Roboto Mono',
-        whiteSpace: 'nowrap',
+        whiteSpace: 'pre',
         cursor: 'pointer',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
@@ -140,15 +163,7 @@ const styles = {
         maxHeight: '100%',
         textAlign: 'center',
     },
-    loading: {
-        position: 'fixed',
-        top: '50%',
-        left: '50%',
-        display: 'flex',
-        flexDirection: 'column',
-        transform: 'translate(-50%, -50%)',
-        zIndex: 999,
-    },
+    loading: {},
     sponsored: {
         marginTop: '10px',
         fontSize: '14px',
@@ -164,6 +179,13 @@ const styles = {
         fontSize: '16px',
         color: 'grey.600',
         ml: '4px',
+    },
+    squareIconButton: {
+        aspectRatio: '1 / 1',
+        minWidth: 0,
+        textAlign: 'center',
+        flex: 1,
+        justifyContent: 'center',
     },
 };
 
@@ -195,11 +217,10 @@ const DatasetViewUI: React.FC<{
     handleMouseOver: (rowIndex: number, columnIndex: number) => void;
     handleResizeEnd: () => void;
     isLoading: boolean;
-    dynamicRowHeight: boolean;
     rowVirtualizer: Virtualizer<HTMLDivElement, Element>;
     sorting: ISortingState;
     onSortingChange: (updater: IUpdater<ISortingState>) => void;
-    hasPagination: boolean;
+    settings: TableSettings;
     handleContextMenu?: (
         event: React.MouseEvent<HTMLTableCellElement, MouseEvent>,
         rowIndex: number,
@@ -207,8 +228,6 @@ const DatasetViewUI: React.FC<{
     ) => void;
     filteredColumns?: string[];
     containerStyle?: React.CSSProperties;
-    hideRowNumbers?: boolean;
-    showTypeIcons?: boolean;
 }> = ({
     table,
     tableContainerRef,
@@ -224,26 +243,18 @@ const DatasetViewUI: React.FC<{
     handleMouseOver,
     handleResizeEnd,
     isLoading,
-    dynamicRowHeight,
+    settings,
     rowVirtualizer,
     sorting,
     onSortingChange,
-    hasPagination,
     handleContextMenu = (_event, _rowIndex, _columnIndex) => {},
     filteredColumns = [],
     containerStyle = undefined,
-    hideRowNumbers = false,
-    showTypeIcons = false,
 }) => {
     return (
         <Paper
             ref={tableContainerRef}
-            sx={
-                containerStyle ||
-                (hasPagination
-                    ? styles.containerWithPage
-                    : styles.containerWithoutPage)
-            }
+            sx={containerStyle || getContainerStyle(settings)}
         >
             <Table sx={styles.table}>
                 <TableHead sx={styles.header}>
@@ -252,24 +263,27 @@ const DatasetViewUI: React.FC<{
                             key={headerGroup.id}
                             style={styles.headerColumn}
                         >
-                            {!hideRowNumbers && (
+                            {!settings.hideRowNumbers && (
                                 <TableCell
                                     sx={{
                                         ...styles.tableHeaderCell,
                                         width: visibleColumns[0].getSize(),
                                         ...styles.headerRowNumberCell,
                                     }}
-                                    onClick={() => {
-                                        handleMouseDown(-1, -1);
-                                    }}
                                 >
-                                    <Box sx={styles.tableHeaderLabel}>
-                                        {flexRender(
-                                            headerGroup.headers[0].column
-                                                .columnDef.header,
-                                            headerGroup.headers[0].getContext(),
-                                        )}
-                                    </Box>
+                                    <Tooltip
+                                        title="Select All"
+                                        enterDelay={1000}
+                                    >
+                                        <IconButton
+                                            sx={styles.squareIconButton}
+                                            onClick={() => {
+                                                handleMouseDown(-1, -1);
+                                            }}
+                                        >
+                                            <SelectAllIcon />
+                                        </IconButton>
+                                    </Tooltip>
                                 </TableCell>
                             )}
                             {virtualPaddingLeft ? (
@@ -350,7 +364,7 @@ const DatasetViewUI: React.FC<{
                                                     header.getContext(),
                                                 )}
                                             </Box>
-                                            {showTypeIcons &&
+                                            {settings.showTypeIcons &&
                                                 getTypeIcon(
                                                     header.column.columnDef.meta
                                                         ?.type,
@@ -424,12 +438,12 @@ const DatasetViewUI: React.FC<{
                             return (
                                 <TableRow
                                     data-index={
-                                        dynamicRowHeight
+                                        settings.dynamicRowHeight
                                             ? virtualRow.index
                                             : undefined
                                     }
                                     ref={(node) =>
-                                        dynamicRowHeight
+                                        settings.dynamicRowHeight
                                             ? rowVirtualizer.measureElement(
                                                   node,
                                               )
@@ -438,7 +452,7 @@ const DatasetViewUI: React.FC<{
                                     key={row.id}
                                     sx={{
                                         ...styles.tableRow,
-                                        ...(dynamicRowHeight
+                                        ...(settings.dynamicRowHeight
                                             ? {}
                                             : {
                                                   height: `${virtualRow.size}px`,
@@ -446,10 +460,10 @@ const DatasetViewUI: React.FC<{
                                         transform: `translateY(${virtualRow.start}px)`,
                                     }}
                                 >
-                                    {!hideRowNumbers && (
+                                    {!settings.hideRowNumbers && (
                                         <TableCell
                                             sx={{
-                                                ...(dynamicRowHeight
+                                                ...(settings.dynamicRowHeight
                                                     ? styles.tableCellDynamic
                                                     : styles.tableCellFixed),
                                                 width: visibleCells[0].column.getSize(),
@@ -491,6 +505,14 @@ const DatasetViewUI: React.FC<{
                                     ) : null}
                                     {virtualColumns.map((vc) => {
                                         const cell = visibleCells[vc.index + 1]; // Adjust index for row number
+
+                                        let cellStyle: React.CSSProperties = {
+                                            ...(settings.dynamicRowHeight
+                                                ? styles.tableCellDynamic
+                                                : styles.tableCellFixed),
+                                            width: cell.column.getSize(),
+                                        };
+
                                         const isHighlighted =
                                             highlightedCells.some(
                                                 (highlightedCell) =>
@@ -499,18 +521,25 @@ const DatasetViewUI: React.FC<{
                                                     highlightedCell.column ===
                                                         vc.index + 1,
                                             );
+                                        if (isHighlighted) {
+                                            cellStyle = {
+                                                ...cellStyle,
+                                                ...styles.highlightedCell,
+                                            };
+                                        }
+
+                                        if (cell.column.columnDef.meta?.style) {
+                                            cellStyle = {
+                                                ...cellStyle,
+                                                ...cell.column.columnDef.meta
+                                                    .style,
+                                            };
+                                        }
+
                                         return (
                                             <TableCell
                                                 key={cell.id}
-                                                sx={{
-                                                    ...(dynamicRowHeight
-                                                        ? styles.tableCellDynamic
-                                                        : styles.tableCellFixed),
-                                                    width: cell.column.getSize(),
-                                                    ...(isHighlighted
-                                                        ? styles.highlightedCell
-                                                        : {}),
-                                                }}
+                                                sx={cellStyle}
                                                 onClick={() =>
                                                     handleCellClick(
                                                         virtualRow.index,
@@ -558,7 +587,7 @@ const DatasetViewUI: React.FC<{
                 </TableBody>
             </Table>
             {isLoading && (
-                <Box sx={styles.loading}>
+                <Box sx={getLoadingStyle(settings)}>
                     <Loading />
                     <Box sx={styles.sponsored}>Sponsored by:</Box>
                 </Box>

@@ -7,6 +7,8 @@ import {
     ConvertedFileInfo,
     ValidationTaskFile,
     MainTask,
+    ParsedValidationReport,
+    ValidationReportCompare,
 } from 'interfaces/common';
 import store from 'renderer/redux/store';
 import { mainTaskTypes } from 'misc/constants';
@@ -81,7 +83,7 @@ export const startValidation = async (
     let lastReportedValidationProgress = 0;
 
     // Set up progress subscription
-    context.subscribeToTaskProgress((info: TaskProgress) => {
+    context.subscribeToTaskProgress(async (info: TaskProgress) => {
         if (info.type === mainTaskTypes.CONVERT && info.id === validationId) {
             // For the conversion task, we need to calculate the total progress based on the number of files which are converted
             if (info.fullPath) {
@@ -159,7 +161,46 @@ export const startValidation = async (
                         typeof info.result === 'object' &&
                         'date' in info.result
                     ) {
-                        store.dispatch(addValidationReport(info.result));
+                        // First we need to compare with the previous reports
+                        const allReports = Object.values(
+                            store.getState().data.validator.reports,
+                        );
+                        const newReport = info.result;
+
+                        // Find reports with exactly the same files
+                        const sameFilesReports = allReports.filter((report) => {
+                            if (
+                                report.files.length !== newReport.files.length
+                            ) {
+                                return false;
+                            }
+
+                            // Check if all file paths match
+                            return report.files.every((file) =>
+                                newReport.files.some(
+                                    (newFile) => newFile.file === file.file,
+                                ),
+                            );
+                        });
+                        if (sameFilesReports.length > 0) {
+                            // Find the most recent report with same files
+                            const mostRecentReport = sameFilesReports.reduce(
+                                (latest, current) =>
+                                    current.date > latest.date
+                                        ? current
+                                        : latest,
+                            );
+                            const reportCompare =
+                                await compareValidationReports(
+                                    newReport.output,
+                                    mostRecentReport.output,
+                                );
+                            if (reportCompare) {
+                                newReport.summary.changes =
+                                    reportCompare.counts;
+                            }
+                        }
+                        store.dispatch(addValidationReport(newReport));
                     }
                 }
             }
@@ -267,5 +308,34 @@ export const deleteValidationReport = async (
     fileName: string,
 ): Promise<boolean> => {
     const result = await window.electron.deleteValidationReport(fileName);
+    return result;
+};
+
+export const getValidationReport = async (
+    fileName: string,
+): Promise<ParsedValidationReport | null> => {
+    const result = await window.electron.getValidationReport(fileName);
+    return result;
+};
+
+export const compareValidationReports = async (
+    fileNameBase: string,
+    fileNameComp: string,
+): Promise<ValidationReportCompare | null> => {
+    const result = await window.electron.compareValidationReports(
+        fileNameBase,
+        fileNameComp,
+    );
+    return result;
+};
+
+export const downloadValidationReport = async (
+    fileName: string,
+    initialFolder?: string,
+): Promise<string | false> => {
+    const result = await window.electron.downloadValidationReport(
+        fileName,
+        initialFolder,
+    );
     return result;
 };

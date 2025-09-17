@@ -22,6 +22,7 @@ import {
     Stack,
     TextField,
     InputAdornment,
+    Typography,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { closeModal, setDatasetInfoTab } from 'renderer/redux/slices/ui';
@@ -38,13 +39,20 @@ const styles = {
         background:
             'radial-gradient(circle farthest-corner at bottom center,#eeeeee,#e5e4e4)',
     },
-    tabPanel: {
-        height: 'calc(100% - 48px)', // Adjust height to account for tab header
+    metadataPanel: {
+        height: '100%',
         overflow: 'auto',
+    },
+    columnsPanel: {
+        height: '100%',
+        overflow: 'none',
     },
     title: {
         backgroundColor: 'primary.main',
         color: 'grey.100',
+    },
+    label: {
+        py: 0.5,
     },
     actions: {
         m: 1,
@@ -128,7 +136,9 @@ const DatasetInfo: React.FC<IUiModal> = (props: IUiModal) => {
                     alignItems="center"
                     justifyContent="space-between"
                 >
-                    Dataset Information
+                    <Typography variant="h6" sx={styles.label}>
+                        Dataset Information
+                    </Typography>
                     {datasetInfoTab === 1 && (
                         <TextField
                             placeholder="Ctrl + F to search"
@@ -163,19 +173,20 @@ const DatasetInfo: React.FC<IUiModal> = (props: IUiModal) => {
                     <Tab label="Metadata" sx={styles.tab} />
                     <Tab label="Columns" sx={styles.tab} />
                 </Tabs>
-                <Box hidden={datasetInfoTab !== 0} sx={styles.tabPanel}>
+                <Box hidden={datasetInfoTab !== 0} sx={styles.metadataPanel}>
                     <MetadataInfo
                         metadata={currentMetadata}
                         extraInfo={extraInfo}
                     />
                 </Box>
-                <Box hidden={datasetInfoTab !== 1} sx={styles.tabPanel}>
-                    <ColumnsInfo
-                        metadata={currentMetadata}
-                        onClose={handleClose}
-                        active={datasetInfoTab === 1}
-                        searchTerm={searchTerm}
-                    />
+                <Box hidden={datasetInfoTab !== 1} sx={styles.columnsPanel}>
+                    {datasetInfoTab === 1 && (
+                        <ColumnsInfo
+                            metadata={currentMetadata}
+                            onClose={handleClose}
+                            searchTerm={searchTerm}
+                        />
+                    )}
                 </Box>
             </DialogContent>
             <DialogActions sx={styles.actions}>

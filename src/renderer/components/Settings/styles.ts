@@ -32,6 +32,9 @@ export const styles = {
     buttonContainer: {
         justifyContent: 'flex-end',
     },
+    refreshContainer: {
+        alignContent: 'center',
+    },
     tabs: {
         background:
             'radial-gradient(circle farthest-corner at bottom center,#eeeeee,#e5e4e4)',

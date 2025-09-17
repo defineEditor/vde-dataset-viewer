@@ -10,17 +10,33 @@ import {
     Stack,
     Box,
     Paper,
+    TextField,
+    InputAdornment,
     TablePagination,
+    Tooltip,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import { openSnackbar } from 'renderer/redux/slices/ui';
-import { removeValidationReport } from 'renderer/redux/slices/data';
+import DownloadIcon from '@mui/icons-material/Download';
+import SearchIcon from '@mui/icons-material/Search';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
+import {
+    openSnackbar,
+    setValidationReport,
+    setValidationTab,
+    setPathname,
+    closeModal,
+} from 'renderer/redux/slices/ui';
+import {
+    removeValidationReport,
+    setReportLastSaveFolder,
+} from 'renderer/redux/slices/data';
 import { ValidationReport } from 'interfaces/common';
+import { paths, modals } from 'misc/constants';
 
 const styles = {
     container: {
-        p: 2,
+        p: 0,
         height: '100%',
         overflow: 'auto',
         display: 'flex',
@@ -36,6 +52,7 @@ const styles = {
         overflow: 'auto',
     },
     pagination: {
+        backgroundColor: 'grey.200',
         display: 'flex',
         flex: '0 1 auto',
         justifyContent: 'flex-end',
@@ -64,42 +81,147 @@ const styles = {
         color: '#4caf50',
         fontWeight: 'medium',
     },
+    title: {
+        px: 2,
+        pt: 2,
+        flex: '1 1 1%',
+        minHeight: 60,
+        overflowY: 'auto',
+    },
     listContentContainer: {
-        flexGrow: 1,
+        px: 2,
+        pb: 1,
+        flex: '1 1 99%',
+        height: '100%',
         minHeight: 0,
         overflowY: 'auto',
     },
     paginationPaper: {
-        mt: 'auto',
+        backgroundColor: 'grey.200',
         borderTop: 1,
         borderRadius: 0,
         borderColor: 'divider',
     },
+    searchInput: {
+        color: 'text.primary',
+    },
+    searchIcon: { color: 'text.secondary' },
+};
+
+const getTimeAgo = (date: number): string => {
+    const now = new Date();
+    const reportDate = new Date(date);
+    const diffMs = now.getTime() - reportDate.getTime();
+
+    const minute = 60 * 1000;
+    const hour = minute * 60;
+    const day = hour * 24;
+    const week = day * 7;
+    const month = day * 31; // Average month length
+    const year = day * 366; // Average year length with leap years
+
+    if (diffMs < minute) {
+        return 'just now';
+    }
+    if (diffMs < hour) {
+        const minutes = Math.floor(diffMs / minute);
+        return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+    }
+    if (diffMs < day) {
+        const hours = Math.floor(diffMs / hour);
+        return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+    }
+    if (diffMs < week) {
+        const days = Math.floor(diffMs / day);
+        return `${days} day${days === 1 ? '' : 's'} ago`;
+    }
+    if (diffMs < month) {
+        const weeks = Math.floor(diffMs / week);
+        return `${weeks} week${weeks === 1 ? '' : 's'} ago`;
+    }
+    if (diffMs < year) {
+        const months = Math.floor(diffMs / month);
+        return `${months} month${months === 1 ? '' : 's'} ago`;
+    }
+    const years = Math.floor(diffMs / year);
+    return `${years} year${years === 1 ? '' : 's'} ago`;
+};
+
+const getReportTitle = (report: ValidationReport): string => {
+    const date = new Date(report.date);
+    const reportDate =
+        `${date.getFullYear()}` +
+        `-${String(date.getMonth() + 1).padStart(2, '0')}` +
+        `-${String(date.getDate()).padStart(2, '0')}` +
+        ` ${String(date.getHours()).padStart(2, '0')}:` +
+        `${String(date.getMinutes()).padStart(2, '0')}:` +
+        `${String(date.getSeconds()).padStart(2, '0')}`;
+
+    // Use first 5 dataset names and add (+ X more) if applicable
+    const datasetNames = report.files
+        ? report.files
+              .slice(0, 5)
+              .map((file) =>
+                  file.file
+                      .replace(/.*(?:\/|\\)(.*)\.\w+$/, '$1')
+                      .toUpperCase(),
+              )
+              .join(', ')
+        : '';
+    const additionalCount =
+        report.files && report.files.length > 5
+            ? ` (+${report.files.length - 5} more)`
+            : '';
+
+    const reportTitle =
+        `${datasetNames}${additionalCount || ''} ` +
+            `${reportDate} (${getTimeAgo(report.date)} ago)` ||
+        'Validation Report';
+    return reportTitle;
 };
 
 interface ResultsProps {
     filePaths?: string[];
+    closeValidationModal?: true;
 }
 
-const ValidationResults: React.FC<ResultsProps> = ({ filePaths = [] }) => {
+const ValidationResults: React.FC<ResultsProps> = ({
+    filePaths = [],
+    closeValidationModal = false,
+}) => {
     const dispatch = useAppDispatch();
     const allReports = useAppSelector((state) => state.data.validator.reports);
     const reports = useMemo(() => {
         // Keep only those reports, which have include all the file paths
+        const result = Object.values(allReports).slice();
         if (!filePaths || filePaths.length === 0) {
-            return allReports; // No filtering if no file paths provided
+            return result.sort((a, b) => b.date - a.date);
         }
-        return allReports.filter((report) => {
-            const reportFiles = report.files.map((file) => file.file);
-            if (reportFiles.length < filePaths.length) {
-                return false; // Report doesn't include all file paths
-            }
-            // Check if all file paths match
-            return filePaths.every((file) => reportFiles.includes(file));
-        });
+        return result
+            .filter((report) => {
+                const reportFiles = report.files.map((file) => file.file);
+                if (reportFiles.length < filePaths.length) {
+                    return false; // Report doesn't include all file paths
+                }
+                // Check if all file paths match
+                return filePaths.every((file) => reportFiles.includes(file));
+            })
+            .sort((a, b) => b.date - a.date);
     }, [allReports, filePaths]);
 
     const { apiService } = React.useContext(AppContext);
+
+    // Get report titles;
+    const reportTitles = useMemo(() => {
+        const titles: { [id: string]: string } = {};
+        reports.forEach((report) => {
+            titles[report.id] = getReportTitle(report);
+        });
+        return titles;
+    }, [reports]);
+
+    // Confirm delete indicator
+    const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
     const [page, setPage] = useState(0);
     const [itemsPerPage, setItemsPerPage] = useState(6);
@@ -110,7 +232,7 @@ const ValidationResults: React.FC<ResultsProps> = ({ filePaths = [] }) => {
         const calculateItemsPerPage = () => {
             if (listContainerRef.current) {
                 const containerHeight =
-                    listContainerRef.current.clientHeight - 16 - 20; // Subtract padding/margin
+                    listContainerRef.current.clientHeight - 60; // Subtract padding/margin/pagination
                 const itemHeight = 80; // Each list item with margin is 80px
                 const calculatedItems = Math.floor(
                     containerHeight / itemHeight,
@@ -121,32 +243,18 @@ const ValidationResults: React.FC<ResultsProps> = ({ filePaths = [] }) => {
                     Math.min(calculatedItems, 50),
                 );
                 setItemsPerPage(newItemsPerPage);
-                // Reset page if current page would be invalid
-                if (page > 0) {
-                    const maxPage = Math.max(
-                        0,
-                        Math.ceil(reports.length / newItemsPerPage) - 1,
-                    );
-                    if (page > maxPage) {
-                        setPage(maxPage);
-                    }
-                }
             }
         };
 
         // Calculate on mount and when container size might change
         calculateItemsPerPage();
 
-        // Add resize observer to recalculate when container size changes
-        const resizeObserver = new ResizeObserver(calculateItemsPerPage);
-        if (listContainerRef.current) {
-            resizeObserver.observe(listContainerRef.current);
-        }
+        window.addEventListener('resize', calculateItemsPerPage);
 
         return () => {
-            resizeObserver.disconnect();
+            window.removeEventListener('resize', calculateItemsPerPage);
         };
-    }, [reports.length, page]);
+    }, [reports.length]);
 
     const handleChangePage = (
         _event: React.MouseEvent<HTMLButtonElement> | null,
@@ -155,8 +263,12 @@ const ValidationResults: React.FC<ResultsProps> = ({ filePaths = [] }) => {
         setPage(newPage);
     };
 
-    const handleDeleteReport = async (index: number) => {
-        dispatch(removeValidationReport({ index }));
+    const handleDeleteReport = async (
+        event: React.MouseEvent<HTMLButtonElement>,
+        index: number,
+    ) => {
+        event.stopPropagation();
+        dispatch(removeValidationReport({ id: reports[index].id }));
         const deleteResult = await apiService.deleteValidationReport(
             reports[index].output,
         );
@@ -187,8 +299,50 @@ const ValidationResults: React.FC<ResultsProps> = ({ filePaths = [] }) => {
         }
     };
 
-    const handleOpenReport = (_report: ValidationReport) => {
-        // TODO: Implement open report functionality
+    const lastReportSaveFolder = useAppSelector(
+        (state) => state.data.validator.lastReportSaveFolder,
+    );
+
+    const handleDownloadReport = async (
+        event: React.MouseEvent<HTMLButtonElement>,
+        index: number,
+    ) => {
+        event.stopPropagation();
+        const downloadResult = await apiService.downloadValidationReport(
+            reports[index].output,
+            lastReportSaveFolder,
+        );
+        if (downloadResult === false) {
+            dispatch(
+                openSnackbar({
+                    message: `Error downloading report`,
+                    type: 'error',
+                }),
+            );
+        } else if (downloadResult !== '') {
+            dispatch(
+                openSnackbar({
+                    message: 'Validation report downloaded',
+                    type: 'success',
+                }),
+            );
+            dispatch(
+                setReportLastSaveFolder(downloadResult), // Save last used folder
+            );
+        }
+    };
+
+    const handleOpenReport = (index: number) => {
+        dispatch(setValidationReport(reports[index].output));
+        dispatch(setValidationTab('report'));
+        dispatch(
+            setPathname({
+                pathname: paths.VALIDATOR,
+            }),
+        );
+        if (closeValidationModal) {
+            dispatch(closeModal({ type: modals.VALIDATOR }));
+        }
     };
 
     const getDatasetCount = (report: ValidationReport): number => {
@@ -202,44 +356,26 @@ const ValidationResults: React.FC<ResultsProps> = ({ filePaths = [] }) => {
         }
     };
 
-    const getTimeAgo = (date: number): string => {
-        const now = new Date();
-        const reportDate = new Date(date);
-        const diffMs = now.getTime() - reportDate.getTime();
+    // Handle search
+    const [searchTerm, setSearchTerm] = useState('');
+    const searchInputRef = useRef<HTMLInputElement>(null);
 
-        const minute = 60 * 1000;
-        const hour = minute * 60;
-        const day = hour * 24;
-        const week = day * 7;
-        const month = day * 31; // Average month length
-        const year = day * 366; // Average year length with leap years
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            // Focus search input when Ctrl+F is pressed and Columns tab is active
+            if (event.ctrlKey && event.key === 'f') {
+                event.preventDefault();
+                if (searchInputRef.current) {
+                    searchInputRef.current.focus();
+                }
+            }
+        };
 
-        if (diffMs < minute) {
-            return 'just now';
-        }
-        if (diffMs < hour) {
-            const minutes = Math.floor(diffMs / minute);
-            return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
-        }
-        if (diffMs < day) {
-            const hours = Math.floor(diffMs / hour);
-            return `${hours} hour${hours === 1 ? '' : 's'} ago`;
-        }
-        if (diffMs < week) {
-            const days = Math.floor(diffMs / day);
-            return `${days} day${days === 1 ? '' : 's'} ago`;
-        }
-        if (diffMs < month) {
-            const weeks = Math.floor(diffMs / week);
-            return `${weeks} week${weeks === 1 ? '' : 's'} ago`;
-        }
-        if (diffMs < year) {
-            const months = Math.floor(diffMs / month);
-            return `${months} month${months === 1 ? '' : 's'} ago`;
-        }
-        const years = Math.floor(diffMs / year);
-        return `${years} year${years === 1 ? '' : 's'} ago`;
-    };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, []);
 
     if (reports.length === 0) {
         return (
@@ -259,105 +395,163 @@ const ValidationResults: React.FC<ResultsProps> = ({ filePaths = [] }) => {
         );
     }
 
-    // Get sorted reports for pagination
-    const sortedReports = reports.slice().sort((a, b) => b.date - a.date);
+    // Filter reports based on search term
+    const filteredReports = reports.filter((report) => {
+        if (!searchTerm) {
+            return true;
+        }
+        const title = reportTitles[report.id] || '';
+        return title.toLowerCase().includes(searchTerm.toLowerCase());
+    });
 
-    const totalReports = sortedReports.length;
-    const paginatedReports = sortedReports.slice(
+    // If the number of filtered reports is less than current page start, reset to page 0
+    if (filteredReports.length <= page * itemsPerPage && page !== 0) {
+        setPage(0);
+    }
+
+    // Get sorted reports for pagination
+    const totalReports = filteredReports.length;
+    const paginatedReports = filteredReports.slice(
         page * itemsPerPage,
         page * itemsPerPage + itemsPerPage,
     );
 
     return (
         <Box sx={styles.container}>
-            <Typography variant="h6" gutterBottom>
-                Validation Results ({reports.length})
-            </Typography>
+            <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                mb={2}
+                sx={styles.title}
+            >
+                <Typography variant="h6" gutterBottom>
+                    Validation Results ({filteredReports.length})
+                </Typography>
+                <TextField
+                    placeholder="Ctrl + F to search"
+                    size="small"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    variant="outlined"
+                    inputRef={searchInputRef}
+                    slotProps={{
+                        input: {
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchIcon sx={styles.searchIcon} />
+                                </InputAdornment>
+                            ),
+                            sx: styles.searchInput,
+                        },
+                    }}
+                />
+            </Stack>
             <Box ref={listContainerRef} sx={styles.listContentContainer}>
                 <List>
                     {paginatedReports.map((report, _displayIndex) => {
-                        const actualIndex = sortedReports.indexOf(report);
+                        const actualIndex = reports.indexOf(report);
                         const datasetCount = getDatasetCount(report);
-                        const {
-                            uniqueIssues,
-                            totalIssues,
-                            newIssues,
-                            changedIssues,
-                            resolvedIssues,
-                        } = report.summary;
-                        const date = new Date(report.date);
-                        const reportDate =
-                            `${date.getFullYear()}` +
-                            `-${String(date.getMonth() + 1).padStart(2, '0')}` +
-                            `-${String(date.getDate()).padStart(2, '0')}` +
-                            ` ${String(date.getHours()).padStart(2, '0')}:` +
-                            `${String(date.getMinutes()).padStart(2, '0')}:` +
-                            `${String(date.getSeconds()).padStart(2, '0')}`;
+                        const { uniqueIssues, totalIssues } = report.summary;
 
-                        // Use first 5 dataset names and add (+ X more) if applicable
-                        const datasetNames = report.files
-                            ? report.files
-                                  .slice(0, 5)
-                                  .map((file) =>
-                                      file.file
-                                          .replace(
-                                              /.*(?:\/|\\)(.*)\.\w+$/,
-                                              '$1',
-                                          )
-                                          .toUpperCase(),
-                                  )
-                                  .join(', ')
-                            : '';
-                        const additionalCount =
-                            report.files && report.files.length > 5
-                                ? ` (+${report.files.length - 5} more)`
-                                : '';
-
-                        const reportTitle =
-                            `${datasetNames}${additionalCount || ''} ` +
-                                `${reportDate} (${getTimeAgo(report.date)} ago)` ||
-                            'Validation Report';
-
-                        const hasComparison =
-                            newIssues !== undefined ||
-                            changedIssues !== undefined ||
-                            resolvedIssues !== undefined;
-                        const comparisonText = hasComparison
-                            ? ` (resolved: ${resolvedIssues || 0}, changed: ${changedIssues || 0}, new: ${newIssues || 0})`
-                            : '';
+                        let comparisonText = '';
+                        if (report.summary.changes) {
+                            const { newIssues, changedIssues, resolvedIssues } =
+                                report.summary.changes;
+                            comparisonText = ` (resolved: ${resolvedIssues || 0}, changed: ${changedIssues || 0}, new: ${newIssues || 0})`;
+                        }
 
                         return (
                             <ListItem
                                 key={report.date}
+                                onClick={() => handleOpenReport(actualIndex)}
                                 sx={
                                     uniqueIssues === 0
                                         ? styles.listItemSuccess
                                         : styles.listItem
                                 }
                                 secondaryAction={
-                                    <Stack direction="row" spacing={1}>
-                                        <IconButton
-                                            edge="end"
-                                            aria-label="open report"
-                                            onClick={() =>
-                                                handleOpenReport(report)
-                                            }
-                                            size="small"
-                                        >
-                                            <OpenInNewIcon />
-                                        </IconButton>
-                                        <IconButton
-                                            edge="end"
-                                            aria-label="delete report"
-                                            onClick={() =>
-                                                handleDeleteReport(actualIndex)
-                                            }
-                                            size="small"
-                                            color="default"
-                                        >
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </Stack>
+                                    confirmDelete === report.id ? (
+                                        <Stack direction="row" spacing={1}>
+                                            <Tooltip
+                                                title="Cancel Delete"
+                                                enterDelay={1000}
+                                            >
+                                                <IconButton
+                                                    edge="end"
+                                                    aria-label="delete cancel"
+                                                    onClick={(event) => {
+                                                        event.stopPropagation();
+                                                        setConfirmDelete(null);
+                                                    }}
+                                                    size="small"
+                                                    color="default"
+                                                >
+                                                    <CloseIcon />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip
+                                                title="Confirm Delete"
+                                                enterDelay={1000}
+                                            >
+                                                <IconButton
+                                                    edge="end"
+                                                    aria-label="delete confirm"
+                                                    onClick={(event) =>
+                                                        handleDeleteReport(
+                                                            event,
+                                                            actualIndex,
+                                                        )
+                                                    }
+                                                    size="small"
+                                                    color="default"
+                                                >
+                                                    <CheckIcon />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Stack>
+                                    ) : (
+                                        <Stack direction="row" spacing={1}>
+                                            <Tooltip
+                                                title="Save Report"
+                                                enterDelay={1000}
+                                            >
+                                                <IconButton
+                                                    edge="end"
+                                                    aria-label="download report"
+                                                    onClick={(event) =>
+                                                        handleDownloadReport(
+                                                            event,
+                                                            actualIndex,
+                                                        )
+                                                    }
+                                                    size="small"
+                                                    color="default"
+                                                >
+                                                    <DownloadIcon />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip
+                                                title="Delete Report"
+                                                enterDelay={1000}
+                                            >
+                                                <IconButton
+                                                    edge="end"
+                                                    aria-label="delete report"
+                                                    onClick={(event) => {
+                                                        event.stopPropagation();
+                                                        setConfirmDelete(
+                                                            report.id,
+                                                        );
+                                                    }}
+                                                    size="small"
+                                                    color="default"
+                                                >
+                                                    <DeleteIcon />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Stack>
+                                    )
                                 }
                             >
                                 <ListItemText
@@ -366,7 +560,7 @@ const ValidationResults: React.FC<ResultsProps> = ({ filePaths = [] }) => {
                                             variant="subtitle1"
                                             fontWeight="medium"
                                         >
-                                            {reportTitle}
+                                            {reportTitles[report.id]}
                                         </Typography>
                                     }
                                     secondary={
@@ -404,6 +598,7 @@ const ValidationResults: React.FC<ResultsProps> = ({ filePaths = [] }) => {
                 <Paper elevation={0} sx={styles.paginationPaper}>
                     <TablePagination
                         component="div"
+                        sx={styles.pagination}
                         count={totalReports}
                         page={page}
                         onPageChange={handleChangePage}

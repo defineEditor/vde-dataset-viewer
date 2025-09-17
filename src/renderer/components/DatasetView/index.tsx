@@ -5,11 +5,13 @@ import React, {
     useMemo,
     useRef,
 } from 'react';
-import { ITableData, ItemType } from 'interfaces/common';
+import { Box } from '@mui/material';
+import { ITableData, ItemType, IMask, TableSettings } from 'interfaces/common';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { openSnackbar, setGoTo, setSelect } from 'renderer/redux/slices/ui';
 import View from 'renderer/components/DatasetView/View';
+import useTableHeight from 'renderer/components/DatasetView/useTableHeight';
 import {
     ColumnDef,
     getCoreRowModel,
@@ -24,12 +26,20 @@ declare module '@tanstack/table-core' {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     interface ColumnMeta<TData extends RowData, TValue> {
         type?: ItemType | 'rowNumber';
+        align?: 'right' | 'left' | 'center' | 'justify';
+        style?: React.CSSProperties;
     }
 }
 
 interface ITableRow {
     [key: string]: string | number | boolean | null;
 }
+
+const styles = {
+    fullHeight: {
+        height: '100%',
+    },
+};
 
 interface DatasetViewProps {
     tableData: ITableData;
@@ -39,26 +49,38 @@ interface DatasetViewProps {
         rowIndex: number,
         columnIndex: number,
     ) => void;
+    settings: TableSettings;
+    currentPage?: number;
+    currentMask?: IMask | null;
 }
 
 const DatasetView: React.FC<DatasetViewProps> = ({
     tableData,
     isLoading,
     handleContextMenu,
+    settings,
+    currentPage = 0,
+    currentMask = null,
 }) => {
     const dispatch = useAppDispatch();
-    const settings = useAppSelector((state) => state.settings.viewer);
-    const currentPage = useAppSelector((state) => state.ui.currentPage);
-    const currentMask = useAppSelector(
-        (state) => state.data.maskData.currentMask,
-    );
     const [sorting, setSorting] = useState<ISortingState>([]);
 
     const columns = useMemo<ColumnDef<ITableRow>[]>(() => {
         const result = tableData.header.map((column) => {
-            return {
+            const headerCell: {
+                accessorKey: string;
+                header: string;
+                size?: number;
+                enableResizing?: boolean;
+                meta: {
+                    type?: ItemType | 'rowNumber';
+                    align?: 'right' | 'left' | 'center' | 'justify';
+                    style?: React.CSSProperties;
+                };
+                cell?: ColumnDef<ITableRow>['cell'];
+            } = {
                 accessorKey: column.id,
-                header: column.id,
+                header: settings.showLabel ? column.label : column.id,
                 size: column.size,
                 enableResizing: true,
                 meta: {
@@ -67,17 +89,44 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                         : column.type || 'string',
                 },
             };
+
+            let style: React.CSSProperties = {};
+            if (column.style) {
+                style = column.style;
+            }
+
+            if (column.align) {
+                style = { ...style, textAlign: column.align };
+            } else if (
+                ['integer', 'float', 'double', 'decimal'].includes(
+                    column.type || '',
+                )
+            ) {
+                style = { ...style, textAlign: 'right' };
+            }
+
+            if (Object.keys(style).length > 0) {
+                headerCell.meta.style = style;
+            }
+
+            if (column.cell) {
+                headerCell.cell =
+                    column.cell as unknown as ColumnDef<ITableRow>['cell'];
+            }
+            return headerCell;
         });
-        // Add row number column
-        result.unshift({
-            accessorKey: '#',
-            header: '#',
-            size: 60,
-            enableResizing: false,
-            meta: { type: 'integer' },
-        });
+        // Add row number column if not present
+        if (!result.find((col) => col.accessorKey === '#')) {
+            result.unshift({
+                accessorKey: '#',
+                header: '#',
+                size: 60,
+                enableResizing: false,
+                meta: { type: 'integer' },
+            });
+        }
         return result;
-    }, [tableData.header]);
+    }, [tableData.header, settings]);
 
     // Create column visibility state based on current mask
     const columnVisibility = useMemo<VisibilityState>(() => {
@@ -109,7 +158,10 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             .map((column) => column.id);
     }, [tableData.header]);
 
-    // Inital rows;
+    // Height measurements
+    const { tableHeight, viewContainerRef } = useTableHeight();
+
+    // Initial rows;
     const { data } = tableData;
     const table = useReactTable({
         data: isLoading ? [] : data,
@@ -378,7 +430,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                 window.electron.writeToClipboard(selectedData);
                 dispatch(
                     openSnackbar({
-                        message: 'Copied to clipboard',
+                        message: `Copied to clipboard ${withHeaders ? 'with headers' : ''}`,
                         type: 'success',
                         props: { duration: 1000 },
                     }),
@@ -392,10 +444,10 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.ctrlKey && event.altKey && event.key === 'c') {
                 // Ctrl + Alt + C to copy selected cells to clipboard
-                handleCopyToClipboard(true);
+                handleCopyToClipboard(!settings.copyWithHeaders);
             } else if (event.ctrlKey && event.key === 'c') {
                 // Ctrl + C to copy selected cells to clipboard
-                handleCopyToClipboard(false);
+                handleCopyToClipboard(settings.copyWithHeaders);
             } else if (event.key === 'Escape') {
                 // Escape to clear selection
                 setHighlightedCells([]);
@@ -405,7 +457,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [highlightedCells, handleCopyToClipboard]);
+    }, [highlightedCells, handleCopyToClipboard, settings.copyWithHeaders]);
 
     useEffect(() => {
         document.addEventListener('mouseup', handleMouseUp);
@@ -423,7 +475,8 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             goTo.row !== null &&
             currentPage ===
                 Math.floor(Math.max(goTo.row - 1, 0) / settings.pageSize) &&
-            isLoading === false
+            isLoading === false &&
+            tableHeight > 0
         ) {
             const row = (goTo.row - 1) % settings.pageSize;
             rowVirtualizer.scrollToIndex(row, { align: 'center' });
@@ -455,10 +508,11 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         currentPage,
         handleCellClick,
         isLoading,
+        tableHeight,
     ]);
 
     useEffect(() => {
-        if (goTo.column !== null && goTo.row === null) {
+        if (goTo.column !== null && goTo.row === null && tableHeight > 0) {
             // Add +1 as the first column is the row number
             const columnIndex =
                 tableData.header.findIndex(
@@ -484,13 +538,17 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         columnVirtualizer,
         dispatch,
         handleColumnSelect,
+        tableHeight,
     ]);
 
     // Select control
     const select = useAppSelector((state) => state.ui.control.select);
 
     useEffect(() => {
-        if (select.row !== null || select.column !== null) {
+        if (
+            select.row !== null ||
+            (select.column !== null && tableHeight > 0)
+        ) {
             let columnIndex = -1;
             if (select.column !== null) {
                 // Add +1 as the first column is the row number
@@ -524,33 +582,39 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         handleCellClick,
         handleColumnSelect,
         settings.pageSize,
+        tableHeight,
     ]);
 
+    const updatedSettings = { ...settings, height: tableHeight };
+
     return (
-        <View
-            table={table}
-            tableContainerRef={tableContainerRef}
-            visibleColumns={visibleColumns}
-            virtualPaddingLeft={virtualPaddingLeft}
-            virtualPaddingRight={virtualPaddingRight}
-            virtualColumns={virtualColumns}
-            virtualRows={virtualRows}
-            rows={rows}
-            highlightedCells={highlightedCells}
-            handleCellClick={handleCellClick}
-            handleMouseDown={handleMouseDown}
-            handleMouseOver={handleMouseOver}
-            handleContextMenu={handleContextMenu}
-            handleResizeEnd={columnVirtualizer.measure}
-            isLoading={isLoading}
-            dynamicRowHeight={settings.dynamicRowHeight}
-            rowVirtualizer={rowVirtualizer}
-            sorting={sorting}
-            onSortingChange={setSorting}
-            hasPagination={tableData?.metadata?.records > settings.pageSize}
-            filteredColumns={filteredColumns}
-            showTypeIcons={settings.showTypeIcons}
-        />
+        <Box ref={viewContainerRef} style={styles.fullHeight}>
+            {/* If height is not measured yet, do not render */}
+            {tableHeight !== 0 && (
+                <View
+                    table={table}
+                    tableContainerRef={tableContainerRef}
+                    visibleColumns={visibleColumns}
+                    virtualPaddingLeft={virtualPaddingLeft}
+                    virtualPaddingRight={virtualPaddingRight}
+                    virtualColumns={virtualColumns}
+                    virtualRows={virtualRows}
+                    rows={rows}
+                    highlightedCells={highlightedCells}
+                    handleCellClick={handleCellClick}
+                    handleMouseDown={handleMouseDown}
+                    handleMouseOver={handleMouseOver}
+                    handleContextMenu={handleContextMenu}
+                    handleResizeEnd={columnVirtualizer.measure}
+                    isLoading={isLoading}
+                    settings={updatedSettings}
+                    rowVirtualizer={rowVirtualizer}
+                    sorting={sorting}
+                    onSortingChange={setSorting}
+                    filteredColumns={filteredColumns}
+                />
+            )}
+        </Box>
     );
 };
 

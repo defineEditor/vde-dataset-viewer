@@ -6,6 +6,7 @@ import {
     ValidatorConfig,
     ValidationReport,
 } from 'interfaces/main';
+import { ParsedValidationReport } from 'interfaces/core.report';
 import { modals, ModalType, AllowedPathnames } from 'misc/constants';
 import { ConversionConfig } from 'interfaces/converter';
 
@@ -18,19 +19,22 @@ export interface IMask {
 
 export type ClipboardCopyFormat = 'tab' | 'csv' | 'json';
 
+export interface SettingsViewer {
+    pageSize: number;
+    estimateWidthRows: number;
+    dynamicRowHeight: boolean;
+    maxColWidth: number;
+    dateFormat: 'ISO8601' | 'DDMONYEAR';
+    roundNumbers: boolean;
+    maxPrecision?: number;
+    applyDateFormat: boolean;
+    copyFormat: ClipboardCopyFormat;
+    showTypeIcons: boolean;
+    copyWithHeaders: boolean;
+}
+
 export interface ISettings {
-    viewer: {
-        pageSize: number;
-        estimateWidthRows: number;
-        dynamicRowHeight: boolean;
-        maxColWidth: number;
-        dateFormat: 'ISO8601' | 'DDMONYEAR';
-        roundNumbers: boolean;
-        maxPrecision?: number;
-        applyDateFormat: boolean;
-        copyFormat: ClipboardCopyFormat;
-        showTypeIcons: boolean;
-    };
+    viewer: SettingsViewer;
     converter: SettingsConverter;
     validator: SettingsValidator;
     other: {
@@ -86,8 +90,14 @@ export interface IUiModalVariableInfo extends IUiModalBase {
     data: { columnId: string };
 }
 
+export interface IUiModalFilter extends IUiModalBase {
+    type: typeof modals.FILTER;
+    filterType: 'dataset' | 'report';
+}
+
 export type IUiModal =
     | IUiModalAppUpdate
+    | IUiModalFilter
     | IUiModalVariableInfo
     | IUiModalGeneral
     | IUiModalEditApi
@@ -127,20 +137,30 @@ export interface IUiValidation {
     dateCompleted: number | null;
 }
 
-export interface IUiValidationReport {
+export interface IUiValidationPage {
+    currentTab: 'validation' | 'results' | 'report';
+    currentReportTab:
+        | 'overview'
+        | 'summary'
+        | 'details'
+        | 'rules'
+        | 'configuration';
     currentReportId: string | null;
+    showOnlyDatasetsWithIssues: boolean;
+    reportSummaryType: 'datasets' | 'issues';
 }
 
 export interface IUi {
     pathname: AllowedPathnames;
     currentFileId: string;
     currentPage: number;
+    zoomLevel: number;
     viewer: IUiViewer;
     modals: IUiModal[];
     snackbar: IUiSnackbar;
     control: IUiControl;
     validation: { [validationId: string]: IUiValidation };
-    validationReport: IUiValidationReport;
+    validationPage: IUiValidationPage;
 }
 
 export interface IRecentFile {
@@ -161,7 +181,12 @@ export interface ValidatorData {
         standards: string[];
         terminology: string[];
     };
-    reports: ValidationReport[];
+    reports: { [id: string]: ValidationReport };
+    reportData: { [id: string]: ParsedValidationReport };
+    reportFilters: {
+        [id: string]: BasicFilter | null;
+    };
+    lastReportSaveFolder: string;
     configuration: ValidatorConfig;
 }
 

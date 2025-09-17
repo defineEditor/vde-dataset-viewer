@@ -1,14 +1,16 @@
 import React, { useState, useContext } from 'react';
 import { Box, Tabs, Tab, Paper, Button, Stack } from '@mui/material';
 import Results from 'renderer/components/Common/ValidationResults';
+import Report from 'renderer/components/Validator/Report';
 import {
     FileInfo,
     InputFileExtension,
     IUiValidation,
+    IUiValidationPage,
     ValidatorConfig,
 } from 'interfaces/common';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
-import { updateValidation } from 'renderer/redux/slices/ui';
+import { updateValidation, setValidationTab } from 'renderer/redux/slices/ui';
 import Configuration from 'renderer/components/Validator/Configuration';
 import AppContext from 'renderer/utils/AppContext';
 import ValidationProgress from 'renderer/components/Modal/Validator/ValidationProgress';
@@ -58,11 +60,11 @@ const styles = {
 
 const Validator: React.FC = () => {
     const [selectedFiles, setSelectedFiles] = useState<FileInfo[]>([]);
-    const [tab, setTab] = useState(0);
 
     const { apiService } = useContext(AppContext);
     const validatorData = useAppSelector((state) => state.data.validator);
     const settings = useAppSelector((state) => state.settings);
+    const tab = useAppSelector((state) => state.ui.validationPage.currentTab);
 
     // Get validation state from Redux
     const validationState = useAppSelector<IUiValidation>(
@@ -82,9 +84,9 @@ const Validator: React.FC = () => {
 
     const handleTabChange = (
         _event: React.SyntheticEvent,
-        newValue: number,
+        newValue: IUiValidationPage['currentTab'],
     ) => {
-        setTab(newValue);
+        dispatch(setValidationTab(newValue));
     };
 
     const handleValidate = async () => {
@@ -127,66 +129,76 @@ const Validator: React.FC = () => {
                     variant="fullWidth"
                     sx={styles.tabs}
                 >
-                    <Tab label="Configuration" />
-                    <Tab label="Results" />
+                    <Tab label="Validation" value="validation" />
+                    <Tab label="Results" value="results" />
+                    <Tab label="Report" value="report" />
                 </Tabs>
             </Paper>
-            <Box hidden={tab !== 0} sx={styles.tabPanel}>
-                <Stack spacing={0} sx={styles.configuration}>
-                    <Box sx={styles.mainBody}>
-                        {['completed', 'validating'].includes(
-                            validationState.status,
-                        ) ? (
-                            <ValidationProgress
-                                conversionProgress={
-                                    validationState.conversionProgress
-                                }
-                                validationProgress={
-                                    validationState.validationProgress
-                                }
-                            />
-                        ) : (
-                            <Configuration
-                                selectedFiles={selectedFiles}
-                                setSelectedFiles={setSelectedFiles}
-                                config={config}
-                                setConfig={setConfig}
-                            />
-                        )}
-                    </Box>
-                    <Box sx={styles.actions}>
-                        {['completed', 'validating'].includes(
-                            validationState.status,
-                        ) ? (
-                            <Button
-                                onClick={handleReset}
-                                color="primary"
-                                variant="contained"
-                                disabled={
-                                    validationState.status !== 'completed'
-                                }
-                            >
-                                Done
-                            </Button>
-                        ) : (
-                            <Button
-                                onClick={handleValidate}
-                                color="primary"
-                                variant="contained"
-                                disabled={
-                                    selectedFiles.length === 0 ||
-                                    validationState.status === 'validating'
-                                }
-                            >
-                                Validate
-                            </Button>
-                        )}
-                    </Box>
-                </Stack>
-            </Box>
-            <Box hidden={tab !== 1} sx={styles.tabPanel}>
-                <Results />
-            </Box>
+            {tab === 'validation' && (
+                <Box sx={styles.tabPanel}>
+                    <Stack spacing={0} sx={styles.configuration}>
+                        <Box sx={styles.mainBody}>
+                            {['completed', 'validating'].includes(
+                                validationState.status,
+                            ) ? (
+                                <ValidationProgress
+                                    conversionProgress={
+                                        validationState.conversionProgress
+                                    }
+                                    validationProgress={
+                                        validationState.validationProgress
+                                    }
+                                />
+                            ) : (
+                                <Configuration
+                                    selectedFiles={selectedFiles}
+                                    setSelectedFiles={setSelectedFiles}
+                                    config={config}
+                                    setConfig={setConfig}
+                                />
+                            )}
+                        </Box>
+                        <Box sx={styles.actions}>
+                            {['completed', 'validating'].includes(
+                                validationState.status,
+                            ) ? (
+                                <Button
+                                    onClick={handleReset}
+                                    color="primary"
+                                    variant="contained"
+                                    disabled={
+                                        validationState.status !== 'completed'
+                                    }
+                                >
+                                    Done
+                                </Button>
+                            ) : (
+                                <Button
+                                    onClick={handleValidate}
+                                    color="primary"
+                                    variant="contained"
+                                    disabled={
+                                        selectedFiles.length === 0 ||
+                                        validationState.status === 'validating'
+                                    }
+                                >
+                                    Validate
+                                </Button>
+                            )}
+                        </Box>
+                    </Stack>
+                </Box>
+            )}
+            {tab === 'results' && (
+                <Box hidden={tab !== 'results'} sx={styles.tabPanel}>
+                    <Results />
+                </Box>
+            )}
+            {tab === 'report' && (
+                <Box hidden={tab !== 'report'} sx={styles.tabPanel}>
+                    <Report />
+                </Box>
+            )}
         </Box>
     );
 };
