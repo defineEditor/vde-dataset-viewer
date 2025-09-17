@@ -175,5 +175,21 @@ export const Viewer: React.FC<ViewerProps> = ({
                 When enabled, type icons are shown in the header of the table
             </Typography>
         </Stack>
+        <Stack spacing={0}>
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        checked={settings.viewer.copyWithHeaders}
+                        onChange={onSettingChange}
+                        name="viewer.copyWithHeaders"
+                    />
+                }
+                label="Copy with Headers by Default"
+            />
+            <Typography variant="caption" sx={styles.helperText}>
+                When enabled, selected values are copied with headers by default
+                (inverts Ctrl + C and Ctrl + Alt + C behavior)
+            </Typography>
+        </Stack>
     </Stack>
 );

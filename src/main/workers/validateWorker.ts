@@ -174,6 +174,13 @@ const runValidation = async (
         args.push('--define-version', configuration.defineVersion);
     }
 
+    // Specify CT packages if provided
+    if (configuration?.ctPackages && configuration.ctPackages.length > 0) {
+        configuration.ctPackages.forEach((ct) => {
+            args.push('-ct', ct);
+        });
+    }
+
     // Add dictionary paths if provided
     if (configuration?.whodrugPath) {
         args.push('--whodrug', `"${configuration.whodrugPath}"`);
@@ -334,7 +341,6 @@ const getLastModified = (
 export function getIssueSummary(filePath: string): {
     uniqueIssues: number;
     totalIssues: number;
-    summary: IssueSummaryItem[];
 } {
     const raw = fs.readFileSync(filePath, 'utf-8');
     const report = JSON.parse(raw);
@@ -349,7 +355,6 @@ export function getIssueSummary(filePath: string): {
     return {
         uniqueIssues,
         totalIssues,
-        summary,
     };
 }
 
@@ -454,6 +459,7 @@ process.parentPort.once(
 
                         // Form validate report record
                         const report: ValidationReport = {
+                            id: result.fileName,
                             date: result.date,
                             files: getLastModified(
                                 data.validationDetails?.originalFiles || [],

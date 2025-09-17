@@ -11,6 +11,8 @@ import {
     Accordion,
     AccordionSummary,
     AccordionDetails,
+    AutocompleteChangeReason,
+    Autocomplete,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import FileSelector from 'renderer/components/FileSelector';
@@ -50,6 +52,9 @@ const styles = {
     paper: {
         p: 2,
         height: '100%',
+    },
+    ctInput: {
+        width: 300,
     },
 };
 
@@ -102,6 +107,25 @@ const Configuration: React.FC<{
         }
     }, [config.standard, validatorStandards, setConfig]);
 
+    // Controlled Terminology packages
+    const availableCtPackages = useMemo(() => {
+        const result: { [key: string]: string }[] = [];
+        validatorData.info.terminology.forEach((entry) => {
+            const name = entry
+                .replace(/(.*)(\d{4}-\d{2}-\d{2})/, '$1')
+                .trim()
+                .replace(/ct-$/, '')
+                .toUpperCase()
+                .replace('PROTOCOL', 'Protocol')
+                .replace('ADAM', 'ADaM')
+                .replace('DEFINE-XML', 'Define-XML')
+                .replace('GLOSSARY', 'Glossary');
+            const date = entry.replace(/(.*)(\d{4}-\d{2}-\d{2}).*/, '$2');
+            result[entry] = { name, date, label: `${name} ${date}` };
+        });
+        return result;
+    }, [validatorData.info.terminology]);
+
     // Helper function to handle path selection
     const handlePathSelection = async (
         name:
@@ -138,6 +162,26 @@ const Configuration: React.FC<{
         setConfig((prev) => ({
             ...prev,
             [name]: value,
+        }));
+    };
+
+    // Handle CT update
+    const handleCtChange = (
+        _event: React.ChangeEvent<{}>,
+        value: { label: string; id: string }[] | null,
+        reason: AutocompleteChangeReason,
+    ) => {
+        let newCtPackages: string[] = [];
+        if (reason === 'clear') {
+            newCtPackages = [];
+        } else if (Array.isArray(value)) {
+            newCtPackages = value.map((item) => item.id);
+        } else {
+            newCtPackages = [];
+        }
+        setConfig((prev) => ({
+            ...prev,
+            ctPackages: newCtPackages,
         }));
     };
 
@@ -195,6 +239,55 @@ const Configuration: React.FC<{
                             </MenuItem>
                         ))}
                     </TextField>
+
+                    <Autocomplete
+                        multiple
+                        sx={styles.ctInput}
+                        options={Object.keys(availableCtPackages)
+                            .map((ct) => {
+                                return {
+                                    label: availableCtPackages[ct].label,
+                                    name: availableCtPackages[ct].name,
+                                    date: availableCtPackages[ct].date,
+                                    id: ct,
+                                };
+                            })
+                            .sort((a, b) => {
+                                // Show CTs of the current standard first
+                                const updatedStdName = config.standard.replace(
+                                    /^(\w+)IG.*$/,
+                                    '$1',
+                                );
+                                const isCurrentA =
+                                    a.name.toUpperCase() === updatedStdName;
+                                const isCurrentB =
+                                    b.name.toUpperCase() === updatedStdName;
+                                if (isCurrentA && !isCurrentB) return -1;
+                                if (!isCurrentA && isCurrentB) return 1;
+                                // First compare by standard name
+                                if (a.name < b.name) return -1;
+                                if (a.name > b.name) return 1;
+                                // If names are the same, compare by date (newest first)
+                                if (a.date > b.date) return -1;
+                                if (a.date < b.date) return 1;
+                                return 0;
+                            })}
+                        value={config.ctPackages.map((ct) => {
+                            return {
+                                label: availableCtPackages[ct].label,
+                                id: ct,
+                            };
+                        })}
+                        onChange={handleCtChange}
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                name="ctPackages"
+                                label="CT Packages"
+                                fullWidth
+                            />
+                        )}
+                    />
 
                     <FormControlLabel
                         control={

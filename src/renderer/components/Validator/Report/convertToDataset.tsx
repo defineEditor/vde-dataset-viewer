@@ -1,183 +1,135 @@
-import React from 'react';
+import { MouseEvent } from 'react';
 import {
     ITableData,
     ParsedValidationReport,
     DatasetJsonMetadata,
-    ITableRow,
+    BasicFilter,
+    IUiValidationPage,
 } from 'interfaces/common';
-import { Typography } from '@mui/material';
-
-const Status: React.FC<{ cell: any }> = ({ cell }) => {
-    // Ensure we render a string/primitive (React cannot render plain objects)
-    const content = cell.getValue();
-    return <Typography>{content}</Typography>;
-};
+import Filter from 'js-array-filter';
+import renderRuleStatus from 'renderer/components/Validator/Report/Formatters/RuleStatus';
+import renderExecutability from 'renderer/components/Validator/Report/Formatters/Executable';
+import renderRow from 'renderer/components/Validator/Report/Formatters/Row';
+import renderVariables from 'renderer/components/Validator/Report/Formatters/Variables';
+import renderSummaryIssues from 'renderer/components/Validator/Report/Formatters/SummaryIssues';
+import columnDefs from 'renderer/components/Validator/Report/columnDefs';
 
 const convertToDataset = (
     data: ParsedValidationReport,
-    type: 'Issue_Details' | 'Issue_Summary' | 'Rules_Report',
+    type: 'details' | 'summary' | 'rules',
+    handlers?: {
+        onOpenFile: (
+            event: MouseEvent<HTMLButtonElement>,
+            id: string,
+            row?: number,
+            columns?: string,
+        ) => void;
+        onFilterIssues: (
+            filter: BasicFilter,
+            reportTab: IUiValidationPage['currentReportTab'],
+        ) => void;
+    },
+    filter: BasicFilter | null = null,
 ): ITableData => {
     // Implement conversion logic here
+    const reportSection: 'Issue_Details' | 'Issue_Summary' | 'Rules_Report' =
+        type === 'details'
+            ? 'Issue_Details'
+            : type === 'summary'
+              ? 'Issue_Summary'
+              : 'Rules_Report';
     const metadata: DatasetJsonMetadata = {
         datasetJSONCreationDateTime: new Date().toISOString(),
         datasetJSONVersion: '1.1',
-        records: data[type].length,
+        records: data[reportSection].length,
         name: `core_report_${type}`,
-        label: `CORE Report ${type}`,
+        label: `CORE Report ${reportSection.replace(/_/g, ' ')}`,
         columns: [],
     };
 
-    // Get columns metadata
-    if (type === 'Issue_Details') {
-        metadata.columns = [
-            {
-                itemOID: 'dataset',
-                name: 'dataset',
-                label: 'Dataset',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'core_id',
-                name: 'core_id',
-                label: 'Core ID',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'message',
-                name: 'message',
-                label: 'Message',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'executability',
-                name: 'executability',
-                label: 'Executability',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'USUBJID',
-                name: 'USUBJID',
-                label: 'USUBJID',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'row',
-                name: 'row',
-                label: 'Row',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'SEQ',
-                name: 'SEQ',
-                label: 'SEQ',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'variables',
-                name: 'variables',
-                label: 'Variables',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'values',
-                name: 'values',
-                label: 'Values',
-                dataType: 'string',
-            },
-        ];
-    } else if (type === 'Issue_Summary') {
-        metadata.columns = [
-            {
-                itemOID: 'dataset',
-                name: 'dataset',
-                label: 'Dataset',
-                dataType: 'string',
-                length: 5,
-            },
-            {
-                itemOID: 'core_id',
-                name: 'core_id',
-                label: 'Core ID',
-                dataType: 'string',
-                length: 5,
-            },
-            {
-                itemOID: 'message',
-                name: 'message',
-                label: 'Message',
-                dataType: 'string',
-                length: 85,
-            },
-            {
-                itemOID: 'issues',
-                name: 'issues',
-                label: 'Issues',
-                dataType: 'integer',
-                length: 5,
-            },
-        ];
-    } else if (type === 'Rules_Report') {
-        metadata.columns = [
-            {
-                itemOID: 'core_id',
-                name: 'core_id',
-                label: 'Core ID',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'version',
-                name: 'version',
-                label: 'Version',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'cdisc_rule_id',
-                name: 'cdisc_rule_id',
-                label: 'CDISC Rule ID',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'fda_rule_id',
-                name: 'fda_rule_id',
-                label: 'FDA Rule ID',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'message',
-                name: 'message',
-                label: 'Message',
-                dataType: 'string',
-            },
-            {
-                itemOID: 'status',
-                name: 'status',
-                label: 'Status',
-                dataType: 'string',
-            },
-        ];
+    let filtertedColumns: string[] = [];
+    if (filter) {
+        filtertedColumns = filter.conditions.map((c) => c.variable);
     }
-    // Form header;
-    const header: ITableData['header'] = metadata.columns.map((col) => {
-        const item: {
-            id: string;
-            label: string;
-            cell?: (cell: any) => React.JSX.Element;
-            flex: string;
-        } = {
-            id: col.itemOID,
+    let header: ITableData['header'] = [];
+    // Get columns metadata
+    if (type === 'details') {
+        metadata.columns = columnDefs.details.map((col) => ({
+            itemOID: col.id,
+            name: col.id,
             label: col.label,
-            flex: `1 1 ${col.length}%`,
-        };
-
-        if (col.itemOID === 'status') {
-            item.cell = ({ cell }: { cell: any }) => <Status cell={cell} />;
-        }
-
-        return item;
-    });
+            dataType: col.type || 'string',
+        }));
+        header = columnDefs.details.map((col) => {
+            let item = col;
+            if (filtertedColumns.includes(col.id)) {
+                item = { ...item, isFiltered: true };
+            }
+            if (col.id === 'executability') {
+                item.cell = renderExecutability;
+            }
+            if (col.id === 'variables' && handlers?.onOpenFile) {
+                item.cell = renderVariables(handlers.onOpenFile);
+            }
+            if (col.id === 'row' && handlers?.onOpenFile) {
+                item.cell = renderRow(handlers.onOpenFile);
+            }
+            return item;
+        });
+    } else if (type === 'summary') {
+        metadata.columns = columnDefs.summary.map((col) => ({
+            itemOID: col.id,
+            name: col.id,
+            label: col.label,
+            dataType: col.type || 'string',
+        }));
+        header = columnDefs.summary.map((col) => {
+            let item = col;
+            if (filtertedColumns.includes(col.id)) {
+                item = { ...item, isFiltered: true };
+            }
+            if (col.id === 'issues' && handlers?.onFilterIssues) {
+                item.cell = renderSummaryIssues(handlers.onFilterIssues);
+            }
+            return item;
+        });
+    } else if (type === 'rules') {
+        metadata.columns = columnDefs.rules.map((col) => ({
+            itemOID: col.id,
+            name: col.id,
+            label: col.label,
+            dataType: col.type || 'string',
+        }));
+        header = columnDefs.rules.map((col) => {
+            let item = col;
+            if (filtertedColumns.includes(col.id)) {
+                item = { ...item, isFiltered: true };
+            }
+            if (col.id === 'status') {
+                item.cell = renderRuleStatus;
+            }
+            return item;
+        });
+    }
 
     // Add row number
-    const updatedData = data[type] as unknown as ITableRow[];
+    let updatedData = data[reportSection].map((row, index) => ({
+        ...row,
+        '#': index + 1,
+    }));
+    // Filter records;
+    if (filter) {
+        const filterInstance = new Filter(
+            'dataset-json1.1',
+            metadata.columns,
+            filter,
+        );
+        updatedData = updatedData.filter((row) => {
+            // We need to covert row to array;
+            const rowArray = metadata.columns.map((col) => row[col.name]);
+            return filterInstance.filterRow(rowArray);
+        });
+    }
 
     const result: ITableData = {
         header,

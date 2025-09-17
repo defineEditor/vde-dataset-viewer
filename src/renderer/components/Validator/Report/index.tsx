@@ -9,11 +9,21 @@ import TabPanel from '@mui/lab/TabPanel';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
-import { openSnackbar } from 'renderer/redux/slices/ui';
+import { openSnackbar, setValidationReportTab } from 'renderer/redux/slices/ui';
+import { setReport, setReportFilter } from 'renderer/redux/slices/data';
 import AppContext from 'renderer/utils/AppContext';
-import { ITableData, ParsedValidationReport } from 'interfaces/common';
+import {
+    ITableData,
+    IUiValidationPage,
+    NewWindowProps,
+    BasicFilter,
+} from 'interfaces/common';
 import convertToDataset from 'renderer/components/Validator/Report/convertToDataset';
-import DatasetContainer from 'renderer/components/Validator/Report/DatasetContainer';
+import DatasetContainer from 'renderer/components/Validator/Report/ReportDatasetContainer';
+import Configuration from 'renderer/components/Validator/Report/Configuration';
+import IssueOverview from 'renderer/components/Validator/Report/IssueOverview';
+import transformReport from 'renderer/components/Validator/Report/transformReport';
+import handleOpenDataset from 'renderer/utils/handleOpenDataset';
 
 const styles = {
     container: {
@@ -39,8 +49,14 @@ const styles = {
         flex: '1 1 auto',
         px: 0,
         backgroundColor: 'grey.300',
+        height: '100%',
+    },
+    fullHeight: {
+        height: '100%',
+        width: '100%',
     },
     tabPanel: {
+        height: '100%',
         p: 0,
     },
     loading: {
@@ -61,25 +77,85 @@ const StyledTab = styled(Tab)({
 });
 
 const ValidationReportPage: React.FC = () => {
-    const [tab, setTab] = useState('1');
-
     const { apiService } = useContext(AppContext);
     const dispatch = useAppDispatch();
-
-    const [report, setReport] = useState<ParsedValidationReport | null>(null);
-    const [tables, setTables] = useState<{
-        details: ITableData;
-        summary: ITableData;
-        rules: ITableData;
-    } | null>(null);
+    const tab = useAppSelector(
+        (state) => state.ui.validationPage.currentReportTab,
+    );
 
     const reportId = useAppSelector(
         (state) => state.ui.validationPage.currentReportId,
     );
 
+    const validationReportInfo = useAppSelector(
+        (state) => state.data.validator.reports[reportId || ''],
+    );
+
+    const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+
+    const handleOpenFile = React.useCallback(
+        (
+            event: React.MouseEvent<HTMLButtonElement>,
+            id: string,
+            row?: number,
+            column?: string,
+        ) => {
+            // Find filename by ID
+            const filePath = validationReportInfo?.files.find(
+                (file) =>
+                    file.file
+                        .replace(/.*?([^\\/]+)\.[^/.]+$/, '$1')
+                        .toUpperCase() === id,
+            )?.file;
+            if (filePath) {
+                // Form properties
+                const props: NewWindowProps = {};
+                if (row || column) {
+                    props.goTo = { row, column };
+                }
+                // If Ctrl or Cmd key is pressed, open in new window
+                if (event.ctrlKey || event.metaKey) {
+                    apiService.openInNewWindow(filePath, undefined, props);
+                } else {
+                    // Open in the same window
+                    handleOpenDataset(
+                        filePath,
+                        currentFileId,
+                        dispatch,
+                        apiService,
+                        props,
+                    );
+                }
+            }
+        },
+        [validationReportInfo, apiService, currentFileId, dispatch],
+    );
+
+    const handleFilterIssues = React.useCallback(
+        (
+            filter: BasicFilter,
+            reportTab: IUiValidationPage['currentReportTab'],
+        ) => {
+            if (filter) {
+                dispatch(setReportFilter({ filter, reportTab }));
+                // Switch to details tab
+                dispatch(setValidationReportTab(reportTab));
+            }
+        },
+        [dispatch],
+    );
+
+    const report = useAppSelector(
+        (state) => state.data.validator.reportData[reportId || ''] || null,
+    );
+
     useEffect(() => {
         const getReport = async () => {
             if (reportId) {
+                // Check if report is already loaded;
+                if (report) {
+                    return;
+                }
                 const newReport =
                     await apiService.getValidationReport(reportId);
                 if (newReport === null) {
@@ -91,35 +167,71 @@ const ValidationReportPage: React.FC = () => {
                     );
                 } else {
                     // Convert everything to dataset-json format
-                    setReport(newReport);
-                    const details = convertToDataset(
-                        newReport,
-                        'Issue_Details',
+                    const transformedReport = transformReport(newReport);
+                    dispatch(
+                        setReport({ reportId, report: transformedReport }),
                     );
-                    const summary = convertToDataset(
-                        newReport,
-                        'Issue_Summary',
-                    );
-                    const rules = convertToDataset(newReport, 'Rules_Report');
-                    setTables({
-                        details,
-                        summary,
-                        rules,
-                    });
                 }
             }
         };
         getReport();
-    }, [reportId, apiService, dispatch]);
+    }, [reportId, report, apiService, dispatch]);
+
+    const [tables, setTables] = useState<{
+        details: ITableData;
+        summary: ITableData;
+        rules: ITableData;
+    } | null>(null);
+
+    const reportFilters = useAppSelector(
+        (state) => state.data.validator.reportFilters,
+    );
+
+    useEffect(() => {
+        if (report) {
+            const details = convertToDataset(
+                report,
+                'details',
+                {
+                    onOpenFile: handleOpenFile,
+                    onFilterIssues: handleFilterIssues,
+                },
+                reportFilters?.details || null,
+            );
+            const summary = convertToDataset(
+                report,
+                'summary',
+                {
+                    onOpenFile: handleOpenFile,
+                    onFilterIssues: handleFilterIssues,
+                },
+                reportFilters?.summary || null,
+            );
+            const rules = convertToDataset(
+                report,
+                'rules',
+                {
+                    onOpenFile: handleOpenFile,
+                    onFilterIssues: handleFilterIssues,
+                },
+                reportFilters?.rules || null,
+            );
+            setTables({
+                details,
+                summary,
+                rules,
+            });
+        }
+    }, [report, reportFilters, handleOpenFile, handleFilterIssues]);
 
     const handleTabChange = (
         _event: React.SyntheticEvent,
-        newValue: string,
+        newValue: IUiValidationPage['currentReportTab'],
     ) => {
-        setTab(newValue);
+        dispatch(setValidationReportTab(newValue));
     };
 
-    if (!reportId) {
+    if (!reportId || tables === null) {
         return (
             <Box sx={styles.container}>
                 <Box sx={styles.emptyState}>
@@ -143,22 +255,42 @@ const ValidationReportPage: React.FC = () => {
     }
 
     return (
-        <Stack spacing={0} justifyContent="space-between" sx={styles.root}>
+        <Stack spacing={0} justifyContent="flex-start" sx={styles.root}>
             <TabContext value={tab}>
-                <TabList onChange={handleTabChange} sx={styles.tabs}>
-                    <StyledTab label="Issue Summary" value="1" />
-                    <StyledTab label="Issue Details" value="2" />
-                    <StyledTab label="Rules Report" value="3" />
+                <TabList
+                    onChange={handleTabChange}
+                    sx={styles.tabs}
+                    variant="fullWidth"
+                >
+                    <StyledTab label="Overview" value="overview" />
+                    <StyledTab label="Issue Summary" value="summary" />
+                    <StyledTab label="Issue Details" value="details" />
+                    <StyledTab label="Rules Report" value="rules" />
+                    <StyledTab label="Configuration" value="configuration" />
                 </TabList>
-                <TabPanel value="1" sx={styles.tabPanel}>
-                    <DatasetContainer data={tables?.summary} />
-                </TabPanel>
-                <TabPanel value="2" sx={styles.tabPanel}>
-                    <DatasetContainer data={tables?.details} />
-                </TabPanel>
-                <TabPanel value="3" sx={styles.tabPanel}>
-                    <DatasetContainer data={tables?.rules} />
-                </TabPanel>
+                <Box style={styles.fullHeight}>
+                    <TabPanel value="overview" sx={styles.tabPanel}>
+                        <IssueOverview parsedReport={report} />
+                    </TabPanel>
+                    <TabPanel value="summary" sx={styles.tabPanel}>
+                        <DatasetContainer
+                            data={tables?.summary}
+                            type="summary"
+                        />
+                    </TabPanel>
+                    <TabPanel value="details" sx={styles.tabPanel}>
+                        <DatasetContainer
+                            data={tables?.details}
+                            type="details"
+                        />
+                    </TabPanel>
+                    <TabPanel value="rules" sx={styles.tabPanel}>
+                        <DatasetContainer data={tables?.rules} type="rules" />
+                    </TabPanel>
+                    <TabPanel value="configuration" sx={styles.tabPanel}>
+                        <Configuration report={report} />
+                    </TabPanel>
+                </Box>
             </TabContext>
         </Stack>
     );

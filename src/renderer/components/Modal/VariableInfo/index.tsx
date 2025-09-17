@@ -86,6 +86,7 @@ const VariableInfo: React.FC<IUiModalVariableInfo> = ({
         counts: { [value: string]: number };
     }>({ values: [], counts: {} });
     const [searchTerm, setSearchTerm] = useState('');
+    const [loading, setLoading] = useState(false);
     const searchInputRef = useRef<HTMLInputElement>(null);
 
     const totalRecords = currentMetadata.records;
@@ -122,6 +123,7 @@ const VariableInfo: React.FC<IUiModalVariableInfo> = ({
     // On load use the values which are currently available
     useEffect(() => {
         const getValues = async () => {
+            setLoading(true);
             const initialValues = await apiService.getUniqueValues(
                 currentFileId,
                 [columnId],
@@ -129,6 +131,7 @@ const VariableInfo: React.FC<IUiModalVariableInfo> = ({
                 true,
             );
             setValues(initialValues[columnId]);
+            setLoading(false);
         };
 
         getValues();
@@ -163,6 +166,7 @@ const VariableInfo: React.FC<IUiModalVariableInfo> = ({
     ];
 
     const handleGetValues = async () => {
+        setLoading(true);
         const newValues = await apiService.getUniqueValues(
             currentFileId,
             [columnId],
@@ -170,6 +174,7 @@ const VariableInfo: React.FC<IUiModalVariableInfo> = ({
             true,
             true,
         );
+        setLoading(false);
         setValues(newValues[columnId]);
         setHasAllValues(true);
     };
@@ -227,6 +232,7 @@ const VariableInfo: React.FC<IUiModalVariableInfo> = ({
                     <Stack direction="column" flex={1}>
                         <UniqueValues
                             counts={values.counts}
+                            loading={loading}
                             hasAllValues={hasAllValues}
                             onGetValues={handleGetValues}
                             totalRecords={totalRecords}

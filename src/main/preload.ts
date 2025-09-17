@@ -4,7 +4,7 @@ import {
     IpcRendererEvent,
     webUtils,
 } from 'electron';
-import { TaskProgress } from 'interfaces/common';
+import { TaskProgress, NewWindowProps } from 'interfaces/common';
 import { ElectronApi, Channels } from 'interfaces/electron.api';
 
 const openFile: ElectronApi['openFile'] = (mode, fileSettings) =>
@@ -73,8 +73,12 @@ const onSaveStore: ElectronApi['onSaveStore'] = (callback) => {
 const onFileOpen: ElectronApi['onFileOpen'] = (callback) => {
     ipcRenderer.on(
         'renderer:openFile',
-        (_event: IpcRendererEvent, filePath: string) => {
-            callback(filePath);
+        (
+            _event: IpcRendererEvent,
+            filePath: string,
+            props?: NewWindowProps,
+        ) => {
+            callback(filePath, props);
         },
     );
 };
@@ -100,8 +104,28 @@ const deleteValidationReport: ElectronApi['deleteValidationReport'] = (
     fileName,
 ) => ipcRenderer.invoke('main:deleteValidationReport', fileName);
 
+const compareValidationReports: ElectronApi['compareValidationReports'] = (
+    fileNameBase,
+    fileNameComp,
+) =>
+    ipcRenderer.invoke(
+        'main:compareValidationReports',
+        fileNameBase,
+        fileNameComp,
+    );
+
 const getValidationReport: ElectronApi['getValidationReport'] = (fileName) =>
     ipcRenderer.invoke('main:getValidationReport', fileName);
+
+const downloadValidationReport: ElectronApi['downloadValidationReport'] = (
+    fileName,
+    initialFolder,
+) =>
+    ipcRenderer.invoke(
+        'main:downloadValidationReport',
+        fileName,
+        initialFolder,
+    );
 
 const isWindows: ElectronApi['isWindows'] = process.platform === 'win32';
 
@@ -125,8 +149,11 @@ const cleanTaskProgressListeners: ElectronApi['cleanTaskProgressListeners'] =
 const getAppVersion: ElectronApi['getAppVersion'] = () =>
     ipcRenderer.invoke('main:getVersion');
 
-const openInNewWindow: ElectronApi['openInNewWindow'] = (filePath, position) =>
-    ipcRenderer.invoke('main:openInNewWindow', filePath, position);
+const openInNewWindow: ElectronApi['openInNewWindow'] = (
+    filePath,
+    position,
+    props,
+) => ipcRenderer.invoke('main:openInNewWindow', filePath, position, props);
 
 const resizeWindow: ElectronApi['resizeWindow'] = (position) =>
     ipcRenderer.invoke('main:resizeWindow', position);
@@ -156,7 +183,9 @@ contextBridge.exposeInMainWorld('electron', {
     openFileDialog,
     openDirectoryDialog,
     deleteValidationReport,
+    compareValidationReports,
     getValidationReport,
+    downloadValidationReport,
     isWindows,
     startTask,
     onTaskProgress,

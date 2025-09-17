@@ -21,6 +21,8 @@ import {
     ApiOpenedFile,
     ApiOpenedFileWithMetadata,
     ParsedValidationReport,
+    ValidationReportCompare,
+    NewWindowProps,
 } from 'interfaces/common';
 import store from 'renderer/redux/store';
 import transformData from 'renderer/services/transformData';
@@ -29,7 +31,9 @@ import { setLoadedRecords } from 'renderer/redux/slices/data';
 import {
     startValidation,
     deleteValidationReport,
+    compareValidationReports,
     getValidationReport,
+    downloadValidationReport,
 } from 'renderer/services/validation';
 
 class ApiService {
@@ -788,6 +792,20 @@ class ApiService {
         return getValidationReport(fileName);
     };
 
+    public downloadValidationReport = async (
+        fileName: string,
+        initialFolder?: string,
+    ): Promise<string | false> => {
+        return downloadValidationReport(fileName, initialFolder);
+    };
+
+    public compareValidationReports = async (
+        fileNameBase: string,
+        fileNameComp: string,
+    ): Promise<ValidationReportCompare | null> => {
+        return compareValidationReports(fileNameBase, fileNameComp);
+    };
+
     // Misc
     public getAppVersion = async (): Promise<string> => {
         const result = await window.electron.getAppVersion();
@@ -797,8 +815,9 @@ class ApiService {
     public openInNewWindow = async (
         filePath: string,
         position?: 'top' | 'bottom' | 'left' | 'right',
+        props?: NewWindowProps,
     ): Promise<void> => {
-        await window.electron.openInNewWindow(filePath, position);
+        await window.electron.openInNewWindow(filePath, position, props);
     };
 
     public resizeWindow = async (
@@ -813,6 +832,16 @@ class ApiService {
 
     public getZoom = async (): Promise<number> => {
         return await window.electron.getZoom();
+    };
+
+    public onFileOpen = (
+        callback: (filePath: string, newWindowProps?: NewWindowProps) => void,
+    ) => {
+        window.electron.onFileOpen(callback);
+    };
+
+    public removeFileOpenListener = () => {
+        window.electron.removeFileOpenListener();
     };
 }
 

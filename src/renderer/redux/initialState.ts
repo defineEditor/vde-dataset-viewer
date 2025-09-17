@@ -21,6 +21,7 @@ export const settings: ISettings = {
         copyFormat: 'tab',
         applyDateFormat: true,
         showTypeIcons: false,
+        copyWithHeaders: false,
     },
     converter: {
         threads: 2,
@@ -87,6 +88,8 @@ export const ui: IUi = {
         currentTab: 'validation',
         currentReportTab: 'summary',
         currentReportId: null,
+        showOnlyDatasetsWithIssues: false,
+        reportSummaryType: 'datasets',
     },
 };
 
@@ -126,9 +129,13 @@ export const validator: ValidatorData = {
         customStandard: false,
         defineVersion: '',
         standard: '',
+        ctPackages: [],
         version: '',
     },
-    reports: [],
+    reports: {},
+    reportData: {},
+    reportFilters: {},
+    lastReportSaveFolder: '',
 };
 
 export const data: IData = {

@@ -27,6 +27,14 @@ export interface IHeaderCell {
     defaultOrder?: SortOrder;
     /** Size in px */
     size?: number;
+    /** Minimum size in px */
+    minSize?: number;
+    /** Maximum size in px */
+    maxSize?: number;
+    /** Size in percents */
+    sizePct?: number;
+    /** Padding */
+    padding?: number;
     /** Type */
     type?: ItemType;
     /** Filter is applied to the column */
@@ -35,6 +43,8 @@ export interface IHeaderCell {
     numericDatetimeType?: 'date' | 'time' | 'datetime';
     /** Cell render */
     cell?: (cell: any) => React.JSX.Element;
+    /** Style */
+    style?: React.CSSProperties;
 }
 
 export type TableRowValue = string | number | boolean | null;
@@ -52,8 +62,8 @@ export interface ITableData {
 }
 
 export interface TableSettings extends SettingsViewer {
-    widthUnit?: 'px' | '%';
     hideRowNumbers?: boolean;
     showLabel?: boolean;
-    useFlex?: boolean;
+    height?: number;
+    width?: number;
 }

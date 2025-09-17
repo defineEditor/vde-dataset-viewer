@@ -97,6 +97,7 @@ export interface ValidatorConfig {
     customStandard: boolean;
     defineVersion: string;
     standard: string;
+    ctPackages: string[];
     version: string;
 }
 
@@ -152,6 +153,7 @@ export interface ConverterTaskProgress {
 }
 
 export interface ValidationReport {
+    id: string;
     date: number;
     files: { file: string; lastModified: number }[];
     output: string;
@@ -159,8 +161,8 @@ export interface ValidationReport {
     summary: {
         uniqueIssues: number;
         totalIssues: number;
-        summary: IssueSummaryItem[];
         newIssues?: number;
+        changes?: ValidationReportCompare['counts'] | null;
         resolvedIssues?: number;
         changedIssues?: number;
     };
@@ -175,3 +177,35 @@ export interface ValidatorTaskProgress {
 }
 
 export type TaskProgress = ValidatorTaskProgress | ConverterTaskProgress;
+
+export interface ValidationReportCompare {
+    counts: {
+        newIssues: number;
+        changedIssues: number;
+        resolvedIssues: number;
+        skippedIssues: number;
+        byDataset?: {
+            [dataset: string]: {
+                newIssues: string[];
+                changedIssues: string[];
+                resolvedIssues: string[];
+                skippedIssues: string[];
+            };
+        };
+        byIssue?: {
+            [core_id: string]: {
+                newDatasets: string[];
+                changedDatasets: string[];
+                resolvedDatasets: string[];
+                skippedDatasets: string[];
+            };
+        };
+    };
+}
+
+export interface NewWindowProps {
+    goTo?: {
+        row?: number;
+        column?: string;
+    };
+}

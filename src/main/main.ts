@@ -19,7 +19,7 @@ import FileManager from 'main/managers/fileManager';
 import NetManager from 'main/managers/netManager';
 import TaskManager from 'main/managers/taskManager';
 import ReportManager from 'main/managers/reportManager';
-import { MainTask } from 'interfaces/main';
+import { MainTask, NewWindowProps } from 'interfaces/main';
 
 let mainWindow: BrowserWindow | null = null;
 let fileToOpen: string | null = null;
@@ -114,6 +114,7 @@ app.whenReady()
 const createWindow = async (
     filePath?: string | null,
     position?: 'top' | 'bottom' | 'left' | 'right',
+    props?: NewWindowProps,
 ): Promise<BrowserWindow | null> => {
     const RESOURCES_PATH = app.isPackaged
         ? path.join(process.resourcesPath, 'assets')
@@ -156,7 +157,7 @@ const createWindow = async (
 
         // Open file if one was provided
         if (filePath) {
-            newWindow.webContents.send('renderer:openFile', filePath);
+            newWindow.webContents.send('renderer:openFile', filePath, props);
         }
     });
 
@@ -200,8 +201,9 @@ const handleOpenInNewWindow = async (
     _event: IpcMainInvokeEvent,
     filePath: string,
     position?: 'top' | 'bottom' | 'left' | 'right',
+    props?: NewWindowProps,
 ): Promise<void> => {
-    createWindow(filePath, position);
+    createWindow(filePath, position, props);
 };
 
 // Function to handle resizing and positioning the current window
@@ -270,6 +272,14 @@ app.whenReady()
         ipcMain.handle(
             'main:getValidationReport',
             reportManager.getValidationReport,
+        );
+        ipcMain.handle(
+            'main:downloadValidationReport',
+            reportManager.downloadValidationReport,
+        );
+        ipcMain.handle(
+            'main:compareValidationReports',
+            reportManager.compareValidationReports,
         );
         ipcMain.handle('read:getMetadata', fileManager.handleGetMetadata);
         ipcMain.handle(

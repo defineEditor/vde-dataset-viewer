@@ -6,6 +6,7 @@ export default function estimateWidth(
     widthEstimateRows: number,
     maxColWidth: number,
     showTypeIcons: boolean = false,
+    skipIdLength: boolean = false,
 ): { [id: string]: number } {
     const { header, data: tableData } = data;
     const result = {};
@@ -78,11 +79,13 @@ export default function estimateWidth(
             const iconsSize = 2 + (showTypeIcons ? 3 : 0);
             result[id] = Math.min(
                 Math.round(
-                    Math.max(
-                        columnWidth,
-                        longestWord,
-                        id.length * 1.3 + iconsSize,
-                    ),
+                    skipIdLength
+                        ? Math.max(columnWidth, longestWord)
+                        : Math.max(
+                              columnWidth,
+                              longestWord,
+                              id.length * 1.3 + iconsSize,
+                          ),
                 ),
                 maxColWidth,
             );

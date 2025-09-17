@@ -138,7 +138,9 @@ const Settings: React.FC = () => {
     };
 
     const settingsChanged =
-        JSON.stringify(initialSettings) !== JSON.stringify(newSettings);
+        JSON.stringify(initialSettings) !== JSON.stringify(newSettings) ||
+        JSON.stringify(initialValidatorInfo) !==
+            JSON.stringify(newValidatorInfo);
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {

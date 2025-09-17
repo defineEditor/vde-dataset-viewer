@@ -162,6 +162,22 @@ export const uiSlice = createSlice({
         setValidationReport: (state, action: PayloadAction<string | null>) => {
             state.validationPage.currentReportId = action.payload;
         },
+        setValidationReportTab: (
+            state,
+            action: PayloadAction<IUiValidationPage['currentReportTab']>,
+        ) => {
+            state.validationPage.currentReportTab = action.payload;
+        },
+        toggleShowOnlyDatasetsWithIssues: (state) => {
+            state.validationPage.showOnlyDatasetsWithIssues =
+                !state.validationPage.showOnlyDatasetsWithIssues;
+        },
+        setReportSummaryType: (
+            state,
+            action: PayloadAction<IUiValidationPage['reportSummaryType']>,
+        ) => {
+            state.validationPage.reportSummaryType = action.payload;
+        },
         setZoomLevel: (state, action: PayloadAction<number>) => {
             state.zoomLevel = action.payload;
         },
@@ -210,6 +226,9 @@ export const {
     updateValidation,
     setValidationReport,
     setValidationTab,
+    setValidationReportTab,
+    toggleShowOnlyDatasetsWithIssues,
+    setReportSummaryType,
     setZoomLevel,
 } = uiSlice.actions;
 
