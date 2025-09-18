@@ -121,6 +121,53 @@ const getControlledTerminology = async (
 };
 
 /**
+ * Cleanup temporary folder after the validation
+ * @param validationDetails Files and folders to validate
+ */
+const cleanTemporaryFiles = async (
+    validationDetails: ValidatorProcessTask['validationDetails'],
+): Promise<boolean> => {
+    const filesToDelete: string[] = [];
+    // Identify temporary files
+    if (validationDetails?.files && validationDetails.files.length > 0) {
+        validationDetails.files
+            .filter((file: string) => file.startsWith('__TEMP__'))
+            .forEach((file: string) => {
+                filesToDelete.push(
+                    file.replace(
+                        '__TEMP__',
+                        path.join(tmpdir(), 'vde-convert'),
+                    ),
+                );
+            });
+    }
+
+    // Delete temporary files
+    if (filesToDelete.length > 0) {
+        let failedToDelete = false;
+        for (const file of filesToDelete) {
+            try {
+                if (fs.existsSync(file)) {
+                    fs.unlinkSync(file);
+                }
+            } catch (error) {
+                // Log error but continue
+                console.error(
+                    `Validate Worker: Error deleting temporary file ${file}: ${
+                        (error as Error).message
+                    }`,
+                );
+                failedToDelete = true;
+            }
+        }
+        return !failedToDelete;
+    } else {
+        // No temporary files to delete
+        return true;
+    }
+};
+
+/**
  * Validates datasets using CDISC CORE command line tool
  * @param validatorPath Path to the Core CLI executable
  * @param configuration Validation configuration
@@ -131,6 +178,7 @@ const getControlledTerminology = async (
 const runValidation = async (
     validatorPath: string,
     configuration: ValidatorProcessTask['configuration'],
+    options: ValidatorProcessTask['options'],
     validationDetails: ValidatorProcessTask['validationDetails'],
     outputDir: string,
     sendMessage: (progress: number) => void,
@@ -207,6 +255,11 @@ const runValidation = async (
     }
     if (configuration?.snomedEdition) {
         args.push('--snomed-edition', configuration.snomedEdition);
+    }
+
+    // Specify pool size
+    if (options?.poolSize && options.poolSize > 0) {
+        args.push('--pool-size', options.poolSize.toString());
     }
 
     // Enable verbose progress output
@@ -448,10 +501,14 @@ process.parentPort.once(
                         const result = await runValidation(
                             validatorPath,
                             data.configuration,
+                            data.options,
                             data.validationDetails,
                             data.outputDir || '',
                             sendMessage,
                         );
+
+                        // Delete temporary files (files coverted for validation)
+                        cleanTemporaryFiles(data.validationDetails);
 
                         const summary = getIssueSummary(
                             path.join(data.outputDir || '', result.fileName),

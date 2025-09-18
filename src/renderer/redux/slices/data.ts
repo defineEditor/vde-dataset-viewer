@@ -172,10 +172,17 @@ export const dataSlice = createSlice({
                 report: ParsedValidationReport;
             }>,
         ) => {
+            const sameReport =
+                state.validator.reportData[action.payload.reportId] !==
+                undefined;
             // Keep only one report in memory
             state.validator.reportData = {
                 [action.payload.reportId]: action.payload.report,
             };
+            // Clean the filters if the report was changed
+            if (!sameReport) {
+                state.validator.reportFilters = {};
+            }
         },
         setReportFilter: (
             state,

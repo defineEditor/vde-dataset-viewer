@@ -180,7 +180,7 @@ const ValidatorConfiguration: React.FC<ValidatorConfigurationProps> = ({
         id: `${file.folder}/${file.filename}`,
         outputName: ['xpt', 'json'].includes(getExtension(file.filename))
             ? file.filename
-            : file.filename.replace(/\.[^.]+$/, 'json'), // Convert to JSON if not xpt or json
+            : file.filename.replace(/\.[^.]+$/, '.json'), // Convert to JSON if not xpt or json
     }));
 
     const handleFilesChange = (newFiles: ConvertedFileInfo[]) => {

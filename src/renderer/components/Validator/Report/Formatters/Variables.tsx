@@ -14,6 +14,7 @@ const styles = {
     },
     text: {
         p: 0.5,
+        lineHeight: '1.75',
     },
 };
 

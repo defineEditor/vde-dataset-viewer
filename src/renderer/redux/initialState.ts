@@ -39,6 +39,7 @@ export const settings: ISettings = {
         convertSuffixTm: false,
         convertSuffixDtm: false,
         xptRoundPrecision: 12,
+        sas7bdatUpcaseDatasetNames: true,
         csvEpoch: '1960-01-01',
     },
     other: {

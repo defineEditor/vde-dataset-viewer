@@ -13,6 +13,7 @@ export interface SettingsConverter {
     convertSuffixDtm: boolean;
     csvEpoch: string;
     xptRoundPrecision: number;
+    sas7bdatUpcaseDatasetNames: boolean;
 }
 
 export interface SettingsValidator {

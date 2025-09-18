@@ -51,6 +51,13 @@ const styles = {
         fontWeight: '500',
         p: 0.5,
     },
+    subitemButton: {
+        textTransform: 'none',
+        color: 'primary.main',
+        fontSize: '14',
+        fontWeight: '400',
+        p: 0.5,
+    },
 };
 
 const ExpandMore = styled(
@@ -81,8 +88,8 @@ interface DatasetCardsProps {
     parsedReport: ParsedValidationReport;
     showOnlyDatasetsWithIssues: boolean;
     onUpdateFilter: (
-        value: string,
-        variable: string,
+        values: string[],
+        variables: string[],
         reportTab: IUiValidationPage['currentReportTab'],
     ) => void;
 }
@@ -165,8 +172,8 @@ const DatasetCards: React.FC<DatasetCardsProps> = ({
                                         sx={styles.datasetButton}
                                         onClick={() =>
                                             onUpdateFilter(
-                                                datasetIssue.dataset,
-                                                'dataset',
+                                                [datasetIssue.dataset],
+                                                ['dataset'],
                                                 'summary',
                                             )
                                         }
@@ -229,8 +236,8 @@ const DatasetCards: React.FC<DatasetCardsProps> = ({
                                     <IconButton
                                         onClick={() =>
                                             onUpdateFilter(
-                                                datasetIssue.dataset,
-                                                'dataset',
+                                                [datasetIssue.dataset],
+                                                ['dataset'],
                                                 'details',
                                             )
                                         }
@@ -277,12 +284,28 @@ const DatasetCards: React.FC<DatasetCardsProps> = ({
                                                     justifyContent="space-between"
                                                     alignItems="center"
                                                 >
-                                                    <Typography
-                                                        variant="body2"
-                                                        color="primary"
+                                                    <ButtonBase
+                                                        onClick={() =>
+                                                            onUpdateFilter(
+                                                                [
+                                                                    datasetIssue.dataset,
+                                                                    issue.core_id,
+                                                                ],
+                                                                [
+                                                                    'dataset',
+                                                                    'core_id',
+                                                                ],
+                                                                'details',
+                                                            )
+                                                        }
                                                     >
-                                                        {issue.core_id}
-                                                    </Typography>
+                                                        <Typography
+                                                            variant="body2"
+                                                            color="primary"
+                                                        >
+                                                            {issue.core_id}
+                                                        </Typography>
+                                                    </ButtonBase>
                                                     <Chip
                                                         label={issue.issues}
                                                         size="small"

@@ -70,7 +70,7 @@ export const startValidation = async (
                 size: 0, // Size will be set after conversion
                 lastModified: Date.now(), // Last modified time can be set to current time
                 datasetJsonVersion: '',
-                outputName: `${file.fileName}.json`,
+                outputName: `${file.fileName.replace(/\.[^/.]+$/, '')}.json`, // Replace extension with .json
             };
         });
 
@@ -84,7 +84,10 @@ export const startValidation = async (
 
     // Set up progress subscription
     context.subscribeToTaskProgress(async (info: TaskProgress) => {
-        if (info.type === mainTaskTypes.CONVERT && info.id === validationId) {
+        if (
+            info.type === mainTaskTypes.CONVERT &&
+            info.id.replace(/-\d+$/, '') === validationId
+        ) {
             // For the conversion task, we need to calculate the total progress based on the number of files which are converted
             if (info.fullPath) {
                 // Update conversion progress for the specific file

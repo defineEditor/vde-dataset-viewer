@@ -141,7 +141,7 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
                 files: [
                     {
                         filePath: file[0].path,
-                        fileName: file[0].name,
+                        fileName: `${file[0].name.toLowerCase()}.${extension}`,
                         extension,
                     },
                 ],
@@ -168,6 +168,8 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
                 }),
             );
         }
+        // Switch to results tab
+        dispatch(setValidatorTab(1));
     }, [dispatch, validationId]);
 
     useEffect(() => {
