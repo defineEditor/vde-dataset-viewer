@@ -52,6 +52,7 @@ interface DatasetViewProps {
     settings: TableSettings;
     currentPage?: number;
     currentMask?: IMask | null;
+    annotatedCells?: Map<string, { text: string; color: string }> | null;
 }
 
 const DatasetView: React.FC<DatasetViewProps> = ({
@@ -61,6 +62,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     settings,
     currentPage = 0,
     currentMask = null,
+    annotatedCells = null,
 }) => {
     const dispatch = useAppDispatch();
     const [sorting, setSorting] = useState<ISortingState>([]);
@@ -588,33 +590,43 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     const updatedSettings = { ...settings, height: tableHeight };
 
     return (
-        <Box ref={viewContainerRef} style={styles.fullHeight}>
-            {/* If height is not measured yet, do not render */}
-            {tableHeight !== 0 && (
-                <View
-                    table={table}
-                    tableContainerRef={tableContainerRef}
-                    visibleColumns={visibleColumns}
-                    virtualPaddingLeft={virtualPaddingLeft}
-                    virtualPaddingRight={virtualPaddingRight}
-                    virtualColumns={virtualColumns}
-                    virtualRows={virtualRows}
-                    rows={rows}
-                    highlightedCells={highlightedCells}
-                    handleCellClick={handleCellClick}
-                    handleMouseDown={handleMouseDown}
-                    handleMouseOver={handleMouseOver}
-                    handleContextMenu={handleContextMenu}
-                    handleResizeEnd={columnVirtualizer.measure}
-                    isLoading={isLoading}
-                    settings={updatedSettings}
-                    rowVirtualizer={rowVirtualizer}
-                    sorting={sorting}
-                    onSortingChange={setSorting}
-                    filteredColumns={filteredColumns}
-                />
-            )}
-        </Box>
+        <React.Profiler
+            id="DatasetViewUI"
+            onRender={(id, phase, actualDuration, startTime, commitTime) => {
+                console.log(
+                    `${id} ${phase} actualDuration=${actualDuration.toFixed(2)}ms start=${startTime.toFixed(2)} commit=${commitTime.toFixed(2)}`,
+                );
+            }}
+        >
+            <Box ref={viewContainerRef} style={styles.fullHeight}>
+                {/* If height is not measured yet, do not render */}
+                {tableHeight !== 0 && (
+                    <View
+                        table={table}
+                        tableContainerRef={tableContainerRef}
+                        visibleColumns={visibleColumns}
+                        virtualPaddingLeft={virtualPaddingLeft}
+                        virtualPaddingRight={virtualPaddingRight}
+                        virtualColumns={virtualColumns}
+                        virtualRows={virtualRows}
+                        rows={rows}
+                        highlightedCells={highlightedCells}
+                        annotatedCells={annotatedCells}
+                        handleCellClick={handleCellClick}
+                        handleMouseDown={handleMouseDown}
+                        handleMouseOver={handleMouseOver}
+                        handleContextMenu={handleContextMenu}
+                        handleResizeEnd={columnVirtualizer.measure}
+                        isLoading={isLoading}
+                        settings={updatedSettings}
+                        rowVirtualizer={rowVirtualizer}
+                        sorting={sorting}
+                        onSortingChange={setSorting}
+                        filteredColumns={filteredColumns}
+                    />
+                )}
+            </Box>
+        </React.Profiler>
     );
 };
 

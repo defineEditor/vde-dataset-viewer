@@ -63,9 +63,11 @@ export const ui: IUi = {
     zoomLevel: 0,
     viewer: {
         datasetInfoTab: 0,
-        validatorTab: 0,
+        validatorTab: 'validation',
         filterInputMode: 'manual',
         sidebarOpen: false,
+        showIssues: false,
+        filteredIssues: [],
     },
     modals: [],
     snackbar: {

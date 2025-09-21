@@ -107,10 +107,22 @@ const ValidatorConfiguration: React.FC<ValidatorConfigurationProps> = ({
     useEffect(() => {
         const selectedStandard = config.standard;
         if (validatorStandards[selectedStandard]) {
-            setConfig((prev) => ({
-                ...prev,
-                version: validatorStandards[selectedStandard].versions[0],
-            }));
+            setConfig((prev) => {
+                const prevVersion = prev.version;
+                // If the previous version is not valid for the new standard, set to the first available version
+                if (
+                    !validatorStandards[selectedStandard].versions.includes(
+                        prevVersion,
+                    )
+                ) {
+                    return {
+                        ...prev,
+                        version:
+                            validatorStandards[selectedStandard].versions[0],
+                    };
+                }
+                return prev;
+            });
             setAvailableVersions(validatorStandards[selectedStandard].versions);
         } else {
             setAvailableVersions([]);

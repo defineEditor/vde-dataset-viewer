@@ -142,6 +142,14 @@ const styles = {
     highlightedCell: {
         backgroundColor: '#42a5f533',
     },
+    annotatedCell: {
+        backgroundColor: '#ffe082',
+        border: '1px solid #ffca28',
+    },
+    highlightedAnnotatedCell: {
+        backgroundColor: '#ffe08290',
+        border: '1px solid #ffca2890',
+    },
     headerRowNumberCell: {
         justifyContent: 'center',
         fontSize: 'small',
@@ -187,6 +195,13 @@ const styles = {
         flex: 1,
         justifyContent: 'center',
     },
+    allSpace: {
+        width: '100%',
+        height: '100%',
+    },
+    preWrap: {
+        whiteSpace: 'pre-wrap',
+    },
 };
 
 const getTypeIcon = (type: string | undefined) => {
@@ -228,6 +243,7 @@ const DatasetViewUI: React.FC<{
     ) => void;
     filteredColumns?: string[];
     containerStyle?: React.CSSProperties;
+    annotatedCells?: Map<string, { text: string; color: string }> | null;
 }> = ({
     table,
     tableContainerRef,
@@ -250,6 +266,7 @@ const DatasetViewUI: React.FC<{
     handleContextMenu = (_event, _rowIndex, _columnIndex) => {},
     filteredColumns = [],
     containerStyle = undefined,
+    annotatedCells = null,
 }) => {
     return (
         <Paper
@@ -521,7 +538,25 @@ const DatasetViewUI: React.FC<{
                                                     highlightedCell.column ===
                                                         vc.index + 1,
                                             );
-                                        if (isHighlighted) {
+
+                                        const annotation =
+                                            annotatedCells !== null &&
+                                            annotatedCells.get(
+                                                `${virtualRow.index}#${vc.index + 1}`,
+                                            );
+                                        const isAnnotated = !!annotation;
+
+                                        if (isAnnotated && isHighlighted) {
+                                            cellStyle = {
+                                                ...cellStyle,
+                                                ...styles.highlightedAnnotatedCell,
+                                            };
+                                        } else if (isAnnotated) {
+                                            cellStyle = {
+                                                ...cellStyle,
+                                                ...styles.annotatedCell,
+                                            };
+                                        } else if (isHighlighted) {
                                             cellStyle = {
                                                 ...cellStyle,
                                                 ...styles.highlightedCell,
@@ -566,9 +601,35 @@ const DatasetViewUI: React.FC<{
                                                     )
                                                 }
                                             >
-                                                {flexRender(
-                                                    cell.column.columnDef.cell,
-                                                    cell.getContext(),
+                                                {isAnnotated ? (
+                                                    <Tooltip
+                                                        title={
+                                                            <Box
+                                                                sx={
+                                                                    styles.preWrap
+                                                                }
+                                                            >
+                                                                {
+                                                                    annotation?.text
+                                                                }
+                                                            </Box>
+                                                        }
+                                                        placement="top"
+                                                    >
+                                                        <Box
+                                                            sx={styles.allSpace}
+                                                        >
+                                                            {
+                                                                cell.getValue() as string
+                                                            }
+                                                        </Box>
+                                                    </Tooltip>
+                                                ) : (
+                                                    flexRender(
+                                                        cell.column.columnDef
+                                                            .cell,
+                                                        cell.getContext(),
+                                                    )
                                                 )}
                                             </TableCell>
                                         );

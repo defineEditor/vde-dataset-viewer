@@ -9,6 +9,7 @@ import {
     DatasetType,
     ModalType,
     DatasetMode,
+    IUiViewer,
 } from 'interfaces/common';
 import { paths } from 'misc/constants';
 
@@ -92,16 +93,24 @@ export const uiSlice = createSlice({
             action: PayloadAction<{
                 row?: number | null;
                 column?: string | null;
+                cellSelection?: boolean;
             }>,
         ) => {
-            const { row, column } = action.payload;
+            const { row, column, cellSelection } = action.payload;
             if (row !== undefined) {
                 state.control.goTo.row = row;
             }
             if (column !== undefined) {
                 state.control.goTo.column = column;
             }
-            if (row !== undefined && column !== undefined) {
+            if (cellSelection !== undefined) {
+                state.control.goTo.cellSelection = cellSelection;
+            }
+            if (
+                row !== undefined &&
+                column !== undefined &&
+                cellSelection === undefined
+            ) {
                 state.control.goTo.cellSelection = true;
             } else if (!state.control.goTo.row && !state.control.goTo.column) {
                 // Reset the value once both column and cell are selected
@@ -141,7 +150,10 @@ export const uiSlice = createSlice({
         setDatasetInfoTab: (state, action: PayloadAction<0 | 1>) => {
             state.viewer.datasetInfoTab = action.payload;
         },
-        setValidatorTab: (state, action: PayloadAction<0 | 1>) => {
+        setValidatorTab: (
+            state,
+            action: PayloadAction<IUiViewer['validatorTab']>,
+        ) => {
             state.viewer.validatorTab = action.payload;
         },
         setFilterInputMode: (
@@ -204,6 +216,16 @@ export const uiSlice = createSlice({
                 };
             }
         },
+        setShowIssues: (state, action: PayloadAction<boolean>) => {
+            state.viewer.showIssues = action.payload;
+            if (action.payload === false) {
+                // Clear filtered issues when disabling issue view
+                state.viewer.filteredIssues = [];
+            }
+        },
+        setIssueFilter: (state, action: PayloadAction<string[]>) => {
+            state.viewer.filteredIssues = action.payload;
+        },
     },
 });
 
@@ -230,6 +252,7 @@ export const {
     toggleShowOnlyDatasetsWithIssues,
     setReportSummaryType,
     setZoomLevel,
+    setShowIssues,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

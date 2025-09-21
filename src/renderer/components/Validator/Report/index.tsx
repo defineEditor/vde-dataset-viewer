@@ -9,7 +9,11 @@ import TabPanel from '@mui/lab/TabPanel';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
-import { openSnackbar, setValidationReportTab } from 'renderer/redux/slices/ui';
+import {
+    openSnackbar,
+    setShowIssues,
+    setValidationReportTab,
+} from 'renderer/redux/slices/ui';
 import { setReport, setReportFilter } from 'renderer/redux/slices/data';
 import AppContext from 'renderer/utils/AppContext';
 import {
@@ -117,6 +121,8 @@ const ValidationReportPage: React.FC = () => {
                 if (event.ctrlKey || event.metaKey) {
                     apiService.openInNewWindow(filePath, undefined, props);
                 } else {
+                    // Show issues in the viewer
+                    dispatch(setShowIssues(true));
                     // Open in the same window
                     handleOpenDataset(
                         filePath,

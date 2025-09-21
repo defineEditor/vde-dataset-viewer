@@ -125,9 +125,11 @@ export interface IUiControl {
 
 export interface IUiViewer {
     datasetInfoTab: 0 | 1;
-    validatorTab: 0 | 1;
+    validatorTab: 'validation' | 'results' | 'issues';
     filterInputMode: 'manual' | 'interactive';
     sidebarOpen: boolean;
+    showIssues: boolean;
+    filteredIssues: string[];
 }
 
 export interface IUiValidation {

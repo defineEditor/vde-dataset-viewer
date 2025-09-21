@@ -1,10 +1,15 @@
 import React, { useEffect, useCallback, useState, useContext } from 'react';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
+import {
+    Tabs,
+    Tab,
+    Box,
+    Dialog,
+    Button,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+} from '@mui/material';
 import Configuration from 'renderer/components/Modal/Validator/Configuration';
 import Results from 'renderer/components/Common/ValidationResults';
 import AppContext from 'renderer/utils/AppContext';
@@ -12,15 +17,15 @@ import {
     InputFileExtension,
     IUiModal,
     IUiValidation,
+    IUiViewer,
     ValidatorConfig,
 } from 'interfaces/common';
-import { Tabs, Tab, Box } from '@mui/material';
 import {
     closeModal,
     setValidatorTab,
     updateValidation,
 } from 'renderer/redux/slices/ui';
-import ValidationProgress from './ValidationProgress';
+import ValidationProgress from 'renderer/components/Modal/Validator/ValidationProgress';
 
 const styles = {
     dialog: {
@@ -67,14 +72,18 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
     const validationId = `modal-${currentFileId}`;
 
     // Get validation state from Redux
-    const validationState = useAppSelector<IUiValidation>(
+    const validationStatus = useAppSelector<IUiValidation['status']>(
         (state) =>
-            (validationId !== null && state.ui.validation[validationId]) || {
-                status: 'not started',
-                validationProgress: 0,
-                conversionProgress: null,
-                dateCompleted: null,
-            },
+            (validationId !== null &&
+                state.ui.validation[validationId]?.status) ||
+            'not started',
+    );
+
+    const validationDateCompleted = useAppSelector<number | null>(
+        (state) =>
+            (validationId !== null &&
+                state.ui.validation[validationId]?.dateCompleted) ||
+            null,
     );
 
     const { apiService } = useContext(AppContext);
@@ -87,10 +96,10 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
     // When opening a modal, check if the validation completion date is before the last modified time of the file
     useEffect(() => {
         if (
-            validationState.status === 'completed' &&
-            typeof validationState.dateCompleted === 'number' &&
+            validationStatus === 'completed' &&
+            typeof validationDateCompleted === 'number' &&
             currentFileLastModified &&
-            validationState.dateCompleted < currentFileLastModified
+            validationDateCompleted < currentFileLastModified
         ) {
             // Reset validation state if the file has been modified since the last validation
             dispatch(
@@ -106,8 +115,8 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
         }
     }, [
         dispatch,
-        validationState.status,
-        validationState.dateCompleted,
+        validationStatus,
+        validationDateCompleted,
         currentFileLastModified,
         validationId,
     ]);
@@ -116,7 +125,10 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
         dispatch(closeModal({ type }));
     }, [dispatch, type]);
 
-    const handleTabChange = (_event: React.SyntheticEvent, newValue: 0 | 1) => {
+    const handleTabChange = (
+        _event: React.SyntheticEvent,
+        newValue: IUiViewer['validatorTab'],
+    ) => {
         dispatch(setValidatorTab(newValue));
     };
 
@@ -169,7 +181,7 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
             );
         }
         // Switch to results tab
-        dispatch(setValidatorTab(1));
+        dispatch(setValidatorTab('results'));
     }, [dispatch, validationId]);
 
     useEffect(() => {
@@ -209,48 +221,46 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
                     sx={styles.tabs}
                     variant="fullWidth"
                 >
-                    <Tab label="Configuration" sx={styles.tab} />
-                    <Tab label="Results" sx={styles.tab} />
+                    <Tab
+                        label="Configuration"
+                        sx={styles.tab}
+                        value="validation"
+                    />
+                    <Tab label="Results" sx={styles.tab} value="results" />
                 </Tabs>
-                <Box hidden={validatorTab !== 0} sx={styles.tabPanel}>
-                    {['completed', 'validating'].includes(
-                        validationState.status,
-                    ) ? (
+                <Box
+                    hidden={validatorTab !== 'validation'}
+                    sx={styles.tabPanel}
+                >
+                    {['completed', 'validating'].includes(validationStatus) ? (
                         <ValidationProgress
-                            conversionProgress={
-                                validationState.conversionProgress
-                            }
-                            validationProgress={
-                                validationState.validationProgress
-                            }
+                            validationId={validationId}
+                            validationStatus={validationStatus}
                         />
                     ) : (
                         <Configuration config={config} setConfig={setConfig} />
                     )}
                 </Box>
-                <Box hidden={validatorTab !== 1} sx={styles.tabPanel}>
-                    <Results
-                        filePaths={[currentFilePath]}
-                        closeValidationModal
-                    />
+                <Box hidden={validatorTab !== 'results'} sx={styles.tabPanel}>
+                    <Results filePaths={[currentFilePath]} isModal />
                 </Box>
             </DialogContent>
             <DialogActions sx={styles.actions}>
-                {validationState.status === 'not started' && (
+                {validationStatus === 'not started' && (
                     <Button
                         onClick={handleValidate}
                         color="primary"
-                        disabled={validatorTab !== 0}
+                        disabled={validatorTab !== 'validation'}
                     >
                         Validate
                     </Button>
                 )}
-                {(validationState.status === 'completed' ||
-                    validationState.status === 'validating') && (
+                {(validationStatus === 'completed' ||
+                    validationStatus === 'validating') && (
                     <Button
                         onClick={handleReset}
                         color="primary"
-                        disabled={validationState.status !== 'completed'}
+                        disabled={validationStatus !== 'completed'}
                     >
                         Done
                     </Button>

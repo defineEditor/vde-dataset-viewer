@@ -182,12 +182,12 @@ const getReportTitle = (report: ValidationReport): string => {
 
 interface ResultsProps {
     filePaths?: string[];
-    closeValidationModal?: true;
+    isModal?: boolean;
 }
 
 const ValidationResults: React.FC<ResultsProps> = ({
     filePaths = [],
-    closeValidationModal = false,
+    isModal = false,
 }) => {
     const dispatch = useAppDispatch();
     const allReports = useAppSelector((state) => state.data.validator.reports);
@@ -340,7 +340,7 @@ const ValidationResults: React.FC<ResultsProps> = ({
                 pathname: paths.VALIDATOR,
             }),
         );
-        if (closeValidationModal) {
+        if (isModal) {
             dispatch(closeModal({ type: modals.VALIDATOR }));
         }
     };

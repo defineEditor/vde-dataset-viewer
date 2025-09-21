@@ -1,5 +1,9 @@
 import React from 'react';
 import { Paper, Typography, LinearProgress, Stack } from '@mui/material';
+import DogWorker from 'renderer/components/Loading/DogWorker';
+import CatWorker from 'renderer/components/Loading/CatWorker';
+import { useAppSelector } from 'renderer/redux/hooks';
+import { ISettings, IUiValidation } from 'interfaces/common';
 
 const styles = {
     container: {
@@ -8,29 +12,43 @@ const styles = {
         backgroundColor: 'grey.100',
     },
     progressContainer: {
+        width: '100%',
         mb: 2,
         p: 2,
     },
     progressBar: {
         width: '100%',
-        height: 8,
-        borderRadius: 4,
+        height: 24,
+        borderRadius: 2,
         mt: 1,
+    },
+    closeWindowNote: {
+        width: '100%',
+        textAlign: 'center',
+    },
+    workers: {
+        width: '100%',
+        pr: 4,
     },
 };
 
-interface ValidationProgressProps {
-    conversionProgress: number | null;
-    validationProgress: number;
-}
+const ProgressContainer: React.FC<{
+    validationId: string | null;
+}> = ({ validationId }) => {
+    const { conversionProgress, validationProgress } =
+        useAppSelector<IUiValidation>(
+            (state) =>
+                (validationId !== null &&
+                    state.ui.validation[validationId]) || {
+                    status: 'not started',
+                    validationProgress: 0,
+                    conversionProgress: null,
+                    dateCompleted: null,
+                },
+        );
 
-const ValidationProgress: React.FC<ValidationProgressProps> = ({
-    conversionProgress,
-    validationProgress,
-}) => {
     return (
-        <Stack spacing={2} sx={styles.container}>
-            <Typography variant="h6">Processing</Typography>
+        <>
             {conversionProgress !== null && (
                 <Paper sx={styles.progressContainer}>
                     <>
@@ -65,6 +83,71 @@ const ValidationProgress: React.FC<ValidationProgressProps> = ({
                           : `Validating (${Math.round(validationProgress)}%)`}
                 </Typography>
             </Paper>
+        </>
+    );
+};
+
+const randomType = Math.random() < 0.5 ? 'cat' : 'dog';
+
+const Worker: React.FC<{
+    loadingAnimation: ISettings['other']['loadingAnimation'];
+}> = ({ loadingAnimation }) => {
+    if (loadingAnimation === 'cat') {
+        return <CatWorker />;
+    }
+    if (loadingAnimation === 'dog') {
+        return <DogWorker />;
+    }
+    if (randomType === 'cat') {
+        return <CatWorker />;
+    }
+    if (randomType === 'dog') {
+        return <DogWorker />;
+    }
+    return null;
+};
+
+const ValidationProgress: React.FC<{
+    validationId: string | null;
+    validationStatus: IUiValidation['status'];
+}> = ({ validationId, validationStatus }) => {
+    const poolSize = useAppSelector(
+        (state) => state.settings.validator.poolSize,
+    );
+    const loadingAnimation = useAppSelector(
+        (state) => state.settings.other.loadingAnimation,
+    );
+
+    const workers = new Array(Number(poolSize))
+        .fill(null)
+        .map((_item, index) => (
+            <Worker
+                key={`worker-${index + 1}`}
+                loadingAnimation={loadingAnimation}
+            />
+        ));
+
+    return (
+        <Stack spacing={2} sx={styles.container} alignItems="flex-start">
+            <Typography variant="h6">Processing</Typography>
+            <ProgressContainer validationId={validationId} />
+            {validationStatus !== 'completed' && (
+                <>
+                    <Typography variant="body2" sx={styles.closeWindowNote}>
+                        You can continue working on other tasks
+                    </Typography>
+                    {loadingAnimation !== 'normal' && (
+                        <Stack
+                            direction="row"
+                            sx={styles.workers}
+                            justifyContent="center"
+                            flexWrap="wrap"
+                        >
+                            {workers}
+                        </Stack>
+                    )}
+                </>
+            )}
         </Stack>
     );
 };

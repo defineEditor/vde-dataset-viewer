@@ -51,13 +51,6 @@ const styles = {
         fontWeight: '500',
         p: 0.5,
     },
-    subitemButton: {
-        textTransform: 'none',
-        color: 'primary.main',
-        fontSize: '14',
-        fontWeight: '400',
-        p: 0.5,
-    },
 };
 
 const ExpandMore = styled(

@@ -66,6 +66,7 @@ const handleOpenDataset = async (
                 setGoTo({
                     column: newWindowProps.goTo.column,
                     row: newWindowProps.goTo.row,
+                    cellSelection: false,
                 }),
             );
         }

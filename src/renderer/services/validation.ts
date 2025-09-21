@@ -204,6 +204,13 @@ export const startValidation = async (
                             }
                         }
                         store.dispatch(addValidationReport(newReport));
+                        // Open a snackbar to inform user
+                        store.dispatch(
+                            openSnackbar({
+                                message: 'Validation completed',
+                                type: 'success',
+                            }),
+                        );
                     }
                 }
             }
