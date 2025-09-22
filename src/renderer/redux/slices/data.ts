@@ -160,9 +160,13 @@ export const dataSlice = createSlice({
             state,
             action: PayloadAction<{ id: string }>,
         ) => {
-            // Remove a validation report by index
+            // Remove a validation report
             if (state.validator.reports[action.payload.id]) {
                 delete state.validator.reports[action.payload.id];
+            }
+            // If it is currently loaded, then clean the report data
+            if (state.validator.reportData[action.payload.id]) {
+                delete state.validator.reportData[action.payload.id];
             }
         },
         setReport: (

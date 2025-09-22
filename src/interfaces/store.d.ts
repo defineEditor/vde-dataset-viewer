@@ -128,8 +128,6 @@ export interface IUiViewer {
     validatorTab: 'validation' | 'results' | 'issues';
     filterInputMode: 'manual' | 'interactive';
     sidebarOpen: boolean;
-    showIssues: boolean;
-    filteredIssues: string[];
 }
 
 export interface IUiValidation {
@@ -162,6 +160,12 @@ export interface IUi {
     snackbar: IUiSnackbar;
     control: IUiControl;
     validation: { [validationId: string]: IUiValidation };
+    dataSettings: {
+        [datasetId: string]: {
+            showIssues: boolean;
+            filteredIssues: string[];
+        };
+    };
     validationPage: IUiValidationPage;
 }
 

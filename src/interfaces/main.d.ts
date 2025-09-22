@@ -209,4 +209,8 @@ export interface NewWindowProps {
         row?: number;
         column?: string;
     };
+    issues?: {
+        filteredIssues: string[];
+        reportId: string;
+    };
 }

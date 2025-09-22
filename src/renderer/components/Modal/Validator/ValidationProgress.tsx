@@ -1,5 +1,5 @@
 import React from 'react';
-import { Paper, Typography, LinearProgress, Stack } from '@mui/material';
+import { Paper, Typography, LinearProgress, Stack, Box } from '@mui/material';
 import DogWorker from 'renderer/components/Loading/DogWorker';
 import CatWorker from 'renderer/components/Loading/CatWorker';
 import { useAppSelector } from 'renderer/redux/hooks';
@@ -28,6 +28,8 @@ const styles = {
     },
     workers: {
         width: '100%',
+        display: 'flex',
+        justifyContent: 'center',
         pr: 4,
     },
 };
@@ -111,21 +113,9 @@ const ValidationProgress: React.FC<{
     validationId: string | null;
     validationStatus: IUiValidation['status'];
 }> = ({ validationId, validationStatus }) => {
-    const poolSize = useAppSelector(
-        (state) => state.settings.validator.poolSize,
-    );
     const loadingAnimation = useAppSelector(
         (state) => state.settings.other.loadingAnimation,
     );
-
-    const workers = new Array(Number(poolSize))
-        .fill(null)
-        .map((_item, index) => (
-            <Worker
-                key={`worker-${index + 1}`}
-                loadingAnimation={loadingAnimation}
-            />
-        ));
 
     return (
         <Stack spacing={2} sx={styles.container} alignItems="flex-start">
@@ -137,14 +127,9 @@ const ValidationProgress: React.FC<{
                         You can continue working on other tasks
                     </Typography>
                     {loadingAnimation !== 'normal' && (
-                        <Stack
-                            direction="row"
-                            sx={styles.workers}
-                            justifyContent="center"
-                            flexWrap="wrap"
-                        >
-                            {workers}
-                        </Stack>
+                        <Box sx={styles.workers}>
+                            <Worker loadingAnimation={loadingAnimation} />
+                        </Box>
                     )}
                 </>
             )}

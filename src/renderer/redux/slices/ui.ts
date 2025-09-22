@@ -71,6 +71,11 @@ export const uiSlice = createSlice({
                     state.control = initialUi.control;
                 }
             }
+            // Check if there are any settings
+            if (state.dataSettings[fileId]) {
+                // Remove the settings for this dataset
+                delete state.dataSettings[fileId];
+            }
         },
         setPathname: (
             state,
@@ -150,7 +155,7 @@ export const uiSlice = createSlice({
         setDatasetInfoTab: (state, action: PayloadAction<0 | 1>) => {
             state.viewer.datasetInfoTab = action.payload;
         },
-        setValidatorTab: (
+        setValidationModalTab: (
             state,
             action: PayloadAction<IUiViewer['validatorTab']>,
         ) => {
@@ -216,15 +221,41 @@ export const uiSlice = createSlice({
                 };
             }
         },
-        setShowIssues: (state, action: PayloadAction<boolean>) => {
-            state.viewer.showIssues = action.payload;
-            if (action.payload === false) {
-                // Clear filtered issues when disabling issue view
-                state.viewer.filteredIssues = [];
+        setShowIssues: (
+            state,
+            action: PayloadAction<{
+                id: string;
+                show: boolean;
+                filteredIssues?: string[];
+            }>,
+        ) => {
+            const { id, show, filteredIssues = [] } = action.payload;
+            if (!state.dataSettings[id]) {
+                state.dataSettings[id] = {
+                    showIssues: show,
+                    filteredIssues,
+                };
+            } else {
+                state.dataSettings[id].showIssues = show;
+                if (!show) {
+                    // Clear filtered issues when disabling issue view
+                    state.dataSettings[id].filteredIssues = [];
+                }
             }
         },
-        setIssueFilter: (state, action: PayloadAction<string[]>) => {
-            state.viewer.filteredIssues = action.payload;
+        setIssueFilter: (
+            state,
+            action: PayloadAction<{ id: string; filter: string[] }>,
+        ) => {
+            const { id, filter } = action.payload;
+            if (!state.dataSettings[id]) {
+                state.dataSettings[id] = {
+                    showIssues: true,
+                    filteredIssues: filter,
+                };
+            } else {
+                state.dataSettings[id].filteredIssues = filter;
+            }
         },
     },
 });
@@ -242,7 +273,7 @@ export const {
     setSelect,
     setPage,
     setDatasetInfoTab,
-    setValidatorTab,
+    setValidationModalTab,
     setFilterInputMode,
     toggleSidebar,
     updateValidation,
@@ -253,6 +284,7 @@ export const {
     setReportSummaryType,
     setZoomLevel,
     setShowIssues,
+    setIssueFilter,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

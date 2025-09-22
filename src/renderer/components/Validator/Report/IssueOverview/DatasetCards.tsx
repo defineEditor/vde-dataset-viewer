@@ -51,6 +51,9 @@ const styles = {
         fontWeight: '500',
         p: 0.5,
     },
+    issueCountChip: {
+        scale: 0.8,
+    },
 };
 
 const ExpandMore = styled(
@@ -303,6 +306,9 @@ const DatasetCards: React.FC<DatasetCardsProps> = ({
                                                         label={issue.issues}
                                                         size="small"
                                                         color="warning"
+                                                        sx={
+                                                            styles.issueCountChip
+                                                        }
                                                     />
                                                 </Box>
                                             }

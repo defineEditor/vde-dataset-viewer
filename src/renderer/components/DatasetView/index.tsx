@@ -590,43 +590,34 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     const updatedSettings = { ...settings, height: tableHeight };
 
     return (
-        <React.Profiler
-            id="DatasetViewUI"
-            onRender={(id, phase, actualDuration, startTime, commitTime) => {
-                console.log(
-                    `${id} ${phase} actualDuration=${actualDuration.toFixed(2)}ms start=${startTime.toFixed(2)} commit=${commitTime.toFixed(2)}`,
-                );
-            }}
-        >
-            <Box ref={viewContainerRef} style={styles.fullHeight}>
-                {/* If height is not measured yet, do not render */}
-                {tableHeight !== 0 && (
-                    <View
-                        table={table}
-                        tableContainerRef={tableContainerRef}
-                        visibleColumns={visibleColumns}
-                        virtualPaddingLeft={virtualPaddingLeft}
-                        virtualPaddingRight={virtualPaddingRight}
-                        virtualColumns={virtualColumns}
-                        virtualRows={virtualRows}
-                        rows={rows}
-                        highlightedCells={highlightedCells}
-                        annotatedCells={annotatedCells}
-                        handleCellClick={handleCellClick}
-                        handleMouseDown={handleMouseDown}
-                        handleMouseOver={handleMouseOver}
-                        handleContextMenu={handleContextMenu}
-                        handleResizeEnd={columnVirtualizer.measure}
-                        isLoading={isLoading}
-                        settings={updatedSettings}
-                        rowVirtualizer={rowVirtualizer}
-                        sorting={sorting}
-                        onSortingChange={setSorting}
-                        filteredColumns={filteredColumns}
-                    />
-                )}
-            </Box>
-        </React.Profiler>
+        <Box ref={viewContainerRef} style={styles.fullHeight}>
+            {/* If height is not measured yet, do not render */}
+            {tableHeight !== 0 && (
+                <View
+                    table={table}
+                    tableContainerRef={tableContainerRef}
+                    visibleColumns={visibleColumns}
+                    virtualPaddingLeft={virtualPaddingLeft}
+                    virtualPaddingRight={virtualPaddingRight}
+                    virtualColumns={virtualColumns}
+                    virtualRows={virtualRows}
+                    rows={rows}
+                    highlightedCells={highlightedCells}
+                    annotatedCells={annotatedCells}
+                    handleCellClick={handleCellClick}
+                    handleMouseDown={handleMouseDown}
+                    handleMouseOver={handleMouseOver}
+                    handleContextMenu={handleContextMenu}
+                    handleResizeEnd={columnVirtualizer.measure}
+                    isLoading={isLoading}
+                    settings={updatedSettings}
+                    rowVirtualizer={rowVirtualizer}
+                    sorting={sorting}
+                    onSortingChange={setSorting}
+                    filteredColumns={filteredColumns}
+                />
+            )}
+        </Box>
     );
 };
 

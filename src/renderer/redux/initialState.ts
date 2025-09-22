@@ -66,8 +66,6 @@ export const ui: IUi = {
         validatorTab: 'validation',
         filterInputMode: 'manual',
         sidebarOpen: false,
-        showIssues: false,
-        filteredIssues: [],
     },
     modals: [],
     snackbar: {
@@ -94,6 +92,7 @@ export const ui: IUi = {
         showOnlyDatasetsWithIssues: false,
         reportSummaryType: 'datasets',
     },
+    dataSettings: {},
 };
 
 export const converter: ConverterData = {

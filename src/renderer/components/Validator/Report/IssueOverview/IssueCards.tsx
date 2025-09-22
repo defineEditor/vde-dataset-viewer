@@ -63,6 +63,9 @@ const styles = {
         pr: 0.5,
         py: 0.5,
     },
+    issueCountChip: {
+        scale: 0.8,
+    },
 };
 
 const ExpandMore = styled(
@@ -329,6 +332,9 @@ const IssueCards: React.FC<IssueCardsProps> = ({
                                                         <Chip
                                                             label={
                                                                 datasetInfo.issues
+                                                            }
+                                                            sx={
+                                                                styles.issueCountChip
                                                             }
                                                             size="small"
                                                             color="warning"

@@ -9,11 +9,7 @@ import TabPanel from '@mui/lab/TabPanel';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
-import {
-    openSnackbar,
-    setShowIssues,
-    setValidationReportTab,
-} from 'renderer/redux/slices/ui';
+import { openSnackbar, setValidationReportTab } from 'renderer/redux/slices/ui';
 import { setReport, setReportFilter } from 'renderer/redux/slices/data';
 import AppContext from 'renderer/utils/AppContext';
 import {
@@ -91,6 +87,10 @@ const ValidationReportPage: React.FC = () => {
         (state) => state.ui.validationPage.currentReportId,
     );
 
+    const report = useAppSelector(
+        (state) => state.data.validator.reportData[reportId || ''] || null,
+    );
+
     const validationReportInfo = useAppSelector(
         (state) => state.data.validator.reports[reportId || ''],
     );
@@ -103,6 +103,7 @@ const ValidationReportPage: React.FC = () => {
             id: string,
             row?: number,
             column?: string,
+            coreId?: string,
         ) => {
             // Find filename by ID
             const filePath = validationReportInfo?.files.find(
@@ -111,18 +112,20 @@ const ValidationReportPage: React.FC = () => {
                         .replace(/.*?([^\\/]+)\.[^/.]+$/, '$1')
                         .toUpperCase() === id,
             )?.file;
-            if (filePath) {
+            if (filePath && reportId !== null) {
                 // Form properties
                 const props: NewWindowProps = {};
                 if (row || column) {
                     props.goTo = { row, column };
+                    props.issues = {
+                        filteredIssues: coreId ? [coreId] : [],
+                        reportId,
+                    };
                 }
                 // If Ctrl or Cmd key is pressed, open in new window
                 if (event.ctrlKey || event.metaKey) {
                     apiService.openInNewWindow(filePath, undefined, props);
                 } else {
-                    // Show issues in the viewer
-                    dispatch(setShowIssues(true));
                     // Open in the same window
                     handleOpenDataset(
                         filePath,
@@ -134,7 +137,7 @@ const ValidationReportPage: React.FC = () => {
                 }
             }
         },
-        [validationReportInfo, apiService, currentFileId, dispatch],
+        [validationReportInfo, apiService, dispatch, currentFileId, reportId],
     );
 
     const handleFilterIssues = React.useCallback(
@@ -149,10 +152,6 @@ const ValidationReportPage: React.FC = () => {
             }
         },
         [dispatch],
-    );
-
-    const report = useAppSelector(
-        (state) => state.data.validator.reportData[reportId || ''] || null,
     );
 
     useEffect(() => {

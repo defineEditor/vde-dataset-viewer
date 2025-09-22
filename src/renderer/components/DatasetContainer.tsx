@@ -347,10 +347,12 @@ const DatasetContainer: React.FC = () => {
 
     // Report issues
 
-    const showIssues = useAppSelector((state) => state.ui.viewer.showIssues);
+    const showIssues = useAppSelector(
+        (state) => state.ui.dataSettings[currentFileId]?.showIssues,
+    );
 
     const filteredIssues = useAppSelector(
-        (state) => state.ui.viewer.filteredIssues,
+        (state) => state.ui.dataSettings[currentFileId]?.filteredIssues,
     );
 
     const currentReportId = useAppSelector(

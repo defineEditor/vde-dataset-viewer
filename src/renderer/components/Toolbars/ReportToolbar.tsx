@@ -2,7 +2,7 @@ import React, { useEffect, useCallback, useContext } from 'react';
 import { Typography, Tooltip, IconButton, Stack } from '@mui/material';
 import FilterIcon from '@mui/icons-material/FilterAlt';
 import DownloadIcon from '@mui/icons-material/Download';
-import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
+import FilterOffIcon from '@mui/icons-material/FilterAltOff';
 import { openModal, openSnackbar } from 'renderer/redux/slices/ui';
 import {
     resetReportFilter,
@@ -190,7 +190,7 @@ const Header: React.FC = () => {
                             size="small"
                             disabled={!isFilterEnabled}
                         >
-                            <FilterAltOffIcon
+                            <FilterOffIcon
                                 sx={{
                                     color: isFilterEnabled
                                         ? 'primary.main'
