@@ -23,7 +23,6 @@ const convertToDataset = (
             id: string,
             row?: number,
             columns?: string,
-            coreId?: string,
         ) => void;
         onFilterIssues: (
             filter: BasicFilter,
@@ -31,7 +30,6 @@ const convertToDataset = (
         ) => void;
     },
     filter: BasicFilter | null = null,
-    flatternArrays: boolean = false,
 ): ITableData => {
     // Implement conversion logic here
     const reportSection: 'Issue_Details' | 'Issue_Summary' | 'Rules_Report' =
@@ -119,18 +117,6 @@ const convertToDataset = (
         ...row,
         '#': index + 1,
     }));
-    // Flattern arrays if needed
-    if (flatternArrays) {
-        updatedData = updatedData.map((row) => {
-            const newRow = { ...row };
-            Object.keys(row).forEach((key) => {
-                if (Array.isArray(row[key])) {
-                    newRow[key] = row[key].join(', ');
-                }
-            });
-            return newRow;
-        });
-    }
     // Filter records;
     if (filter) {
         const filterInstance = new Filter(
@@ -140,13 +126,7 @@ const convertToDataset = (
         );
         updatedData = updatedData.filter((row) => {
             // We need to covert row to array;
-            // We need to flattern arrays
-            const rowArray = metadata.columns.map((col) => {
-                if (Array.isArray(row[col.name])) {
-                    return row[col.name].join(', ');
-                }
-                return row[col.name];
-            });
+            const rowArray = metadata.columns.map((col) => row[col.name]);
             return filterInstance.filterRow(rowArray);
         });
     }

@@ -26,10 +26,7 @@ const DragAndDrop: React.FC<Props> = ({ children }) => {
             event.stopPropagation();
 
             const files = Array.from(event.dataTransfer.files);
-            if (files.length === 0) {
-                setIsDragging(false);
-                return;
-            }
+            if (files.length === 0) return;
 
             const filePath = window.electron.pathForFile(files[0]);
             const newDataInfo = await openNewDataset(
@@ -77,11 +74,6 @@ const DragAndDrop: React.FC<Props> = ({ children }) => {
 
     const handleDragOver = useCallback(
         (event: React.DragEvent) => {
-            // Do not react in case there are no files being dragged
-            const files = Array.from(event.dataTransfer.files);
-            if (files.length === 0) {
-                return;
-            }
             event.preventDefault();
             event.stopPropagation();
             setIsDragging(true);

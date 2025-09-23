@@ -1,40 +1,26 @@
-import React, {
-    useEffect,
-    useCallback,
-    useState,
-    useContext,
-    useMemo,
-} from 'react';
+import React, { useEffect, useCallback, useState, useContext } from 'react';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
-import {
-    Tabs,
-    Tab,
-    Box,
-    Dialog,
-    Button,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    Stack,
-} from '@mui/material';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
 import Configuration from 'renderer/components/Modal/Validator/Configuration';
-import Issues from 'renderer/components/Modal/Validator/Issues';
 import Results from 'renderer/components/Common/ValidationResults';
 import AppContext from 'renderer/utils/AppContext';
 import {
     InputFileExtension,
     IUiModal,
     IUiValidation,
-    IUiViewer,
     ValidatorConfig,
 } from 'interfaces/common';
+import { Tabs, Tab, Box } from '@mui/material';
 import {
     closeModal,
-    setValidationModalTab,
+    setValidatorTab,
     updateValidation,
-    setShowIssues,
 } from 'renderer/redux/slices/ui';
-import ValidationProgress from 'renderer/components/Modal/Validator/ValidationProgress';
+import ValidationProgress from './ValidationProgress';
 
 const styles = {
     dialog: {
@@ -59,7 +45,7 @@ const styles = {
         color: 'grey.100',
     },
     actions: {
-        backgroundColor: 'grey.200',
+        m: 1,
     },
     content: {
         display: 'flex',
@@ -81,18 +67,14 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
     const validationId = `modal-${currentFileId}`;
 
     // Get validation state from Redux
-    const validationStatus = useAppSelector<IUiValidation['status']>(
+    const validationState = useAppSelector<IUiValidation>(
         (state) =>
-            (validationId !== null &&
-                state.ui.validation[validationId]?.status) ||
-            'not started',
-    );
-
-    const validationDateCompleted = useAppSelector<number | null>(
-        (state) =>
-            (validationId !== null &&
-                state.ui.validation[validationId]?.dateCompleted) ||
-            null,
+            (validationId !== null && state.ui.validation[validationId]) || {
+                status: 'not started',
+                validationProgress: 0,
+                conversionProgress: null,
+                dateCompleted: null,
+            },
     );
 
     const { apiService } = useContext(AppContext);
@@ -105,10 +87,10 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
     // When opening a modal, check if the validation completion date is before the last modified time of the file
     useEffect(() => {
         if (
-            validationStatus === 'completed' &&
-            typeof validationDateCompleted === 'number' &&
+            validationState.status === 'completed' &&
+            typeof validationState.dateCompleted === 'number' &&
             currentFileLastModified &&
-            validationDateCompleted < currentFileLastModified
+            validationState.dateCompleted < currentFileLastModified
         ) {
             // Reset validation state if the file has been modified since the last validation
             dispatch(
@@ -124,8 +106,8 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
         }
     }, [
         dispatch,
-        validationStatus,
-        validationDateCompleted,
+        validationState.status,
+        validationState.dateCompleted,
         currentFileLastModified,
         validationId,
     ]);
@@ -134,11 +116,8 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
         dispatch(closeModal({ type }));
     }, [dispatch, type]);
 
-    const handleTabChange = (
-        _event: React.SyntheticEvent,
-        newValue: IUiViewer['validatorTab'],
-    ) => {
-        dispatch(setValidationModalTab(newValue));
+    const handleTabChange = (_event: React.SyntheticEvent, newValue: 0 | 1) => {
+        dispatch(setValidatorTab(newValue));
     };
 
     const [config, setConfig] = useState<ValidatorConfig>({
@@ -162,7 +141,7 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
                 files: [
                     {
                         filePath: file[0].path,
-                        fileName: `${file[0].name.toLowerCase()}.${extension}`,
+                        fileName: file[0].name,
                         extension,
                     },
                 ],
@@ -189,8 +168,6 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
                 }),
             );
         }
-        // Switch to results tab
-        dispatch(setValidationModalTab('results'));
     }, [dispatch, validationId]);
 
     useEffect(() => {
@@ -205,63 +182,6 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
             window.removeEventListener('keydown', handleKeyDown);
         };
     }, [handleClose]);
-
-    // Check if current file is in the report
-    const currentReportId = useAppSelector(
-        (state) => state.ui.validationPage.currentReportId,
-    );
-
-    const validationReport = useAppSelector(
-        (state) => state.data.validator.reports[currentReportId || ''] || null,
-    );
-
-    const isCurrentFileInReport = useMemo(() => {
-        // If issues are not enabled, no need to check further
-        if (validationReport === null) {
-            return false;
-        }
-        // Get path to the current file
-        const path = currentFilePath;
-
-        if (
-            validationReport &&
-            path &&
-            validationReport.files.map((item) => item.file).includes(path)
-        ) {
-            return true;
-        }
-        return false;
-    }, [validationReport, currentFilePath]);
-
-    // Filtered issues
-    const defaultFilteredIssues = useAppSelector(
-        (state) => state.ui.dataSettings[currentFileId]?.filteredIssues,
-    );
-    const [filteredIssues, setFilteredIssues] = React.useState<string[]>(
-        defaultFilteredIssues || [],
-    );
-
-    const handleShowIssues = () => {
-        dispatch(
-            setShowIssues({
-                id: currentFileId,
-                show: true,
-                filteredIssues,
-            }),
-        );
-        dispatch(closeModal({ type }));
-    };
-
-    const handleResetIssues = () => {
-        dispatch(
-            setShowIssues({
-                id: currentFileId,
-                show: false,
-                filteredIssues: [],
-            }),
-        );
-        dispatch(closeModal({ type }));
-    };
 
     return (
         <Dialog
@@ -287,85 +207,52 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
                     sx={styles.tabs}
                     variant="fullWidth"
                 >
-                    <Tab
-                        label="Validation"
-                        sx={styles.tab}
-                        value="validation"
-                    />
-                    <Tab label="Results" sx={styles.tab} value="results" />
-                    <Tab
-                        label="Issues"
-                        sx={styles.tab}
-                        value="issues"
-                        disabled={!isCurrentFileInReport}
-                    />
+                    <Tab label="Configuration" sx={styles.tab} />
+                    <Tab label="Results" sx={styles.tab} />
                 </Tabs>
-                <Box
-                    hidden={validatorTab !== 'validation'}
-                    sx={styles.tabPanel}
-                >
-                    {['completed', 'validating'].includes(validationStatus) ? (
+                <Box hidden={validatorTab !== 0} sx={styles.tabPanel}>
+                    {['completed', 'validating'].includes(
+                        validationState.status,
+                    ) ? (
                         <ValidationProgress
-                            validationId={validationId}
-                            validationStatus={validationStatus}
+                            conversionProgress={
+                                validationState.conversionProgress
+                            }
+                            validationProgress={
+                                validationState.validationProgress
+                            }
                         />
                     ) : (
                         <Configuration config={config} setConfig={setConfig} />
                     )}
                 </Box>
-                <Box hidden={validatorTab !== 'results'} sx={styles.tabPanel}>
-                    {validatorTab === 'results' && (
-                        <Results filePaths={[currentFilePath]} isModal />
-                    )}
-                </Box>
-                <Box hidden={validatorTab !== 'issues'} sx={styles.tabPanel}>
-                    {validatorTab === 'issues' && currentReportId && (
-                        <Issues
-                            filteredIssues={filteredIssues}
-                            setFilteredIssues={setFilteredIssues}
-                            datasetName={currentFile?.name || ''}
-                            onClose={handleClose}
-                            fileId={currentFileId}
-                        />
-                    )}
+                <Box hidden={validatorTab !== 1} sx={styles.tabPanel}>
+                    <Results
+                        filePaths={[currentFilePath]}
+                        closeValidationModal
+                    />
                 </Box>
             </DialogContent>
             <DialogActions sx={styles.actions}>
-                {validatorTab === 'issues' && (
-                    <Stack direction="row" spacing={1}>
-                        <Button
-                            onClick={handleShowIssues}
-                            color="primary"
-                            disabled={filteredIssues.length === 0}
-                        >
-                            Show issues
-                        </Button>
-                        <Button onClick={handleResetIssues} color="primary">
-                            Reset
-                        </Button>
-                    </Stack>
+                {validationState.status === 'not started' && (
+                    <Button
+                        onClick={handleValidate}
+                        color="primary"
+                        disabled={validatorTab !== 0}
+                    >
+                        Validate
+                    </Button>
                 )}
-                {validationStatus === 'not started' &&
-                    validatorTab === 'validation' && (
-                        <Button
-                            onClick={handleValidate}
-                            color="primary"
-                            disabled={validatorTab !== 'validation'}
-                        >
-                            Validate
-                        </Button>
-                    )}
-                {validatorTab === 'validation' &&
-                    (validationStatus === 'completed' ||
-                        validationStatus === 'validating') && (
-                        <Button
-                            onClick={handleReset}
-                            color="primary"
-                            disabled={validationStatus !== 'completed'}
-                        >
-                            Done
-                        </Button>
-                    )}
+                {(validationState.status === 'completed' ||
+                    validationState.status === 'validating') && (
+                    <Button
+                        onClick={handleReset}
+                        color="primary"
+                        disabled={validationState.status !== 'completed'}
+                    >
+                        Done
+                    </Button>
+                )}
                 <Button onClick={handleClose} color="primary">
                     Close
                 </Button>

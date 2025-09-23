@@ -14,7 +14,6 @@ const styles = {
     },
     text: {
         p: 0.5,
-        lineHeight: '1.75',
     },
 };
 
@@ -22,15 +21,13 @@ const Variables: React.FC<{
     variables: string[];
     row: number;
     dataset: string;
-    coreId: string;
     onOpenFile: (
         event: React.MouseEvent<HTMLButtonElement>,
         id: string,
         row?: number,
         columns?: string,
-        coreId?: string,
     ) => void;
-}> = ({ variables, row, dataset, onOpenFile, coreId }) => {
+}> = ({ variables, row, dataset, onOpenFile }) => {
     if (!variables || variables.length === 0) {
         return null;
     }
@@ -45,11 +42,10 @@ const Variables: React.FC<{
                         <Button
                             variant="text"
                             onClick={(event) =>
-                                onOpenFile(event, dataset, row, item, coreId)
+                                onOpenFile(event, dataset, row, item)
                             }
                             id="info"
                             sx={styles.button}
-                            key={item}
                         >
                             {item}
                         </Button>
@@ -79,7 +75,6 @@ const renderVariables = (
                 variables={cell.getValue() as string[]}
                 row={cell.row?.original?.row as number}
                 dataset={cell.row?.original?.dataset as string}
-                coreId={cell.row?.original?.core_id as string}
                 onOpenFile={onOpenFile}
             />
         );

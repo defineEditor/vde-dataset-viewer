@@ -70,7 +70,7 @@ export const startValidation = async (
                 size: 0, // Size will be set after conversion
                 lastModified: Date.now(), // Last modified time can be set to current time
                 datasetJsonVersion: '',
-                outputName: `${file.fileName.replace(/\.[^/.]+$/, '')}.json`, // Replace extension with .json
+                outputName: `${file.fileName}.json`,
             };
         });
 
@@ -81,15 +81,10 @@ export const startValidation = async (
 
     let lastReportedConversionProgress = 0;
     let lastReportedValidationProgress = 0;
-    let validationStartTime: number | null = null;
-    let validationProgressThreshold = 1; // Start with 1% threshold
 
     // Set up progress subscription
     context.subscribeToTaskProgress(async (info: TaskProgress) => {
-        if (
-            info.type === mainTaskTypes.CONVERT &&
-            info.id.replace(/-\d+$/, '') === validationId
-        ) {
+        if (info.type === mainTaskTypes.CONVERT && info.id === validationId) {
             // For the conversion task, we need to calculate the total progress based on the number of files which are converted
             if (info.fullPath) {
                 // Update conversion progress for the specific file
@@ -124,28 +119,12 @@ export const startValidation = async (
             info.id === validationId
         ) {
             if (info.progress) {
-                // Initialize validation start time on first progress update
-                if (validationStartTime === null) {
-                    validationStartTime = Date.now();
-                }
-
-                // Check if we should adjust the threshold after 5 seconds
-                const elapsedTime = Date.now() - validationStartTime;
-                if (elapsedTime <= 2000 && validationProgressThreshold === 1) {
-                    // If we've made more than 5% progress in 2 seconds, switch to 5% reporting
-                    if (info.progress > 5) {
-                        validationProgressThreshold = 5;
-                    }
-                }
-
                 if (
                     Math.abs(info.progress - lastReportedValidationProgress) >=
-                    validationProgressThreshold
+                    5
                 ) {
                     lastReportedValidationProgress =
-                        Math.floor(
-                            info.progress / validationProgressThreshold,
-                        ) * validationProgressThreshold;
+                        Math.floor(info.progress / 5) * 5;
                     store.dispatch(
                         updateValidation({
                             validationId,
@@ -222,13 +201,6 @@ export const startValidation = async (
                             }
                         }
                         store.dispatch(addValidationReport(newReport));
-                        // Open a snackbar to inform user
-                        store.dispatch(
-                            openSnackbar({
-                                message: 'Validation completed',
-                                type: 'success',
-                            }),
-                        );
                     }
                 }
             }

@@ -35,9 +35,6 @@ const ReportFilter: React.FC<IUiModalFilter> = ({
     const table = convertToDataset(
         report,
         reportTab as 'details' | 'summary' | 'rules',
-        undefined,
-        null,
-        true,
     );
 
     const dataset: { name: string; label: string } = {

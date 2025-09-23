@@ -125,7 +125,7 @@ export interface IUiControl {
 
 export interface IUiViewer {
     datasetInfoTab: 0 | 1;
-    validatorTab: 'validation' | 'results' | 'issues';
+    validatorTab: 0 | 1;
     filterInputMode: 'manual' | 'interactive';
     sidebarOpen: boolean;
 }
@@ -160,12 +160,6 @@ export interface IUi {
     snackbar: IUiSnackbar;
     control: IUiControl;
     validation: { [validationId: string]: IUiValidation };
-    dataSettings: {
-        [datasetId: string]: {
-            showIssues: boolean;
-            filteredIssues: string[];
-        };
-    };
     validationPage: IUiValidationPage;
 }
 

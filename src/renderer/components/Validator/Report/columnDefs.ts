@@ -59,22 +59,29 @@ const details: IHeaderCell[] = [
         minSize: 200,
     },
     {
+        id: 'executability',
+        label: 'Executable',
+        type: 'string',
+        size: 110,
+        style: { padding: 0 },
+    },
+    {
         id: 'USUBJID',
         label: 'USUBJID',
         type: 'string',
-        minSize: 100,
+        size: 100,
     },
     {
         id: 'row',
         label: 'Row',
-        type: 'integer',
+        type: 'string',
         size: 80,
         style: { padding: 0 },
     },
     {
         id: 'SEQ',
         label: 'SEQ',
-        type: 'integer',
+        type: 'string',
         size: 80,
     },
     {
@@ -108,15 +115,15 @@ const rules: IHeaderCell[] = [
     {
         id: 'version',
         label: 'Version',
-        type: 'string',
+        type: 'integer',
         size: 90,
     },
     {
         id: 'cdisc_rule_id',
         label: 'CDISC Rule ID',
         type: 'string',
-        minSize: 100,
-        maxSize: 185,
+        minSize: 120,
+        maxSize: 150,
     },
     {
         id: 'fda_rule_id',
@@ -134,7 +141,7 @@ const rules: IHeaderCell[] = [
         id: 'status',
         label: 'Status',
         type: 'string',
-        size: 130,
+        size: 100,
         style: { padding: 0 },
     },
 ];

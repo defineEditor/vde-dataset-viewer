@@ -39,7 +39,6 @@ export const settings: ISettings = {
         convertSuffixTm: false,
         convertSuffixDtm: false,
         xptRoundPrecision: 12,
-        sas7bdatUpcaseDatasetNames: true,
         csvEpoch: '1960-01-01',
     },
     other: {
@@ -54,7 +53,6 @@ export const settings: ISettings = {
         poolSize: 4,
         cachePath: '',
         localRulesPath: '',
-        reportTemplate: '',
     },
 };
 export const ui: IUi = {
@@ -64,7 +62,7 @@ export const ui: IUi = {
     zoomLevel: 0,
     viewer: {
         datasetInfoTab: 0,
-        validatorTab: 'validation',
+        validatorTab: 0,
         filterInputMode: 'manual',
         sidebarOpen: false,
     },
@@ -93,7 +91,6 @@ export const ui: IUi = {
         showOnlyDatasetsWithIssues: false,
         reportSummaryType: 'datasets',
     },
-    dataSettings: {},
 };
 
 export const converter: ConverterData = {
@@ -130,13 +127,10 @@ export const validator: ValidatorData = {
         snomedUrl: '',
         snomedEdition: '',
         customStandard: false,
-        defineXmlPath: '',
-        validateXml: false,
         defineVersion: '',
         standard: '',
         ctPackages: [],
         version: '',
-        rules: [],
     },
     reports: {},
     reportData: {},

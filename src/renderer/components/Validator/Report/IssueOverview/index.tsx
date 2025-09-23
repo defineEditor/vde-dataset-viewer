@@ -81,19 +81,21 @@ const IssueOverview: React.FC<IssueOverviewProps> = ({ parsedReport }) => {
     );
 
     const handleUpdateFilter = (
-        values: string[],
-        variables: string[],
+        value: string,
+        variable: string,
         reportTab: IUiValidationPage['currentReportTab'],
     ) => {
-        if (values.length > 0) {
+        if (value) {
             // Set filter to show only issues for this dataset
             const newFilter: BasicFilter = {
-                conditions: variables.map((variable, index) => ({
-                    variable,
-                    operator: 'eq',
-                    value: values[index],
-                })),
-                connectors: new Array(values.length - 1).fill('and'),
+                conditions: [
+                    {
+                        variable,
+                        operator: 'eq',
+                        value,
+                    },
+                ],
+                connectors: [],
             };
             // Update the filter
             dispatch(setReportFilter({ filter: newFilter, reportTab }));

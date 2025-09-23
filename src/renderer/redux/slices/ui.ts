@@ -9,7 +9,6 @@ import {
     DatasetType,
     ModalType,
     DatasetMode,
-    IUiViewer,
 } from 'interfaces/common';
 import { paths } from 'misc/constants';
 
@@ -71,11 +70,6 @@ export const uiSlice = createSlice({
                     state.control = initialUi.control;
                 }
             }
-            // Check if there are any settings
-            if (state.dataSettings[fileId]) {
-                // Remove the settings for this dataset
-                delete state.dataSettings[fileId];
-            }
         },
         setPathname: (
             state,
@@ -98,24 +92,16 @@ export const uiSlice = createSlice({
             action: PayloadAction<{
                 row?: number | null;
                 column?: string | null;
-                cellSelection?: boolean;
             }>,
         ) => {
-            const { row, column, cellSelection } = action.payload;
+            const { row, column } = action.payload;
             if (row !== undefined) {
                 state.control.goTo.row = row;
             }
             if (column !== undefined) {
                 state.control.goTo.column = column;
             }
-            if (cellSelection !== undefined) {
-                state.control.goTo.cellSelection = cellSelection;
-            }
-            if (
-                row !== undefined &&
-                column !== undefined &&
-                cellSelection === undefined
-            ) {
+            if (row !== undefined && column !== undefined) {
                 state.control.goTo.cellSelection = true;
             } else if (!state.control.goTo.row && !state.control.goTo.column) {
                 // Reset the value once both column and cell are selected
@@ -155,10 +141,7 @@ export const uiSlice = createSlice({
         setDatasetInfoTab: (state, action: PayloadAction<0 | 1>) => {
             state.viewer.datasetInfoTab = action.payload;
         },
-        setValidationModalTab: (
-            state,
-            action: PayloadAction<IUiViewer['validatorTab']>,
-        ) => {
+        setValidatorTab: (state, action: PayloadAction<0 | 1>) => {
             state.viewer.validatorTab = action.payload;
         },
         setFilterInputMode: (
@@ -221,44 +204,6 @@ export const uiSlice = createSlice({
                 };
             }
         },
-        setShowIssues: (
-            state,
-            action: PayloadAction<{
-                id: string;
-                show: boolean;
-                filteredIssues?: string[];
-            }>,
-        ) => {
-            const { id, show, filteredIssues = null } = action.payload;
-            if (!state.dataSettings[id]) {
-                state.dataSettings[id] = {
-                    showIssues: show,
-                    filteredIssues: filteredIssues || [],
-                };
-            } else {
-                state.dataSettings[id].showIssues = show;
-                if (filteredIssues && filteredIssues.length > 0) {
-                    state.dataSettings[id].filteredIssues = filteredIssues;
-                } else if (!show) {
-                    // Clear filtered issues when disabling issue view
-                    state.dataSettings[id].filteredIssues = [];
-                }
-            }
-        },
-        setIssueFilter: (
-            state,
-            action: PayloadAction<{ id: string; filter: string[] }>,
-        ) => {
-            const { id, filter } = action.payload;
-            if (!state.dataSettings[id]) {
-                state.dataSettings[id] = {
-                    showIssues: true,
-                    filteredIssues: filter,
-                };
-            } else {
-                state.dataSettings[id].filteredIssues = filter;
-            }
-        },
     },
 });
 
@@ -275,7 +220,7 @@ export const {
     setSelect,
     setPage,
     setDatasetInfoTab,
-    setValidationModalTab,
+    setValidatorTab,
     setFilterInputMode,
     toggleSidebar,
     updateValidation,
@@ -285,8 +230,6 @@ export const {
     toggleShowOnlyDatasetsWithIssues,
     setReportSummaryType,
     setZoomLevel,
-    setShowIssues,
-    setIssueFilter,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

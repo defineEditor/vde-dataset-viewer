@@ -106,7 +106,7 @@ const ColumnsInfo: React.FC<{
 
     return (
         <Box sx={styles.container} ref={containerRef}>
-            {columnsData !== null && containerWidth !== 0 && (
+            {columnsData !== null && (
                 <DatasetView
                     key="report"
                     tableData={columnsData}

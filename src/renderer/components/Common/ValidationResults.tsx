@@ -24,16 +24,15 @@ import {
     openSnackbar,
     setValidationReport,
     setValidationTab,
-    setValidationModalTab,
     setPathname,
+    closeModal,
 } from 'renderer/redux/slices/ui';
 import {
     removeValidationReport,
     setReportLastSaveFolder,
 } from 'renderer/redux/slices/data';
 import { ValidationReport } from 'interfaces/common';
-import getReportTitle from 'renderer/utils/getReportTitle';
-import { paths } from 'misc/constants';
+import { paths, modals } from 'misc/constants';
 
 const styles = {
     container: {
@@ -47,7 +46,6 @@ const styles = {
         textAlign: 'center',
         mt: 4,
         color: 'text.secondary',
-        flex: '1 1 auto',
     },
     listContainer: {
         flex: '1 1 auto',
@@ -74,19 +72,14 @@ const styles = {
         borderColor: 'divider',
         borderRadius: 1,
         mb: 1,
+        backgroundColor: 'rgba(76, 175, 80, 0.1)', // Light green
         '&:hover': {
-            backgroundColor: 'grey.200',
+            backgroundColor: 'rgba(76, 175, 80, 0.15)',
         },
     },
-    noIssuesBox: {
-        display: 'flex',
-        alignItems: 'center',
-    },
-    noIssuesIcon: {
-        mr: 1,
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: 'success.main',
+    noIssuesText: {
+        color: '#4caf50',
+        fontWeight: 'medium',
     },
     title: {
         px: 2,
@@ -115,14 +108,86 @@ const styles = {
     searchIcon: { color: 'text.secondary' },
 };
 
+const getTimeAgo = (date: number): string => {
+    const now = new Date();
+    const reportDate = new Date(date);
+    const diffMs = now.getTime() - reportDate.getTime();
+
+    const minute = 60 * 1000;
+    const hour = minute * 60;
+    const day = hour * 24;
+    const week = day * 7;
+    const month = day * 31; // Average month length
+    const year = day * 366; // Average year length with leap years
+
+    if (diffMs < minute) {
+        return 'just now';
+    }
+    if (diffMs < hour) {
+        const minutes = Math.floor(diffMs / minute);
+        return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+    }
+    if (diffMs < day) {
+        const hours = Math.floor(diffMs / hour);
+        return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+    }
+    if (diffMs < week) {
+        const days = Math.floor(diffMs / day);
+        return `${days} day${days === 1 ? '' : 's'} ago`;
+    }
+    if (diffMs < month) {
+        const weeks = Math.floor(diffMs / week);
+        return `${weeks} week${weeks === 1 ? '' : 's'} ago`;
+    }
+    if (diffMs < year) {
+        const months = Math.floor(diffMs / month);
+        return `${months} month${months === 1 ? '' : 's'} ago`;
+    }
+    const years = Math.floor(diffMs / year);
+    return `${years} year${years === 1 ? '' : 's'} ago`;
+};
+
+const getReportTitle = (report: ValidationReport): string => {
+    const date = new Date(report.date);
+    const reportDate =
+        `${date.getFullYear()}` +
+        `-${String(date.getMonth() + 1).padStart(2, '0')}` +
+        `-${String(date.getDate()).padStart(2, '0')}` +
+        ` ${String(date.getHours()).padStart(2, '0')}:` +
+        `${String(date.getMinutes()).padStart(2, '0')}:` +
+        `${String(date.getSeconds()).padStart(2, '0')}`;
+
+    // Use first 5 dataset names and add (+ X more) if applicable
+    const datasetNames = report.files
+        ? report.files
+              .slice(0, 5)
+              .map((file) =>
+                  file.file
+                      .replace(/.*(?:\/|\\)(.*)\.\w+$/, '$1')
+                      .toUpperCase(),
+              )
+              .join(', ')
+        : '';
+    const additionalCount =
+        report.files && report.files.length > 5
+            ? ` (+${report.files.length - 5} more)`
+            : '';
+
+    const reportTitle =
+        `${datasetNames}${additionalCount || ''} ` +
+            `${reportDate} (${getTimeAgo(report.date)} ago)` ||
+        'Validation Report';
+    return reportTitle;
+};
+
 interface ResultsProps {
     filePaths?: string[];
-    isModal?: boolean;
+    closeValidationModal?: true;
 }
 
 const ValidationResults: React.FC<ResultsProps> = ({
     filePaths = [],
-    isModal = false,
+    closeValidationModal = false,
 }) => {
     const dispatch = useAppDispatch();
     const allReports = useAppSelector((state) => state.data.validator.reports);
@@ -269,15 +334,14 @@ const ValidationResults: React.FC<ResultsProps> = ({
 
     const handleOpenReport = (index: number) => {
         dispatch(setValidationReport(reports[index].output));
-        if (isModal) {
-            dispatch(setValidationModalTab('issues'));
-        } else {
-            dispatch(setValidationTab('report'));
-            dispatch(
-                setPathname({
-                    pathname: paths.VALIDATOR,
-                }),
-            );
+        dispatch(setValidationTab('report'));
+        dispatch(
+            setPathname({
+                pathname: paths.VALIDATOR,
+            }),
+        );
+        if (closeValidationModal) {
+            dispatch(closeModal({ type: modals.VALIDATOR }));
         }
     };
 
@@ -316,7 +380,7 @@ const ValidationResults: React.FC<ResultsProps> = ({
     if (reports.length === 0) {
         return (
             <Box sx={styles.container}>
-                <Typography variant="h6" gutterBottom sx={styles.title}>
+                <Typography variant="h6" gutterBottom>
                     Validation Results
                 </Typography>
                 <Box sx={styles.emptyState}>
@@ -507,15 +571,9 @@ const ValidationResults: React.FC<ResultsProps> = ({
                                             >
                                                 {uniqueIssues === 0 ? (
                                                     <Box
-                                                        sx={styles.noIssuesBox}
+                                                        sx={styles.noIssuesText}
                                                     >
-                                                        <CheckIcon
-                                                            sx={
-                                                                styles.noIssuesIcon
-                                                            }
-                                                        />
-                                                        No issues found, Dataset
-                                                        Count: {datasetCount}
+                                                        No issues found
                                                     </Box>
                                                 ) : (
                                                     <>

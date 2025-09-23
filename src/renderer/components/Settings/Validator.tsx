@@ -74,7 +74,6 @@ export const Validator: React.FC<ValidatorProps> = ({
                         validatorPath,
                         cachePath: '',
                         localRulesPath: '',
-                        reportTemplate: '',
                         poolSize: 1,
                     },
                     id: 'get-validator-info',
@@ -228,15 +227,6 @@ export const Validator: React.FC<ValidatorProps> = ({
                 helperText="Path to cache files containing preloaded metadata and rules"
                 type="folder"
                 value={settings.validator.cachePath}
-                onSelectDestination={handleSelectDestination}
-                onChange={onSettingChange}
-            />
-            <SettingsFileSelector
-                name="validator.reportTemplate"
-                label="Path to report template"
-                helperText="Path to a report template file to use for Excel output"
-                type="file"
-                value={settings.validator.reportTemplate}
                 onSelectDestination={handleSelectDestination}
                 onChange={onSettingChange}
             />

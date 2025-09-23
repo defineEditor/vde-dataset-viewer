@@ -2,7 +2,7 @@ import React, { useEffect, useCallback, useContext } from 'react';
 import { Typography, Tooltip, IconButton, Stack } from '@mui/material';
 import FilterIcon from '@mui/icons-material/FilterAlt';
 import DownloadIcon from '@mui/icons-material/Download';
-import FilterOffIcon from '@mui/icons-material/FilterAltOff';
+import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
 import { openModal, openSnackbar } from 'renderer/redux/slices/ui';
 import {
     resetReportFilter,
@@ -163,44 +163,40 @@ const Header: React.FC = () => {
             <Typography variant="h6" sx={styles.reportName}>
                 {reportTitle}
             </Typography>
-            {tabHasFilter && (
-                <>
-                    <Tooltip title="Filter Report" enterDelay={1000}>
-                        <IconButton
-                            onClick={handleFilterClick}
-                            id="filterData"
-                            size="small"
-                            disabled={!tabHasFilter}
-                        >
-                            <FilterIcon
-                                sx={{
-                                    color: isFilterEnabled
-                                        ? 'success.main'
-                                        : tabHasFilter
-                                          ? 'primary.main'
-                                          : 'primary.disabled',
-                                }}
-                            />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Reset Filter" enterDelay={1000}>
-                        <IconButton
-                            onClick={handleResetFilter}
-                            id="resetFilter"
-                            size="small"
-                            disabled={!isFilterEnabled}
-                        >
-                            <FilterOffIcon
-                                sx={{
-                                    color: isFilterEnabled
-                                        ? 'primary.main'
-                                        : 'primary.disabled',
-                                }}
-                            />
-                        </IconButton>
-                    </Tooltip>
-                </>
-            )}
+            <Tooltip title="Filter Report" enterDelay={1000}>
+                <IconButton
+                    onClick={handleFilterClick}
+                    id="filterData"
+                    size="small"
+                    disabled={!tabHasFilter}
+                >
+                    <FilterIcon
+                        sx={{
+                            color: isFilterEnabled
+                                ? 'success.main'
+                                : tabHasFilter
+                                  ? 'primary.main'
+                                  : 'primary.disabled',
+                        }}
+                    />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Reset Filter" enterDelay={1000}>
+                <IconButton
+                    onClick={handleResetFilter}
+                    id="resetFilter"
+                    size="small"
+                    disabled={!isFilterEnabled}
+                >
+                    <FilterAltOffIcon
+                        sx={{
+                            color: isFilterEnabled
+                                ? 'primary.main'
+                                : 'primary.disabled',
+                        }}
+                    />
+                </IconButton>
+            </Tooltip>
             <Tooltip title="Download Report" enterDelay={1000}>
                 <IconButton
                     onClick={handleDownloadReport}

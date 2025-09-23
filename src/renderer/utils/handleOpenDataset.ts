@@ -3,7 +3,6 @@ import {
     closeDataset,
     openSnackbar,
     setGoTo,
-    setShowIssues,
 } from 'renderer/redux/slices/ui';
 import { addRecent } from 'renderer/redux/slices/data';
 import { openNewDataset } from 'renderer/utils/readData';
@@ -67,15 +66,6 @@ const handleOpenDataset = async (
                 setGoTo({
                     column: newWindowProps.goTo.column,
                     row: newWindowProps.goTo.row,
-                }),
-            );
-        }
-        if (newWindowProps && newWindowProps.issues) {
-            dispatch(
-                setShowIssues({
-                    id: newDataInfo.fileId,
-                    show: true,
-                    filteredIssues: newWindowProps.issues.filteredIssues,
                 }),
             );
         }

@@ -226,18 +226,6 @@ export const Converter: React.FC<ConverterProps> = ({
                     }
                     label="Convert --DTM variables as datetime"
                 />
-                <FormControlLabel
-                    control={
-                        <Checkbox
-                            checked={
-                                settings.converter.sas7bdatUpcaseDatasetNames
-                            }
-                            onChange={onSettingChange}
-                            name="converter.sas7bdatUpcaseDatasetNames"
-                        />
-                    }
-                    label="Upcase dataset names when converting SAS7BDAT files"
-                />
             </Stack>
             <TextField
                 label="XPT Numeric Round Precision"

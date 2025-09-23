@@ -1,19 +1,8 @@
-import React, {
-    useState,
-    useEffect,
-    useCallback,
-    useContext,
-    useMemo,
-} from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import Stack from '@mui/material/Stack';
 import Paper from '@mui/material/Paper';
 import TablePagination from '@mui/material/TablePagination';
-import {
-    IHeaderCell,
-    ITableData,
-    IMask,
-    ParsedValidationReport,
-} from 'interfaces/common';
+import { IHeaderCell, ITableData, IMask } from 'interfaces/common';
 import DatasetView from 'renderer/components/DatasetView';
 import ContextMenu from 'renderer/components/DatasetView/ContextMenu';
 import AppContext from 'renderer/utils/AppContext';
@@ -28,7 +17,6 @@ import { getData } from 'renderer/utils/readData';
 import estimateWidth from 'renderer/utils/estimateWidth';
 import deepEqual from 'renderer/utils/deepEqual';
 import DatasetSidebar from 'renderer/components/DatasetView/Sidebar';
-import getIssueAnnotations from 'renderer/utils/getIssueAnnotations';
 
 const styles = {
     main: {
@@ -69,7 +57,7 @@ const updateWidth = (
 const DatasetContainer: React.FC = () => {
     const dispatch = useAppDispatch();
 
-    const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+    const fileId = useAppSelector((state) => state.ui.currentFileId);
     const pageSize = useAppSelector((state) => state.settings.viewer.pageSize);
     const settings = useAppSelector((state) => state.settings);
     const sidebarOpen = useAppSelector((state) => state.ui.viewer.sidebarOpen);
@@ -155,13 +143,13 @@ const DatasetContainer: React.FC = () => {
 
     // Load initial data
     useEffect(() => {
-        if (table?.fileId === currentFileId) {
+        if (table?.fileId === fileId) {
             // If table is already loaded for the current fileId, do not reload
             return;
         }
         setTable(null);
         const readDataset = async () => {
-            if (currentFileId === '' || apiService === null) {
+            if (fileId === '' || apiService === null) {
                 return;
             }
 
@@ -170,7 +158,7 @@ const DatasetContainer: React.FC = () => {
             try {
                 newData = await getData(
                     apiService,
-                    currentFileId,
+                    fileId,
                     0,
                     pageSize,
                     settings,
@@ -181,7 +169,7 @@ const DatasetContainer: React.FC = () => {
                 // Remove current fileId as something is wrong with itj
                 dispatch(
                     closeDataset({
-                        fileId: currentFileId,
+                        fileId,
                     }),
                 );
                 dispatch(
@@ -208,7 +196,7 @@ const DatasetContainer: React.FC = () => {
         readDataset();
     }, [
         dispatch,
-        currentFileId,
+        fileId,
         pageSize,
         apiService,
         settings,
@@ -233,7 +221,7 @@ const DatasetContainer: React.FC = () => {
             const readNext = async (start: number) => {
                 const newData = await getData(
                     apiService,
-                    currentFileId,
+                    fileId,
                     start,
                     pageSize,
                     settings,
@@ -253,7 +241,7 @@ const DatasetContainer: React.FC = () => {
 
             readNext((newPage as number) * pageSize);
         },
-        [currentFileId, pageSize, table, dispatch, apiService, settings],
+        [fileId, pageSize, table, dispatch, apiService, settings],
     );
 
     // Filter change
@@ -262,7 +250,7 @@ const DatasetContainer: React.FC = () => {
             return;
         }
         // Check current table data corresponds to current file
-        if (table.fileId !== currentFileId) {
+        if (table.fileId !== fileId) {
             return;
         }
         // Check if filter is already applied
@@ -278,7 +266,7 @@ const DatasetContainer: React.FC = () => {
         const readDataset = async () => {
             const newData = await getData(
                 apiService,
-                currentFileId,
+                fileId,
                 0,
                 pageSize,
                 settings,
@@ -324,7 +312,7 @@ const DatasetContainer: React.FC = () => {
         readDataset();
     }, [
         dispatch,
-        currentFileId,
+        fileId,
         pageSize,
         table,
         currentFilter,
@@ -345,62 +333,6 @@ const DatasetContainer: React.FC = () => {
         }
     }, [goToRow, page, pageSize, handleChangePage]);
 
-    // Report issues
-
-    const showIssues = useAppSelector(
-        (state) => state.ui.dataSettings[currentFileId]?.showIssues,
-    );
-
-    const filteredIssues = useAppSelector(
-        (state) => state.ui.dataSettings[currentFileId]?.filteredIssues,
-    );
-
-    const currentReportId = useAppSelector(
-        (state) => state.ui.validationPage.currentReportId,
-    );
-
-    const reportData: ParsedValidationReport | null = useAppSelector(
-        (state) =>
-            state.data.validator.reportData[currentReportId || ''] || null,
-    );
-
-    const validationReport = useAppSelector(
-        (state) => state.data.validator.reports[currentReportId || ''] || null,
-    );
-
-    // Check if current file is in the report
-    const isCurrentFileInReport = useMemo(() => {
-        // If issues are not enabled, no need to check further
-        if (!showIssues || validationReport === null) {
-            return false;
-        }
-        // Get path to the current file
-        const currentFile = apiService.getOpenedFiles(currentFileId);
-        const path = currentFile[0]?.path || '';
-
-        if (
-            validationReport &&
-            path &&
-            validationReport.files.map((item) => item.file).includes(path)
-        ) {
-            return true;
-        }
-        return false;
-    }, [validationReport, currentFileId, apiService, showIssues]);
-
-    // Convert report into annotation map
-    const issueAnnotations = useMemo(() => {
-        if (!isCurrentFileInReport) {
-            return null;
-        }
-        return getIssueAnnotations(
-            reportData,
-            table,
-            currentMask,
-            filteredIssues,
-        );
-    }, [reportData, table, currentMask, isCurrentFileInReport, filteredIssues]);
-
     if (table === null) {
         return null;
     }
@@ -410,14 +342,13 @@ const DatasetContainer: React.FC = () => {
             <Stack sx={styles.main}>
                 <Paper sx={styles.table}>
                     <DatasetView
-                        key={`${currentFileId}:${page}`} // Add key prop to force unmount/remount
+                        key={`${fileId}:${page}`} // Add key prop to force unmount/remount
                         tableData={table}
                         settings={settings.viewer}
                         isLoading={isLoading}
                         handleContextMenu={handleContextMenu}
                         currentPage={page}
                         currentMask={currentMask}
-                        annotatedCells={issueAnnotations}
                     />
                     <ContextMenu
                         open={contextMenu.open}

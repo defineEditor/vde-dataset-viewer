@@ -55,7 +55,7 @@ const styles = {
         py: 0.5,
     },
     actions: {
-        backgroundColor: 'grey.200',
+        m: 1,
     },
     content: {
         display: 'flex',
