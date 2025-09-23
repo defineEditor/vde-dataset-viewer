@@ -4,7 +4,7 @@ import { ParsedValidationReport, ITableData, IMask } from 'interfaces/common';
  * Get issue annotations for table view
  */
 
-const getIssueAnnotationststs = (
+const getIssueAnnotations = (
     report: ParsedValidationReport | null,
     table: ITableData | null,
     currentMask: IMask | null,
@@ -73,4 +73,4 @@ const getIssueAnnotationststs = (
     return issueAnnotations;
 };
 
-export default getIssueAnnotationststs;
+export default getIssueAnnotations;
