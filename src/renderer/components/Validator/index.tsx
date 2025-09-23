@@ -11,6 +11,7 @@ import {
 } from 'interfaces/common';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import { updateValidation, setValidationTab } from 'renderer/redux/slices/ui';
+import { setValidatorData } from 'renderer/redux/slices/data';
 import Configuration from 'renderer/components/Validator/Configuration';
 import AppContext from 'renderer/utils/AppContext';
 import ValidationProgress from 'renderer/components/Modal/Validator/ValidationProgress';
@@ -66,15 +67,12 @@ const Validator: React.FC = () => {
     const settings = useAppSelector((state) => state.settings);
     const tab = useAppSelector((state) => state.ui.validationPage.currentTab);
 
-    // Get validation state from Redux
-    const validationState = useAppSelector<IUiValidation>(
+    const validationId = 'globalvalidation';
+    const validationStatus = useAppSelector<IUiValidation['status']>(
         (state) =>
-            state.ui.validation.globalvalidation || {
-                status: 'not started',
-                validationProgress: 0,
-                conversionProgress: null,
-                dateCompleted: null,
-            },
+            (validationId !== null &&
+                state.ui.validation[validationId]?.status) ||
+            'not started',
     );
     const dispatch = useAppDispatch();
 
@@ -98,6 +96,12 @@ const Validator: React.FC = () => {
             fileName: file.filename,
             extension: file.format as InputFileExtension,
         }));
+        // Save configuration to Redux
+        dispatch(
+            setValidatorData({
+                configuration: config,
+            }),
+        );
         await apiService.startValidation({
             files,
             configuration: config,
@@ -139,15 +143,11 @@ const Validator: React.FC = () => {
                     <Stack spacing={0} sx={styles.configuration}>
                         <Box sx={styles.mainBody}>
                             {['completed', 'validating'].includes(
-                                validationState.status,
+                                validationStatus,
                             ) ? (
                                 <ValidationProgress
-                                    conversionProgress={
-                                        validationState.conversionProgress
-                                    }
-                                    validationProgress={
-                                        validationState.validationProgress
-                                    }
+                                    validationId={validationId}
+                                    validationStatus={validationStatus}
                                 />
                             ) : (
                                 <Configuration
@@ -160,15 +160,13 @@ const Validator: React.FC = () => {
                         </Box>
                         <Box sx={styles.actions}>
                             {['completed', 'validating'].includes(
-                                validationState.status,
+                                validationStatus,
                             ) ? (
                                 <Button
                                     onClick={handleReset}
                                     color="primary"
                                     variant="contained"
-                                    disabled={
-                                        validationState.status !== 'completed'
-                                    }
+                                    disabled={validationStatus !== 'completed'}
                                 >
                                     Done
                                 </Button>
@@ -179,7 +177,7 @@ const Validator: React.FC = () => {
                                     variant="contained"
                                     disabled={
                                         selectedFiles.length === 0 ||
-                                        validationState.status === 'validating'
+                                        validationStatus === 'validating'
                                     }
                                 >
                                     Validate

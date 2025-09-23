@@ -21,6 +21,7 @@ import {
 } from 'renderer/redux/slices/data';
 import AppContext from 'renderer/utils/AppContext';
 import store from 'renderer/redux/store';
+import { dehydrateState } from 'renderer/redux/stateUtils';
 import { styles } from 'renderer/components/Settings/styles';
 import { ISettings } from 'interfaces/common';
 import { Viewer } from 'renderer/components/Settings/Viewer';
@@ -72,7 +73,7 @@ const Settings: React.FC = () => {
                 props: { duration: 1000 },
             }),
         );
-        const state = store.getState();
+        const state = dehydrateState(store.getState());
         apiService.saveLocalStore({ reduxStore: state });
     }, [
         dispatch,

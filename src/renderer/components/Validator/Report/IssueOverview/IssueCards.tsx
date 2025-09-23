@@ -63,6 +63,9 @@ const styles = {
         pr: 0.5,
         py: 0.5,
     },
+    issueCountChip: {
+        scale: 0.8,
+    },
 };
 
 const ExpandMore = styled(
@@ -121,7 +124,7 @@ const TruncatedTextWithTooltip: React.FC<{
 };
 
 interface IssueGroup {
-    ruleId: string;
+    core_id: string;
     message: string;
     totalIssues: number;
     datasetCount: number;
@@ -131,8 +134,8 @@ interface IssueGroup {
 interface IssueCardsProps {
     parsedReport: ParsedValidationReport;
     onUpdateFilter: (
-        value: string,
-        variable: string,
+        values: string[],
+        variables: string[],
         reportTab: IUiValidationPage['currentReportTab'],
     ) => void;
     showOnlyIssuesWithHighCount?: boolean;
@@ -145,13 +148,13 @@ const IssueCards: React.FC<IssueCardsProps> = ({
 }) => {
     const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
 
-    const handleExpandClick = (ruleId: string) => {
+    const handleExpandClick = (coreId: string) => {
         setExpandedCards((prev) => {
             const newSet = new Set(prev);
-            if (newSet.has(ruleId)) {
-                newSet.delete(ruleId);
+            if (newSet.has(coreId)) {
+                newSet.delete(coreId);
             } else {
-                newSet.add(ruleId);
+                newSet.add(coreId);
             }
             return newSet;
         });
@@ -172,7 +175,7 @@ const IssueCards: React.FC<IssueCardsProps> = ({
                 });
             } else {
                 ruleMap.set(issue.core_id, {
-                    ruleId: issue.core_id,
+                    core_id: issue.core_id,
                     message: issue.message,
                     totalIssues: issue.issues,
                     datasetCount: 1,
@@ -191,7 +194,7 @@ const IssueCards: React.FC<IssueCardsProps> = ({
             if (a.totalIssues !== b.totalIssues) {
                 return b.totalIssues - a.totalIssues;
             }
-            return a.ruleId.localeCompare(b.ruleId);
+            return a.core_id.localeCompare(b.core_id);
         });
 
         if (showOnlyIssuesWithHighCount) {
@@ -204,7 +207,7 @@ const IssueCards: React.FC<IssueCardsProps> = ({
     return (
         <Grid2 container spacing={2}>
             {issueGroups.map((issueGroup) => (
-                <Grid2 key={issueGroup.ruleId}>
+                <Grid2 key={issueGroup.core_id}>
                     <Card sx={styles.card}>
                         <CardHeader
                             title={
@@ -218,13 +221,13 @@ const IssueCards: React.FC<IssueCardsProps> = ({
                                         sx={styles.issueButton}
                                         onClick={() =>
                                             onUpdateFilter(
-                                                issueGroup.ruleId,
-                                                'core_id',
+                                                [issueGroup.core_id],
+                                                ['core_id'],
                                                 'summary',
                                             )
                                         }
                                     >
-                                        {issueGroup.ruleId}
+                                        {issueGroup.core_id}
                                     </ButtonBase>
                                     <Typography
                                         variant="body2"
@@ -256,8 +259,8 @@ const IssueCards: React.FC<IssueCardsProps> = ({
                                     <IconButton
                                         onClick={() =>
                                             onUpdateFilter(
-                                                issueGroup.ruleId,
-                                                'core_id',
+                                                [issueGroup.core_id],
+                                                ['core_id'],
                                                 'details',
                                             )
                                         }
@@ -268,13 +271,13 @@ const IssueCards: React.FC<IssueCardsProps> = ({
                                 </Tooltip>
                                 <ExpandMore
                                     expand={expandedCards.has(
-                                        issueGroup.ruleId,
+                                        issueGroup.core_id,
                                     )}
                                     onClick={() =>
-                                        handleExpandClick(issueGroup.ruleId)
+                                        handleExpandClick(issueGroup.core_id)
                                     }
                                     aria-expanded={expandedCards.has(
-                                        issueGroup.ruleId,
+                                        issueGroup.core_id,
                                     )}
                                     aria-label="show more"
                                 >
@@ -283,7 +286,7 @@ const IssueCards: React.FC<IssueCardsProps> = ({
                             </Stack>
                         </CardActions>
                         <Collapse
-                            in={expandedCards.has(issueGroup.ruleId)}
+                            in={expandedCards.has(issueGroup.core_id)}
                             timeout="auto"
                             unmountOnExit
                         >
@@ -293,7 +296,7 @@ const IssueCards: React.FC<IssueCardsProps> = ({
                                     .sort((a, b) => b.issues - a.issues)
                                     .map((datasetInfo) => (
                                         <ListItem
-                                            key={`${issueGroup.ruleId}-${datasetInfo.dataset}`}
+                                            key={`${issueGroup.core_id}-${datasetInfo.dataset}`}
                                         >
                                             <ListItemText
                                                 primary={
@@ -302,17 +305,36 @@ const IssueCards: React.FC<IssueCardsProps> = ({
                                                         justifyContent="space-between"
                                                         alignItems="center"
                                                     >
-                                                        <Typography
-                                                            variant="body2"
-                                                            color="primary"
-                                                        >
-                                                            {
-                                                                datasetInfo.dataset
+                                                        <ButtonBase
+                                                            onClick={() =>
+                                                                onUpdateFilter(
+                                                                    [
+                                                                        datasetInfo.dataset,
+                                                                        issueGroup.core_id,
+                                                                    ],
+                                                                    [
+                                                                        'dataset',
+                                                                        'core_id',
+                                                                    ],
+                                                                    'details',
+                                                                )
                                                             }
-                                                        </Typography>
+                                                        >
+                                                            <Typography
+                                                                variant="body2"
+                                                                color="primary"
+                                                            >
+                                                                {
+                                                                    datasetInfo.dataset
+                                                                }
+                                                            </Typography>
+                                                        </ButtonBase>
                                                         <Chip
                                                             label={
                                                                 datasetInfo.issues
+                                                            }
+                                                            sx={
+                                                                styles.issueCountChip
                                                             }
                                                             size="small"
                                                             color="warning"

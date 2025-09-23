@@ -5,9 +5,8 @@ import {
     Typography,
     MenuItem,
     TextField,
-    FormControlLabel,
-    Switch,
     Paper,
+    Button,
     Accordion,
     AccordionSummary,
     AccordionDetails,
@@ -18,6 +17,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import FileSelector from 'renderer/components/FileSelector';
 import AppContext from 'renderer/utils/AppContext';
 import { ValidatorConfig } from 'interfaces/main';
+import OptionsModal from 'renderer/components/Validator/OptionsModal';
 
 const styles = {
     container: {
@@ -31,6 +31,10 @@ const styles = {
     selectInput: {
         my: 1,
         maxWidth: 400,
+    },
+    versionInput: {
+        my: 1,
+        maxWidth: 200,
     },
     formControl: {
         my: 1,
@@ -56,6 +60,10 @@ const styles = {
     ctInput: {
         width: 300,
     },
+    button: {
+        p: 1,
+    },
+    defineXmlPath: { width: 300, flex: '1 1 auto' },
 };
 
 const Configuration: React.FC<{
@@ -63,10 +71,9 @@ const Configuration: React.FC<{
     setConfig: React.Dispatch<React.SetStateAction<ValidatorConfig>>;
 }> = ({ config, setConfig }) => {
     const { apiService } = useContext(AppContext);
+    const [optionsModalOpen, setOptionsModalOpen] = useState(false);
+
     const validatorData = useAppSelector((state) => state.data.validator);
-    const validatorSettings = useAppSelector(
-        (state) => state.settings.validator,
-    );
 
     // Derive version and standard options from the validator info
     const validatorStandards = useMemo(() => {
@@ -129,6 +136,7 @@ const Configuration: React.FC<{
     // Helper function to handle path selection
     const handlePathSelection = async (
         name:
+            | 'defineXmlPath'
             | 'whodrugPath'
             | 'meddraPath'
             | 'loincPath'
@@ -145,7 +153,17 @@ const Configuration: React.FC<{
             return;
         }
 
-        const result = await apiService.openDirectoryDialog(config[name]);
+        let result: string | null = null;
+        if (name === 'defineXmlPath') {
+            const fileInfo = await apiService.openFileDialog({
+                initialFolder: '',
+            });
+            if (fileInfo && fileInfo.length > 0) {
+                result = fileInfo[0].fullPath;
+            }
+        } else {
+            result = await apiService.openDirectoryDialog(config[name]);
+        }
         if (result === null || result === '') {
             return;
         }
@@ -185,15 +203,6 @@ const Configuration: React.FC<{
         }));
     };
 
-    // Handle switch changes
-    const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, checked } = event.target;
-        setConfig((prev) => ({
-            ...prev,
-            [name]: checked,
-        }));
-    };
-
     return (
         <Stack spacing={2} sx={styles.container}>
             <Paper sx={styles.paper}>
@@ -230,7 +239,7 @@ const Configuration: React.FC<{
                         disabled={config.customStandard}
                         value={config.version}
                         onChange={handleChange}
-                        sx={styles.selectInput}
+                        sx={styles.versionInput}
                         fullWidth
                     >
                         {availableVersions.map((ver) => (
@@ -288,20 +297,24 @@ const Configuration: React.FC<{
                             />
                         )}
                     />
-
-                    <FormControlLabel
-                        control={
-                            <Switch
-                                checked={config.customStandard}
-                                onChange={handleSwitchChange}
-                                name="customStandard"
-                                disabled={
-                                    validatorSettings.localRulesPath === ''
-                                }
-                            />
-                        }
-                        label="Use Custom Standard"
+                    <FileSelector
+                        sx={styles.defineXmlPath}
+                        label="Define-XML"
+                        value={config.defineXmlPath}
+                        onSelectDestination={() => {
+                            handlePathSelection('defineXmlPath');
+                        }}
+                        onClean={() => {
+                            handlePathSelection('defineXmlPath', true);
+                        }}
                     />
+                    <Button
+                        variant="contained"
+                        onClick={() => setOptionsModalOpen(true)}
+                        sx={styles.button}
+                    >
+                        Options
+                    </Button>
                 </Stack>
                 <Typography variant="h6" sx={styles.sectionTitle}>
                     Additional Options
@@ -408,6 +421,12 @@ const Configuration: React.FC<{
                     </AccordionDetails>
                 </Accordion>
             </Paper>
+            <OptionsModal
+                open={optionsModalOpen}
+                onClose={() => setOptionsModalOpen(false)}
+                config={config}
+                setConfig={setConfig}
+            />
         </Stack>
     );
 };

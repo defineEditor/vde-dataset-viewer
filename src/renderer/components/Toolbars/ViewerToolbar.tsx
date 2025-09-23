@@ -61,6 +61,13 @@ const Header: React.FC = () => {
 
     const dsName = dataset?.name || '';
 
+    const showIssues = useAppSelector((state) => {
+        if (currentFileId && state.ui.dataSettings[currentFileId]) {
+            return state.ui.dataSettings[currentFileId].showIssues;
+        }
+        return false;
+    });
+
     const handleOpenClick = useCallback(async () => {
         const newDataInfo = await openNewDataset(apiService, 'local');
         if (newDataInfo.errorMessage) {
@@ -338,7 +345,9 @@ const Header: React.FC = () => {
                     <FactCheckIcon
                         sx={{
                             color: validatorVersion
-                                ? 'primary.main'
+                                ? showIssues
+                                    ? 'success.main'
+                                    : 'primary.main'
                                 : 'grey.500',
                         }}
                     />

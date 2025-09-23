@@ -52,6 +52,7 @@ interface DatasetViewProps {
     settings: TableSettings;
     currentPage?: number;
     currentMask?: IMask | null;
+    annotatedCells?: Map<string, { text: string; color: string }> | null;
 }
 
 const DatasetView: React.FC<DatasetViewProps> = ({
@@ -61,6 +62,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     settings,
     currentPage = 0,
     currentMask = null,
+    annotatedCells = null,
 }) => {
     const dispatch = useAppDispatch();
     const [sorting, setSorting] = useState<ISortingState>([]);
@@ -601,6 +603,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                     virtualRows={virtualRows}
                     rows={rows}
                     highlightedCells={highlightedCells}
+                    annotatedCells={annotatedCells}
                     handleCellClick={handleCellClick}
                     handleMouseDown={handleMouseDown}
                     handleMouseOver={handleMouseOver}

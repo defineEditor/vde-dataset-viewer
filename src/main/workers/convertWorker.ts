@@ -15,6 +15,7 @@ const processSasMetadata = (
     metadata: DatasetJsonMetadata,
     options: ConvertTask['options'],
     outputName: string,
+    inputFormat: 'XPT' | 'SAS7BDAT',
 ): DatasetJsonMetadata => {
     const newColumns = metadata.columns.map((column) => {
         const newColumn = { ...column };
@@ -111,6 +112,11 @@ const processSasMetadata = (
 
     // FileOID;
     newMetadata.fileOID = outputName;
+
+    // Upcase dataset name if requested
+    if (options.sas7bdatUpcaseDatasetNames && inputFormat === 'SAS7BDAT') {
+        newMetadata.name = newMetadata.name.toUpperCase();
+    }
 
     return newMetadata;
 };
@@ -279,6 +285,7 @@ const convertXpt = async (
                 metadata,
                 options,
                 outputName,
+                'XPT',
             );
 
             // Standard metadata updates;
@@ -629,6 +636,7 @@ const convertSas7bdat = async (
                 metadata,
                 options,
                 outputName,
+                'SAS7BDAT',
             );
 
             // Set Dataset-JSON version

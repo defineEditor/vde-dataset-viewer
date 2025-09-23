@@ -87,6 +87,10 @@ const ValidationReportPage: React.FC = () => {
         (state) => state.ui.validationPage.currentReportId,
     );
 
+    const report = useAppSelector(
+        (state) => state.data.validator.reportData[reportId || ''] || null,
+    );
+
     const validationReportInfo = useAppSelector(
         (state) => state.data.validator.reports[reportId || ''],
     );
@@ -99,6 +103,7 @@ const ValidationReportPage: React.FC = () => {
             id: string,
             row?: number,
             column?: string,
+            coreId?: string,
         ) => {
             // Find filename by ID
             const filePath = validationReportInfo?.files.find(
@@ -107,11 +112,15 @@ const ValidationReportPage: React.FC = () => {
                         .replace(/.*?([^\\/]+)\.[^/.]+$/, '$1')
                         .toUpperCase() === id,
             )?.file;
-            if (filePath) {
+            if (filePath && reportId !== null) {
                 // Form properties
                 const props: NewWindowProps = {};
                 if (row || column) {
                     props.goTo = { row, column };
+                    props.issues = {
+                        filteredIssues: coreId ? [coreId] : [],
+                        reportId,
+                    };
                 }
                 // If Ctrl or Cmd key is pressed, open in new window
                 if (event.ctrlKey || event.metaKey) {
@@ -128,7 +137,7 @@ const ValidationReportPage: React.FC = () => {
                 }
             }
         },
-        [validationReportInfo, apiService, currentFileId, dispatch],
+        [validationReportInfo, apiService, dispatch, currentFileId, reportId],
     );
 
     const handleFilterIssues = React.useCallback(
@@ -143,10 +152,6 @@ const ValidationReportPage: React.FC = () => {
             }
         },
         [dispatch],
-    );
-
-    const report = useAppSelector(
-        (state) => state.data.validator.reportData[reportId || ''] || null,
     );
 
     useEffect(() => {
