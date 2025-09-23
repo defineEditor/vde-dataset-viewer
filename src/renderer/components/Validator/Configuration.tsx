@@ -1,21 +1,25 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useContext } from 'react';
 import {
     Stack,
     Button,
     Typography,
     MenuItem,
     TextField,
-    FormControlLabel,
-    Switch,
     Box,
     AutocompleteChangeReason,
     Autocomplete,
 } from '@mui/material';
-import { FileInfo, ConvertedFileInfo } from 'interfaces/common';
-import { ValidatorConfig } from 'interfaces/main';
+import {
+    FileInfo,
+    ConvertedFileInfo,
+    ValidatorConfig,
+} from 'interfaces/common';
 import { useAppSelector } from 'renderer/redux/hooks';
 import FileSelector from 'renderer/components/Common/FileSelector';
 import DictionaryConfigModal from 'renderer/components/Validator/DictionaryConfigModal';
+import OptionsModal from 'renderer/components/Validator/OptionsModal';
+import PathSelector from 'renderer/components/FileSelector';
+import AppContext from 'renderer/utils/AppContext';
 
 const styles = {
     container: {
@@ -52,6 +56,7 @@ const styles = {
             minWidth: 20,
         },
     },
+    defineXmlPath: { width: '200px' },
 };
 
 interface ValidatorConfigurationProps {
@@ -72,12 +77,11 @@ const ValidatorConfiguration: React.FC<ValidatorConfigurationProps> = ({
     config,
     setConfig,
 }) => {
-    const validatorData = useAppSelector((state) => state.data.validator);
-    const validatorSettings = useAppSelector(
-        (state) => state.settings.validator,
-    );
+    const { apiService } = useContext(AppContext);
 
+    const validatorData = useAppSelector((state) => state.data.validator);
     const [dictionaryModalOpen, setDictionaryModalOpen] = useState(false);
+    const [optionsModalOpen, setOptionsModalOpen] = useState(false);
 
     // Derive version and standard options from the validator info
     const validatorStandards = useMemo(() => {
@@ -138,15 +142,6 @@ const ValidatorConfiguration: React.FC<ValidatorConfigurationProps> = ({
         }));
     };
 
-    // Handle switch changes
-    const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, checked } = event.target;
-        setConfig((prev) => ({
-            ...prev,
-            [name]: checked,
-        }));
-    };
-
     // Handle CT update
     const handleCtChange = (
         _event: React.ChangeEvent<{}>,
@@ -185,6 +180,46 @@ const ValidatorConfiguration: React.FC<ValidatorConfigurationProps> = ({
         });
         return result;
     }, [validatorData.info.terminology]);
+
+    // Handle path selection for define-xml path
+    const handlePathSelection = async (
+        name:
+            | 'defineXmlPath'
+            | 'whodrugPath'
+            | 'meddraPath'
+            | 'loincPath'
+            | 'medrtPath'
+            | 'uniiPath',
+        reset: boolean = false,
+    ) => {
+        if (reset) {
+            setConfig((prev) => ({
+                ...prev,
+                [name]: '',
+            }));
+            return;
+        }
+
+        let result: string | null = null;
+        if (name === 'defineXmlPath') {
+            const fileInfo = await apiService.openFileDialog({
+                initialFolder: '',
+            });
+            if (fileInfo && fileInfo.length > 0) {
+                result = fileInfo[0].fullPath;
+            }
+        } else {
+            result = await apiService.openDirectoryDialog(config[name]);
+        }
+        if (result === null || result === '') {
+            return;
+        }
+
+        setConfig((prev) => ({
+            ...prev,
+            [name]: result,
+        }));
+    };
 
     // Convert FileInfo to ConvertedFileInfo for the FileSelector
     const files: ConvertedFileInfo[] = selectedFiles.map((file) => ({
@@ -302,19 +337,16 @@ const ValidatorConfiguration: React.FC<ValidatorConfigurationProps> = ({
                             />
                         )}
                     />
-
-                    <FormControlLabel
-                        control={
-                            <Switch
-                                checked={config.customStandard}
-                                onChange={handleSwitchChange}
-                                name="customStandard"
-                                disabled={
-                                    validatorSettings.localRulesPath === ''
-                                }
-                            />
-                        }
-                        label="Use Custom Standard"
+                    <PathSelector
+                        sx={styles.defineXmlPath}
+                        label="Define-XML"
+                        value={config.defineXmlPath}
+                        onSelectDestination={() => {
+                            handlePathSelection('defineXmlPath');
+                        }}
+                        onClean={() => {
+                            handlePathSelection('defineXmlPath', true);
+                        }}
                     />
                     <Button
                         variant="contained"
@@ -322,6 +354,13 @@ const ValidatorConfiguration: React.FC<ValidatorConfigurationProps> = ({
                         sx={styles.button}
                     >
                         Dictionaries
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={() => setOptionsModalOpen(true)}
+                        sx={styles.button}
+                    >
+                        Options
                     </Button>
                 </Stack>
             </Box>
@@ -338,6 +377,15 @@ const ValidatorConfiguration: React.FC<ValidatorConfigurationProps> = ({
             <DictionaryConfigModal
                 open={dictionaryModalOpen}
                 onClose={() => setDictionaryModalOpen(false)}
+                config={config}
+                setConfig={setConfig}
+                onPathSelection={handlePathSelection}
+            />
+
+            {/* Validator Options Modal */}
+            <OptionsModal
+                open={optionsModalOpen}
+                onClose={() => setOptionsModalOpen(false)}
                 config={config}
                 setConfig={setConfig}
             />

@@ -288,7 +288,7 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
                     variant="fullWidth"
                 >
                     <Tab
-                        label="Configuration"
+                        label="Validation"
                         sx={styles.tab}
                         value="validation"
                     />

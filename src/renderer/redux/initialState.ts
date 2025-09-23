@@ -54,6 +54,7 @@ export const settings: ISettings = {
         poolSize: 4,
         cachePath: '',
         localRulesPath: '',
+        reportTemplate: '',
     },
 };
 export const ui: IUi = {
@@ -129,10 +130,13 @@ export const validator: ValidatorData = {
         snomedUrl: '',
         snomedEdition: '',
         customStandard: false,
+        defineXmlPath: '',
+        validateXml: false,
         defineVersion: '',
         standard: '',
         ctPackages: [],
         version: '',
+        rules: [],
     },
     reports: {},
     reportData: {},

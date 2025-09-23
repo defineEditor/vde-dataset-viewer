@@ -227,7 +227,8 @@ const Issues: React.FC<IssuesProps> = ({
 
     // Filter issues for the current dataset
     const datasetIssues = report.Issue_Summary.filter(
-        (issue: IssueSummaryItem) => issue.dataset === datasetName,
+        (issue: IssueSummaryItem) =>
+            issue.dataset.toLowerCase() === datasetName.toLowerCase(),
     );
 
     // Sort issues by number of occurrences (highest first), then by core_id

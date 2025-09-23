@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import {
     Stack,
     Button,
@@ -10,7 +10,6 @@ import {
     DialogActions,
 } from '@mui/material';
 import { ValidatorConfig } from 'interfaces/main';
-import AppContext from 'renderer/utils/AppContext';
 import PathSelector from 'renderer/components/FileSelector';
 
 const styles = {
@@ -23,6 +22,16 @@ interface DictionaryConfigModalProps {
     open: boolean;
     onClose: () => void;
     config: ValidatorConfig;
+    onPathSelection: (
+        name:
+            | 'defineXmlPath'
+            | 'whodrugPath'
+            | 'meddraPath'
+            | 'loincPath'
+            | 'medrtPath'
+            | 'uniiPath',
+        reset?: boolean,
+    ) => void;
     setConfig: React.Dispatch<React.SetStateAction<ValidatorConfig>>;
 }
 
@@ -30,39 +39,9 @@ const DictionaryConfigModal: React.FC<DictionaryConfigModalProps> = ({
     open,
     onClose,
     config,
+    onPathSelection,
     setConfig,
 }) => {
-    const { apiService } = useContext(AppContext);
-
-    // Helper function to handle path selection
-    const handlePathSelection = async (
-        name:
-            | 'whodrugPath'
-            | 'meddraPath'
-            | 'loincPath'
-            | 'medrtPath'
-            | 'uniiPath',
-        reset: boolean = false,
-    ) => {
-        if (reset) {
-            setConfig((prev) => ({
-                ...prev,
-                [name]: '',
-            }));
-            return;
-        }
-
-        const result = await apiService.openDirectoryDialog(config[name]);
-        if (result === null || result === '') {
-            return;
-        }
-
-        setConfig((prev) => ({
-            ...prev,
-            [name]: result,
-        }));
-    };
-
     // Handle text input changes
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = event.target;
@@ -81,10 +60,10 @@ const DictionaryConfigModal: React.FC<DictionaryConfigModalProps> = ({
                         label="WHODRUG Path"
                         value={config.whodrugPath}
                         onSelectDestination={() => {
-                            handlePathSelection('whodrugPath');
+                            onPathSelection('whodrugPath');
                         }}
                         onClean={() => {
-                            handlePathSelection('whodrugPath', true);
+                            onPathSelection('whodrugPath', true);
                         }}
                     />
 
@@ -92,10 +71,10 @@ const DictionaryConfigModal: React.FC<DictionaryConfigModalProps> = ({
                         label="MedDRA Path"
                         value={config.meddraPath}
                         onSelectDestination={() => {
-                            handlePathSelection('meddraPath');
+                            onPathSelection('meddraPath');
                         }}
                         onClean={() => {
-                            handlePathSelection('meddraPath', true);
+                            onPathSelection('meddraPath', true);
                         }}
                     />
 
@@ -103,10 +82,10 @@ const DictionaryConfigModal: React.FC<DictionaryConfigModalProps> = ({
                         label="LOINC Path"
                         value={config.loincPath}
                         onSelectDestination={() => {
-                            handlePathSelection('loincPath');
+                            onPathSelection('loincPath');
                         }}
                         onClean={() => {
-                            handlePathSelection('loincPath', true);
+                            onPathSelection('loincPath', true);
                         }}
                     />
 
@@ -114,10 +93,10 @@ const DictionaryConfigModal: React.FC<DictionaryConfigModalProps> = ({
                         label="MedRT Path"
                         value={config.medrtPath}
                         onSelectDestination={() => {
-                            handlePathSelection('medrtPath');
+                            onPathSelection('medrtPath');
                         }}
                         onClean={() => {
-                            handlePathSelection('medrtPath', true);
+                            onPathSelection('medrtPath', true);
                         }}
                     />
 
@@ -125,10 +104,10 @@ const DictionaryConfigModal: React.FC<DictionaryConfigModalProps> = ({
                         label="UNII Path"
                         value={config.uniiPath}
                         onSelectDestination={() => {
-                            handlePathSelection('uniiPath');
+                            onPathSelection('uniiPath');
                         }}
                         onClean={() => {
-                            handlePathSelection('uniiPath', true);
+                            onPathSelection('uniiPath', true);
                         }}
                     />
 

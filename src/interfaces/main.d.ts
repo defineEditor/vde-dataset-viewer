@@ -21,6 +21,7 @@ export interface SettingsValidator {
     poolSize: number;
     cachePath: string;
     localRulesPath: string;
+    reportTemplate: string;
 }
 
 export interface ICheckUpdateResult {
@@ -96,10 +97,13 @@ export interface ValidatorConfig {
     snomedUrl: string;
     snomedEdition: string;
     customStandard: boolean;
+    defineXmlPath: string;
+    validateXml: boolean;
     defineVersion: string;
     standard: string;
     ctPackages: string[];
     version: string;
+    rules: string[];
 }
 
 export interface ValidateTask {

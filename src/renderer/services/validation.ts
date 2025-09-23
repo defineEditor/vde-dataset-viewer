@@ -81,6 +81,8 @@ export const startValidation = async (
 
     let lastReportedConversionProgress = 0;
     let lastReportedValidationProgress = 0;
+    let validationStartTime: number | null = null;
+    let validationProgressThreshold = 1; // Start with 1% threshold
 
     // Set up progress subscription
     context.subscribeToTaskProgress(async (info: TaskProgress) => {
@@ -122,12 +124,28 @@ export const startValidation = async (
             info.id === validationId
         ) {
             if (info.progress) {
+                // Initialize validation start time on first progress update
+                if (validationStartTime === null) {
+                    validationStartTime = Date.now();
+                }
+
+                // Check if we should adjust the threshold after 5 seconds
+                const elapsedTime = Date.now() - validationStartTime;
+                if (elapsedTime <= 2000 && validationProgressThreshold === 1) {
+                    // If we've made more than 5% progress in 2 seconds, switch to 5% reporting
+                    if (info.progress > 5) {
+                        validationProgressThreshold = 5;
+                    }
+                }
+
                 if (
                     Math.abs(info.progress - lastReportedValidationProgress) >=
-                    5
+                    validationProgressThreshold
                 ) {
                     lastReportedValidationProgress =
-                        Math.floor(info.progress / 5) * 5;
+                        Math.floor(
+                            info.progress / validationProgressThreshold,
+                        ) * validationProgressThreshold;
                     store.dispatch(
                         updateValidation({
                             validationId,

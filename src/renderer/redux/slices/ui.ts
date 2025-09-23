@@ -229,15 +229,17 @@ export const uiSlice = createSlice({
                 filteredIssues?: string[];
             }>,
         ) => {
-            const { id, show, filteredIssues = [] } = action.payload;
+            const { id, show, filteredIssues = null } = action.payload;
             if (!state.dataSettings[id]) {
                 state.dataSettings[id] = {
                     showIssues: show,
-                    filteredIssues,
+                    filteredIssues: filteredIssues || [],
                 };
             } else {
                 state.dataSettings[id].showIssues = show;
-                if (!show) {
+                if (filteredIssues && filteredIssues.length > 0) {
+                    state.dataSettings[id].filteredIssues = filteredIssues;
+                } else if (!show) {
                     // Clear filtered issues when disabling issue view
                     state.dataSettings[id].filteredIssues = [];
                 }

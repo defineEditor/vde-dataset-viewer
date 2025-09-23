@@ -17,7 +17,9 @@ const getIssueAnnotationststs = (
     const issueAnnotations = new Map();
     // Select all issues, related to the current dataset;
     const issues = report.Issue_Details.filter((detail) => {
-        return detail.dataset === table?.metadata.name;
+        return (
+            detail.dataset.toLowerCase() === table?.metadata.name.toLowerCase()
+        );
     }).filter((detail) => {
         return filteredIssues.includes(detail.core_id);
     });

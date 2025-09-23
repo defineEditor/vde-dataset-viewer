@@ -1,5 +1,13 @@
 import React from 'react';
-import { Paper, Typography, LinearProgress, Stack, Box } from '@mui/material';
+import {
+    Zoom,
+    Grow,
+    Paper,
+    Typography,
+    LinearProgress,
+    Stack,
+    Box,
+} from '@mui/material';
 import DogWorker from 'renderer/components/Loading/DogWorker';
 import CatWorker from 'renderer/components/Loading/CatWorker';
 import { useAppSelector } from 'renderer/redux/hooks';
@@ -51,13 +59,13 @@ const ProgressContainer: React.FC<{
 
     return (
         <>
-            {conversionProgress !== null && (
+            <Grow in={conversionProgress !== null} timeout={500}>
                 <Paper sx={styles.progressContainer}>
                     <>
                         <Typography variant="subtitle1">Conversion</Typography>
                         <LinearProgress
                             variant="determinate"
-                            value={conversionProgress}
+                            value={conversionProgress || 0}
                             sx={styles.progressBar}
                         />
                         <Typography variant="caption" color="text.secondary">
@@ -65,26 +73,28 @@ const ProgressContainer: React.FC<{
                                 ? 'Complete'
                                 : conversionProgress === 0
                                   ? 'Pending'
-                                  : `Converting (${Math.round(conversionProgress)}%)`}
+                                  : `Converting (${Math.round(conversionProgress || 0)}%)`}
                         </Typography>
                     </>
                 </Paper>
-            )}
-            <Paper sx={styles.progressContainer}>
-                <Typography variant="subtitle1">Validation</Typography>
-                <LinearProgress
-                    variant="determinate"
-                    value={validationProgress}
-                    sx={styles.progressBar}
-                />
-                <Typography variant="caption" color="text.secondary">
-                    {validationProgress === 100
-                        ? 'Complete'
-                        : validationProgress === 0
-                          ? 'Pending'
-                          : `Validating (${Math.round(validationProgress)}%)`}
-                </Typography>
-            </Paper>
+            </Grow>
+            <Grow in={validationProgress > 0} timeout={500}>
+                <Paper sx={styles.progressContainer}>
+                    <Typography variant="subtitle1">Validation</Typography>
+                    <LinearProgress
+                        variant="determinate"
+                        value={validationProgress}
+                        sx={styles.progressBar}
+                    />
+                    <Typography variant="caption" color="text.secondary">
+                        {validationProgress === 100
+                            ? 'Complete'
+                            : validationProgress === 0
+                              ? 'Pending'
+                              : `Validating (${Math.round(validationProgress)}%)`}
+                    </Typography>
+                </Paper>
+            </Grow>
         </>
     );
 };
@@ -121,8 +131,8 @@ const ValidationProgress: React.FC<{
         <Stack spacing={2} sx={styles.container} alignItems="flex-start">
             <Typography variant="h6">Processing</Typography>
             <ProgressContainer validationId={validationId} />
-            {validationStatus !== 'completed' && (
-                <>
+            <Zoom in={validationStatus !== 'completed'} timeout={1000}>
+                <Box sx={styles.closeWindowNote}>
                     <Typography variant="body2" sx={styles.closeWindowNote}>
                         You can continue working on other tasks
                     </Typography>
@@ -131,8 +141,8 @@ const ValidationProgress: React.FC<{
                             <Worker loadingAnimation={loadingAnimation} />
                         </Box>
                     )}
-                </>
-            )}
+                </Box>
+            </Zoom>
         </Stack>
     );
 };

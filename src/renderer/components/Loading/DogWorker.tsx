@@ -260,7 +260,7 @@ const DogWorker: React.FC = () => {
                 setIsTalking(false);
             }, 1000);
             setAnnoyedLevel((level) => level + 1);
-            return Math.round(1 * (annoyedLevel / 2));
+            return Math.round(1 * ((annoyedLevel + 1) / 2));
         });
     };
 

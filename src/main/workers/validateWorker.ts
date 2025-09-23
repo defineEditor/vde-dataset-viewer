@@ -168,21 +168,21 @@ const cleanTemporaryFiles = async (
 };
 
 /**
- * Validates datasets using CDISC CORE command line tool
+ * Generates the command to run CDISC CORE validation
  * @param validatorPath Path to the Core CLI executable
  * @param configuration Validation configuration
+ * @param options Validator options
  * @param validationDetails Files and folders to validate
- * @param sendMessage Progress callback function
- * @returns Promise that resolves to the validation report filename
+ * @param outputPath Output path for the validation report
+ * @returns The command string to execute
  */
-const runValidation = async (
+const generateValidationCommand = (
     validatorPath: string,
     configuration: ValidatorProcessTask['configuration'],
     options: ValidatorProcessTask['options'],
     validationDetails: ValidatorProcessTask['validationDetails'],
-    outputDir: string,
-    sendMessage: (progress: number) => void,
-): Promise<{ fileName: string; date: number }> => {
+    outputPath: string,
+): string => {
     // Build command arguments
     const args: string[] = ['validate'];
 
@@ -217,9 +217,19 @@ const runValidation = async (
         args.push('--version', configuration.version);
     }
 
+    // Add path to Define-XML if provided
+    if (configuration?.defineXmlPath) {
+        args.push('--define-xml-path', `"${configuration.defineXmlPath}"`);
+    }
+
     // Add define version if provided
     if (configuration?.defineVersion) {
         args.push('--define-version', configuration.defineVersion);
+    }
+
+    // Validate XML flag
+    if (configuration?.validateXml) {
+        args.push('--validate-xml', 'y');
     }
 
     // Specify CT packages if provided
@@ -257,6 +267,20 @@ const runValidation = async (
         args.push('--snomed-edition', configuration.snomedEdition);
     }
 
+    // Cache
+    if (options?.cachePath) {
+        args.push('--cache', `"${options.cachePath}"`);
+    }
+    // Custom standard flag
+    if (configuration?.customStandard) {
+        args.push('--custom_standard');
+    }
+
+    // Local rules
+    if (options?.localRulesPath) {
+        args.push('--local_rules', `"${options.localRulesPath}"`);
+    }
+
     // Specify pool size
     if (options?.poolSize && options.poolSize > 0) {
         args.push('--pool-size', options.poolSize.toString());
@@ -264,39 +288,6 @@ const runValidation = async (
 
     // Enable verbose progress output
     args.push('--progress', 'percents');
-
-    // If the output directory does not exist, create it
-    if (!fs.existsSync(outputDir)) {
-        fs.mkdirSync(outputDir, { recursive: true });
-    }
-
-    // Generate output filename with current datetime
-    const now = new Date();
-    const timestamp = now
-        .toISOString()
-        .replace(/[:.]/g, '-')
-        .replace('T', '_')
-        .substring(0, 19);
-
-    // Get filename from the first file in validation details or use 'validation'
-    let baseFileName = 'validation';
-    if (validationDetails?.files && validationDetails.files.length > 0) {
-        // Take the first file's name as base
-        // If there are more than 5 files, use the first 5 file names
-        const fileNames = validationDetails.files
-            .slice(0, 5)
-            .map((file) => path.basename(file).split('.')[0]);
-        const totalCount = validationDetails.files.length;
-        baseFileName = path.parse(
-            fileNames.join('_') +
-                (totalCount > 5 ? `+${totalCount - 5}_datasets` : ''),
-        ).name;
-    }
-
-    const outputFileName = `${baseFileName}-${timestamp}-core-validation`;
-
-    // Use system temporary directory
-    const outputPath = path.join(outputDir, outputFileName);
 
     // Add output parameter
     args.push('--output', `"${outputPath}"`);
@@ -306,7 +297,24 @@ const runValidation = async (
     args.push('--output-format', 'XLSX');
 
     // Build the full command
-    const command = `"${validatorPath}" ${args.join(' ')}`;
+    return `"${validatorPath}" ${args.join(' ')}`;
+};
+
+/**
+ * Validates datasets using CDISC CORE command line tool
+ * @param command The command to execute
+ * @param validatorPath Path to the Core CLI executable (for cwd)
+ * @param outputPath Path to the output file (for logging)
+ * @param sendMessage Progress callback function
+ * @returns Promise that resolves to the validation report filename
+ */
+const runValidation = async (
+    command: string,
+    validatorPath: string,
+    outputPath: string,
+    sendMessage: (progress: number) => void,
+): Promise<{ fileName: string; date: number }> => {
+    const now = new Date();
 
     return new Promise((resolve, reject) => {
         const childProcess = exec(command, {
@@ -322,7 +330,7 @@ const runValidation = async (
 
                 // Parse progress from verbose output
                 // Look for progress indicators in the CDISC Core output
-                progressMatch = output.match(/(\d+)/);
+                progressMatch = output.trim().match(/^(\d+)$/);
                 if (output.startsWith('Output:')) {
                     // Validation finished, send final progress
                     sendMessage(99);
@@ -336,12 +344,35 @@ const runValidation = async (
                     }
                 }
             });
+            if (childProcess.stderr) {
+                childProcess.stderr.on('data', (data: string) => {
+                    const output = data.toString();
+
+                    // Log command if file is not yet created
+                    if (!fs.existsSync(`${outputPath}.log`)) {
+                        fs.writeFileSync(
+                            path.join(`${outputPath}.log`),
+                            `Log file for validation run on ${now.toISOString()}\n\n`,
+                        );
+                        fs.appendFileSync(
+                            path.join(`${outputPath}.log`),
+                            `CLI command:\n${command}\nError Messages:\n`,
+                        );
+                    }
+                    // Log stdout errors to file
+                    fs.appendFileSync(
+                        path.join(`${outputPath}.log`),
+                        `${output}\n`,
+                    );
+                });
+            }
         }
 
         // Handle process completion
         childProcess.on('close', (code) => {
             if (code === 0) {
                 // Validation completed successfully
+                const outputFileName = path.basename(outputPath);
                 resolve({
                     fileName: `${outputFileName}.json`,
                     date: now.getTime(),
@@ -498,12 +529,54 @@ process.parentPort.once(
                                 'Validation configuration is required.',
                             );
                         }
-                        const result = await runValidation(
+
+                        // Generate output filename and path
+                        const outputDir = data.outputDir || '';
+                        
+                        // If the output directory does not exist, create it
+                        if (!fs.existsSync(outputDir)) {
+                            fs.mkdirSync(outputDir, { recursive: true });
+                        }
+
+                        // Generate output filename with current datetime
+                        const now = new Date();
+                        const timestamp = now
+                            .toISOString()
+                            .replace(/[:.]/g, '-')
+                            .replace('T', '_')
+                            .substring(0, 19);
+
+                        // Get filename from the first file in validation details or use 'validation'
+                        let baseFileName = 'validation';
+                        if (data.validationDetails?.files && data.validationDetails.files.length > 0) {
+                            // Take the first file's name as base
+                            // If there are more than 5 files, use the first 5 file names
+                            const fileNames = data.validationDetails.files
+                                .slice(0, 5)
+                                .map((file) => path.basename(file).split('.')[0]);
+                            const totalCount = data.validationDetails.files.length;
+                            baseFileName = path.parse(
+                                fileNames.join('_') +
+                                    (totalCount > 5 ? `+${totalCount - 5}_datasets` : ''),
+                            ).name;
+                        }
+
+                        const outputFileName = `${baseFileName}-${timestamp}-core-validation`;
+                        const outputPath = path.join(outputDir, outputFileName);
+
+                        // Generate the validation command
+                        const command = generateValidationCommand(
                             validatorPath,
                             data.configuration,
                             data.options,
                             data.validationDetails,
-                            data.outputDir || '',
+                            outputPath,
+                        );
+
+                        const result = await runValidation(
+                            command,
+                            validatorPath,
+                            outputPath,
                             sendMessage,
                         );
 
@@ -511,7 +584,7 @@ process.parentPort.once(
                         cleanTemporaryFiles(data.validationDetails);
 
                         const summary = getIssueSummary(
-                            path.join(data.outputDir || '', result.fileName),
+                            path.join(outputDir, result.fileName),
                         );
 
                         // Form validate report record
