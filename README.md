@@ -63,10 +63,5 @@ To develop the VDE Dataset Viewer, follow these steps:
 3. Install the dependencies: `npm install`
 4. Start the development mode: `npm run start`
 
-## Testing
-The VDE Dataset Viewer uses Jest for testing. Tests are located in the `__tests__` folder. To run the tests, use:
-1. Execute all tests : `npm test`
-2. Run specific tests: `npm test -- <test-file-name>`
-
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

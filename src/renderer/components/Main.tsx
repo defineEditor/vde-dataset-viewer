@@ -7,27 +7,29 @@ import WysiwygIcon from '@mui/icons-material/Wysiwyg';
 import InfoIcon from '@mui/icons-material/Info';
 import SettingsIcon from '@mui/icons-material/Settings';
 import KeyboardIcon from '@mui/icons-material/Keyboard';
-import { DashboardLayout } from '@toolpad/core/DashboardLayout';
+import FactCheckIcon from '@mui/icons-material/FactCheck';
+import {
+    DashboardLayout,
+    DashboardLayoutSlots,
+} from '@toolpad/core/DashboardLayout';
 import SelectDataset from 'renderer/components/SelectDataset';
 import Api from 'renderer/components/Api';
 import AppContext from 'renderer/utils/AppContext';
 import ViewFile from 'renderer/components/ViewFile';
 import Settings from 'renderer/components/Settings';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
-import {
-    setPathname,
-    openDataset,
-    openSnackbar,
-} from 'renderer/redux/slices/ui';
-import { AllowedPathnames } from 'interfaces/common';
-import ViewerToolbar from 'renderer/components/ViewerToolbar';
+import { setPathname, setZoomLevel } from 'renderer/redux/slices/ui';
+import { AllowedPathnames, NewWindowProps } from 'interfaces/common';
+import ViewerToolbar from 'renderer/components/Toolbars/ViewerToolbar';
+import ReportToolbar from 'renderer/components/Toolbars/ReportToolbar';
+import ToolbarActions from 'renderer/components/ToolbarActions';
 import Shortcuts from 'renderer/components/Shortcuts';
 import Converter from 'renderer/components/Converter';
+import Validator from 'renderer/components/Validator';
 import About from 'renderer/components/About';
 import { paths } from 'misc/constants';
 import { saveStore } from 'renderer/redux/stateUtils';
-import { openNewDataset } from 'renderer/utils/readData';
-import { addRecent } from 'renderer/redux/slices/data';
+import handleOpenDataset from 'renderer/utils/handleOpenDataset';
 
 const styles = {
     main: {
@@ -72,6 +74,11 @@ const NAVIGATION: Navigation = [
         segment: 'converter',
         title: 'Converter',
         icon: <CachedIcon />,
+    },
+    {
+        segment: 'validator',
+        title: 'Validator',
+        icon: <FactCheckIcon />,
     },
     {
         kind: 'divider',
@@ -162,11 +169,18 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                     case 'F4':
                         dispatch(
                             setPathname({
-                                pathname: paths.SETTINGS,
+                                pathname: paths.VALIDATOR,
                             }),
                         );
                         break;
                     case 'F5':
+                        dispatch(
+                            setPathname({
+                                pathname: paths.SETTINGS,
+                            }),
+                        );
+                        break;
+                    case 'F6':
                         dispatch(
                             setPathname({
                                 pathname: paths.ABOUT,
@@ -194,65 +208,104 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
         };
     }, [dispatch, apiService]);
 
+    // Add zoom functionality with Ctrl + Mouse wheel
+    const currentZoom = useAppSelector((state) => state.ui.zoomLevel);
+    useEffect(() => {
+        const handleZoom = async (event: WheelEvent | KeyboardEvent) => {
+            if (event.ctrlKey || event.metaKey) {
+                const zoomStep = 0.1;
+                const minZoom = -5; // ~25% zoom
+                const maxZoom = 3; // ~800% zoom
+
+                let newZoom: number = currentZoom;
+                if (event instanceof WheelEvent) {
+                    event.preventDefault();
+                    // If it is wheel event
+                    if (event.deltaY < 0) {
+                        // Zoom in (wheel up)
+                        newZoom = Math.min(currentZoom + zoomStep, maxZoom);
+                    } else {
+                        // Zoom out (wheel down)
+                        newZoom = Math.max(currentZoom - zoomStep, minZoom);
+                    }
+                } else {
+                    switch (event.key) {
+                        case '+':
+                        case '=': // Handle both + and = keys (= is + without shift)
+                            event.preventDefault();
+                            newZoom = Math.min(currentZoom + zoomStep, maxZoom);
+                            break;
+                        case '-':
+                        case '_': // Handle both - and _ keys (_ is - with shift)
+                            event.preventDefault();
+                            newZoom = Math.max(currentZoom - zoomStep, minZoom);
+                            break;
+                        case '0':
+                            event.preventDefault();
+                            newZoom = 0; // Reset to default zoom
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+                dispatch(setZoomLevel(newZoom));
+            }
+        };
+
+        window.addEventListener('wheel', handleZoom, { passive: false });
+        window.addEventListener('keydown', handleZoom);
+
+        return () => {
+            window.removeEventListener('wheel', handleZoom);
+            window.removeEventListener('keydown', handleZoom);
+        };
+    }, [dispatch, currentZoom]);
+
+    useEffect(() => {
+        apiService.setZoom(currentZoom);
+    }, [currentZoom, apiService]);
+
     // Handle "Open With" file opening events from the OS
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
 
     useEffect(() => {
-        const handleFileOpen = async (filePath: string) => {
-            try {
-                const newDataInfo = await openNewDataset(
-                    apiService,
-                    'local',
-                    filePath,
-                );
-                if (newDataInfo.errorMessage) {
-                    if (newDataInfo.errorMessage !== 'cancelled') {
-                        dispatch(
-                            openSnackbar({
-                                type: 'error',
-                                message: newDataInfo.errorMessage,
-                            }),
-                        );
-                    }
-                    return;
-                }
-                dispatch(
-                    addRecent({
-                        name: newDataInfo.metadata.name,
-                        label: newDataInfo.metadata.label,
-                        path: newDataInfo.path,
-                    }),
-                );
-                dispatch(
-                    openDataset({
-                        fileId: newDataInfo.fileId,
-                        type: newDataInfo.type,
-                        name: newDataInfo.metadata.name,
-                        label: newDataInfo.metadata.label,
-                        mode: 'local',
-                        totalRecords: newDataInfo.metadata.records,
-                        currentFileId,
-                    }),
-                );
-            } catch (error) {
-                if (error instanceof Error) {
-                    dispatch(
-                        openSnackbar({
-                            message: `Error opening file: ${error.message || 'Unknown error'}`,
-                            type: 'error',
-                        }),
-                    );
-                }
-            }
+        const handleFileOpen = async (
+            filePath: string,
+            newWindowProps?: NewWindowProps,
+        ) => {
+            return handleOpenDataset(
+                filePath,
+                currentFileId,
+                dispatch,
+                apiService,
+                newWindowProps,
+            );
         };
 
-        window.electron.onFileOpen(handleFileOpen);
+        apiService.onFileOpen(handleFileOpen);
 
         // Clean up listener on unmount
         return () => {
-            window.electron.removeFileOpenListener();
+            apiService.removeFileOpenListener();
         };
     }, [apiService, dispatch, currentFileId]);
+
+    const slots: DashboardLayoutSlots = {
+        toolbarActions: ToolbarActions,
+    };
+
+    if (pathname === paths.VIEWFILE && isDataLoaded) {
+        slots.appTitle = ViewerToolbar;
+    }
+
+    const currentValidatorTab = useAppSelector(
+        (state) => state.ui.validationPage.currentTab,
+    );
+
+    if (pathname === paths.VALIDATOR && currentValidatorTab === 'report') {
+        slots.appTitle = ReportToolbar;
+    }
 
     return (
         <AppProvider
@@ -261,16 +314,7 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
             router={useAppRouter()}
             branding={{ title, logo: <Logo /> }}
         >
-            <DashboardLayout
-                defaultSidebarCollapsed
-                slots={
-                    pathname === paths.VIEWFILE && isDataLoaded
-                        ? {
-                              appTitle: ViewerToolbar,
-                          }
-                        : {}
-                }
-            >
+            <DashboardLayout defaultSidebarCollapsed slots={slots}>
                 <Stack sx={styles.main} id="main">
                     {pathname === paths.SELECT && <SelectDataset />}
                     {pathname === paths.VIEWFILE && isDataLoaded && (
@@ -279,6 +323,7 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                     {pathname === paths.SETTINGS && <Settings />}
                     {pathname === paths.API && <Api />}
                     {pathname === paths.CONVERTER && <Converter />}
+                    {pathname === paths.VALIDATOR && <Validator />}
                     {pathname === paths.ABOUT && <About />}
                 </Stack>
                 <Shortcuts

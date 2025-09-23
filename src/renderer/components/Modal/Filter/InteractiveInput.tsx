@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
     TextField,
     Button,
@@ -136,26 +136,33 @@ const ValueAutocomplete: React.FC<{
 }) => {
     const columnType = columnTypes[condition.variable.toLowerCase()];
     const isMultiple = ['in', 'notin'].includes(condition.operator);
-    let textValue: string | string[];
-    if (isMultiple) {
-        if (['number', 'boolean'].includes(columnType)) {
-            textValue =
-                condition.value === null || !Array.isArray(condition.value)
-                    ? []
-                    : (condition.value.map((value) =>
-                          value.toString(),
-                      ) as string[]);
-        } else {
-            textValue =
-                condition.value === null || !Array.isArray(condition.value)
-                    ? []
-                    : (condition.value as string[]);
+    const [inputValue, setInputValue] = React.useState<string | undefined>('');
+
+    useEffect(() => {
+        if (isMultiple && condition.value) {
+            setInputValue('');
         }
-    } else if (['number', 'boolean'].includes(columnType)) {
-        textValue = condition.value === null ? '' : condition.value.toString();
-    } else {
-        textValue = condition.value as string;
-    }
+    }, [isMultiple, condition.value]);
+
+    const textValue = React.useMemo(() => {
+        if (isMultiple) {
+            if (['number', 'boolean'].includes(columnType)) {
+                return condition.value === null ||
+                    !Array.isArray(condition.value)
+                    ? []
+                    : (condition.value
+                          .filter((value) => value !== null)
+                          .map((value) => value.toString()) as string[]);
+            }
+            return condition.value === null || !Array.isArray(condition.value)
+                ? []
+                : (condition.value as string[]);
+        }
+        if (['number', 'boolean'].includes(columnType)) {
+            return condition.value === null ? '' : condition.value.toString();
+        }
+        return condition.value as string;
+    }, [isMultiple, columnType, condition.value]);
 
     // Get proper column name
     const columnName = columnNames.find(
@@ -165,9 +172,10 @@ const ValueAutocomplete: React.FC<{
     let valueOptions: string[] = [];
 
     if (columnName !== undefined && uniqueValues[columnName]) {
-        valueOptions = uniqueValues[columnName].map((value) =>
-            value === null ? 'null' : value.toString(),
-        );
+        // Do not show null in multiselection, nulls should be handled by separate condition
+        valueOptions = uniqueValues[columnName]
+            .filter((value) => value !== null)
+            .map((value) => value.toString());
     }
 
     return (
@@ -177,6 +185,10 @@ const ValueAutocomplete: React.FC<{
             sx={styles.valueSelect}
             options={valueOptions}
             value={textValue}
+            inputValue={inputValue}
+            onInputChange={(_event, newInputValue) => {
+                setInputValue(newInputValue);
+            }}
             filterOptions={(options, state) => {
                 const filteredOptions = options.filter((option) =>
                     option
@@ -340,6 +352,19 @@ const InteractiveInput: React.FC<{
                 const newCondition = updateConditionValue(
                     conditions[index],
                     value || [],
+                    columnTypes,
+                );
+                const newConditions = [...conditions];
+                newConditions[index] = newCondition;
+                const newFilter = {
+                    conditions: newConditions,
+                    connectors,
+                };
+                onChange(newFilter);
+            } else if (reason === 'clear') {
+                const newCondition = updateConditionValue(
+                    conditions[index],
+                    [],
                     columnTypes,
                 );
                 const newConditions = [...conditions];

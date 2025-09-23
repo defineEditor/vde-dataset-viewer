@@ -1,5 +1,5 @@
 import initialState, { data, ui, api } from 'renderer/redux/initialState';
-import { IStore } from 'interfaces/common';
+import { IStore, IUi, IApi, IData } from 'interfaces/common';
 import store from 'renderer/redux/store';
 import ApiService from 'renderer/services/ApiService';
 
@@ -42,14 +42,26 @@ export const safeLoadState = (state: IStore): IStore => {
 
 export const dehydrateState = (state: IStore): IStore => {
     // Remove some things, which should not be kept between sessions
-    const newData = { ...state.data };
+    const newData: IData = { ...state.data };
     // Reset opened files
     newData.loadedRecords = data.loadedRecords;
     // Remove filter if it was applied
     newData.filterData = { ...newData.filterData, currentFilter: null };
-    const newUi = { ...ui };
+    // Remove validation filter and current report
+    newData.validator = {
+        ...newData.validator,
+        reportFilters: {},
+        reportData: {},
+    };
+    // Keep zoom level between sessions
+    const newUi: IUi = {
+        ...ui,
+        validation: {},
+        zoomLevel: state.ui.zoomLevel,
+        dataSettings: {},
+    };
     // Remove all but API records
-    const newApi = { ...api, apiRecords: state.api.apiRecords };
+    const newApi: IApi = { ...api, apiRecords: state.api.apiRecords };
 
     return { ...state, ui: newUi, data: newData, api: newApi };
 };

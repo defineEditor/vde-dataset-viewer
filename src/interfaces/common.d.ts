@@ -5,4 +5,6 @@ export * from 'interfaces/api';
 export * from 'interfaces/localStore';
 export * from 'interfaces/main';
 export * from 'interfaces/converter';
+export * from 'interfaces/core.report';
+export { RootState, AppDispatch } from 'renderer/redux/store';
 export { ModalType, AllowedPathnames } from 'misc/constants';

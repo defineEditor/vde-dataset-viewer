@@ -5,11 +5,13 @@ import React, {
     useMemo,
     useRef,
 } from 'react';
-import { ITableData, ItemType } from 'interfaces/common';
+import { Box } from '@mui/material';
+import { ITableData, ItemType, IMask, TableSettings } from 'interfaces/common';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { openSnackbar, setGoTo, setSelect } from 'renderer/redux/slices/ui';
 import View from 'renderer/components/DatasetView/View';
+import useTableHeight from 'renderer/components/DatasetView/useTableHeight';
 import {
     ColumnDef,
     getCoreRowModel,
@@ -24,12 +26,20 @@ declare module '@tanstack/table-core' {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     interface ColumnMeta<TData extends RowData, TValue> {
         type?: ItemType | 'rowNumber';
+        align?: 'right' | 'left' | 'center' | 'justify';
+        style?: React.CSSProperties;
     }
 }
 
 interface ITableRow {
     [key: string]: string | number | boolean | null;
 }
+
+const styles = {
+    fullHeight: {
+        height: '100%',
+    },
+};
 
 interface DatasetViewProps {
     tableData: ITableData;
@@ -39,26 +49,40 @@ interface DatasetViewProps {
         rowIndex: number,
         columnIndex: number,
     ) => void;
+    settings: TableSettings;
+    currentPage?: number;
+    currentMask?: IMask | null;
+    annotatedCells?: Map<string, { text: string; color: string }> | null;
 }
 
 const DatasetView: React.FC<DatasetViewProps> = ({
     tableData,
     isLoading,
     handleContextMenu,
+    settings,
+    currentPage = 0,
+    currentMask = null,
+    annotatedCells = null,
 }) => {
     const dispatch = useAppDispatch();
-    const settings = useAppSelector((state) => state.settings.viewer);
-    const currentPage = useAppSelector((state) => state.ui.currentPage);
-    const currentMask = useAppSelector(
-        (state) => state.data.maskData.currentMask,
-    );
     const [sorting, setSorting] = useState<ISortingState>([]);
 
     const columns = useMemo<ColumnDef<ITableRow>[]>(() => {
         const result = tableData.header.map((column) => {
-            return {
+            const headerCell: {
+                accessorKey: string;
+                header: string;
+                size?: number;
+                enableResizing?: boolean;
+                meta: {
+                    type?: ItemType | 'rowNumber';
+                    align?: 'right' | 'left' | 'center' | 'justify';
+                    style?: React.CSSProperties;
+                };
+                cell?: ColumnDef<ITableRow>['cell'];
+            } = {
                 accessorKey: column.id,
-                header: column.id,
+                header: settings.showLabel ? column.label : column.id,
                 size: column.size,
                 enableResizing: true,
                 meta: {
@@ -67,17 +91,44 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                         : column.type || 'string',
                 },
             };
+
+            let style: React.CSSProperties = {};
+            if (column.style) {
+                style = column.style;
+            }
+
+            if (column.align) {
+                style = { ...style, textAlign: column.align };
+            } else if (
+                ['integer', 'float', 'double', 'decimal'].includes(
+                    column.type || '',
+                )
+            ) {
+                style = { ...style, textAlign: 'right' };
+            }
+
+            if (Object.keys(style).length > 0) {
+                headerCell.meta.style = style;
+            }
+
+            if (column.cell) {
+                headerCell.cell =
+                    column.cell as unknown as ColumnDef<ITableRow>['cell'];
+            }
+            return headerCell;
         });
-        // Add row number column
-        result.unshift({
-            accessorKey: '#',
-            header: '#',
-            size: 60,
-            enableResizing: false,
-            meta: { type: 'integer' },
-        });
+        // Add row number column if not present
+        if (!result.find((col) => col.accessorKey === '#')) {
+            result.unshift({
+                accessorKey: '#',
+                header: '#',
+                size: 60,
+                enableResizing: false,
+                meta: { type: 'integer' },
+            });
+        }
         return result;
-    }, [tableData.header]);
+    }, [tableData.header, settings]);
 
     // Create column visibility state based on current mask
     const columnVisibility = useMemo<VisibilityState>(() => {
@@ -109,7 +160,10 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             .map((column) => column.id);
     }, [tableData.header]);
 
-    // Inital rows;
+    // Height measurements
+    const { tableHeight, viewContainerRef } = useTableHeight();
+
+    // Initial rows;
     const { data } = tableData;
     const table = useReactTable({
         data: isLoading ? [] : data,
@@ -149,6 +203,13 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         horizontal: true,
         overscan: 4,
     });
+
+    // If filter is used, we need to remeasure the columns
+    useEffect(() => {
+        if (data) {
+            columnVirtualizer.measure();
+        }
+    }, [data, columnVirtualizer]);
 
     const rowVirtualizer = useVirtualizer({
         count: rows.length,
@@ -212,6 +273,20 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     );
 
     const handleMouseDown = (rowIndex: number, columnIndex: number) => {
+        if (rowIndex === -1 && columnIndex === -1) {
+            // If user clicks on the header row number, select the entire table
+            const newHighlightedCells: { row: number; column: number }[] = [];
+            for (let row = 0; row < rows.length; row++) {
+                for (let column = 0; column < visibleColumns.length; column++) {
+                    newHighlightedCells.push({ row, column });
+                }
+            }
+            setHighlightedCells(newHighlightedCells);
+            setSelecting(false);
+            setStartCell(null);
+            return;
+        }
+        // If user clicks on a cell, start selecting
         setSelecting(true);
         setStartCell({ row: rowIndex, column: columnIndex });
         setHighlightedCells([{ row: rowIndex, column: columnIndex }]);
@@ -220,14 +295,19 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     const handleMouseOver = (rowIndex: number, columnIndex: number) => {
         if (selecting && startCell) {
             const newHighlightedCells: { row: number; column: number }[] = [];
-            const startRow = Math.min(startCell.row, rowIndex);
-            const endRow = Math.max(startCell.row, rowIndex);
+            let startRow = Math.min(startCell.row, rowIndex);
+            let endRow = Math.max(startCell.row, rowIndex);
             // If user hovers on the row number, highlight the entire row
             let startColumn;
             let endColumn;
             if (columnIndex === 0) {
                 startColumn = 0;
                 endColumn = visibleColumns.length - 1;
+            } else if (rowIndex === 0) {
+                startColumn = Math.min(startCell.column, columnIndex);
+                endColumn = Math.max(startCell.column, columnIndex);
+                startRow = 0;
+                endRow = rows.length - 1;
             } else {
                 startColumn = Math.min(startCell.column, columnIndex);
                 endColumn = Math.max(startCell.column, columnIndex);
@@ -247,99 +327,129 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         setStartCell(null);
     };
 
-    const handleCopyToClipboard = useCallback(() => {
-        if (highlightedCells.length > 0) {
-            const rowIndices = [
-                ...new Set(highlightedCells.map((cell) => cell.row)),
-            ];
-            const columnIndices = [
-                ...new Set(highlightedCells.map((cell) => cell.column)),
-            ];
+    const handleCopyToClipboard = useCallback(
+        (withHeaders: boolean) => {
+            if (highlightedCells.length > 0) {
+                const rowIndices = [
+                    ...new Set(highlightedCells.map((cell) => cell.row)),
+                ];
+                const columnIndices = [
+                    ...new Set(highlightedCells.map((cell) => cell.column)),
+                ];
 
-            rowIndices.sort((a, b) => a - b);
-            columnIndices.sort((a, b) => a - b);
+                rowIndices.sort((a, b) => a - b);
+                columnIndices.sort((a, b) => a - b);
 
-            // Check if row or column indeces exists
-            let invalidIndeces = false;
-            rowIndices.some((rowIndex) => {
-                if (rows[rowIndex] === undefined) {
-                    // Row index is out of bounds
-                    invalidIndeces = true;
-                    return true;
-                }
-                return false;
-            });
-            columnIndices.some((columnIndex) => {
-                if (visibleColumns[columnIndex] === undefined) {
-                    // Column index is out of bounds
-                    invalidIndeces = true;
-                    return true;
-                }
-                return false;
-            });
-
-            // If any index is invalid, do not proceed
-            if (invalidIndeces) {
-                return;
-            }
-
-            let selectedData = '';
-            if (settings.copyFormat === 'tab') {
-                selectedData = rowIndices
-                    .map((rowIndex) => {
-                        const row = rows[rowIndex];
-                        return columnIndices
-                            .map((columnIndex) => {
-                                const cell = row.getVisibleCells()[columnIndex];
-                                return cell.getValue();
-                            })
-                            .join('\t');
-                    })
-                    .join('\n');
-            } else if (settings.copyFormat === 'csv') {
-                selectedData = rowIndices
-                    .map((rowIndex) => {
-                        const row = rows[rowIndex];
-                        return columnIndices
-                            .map((columnIndex) => {
-                                const cell = row.getVisibleCells()[columnIndex];
-                                return `"${(cell.getValue() as string).toString().replace(/"/g, '""')}"`;
-                            })
-                            .join(',');
-                    })
-                    .join('\n');
-            } else if (settings.copyFormat === 'json') {
-                const selectedRows = rowIndices.map((rowIndex) => {
-                    const row = rows[rowIndex];
-                    const selectedColumns = columnIndices.map((columnIndex) => {
-                        const cell = row.getVisibleCells()[columnIndex];
-                        return {
-                            [visibleColumns[columnIndex].id]: cell.getValue(),
-                        };
-                    });
-                    return selectedColumns.reduce((acc, curr) => {
-                        return { ...acc, ...curr };
-                    }, {});
+                // Check if row or column indeces exists
+                let invalidIndeces = false;
+                rowIndices.some((rowIndex) => {
+                    if (rows[rowIndex] === undefined) {
+                        // Row index is out of bounds
+                        invalidIndeces = true;
+                        return true;
+                    }
+                    return false;
                 });
-                selectedData = JSON.stringify(selectedRows, null, 2);
-            }
+                columnIndices.some((columnIndex) => {
+                    if (visibleColumns[columnIndex] === undefined) {
+                        // Column index is out of bounds
+                        invalidIndeces = true;
+                        return true;
+                    }
+                    return false;
+                });
 
-            window.electron.writeToClipboard(selectedData);
-            dispatch(
-                openSnackbar({
-                    message: 'Copied to clipboard',
-                    type: 'success',
-                    props: { duration: 1000 },
-                }),
-            );
-        }
-    }, [highlightedCells, rows, dispatch, settings.copyFormat, visibleColumns]);
+                // If any index is invalid, do not proceed
+                if (invalidIndeces) {
+                    return;
+                }
+
+                let selectedData = '';
+                if (settings.copyFormat === 'tab') {
+                    selectedData = rowIndices
+                        .map((rowIndex) => {
+                            const row = rows[rowIndex];
+                            return columnIndices
+                                .map((columnIndex) => {
+                                    const cell =
+                                        row.getVisibleCells()[columnIndex];
+                                    return cell.getValue();
+                                })
+                                .join('\t');
+                        })
+                        .join('\n');
+                    // If withHeaders is true, add headers
+                    if (withHeaders) {
+                        const headerRow = visibleColumns
+                            .filter((_, index) => columnIndices.includes(index))
+                            .map((column) => column.id)
+                            .join('\t');
+                        selectedData = `${headerRow}\n${selectedData}`;
+                    }
+                } else if (settings.copyFormat === 'csv') {
+                    selectedData = rowIndices
+                        .map((rowIndex) => {
+                            const row = rows[rowIndex];
+                            return columnIndices
+                                .map((columnIndex) => {
+                                    const cell =
+                                        row.getVisibleCells()[columnIndex];
+                                    return `"${(cell.getValue() as string).toString().replace(/"/g, '""')}"`;
+                                })
+                                .join(',');
+                        })
+                        .join('\n');
+                    // If withHeaders is true, add headers
+                    if (withHeaders) {
+                        const headerRow = visibleColumns
+                            .filter((_, index) => columnIndices.includes(index))
+                            .map(
+                                (column) =>
+                                    `"${column.id.replace(/"/g, '""')}"`,
+                            )
+                            .join(',');
+                        selectedData = `${headerRow}\n${selectedData}`;
+                    }
+                } else if (settings.copyFormat === 'json') {
+                    const selectedRows = rowIndices.map((rowIndex) => {
+                        const row = rows[rowIndex];
+                        const selectedColumns = columnIndices.map(
+                            (columnIndex) => {
+                                const cell = row.getVisibleCells()[columnIndex];
+                                return {
+                                    [visibleColumns[columnIndex].id]:
+                                        cell.getValue(),
+                                };
+                            },
+                        );
+                        return selectedColumns.reduce((acc, curr) => {
+                            return { ...acc, ...curr };
+                        }, {});
+                    });
+                    selectedData = JSON.stringify(selectedRows, null, 2);
+                }
+
+                window.electron.writeToClipboard(selectedData);
+                dispatch(
+                    openSnackbar({
+                        message: `Copied to clipboard ${withHeaders ? 'with headers' : ''}`,
+                        type: 'success',
+                        props: { duration: 1000 },
+                    }),
+                );
+            }
+        },
+        [highlightedCells, rows, dispatch, settings.copyFormat, visibleColumns],
+    );
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.ctrlKey && event.key === 'c') {
+            if (event.ctrlKey && event.altKey && event.key === 'c') {
+                // Ctrl + Alt + C to copy selected cells to clipboard
+                handleCopyToClipboard(!settings.copyWithHeaders);
+            } else if (event.ctrlKey && event.key === 'c') {
                 // Ctrl + C to copy selected cells to clipboard
-                handleCopyToClipboard();
+                handleCopyToClipboard(settings.copyWithHeaders);
             } else if (event.key === 'Escape') {
                 // Escape to clear selection
                 setHighlightedCells([]);
@@ -349,7 +459,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [highlightedCells, handleCopyToClipboard]);
+    }, [highlightedCells, handleCopyToClipboard, settings.copyWithHeaders]);
 
     useEffect(() => {
         document.addEventListener('mouseup', handleMouseUp);
@@ -367,7 +477,8 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             goTo.row !== null &&
             currentPage ===
                 Math.floor(Math.max(goTo.row - 1, 0) / settings.pageSize) &&
-            isLoading === false
+            isLoading === false &&
+            tableHeight > 0
         ) {
             const row = (goTo.row - 1) % settings.pageSize;
             rowVirtualizer.scrollToIndex(row, { align: 'center' });
@@ -399,10 +510,11 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         currentPage,
         handleCellClick,
         isLoading,
+        tableHeight,
     ]);
 
     useEffect(() => {
-        if (goTo.column !== null && goTo.row === null) {
+        if (goTo.column !== null && goTo.row === null && tableHeight > 0) {
             // Add +1 as the first column is the row number
             const columnIndex =
                 tableData.header.findIndex(
@@ -428,13 +540,17 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         columnVirtualizer,
         dispatch,
         handleColumnSelect,
+        tableHeight,
     ]);
 
     // Select control
     const select = useAppSelector((state) => state.ui.control.select);
 
     useEffect(() => {
-        if (select.row !== null || select.column !== null) {
+        if (
+            select.row !== null ||
+            (select.column !== null && tableHeight > 0)
+        ) {
             let columnIndex = -1;
             if (select.column !== null) {
                 // Add +1 as the first column is the row number
@@ -468,32 +584,40 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         handleCellClick,
         handleColumnSelect,
         settings.pageSize,
+        tableHeight,
     ]);
 
+    const updatedSettings = { ...settings, height: tableHeight };
+
     return (
-        <View
-            table={table}
-            tableContainerRef={tableContainerRef}
-            visibleColumns={visibleColumns}
-            virtualPaddingLeft={virtualPaddingLeft}
-            virtualPaddingRight={virtualPaddingRight}
-            virtualColumns={virtualColumns}
-            virtualRows={virtualRows}
-            rows={rows}
-            highlightedCells={highlightedCells}
-            handleCellClick={handleCellClick}
-            handleMouseDown={handleMouseDown}
-            handleMouseOver={handleMouseOver}
-            handleContextMenu={handleContextMenu}
-            isLoading={isLoading}
-            dynamicRowHeight={settings.dynamicRowHeight}
-            rowVirtualizer={rowVirtualizer}
-            sorting={sorting}
-            onSortingChange={setSorting}
-            hasPagination={tableData?.metadata?.records > settings.pageSize}
-            filteredColumns={filteredColumns}
-            showTypeIcons={settings.showTypeIcons}
-        />
+        <Box ref={viewContainerRef} style={styles.fullHeight}>
+            {/* If height is not measured yet, do not render */}
+            {tableHeight !== 0 && (
+                <View
+                    table={table}
+                    tableContainerRef={tableContainerRef}
+                    visibleColumns={visibleColumns}
+                    virtualPaddingLeft={virtualPaddingLeft}
+                    virtualPaddingRight={virtualPaddingRight}
+                    virtualColumns={virtualColumns}
+                    virtualRows={virtualRows}
+                    rows={rows}
+                    highlightedCells={highlightedCells}
+                    annotatedCells={annotatedCells}
+                    handleCellClick={handleCellClick}
+                    handleMouseDown={handleMouseDown}
+                    handleMouseOver={handleMouseOver}
+                    handleContextMenu={handleContextMenu}
+                    handleResizeEnd={columnVirtualizer.measure}
+                    isLoading={isLoading}
+                    settings={updatedSettings}
+                    rowVirtualizer={rowVirtualizer}
+                    sorting={sorting}
+                    onSortingChange={setSorting}
+                    filteredColumns={filteredColumns}
+                />
+            )}
+        </Box>
     );
 };
 

@@ -1,8 +1,19 @@
-import React, { useState, useEffect, useCallback, useContext } from 'react';
+import React, {
+    useState,
+    useEffect,
+    useCallback,
+    useContext,
+    useMemo,
+} from 'react';
 import Stack from '@mui/material/Stack';
 import Paper from '@mui/material/Paper';
 import TablePagination from '@mui/material/TablePagination';
-import { IHeaderCell, ITableData, IMask } from 'interfaces/common';
+import {
+    IHeaderCell,
+    ITableData,
+    IMask,
+    ParsedValidationReport,
+} from 'interfaces/common';
 import DatasetView from 'renderer/components/DatasetView';
 import ContextMenu from 'renderer/components/DatasetView/ContextMenu';
 import AppContext from 'renderer/utils/AppContext';
@@ -17,6 +28,7 @@ import { getData } from 'renderer/utils/readData';
 import estimateWidth from 'renderer/utils/estimateWidth';
 import deepEqual from 'renderer/utils/deepEqual';
 import DatasetSidebar from 'renderer/components/DatasetView/Sidebar';
+import getIssueAnnotations from 'renderer/utils/getIssueAnnotations';
 
 const styles = {
     main: {
@@ -57,7 +69,7 @@ const updateWidth = (
 const DatasetContainer: React.FC = () => {
     const dispatch = useAppDispatch();
 
-    const fileId = useAppSelector((state) => state.ui.currentFileId);
+    const currentFileId = useAppSelector((state) => state.ui.currentFileId);
     const pageSize = useAppSelector((state) => state.settings.viewer.pageSize);
     const settings = useAppSelector((state) => state.settings);
     const sidebarOpen = useAppSelector((state) => state.ui.viewer.sidebarOpen);
@@ -97,8 +109,23 @@ const DatasetContainer: React.FC = () => {
             const rows = table.data;
             // In case mask is used, we need to get the index of the column with mask applied
             let updatedColumnIndex = columnIndex;
-            if (currentMask !== null && currentMask.columns.length > 0) {
-                const originalId = table.header[columnIndex - 1].id;
+            if (
+                currentMask !== null &&
+                currentMask.columns.length > 0 &&
+                currentMask.columns.length >= columnIndex
+            ) {
+                // Find id with the mask applied
+                const allIds = table.header.map((header) => header.id);
+                // Mask order can be different from original dataset
+                const maskOrderedColumns = currentMask.columns
+                    .slice()
+                    .sort((a, b) => {
+                        return allIds.indexOf(a) - allIds.indexOf(b);
+                    });
+                // Mask might contain variables not in the dataset
+                const originalId = maskOrderedColumns.filter((id) =>
+                    allIds.includes(id),
+                )[columnIndex - 1];
                 updatedColumnIndex =
                     table.header.findIndex((item) => item.id === originalId) +
                     1;
@@ -128,9 +155,13 @@ const DatasetContainer: React.FC = () => {
 
     // Load initial data
     useEffect(() => {
+        if (table?.fileId === currentFileId) {
+            // If table is already loaded for the current fileId, do not reload
+            return;
+        }
         setTable(null);
         const readDataset = async () => {
-            if (fileId === '' || apiService === null) {
+            if (currentFileId === '' || apiService === null) {
                 return;
             }
 
@@ -139,16 +170,18 @@ const DatasetContainer: React.FC = () => {
             try {
                 newData = await getData(
                     apiService,
-                    fileId,
+                    currentFileId,
                     0,
                     pageSize,
                     settings,
+                    undefined,
+                    currentFilter === null ? undefined : currentFilter,
                 );
             } catch (error) {
                 // Remove current fileId as something is wrong with itj
                 dispatch(
                     closeDataset({
-                        fileId,
+                        fileId: currentFileId,
                     }),
                 );
                 dispatch(
@@ -173,7 +206,15 @@ const DatasetContainer: React.FC = () => {
         };
 
         readDataset();
-    }, [dispatch, fileId, pageSize, apiService, settings]);
+    }, [
+        dispatch,
+        currentFileId,
+        pageSize,
+        apiService,
+        settings,
+        currentFilter,
+        table?.fileId,
+    ]);
 
     // Pagination
     const page = useAppSelector((state) => state.ui.currentPage);
@@ -192,7 +233,7 @@ const DatasetContainer: React.FC = () => {
             const readNext = async (start: number) => {
                 const newData = await getData(
                     apiService,
-                    fileId,
+                    currentFileId,
                     start,
                     pageSize,
                     settings,
@@ -212,12 +253,16 @@ const DatasetContainer: React.FC = () => {
 
             readNext((newPage as number) * pageSize);
         },
-        [fileId, pageSize, table, dispatch, apiService, settings],
+        [currentFileId, pageSize, table, dispatch, apiService, settings],
     );
 
     // Filter change
     useEffect(() => {
         if (table === null || apiService === null) {
+            return;
+        }
+        // Check current table data corresponds to current file
+        if (table.fileId !== currentFileId) {
             return;
         }
         // Check if filter is already applied
@@ -233,7 +278,7 @@ const DatasetContainer: React.FC = () => {
         const readDataset = async () => {
             const newData = await getData(
                 apiService,
-                fileId,
+                currentFileId,
                 0,
                 pageSize,
                 settings,
@@ -279,7 +324,7 @@ const DatasetContainer: React.FC = () => {
         readDataset();
     }, [
         dispatch,
-        fileId,
+        currentFileId,
         pageSize,
         table,
         currentFilter,
@@ -300,6 +345,62 @@ const DatasetContainer: React.FC = () => {
         }
     }, [goToRow, page, pageSize, handleChangePage]);
 
+    // Report issues
+
+    const showIssues = useAppSelector(
+        (state) => state.ui.dataSettings[currentFileId]?.showIssues,
+    );
+
+    const filteredIssues = useAppSelector(
+        (state) => state.ui.dataSettings[currentFileId]?.filteredIssues,
+    );
+
+    const currentReportId = useAppSelector(
+        (state) => state.ui.validationPage.currentReportId,
+    );
+
+    const reportData: ParsedValidationReport | null = useAppSelector(
+        (state) =>
+            state.data.validator.reportData[currentReportId || ''] || null,
+    );
+
+    const validationReport = useAppSelector(
+        (state) => state.data.validator.reports[currentReportId || ''] || null,
+    );
+
+    // Check if current file is in the report
+    const isCurrentFileInReport = useMemo(() => {
+        // If issues are not enabled, no need to check further
+        if (!showIssues || validationReport === null) {
+            return false;
+        }
+        // Get path to the current file
+        const currentFile = apiService.getOpenedFiles(currentFileId);
+        const path = currentFile[0]?.path || '';
+
+        if (
+            validationReport &&
+            path &&
+            validationReport.files.map((item) => item.file).includes(path)
+        ) {
+            return true;
+        }
+        return false;
+    }, [validationReport, currentFileId, apiService, showIssues]);
+
+    // Convert report into annotation map
+    const issueAnnotations = useMemo(() => {
+        if (!isCurrentFileInReport) {
+            return null;
+        }
+        return getIssueAnnotations(
+            reportData,
+            table,
+            currentMask,
+            filteredIssues,
+        );
+    }, [reportData, table, currentMask, isCurrentFileInReport, filteredIssues]);
+
     if (table === null) {
         return null;
     }
@@ -309,10 +410,14 @@ const DatasetContainer: React.FC = () => {
             <Stack sx={styles.main}>
                 <Paper sx={styles.table}>
                     <DatasetView
-                        key={`${fileId}:${page}`} // Add key prop to force unmount/remount
+                        key={`${currentFileId}:${page}`} // Add key prop to force unmount/remount
                         tableData={table}
+                        settings={settings.viewer}
                         isLoading={isLoading}
                         handleContextMenu={handleContextMenu}
+                        currentPage={page}
+                        currentMask={currentMask}
+                        annotatedCells={issueAnnotations}
                     />
                     <ContextMenu
                         open={contextMenu.open}

@@ -10,8 +10,10 @@ import {
     ListItemText,
     IconButton,
     Drawer,
+    Stack,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 const styles = {
     drawer: {
@@ -41,7 +43,7 @@ const styles = {
     filterInput: {
         py: 1,
     },
-    closeIcon: {
+    actionIcon: {
         fontSize: '24px',
     },
 };
@@ -66,9 +68,20 @@ const DatasetSidebar: React.FC<{
 
     const [selectedIndex, setSelectedIndex] = useState(0);
 
-    const filteredFiles = openedFiles.filter((file) =>
-        file.name?.toLowerCase().includes(filterText.toLowerCase()),
-    );
+    const filteredFiles = openedFiles
+        .filter((file) =>
+            file.name?.toLowerCase().includes(filterText.toLowerCase()),
+        )
+        .map((file) => {
+            // Get the last folder name from the file path
+            const separator = window.electron.isWindows ? '\\' : '/';
+            const folderName = file.path.split(separator).at(-2);
+
+            return {
+                ...file,
+                folderName,
+            };
+        });
 
     // When sidebar is open, set the current file as selected
     useEffect(() => {
@@ -107,6 +120,27 @@ const DatasetSidebar: React.FC<{
             .getOpenedFiles()
             .findIndex((file) => file.fileId === currentFileId);
         setSelectedIndex(newFileIndex);
+    };
+
+    const handleOpenInNewWindow = (
+        event: React.MouseEvent<HTMLElement>,
+        fileId: string,
+        filePath: string,
+    ) => {
+        event.stopPropagation();
+        // Close the dataset in the current window
+        handleCloseDataset(event, fileId);
+        // Open the dataset in a new window
+        // If Ctrl key is pressed, resize the current window to the top half of the screen and the new window to the bottom half
+        if (event.shiftKey) {
+            apiService.openInNewWindow(filePath, 'right');
+            apiService.resizeWindow('left');
+        } else if (event.ctrlKey) {
+            apiService.openInNewWindow(filePath, 'bottom');
+            apiService.resizeWindow('top');
+        } else {
+            apiService.openInNewWindow(filePath);
+        }
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -162,16 +196,32 @@ const DatasetSidebar: React.FC<{
                         key={file.fileId}
                         sx={styles.item}
                         secondaryAction={
-                            <IconButton
-                                onClick={(event) =>
-                                    handleCloseDataset(event, file.fileId)
-                                }
-                            >
-                                <CloseIcon
-                                    fontSize="small"
-                                    sx={styles.closeIcon}
-                                />
-                            </IconButton>
+                            <Stack direction="row" spacing={1}>
+                                <IconButton
+                                    onClick={(event) =>
+                                        handleOpenInNewWindow(
+                                            event,
+                                            file.fileId,
+                                            file.path,
+                                        )
+                                    }
+                                >
+                                    <OpenInNewIcon
+                                        fontSize="small"
+                                        sx={styles.actionIcon}
+                                    />
+                                </IconButton>
+                                <IconButton
+                                    onClick={(event) =>
+                                        handleCloseDataset(event, file.fileId)
+                                    }
+                                >
+                                    <CloseIcon
+                                        fontSize="small"
+                                        sx={styles.actionIcon}
+                                    />
+                                </IconButton>
+                            </Stack>
                         }
                     >
                         <ListItemButton
@@ -181,7 +231,7 @@ const DatasetSidebar: React.FC<{
                         >
                             <ListItemText
                                 primary={file.name}
-                                secondary={file.type}
+                                secondary={file.folderName}
                                 slotProps={{
                                     secondary: { sx: styles.type },
                                 }}

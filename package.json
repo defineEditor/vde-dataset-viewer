@@ -103,12 +103,12 @@
         "electron-log": "^4.4.8",
         "electron-updater": "^6.1.4",
         "js-array-filter": "^0.1.4",
-        "js-stream-dataset-json": "^0.6.1",
+        "js-stream-dataset-json": "^0.7.1",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "react-redux": "^8.0.2",
         "redux": "^4.2.0",
-        "xport-js": "^0.2.5"
+        "xport-js": "^0.3.1"
     },
     "devDependencies": {
         "@electron/rebuild": "^3.3.0",
@@ -188,20 +188,14 @@
         ],
         "fileAssociations": [
             {
-                "ext": "json",
-                "name": "JSON",
-                "description": "Dataset JSON File",
-                "role": "Viewer"
-            },
-            {
                 "ext": "ndjson",
                 "name": "NDJSON",
                 "description": "Dataset JSON File",
                 "role": "Viewer"
             },
             {
-                "ext": "djsc",
-                "name": "DJSC",
+                "ext": "dsjc",
+                "name": "DSJC",
                 "description": "Dataset JSON Compressed File",
                 "role": "Viewer"
             },
@@ -247,7 +241,9 @@
             ]
         },
         "nsis": {
-            "artifactName": "${productName}.Setup.${version}.${ext}"
+            "artifactName": "${productName}.Setup.${version}.${ext}",
+            "allowToChangeInstallationDirectory": true,
+            "oneClick": false
         },
         "appImage": {
             "artifactName": "${productName}.${version}.${ext}"

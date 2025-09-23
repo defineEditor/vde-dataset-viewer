@@ -1,6 +1,6 @@
 {
   "name": "vde-dataset-viewer",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "VDE Dataset Viewer",
   "license": "MIT",
   "author": {
@@ -14,7 +14,6 @@
     "link-modules": "node -r ts-node/register ../../.erb/scripts/link-modules.ts"
   },
   "dependencies": {
-        "js-stream-dataset-json": "^0.6.1",
-        "js-stream-sas7bdat": "^0.1.3"
+    "js-stream-sas7bdat": "^0.1.5"
   }
 }

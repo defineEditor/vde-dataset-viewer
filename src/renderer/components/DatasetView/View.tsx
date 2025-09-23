@@ -8,6 +8,8 @@ import {
     Paper,
     Box,
     TableSortLabel,
+    IconButton,
+    Tooltip,
 } from '@mui/material';
 import {
     flexRender,
@@ -17,13 +19,45 @@ import {
     SortingState as ISortingState,
     Updater as IUpdater,
 } from '@tanstack/react-table';
+import SelectAllIcon from '@mui/icons-material/SelectAll';
 import FilterIcon from '@mui/icons-material/FilterAlt';
 import FontDownloadIcon from '@mui/icons-material/FontDownload';
 import LooksOneIcon from '@mui/icons-material/LooksOne';
 import AccessTimeIcon from '@mui/icons-material/HourglassFull';
 import { VirtualItem, Virtualizer } from '@tanstack/react-virtual';
-import { ITableRow } from 'interfaces/common';
+import { ITableRow, TableSettings } from 'interfaces/common';
 import Loading from 'renderer/components/Loading';
+
+const getContainerStyle = (settings: TableSettings): React.CSSProperties => {
+    const result: React.CSSProperties = {
+        overflow: 'auto',
+        position: 'relative',
+        height: settings.height ? `${settings.height}px` : '100vh',
+        userSelect: 'none',
+    };
+    if (settings.width) {
+        result.width = `${settings.width}px`;
+    }
+    return result;
+};
+
+const getLoadingStyle = (settings: TableSettings): React.CSSProperties => {
+    return {
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        display: 'flex',
+        flexDirection: 'column',
+        transform: 'translate(-50%, -50%)',
+        zIndex: 999,
+        scale:
+            settings.height && settings.height > 400
+                ? '1'
+                : settings.height
+                  ? settings.height / 400
+                  : '1',
+    };
+};
 
 const styles = {
     header: {
@@ -36,18 +70,6 @@ const styles = {
     headerColumn: {
         display: 'flex',
         width: '100%',
-    },
-    containerWithPage: {
-        overflow: 'auto',
-        position: 'relative',
-        height: 'calc(100vh - 116px)', // 116px - toolbar + pagination
-        userSelect: 'none',
-    },
-    containerWithoutPage: {
-        overflow: 'auto',
-        position: 'relative',
-        height: 'calc(100vh - 64px)', // 64 - toolbar
-        userSelect: 'none',
     },
     table: {
         display: 'grid',
@@ -65,7 +87,7 @@ const styles = {
         display: 'flex',
     },
     tableHeaderCell: {
-        padding: 1,
+        padding: 0,
         fontFamily: 'Roboto Mono',
         display: 'flex',
         position: 'relative',
@@ -75,10 +97,17 @@ const styles = {
     tableHeaderLabel: {
         width: '100%',
         textAlign: 'center',
+        flex: 1,
+        justifyContent: 'center',
+    },
+    tableHeaderText: {
+        py: 1,
+        pl: 1,
     },
     tableCellDynamic: {
         border: '1px solid rgba(224, 224, 224, 1)',
         fontFamily: 'Roboto Mono',
+        whiteSpace: 'pre-wrap',
         cursor: 'pointer',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
@@ -88,7 +117,7 @@ const styles = {
     tableCellFixed: {
         border: '1px solid rgba(224, 224, 224, 1)',
         fontFamily: 'Roboto Mono',
-        whiteSpace: 'nowrap',
+        whiteSpace: 'pre',
         cursor: 'pointer',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
@@ -113,6 +142,14 @@ const styles = {
     highlightedCell: {
         backgroundColor: '#42a5f533',
     },
+    annotatedCell: {
+        backgroundColor: '#ffe082',
+        border: '1px solid #ffca28',
+    },
+    highlightedAnnotatedCell: {
+        backgroundColor: '#ffe08290',
+        border: '1px solid #ffca2890',
+    },
     headerRowNumberCell: {
         justifyContent: 'center',
         fontSize: 'small',
@@ -134,15 +171,7 @@ const styles = {
         maxHeight: '100%',
         textAlign: 'center',
     },
-    loading: {
-        position: 'fixed',
-        top: '50%',
-        left: '50%',
-        display: 'flex',
-        flexDirection: 'column',
-        transform: 'translate(-50%, -50%)',
-        zIndex: 999,
-    },
+    loading: {},
     sponsored: {
         marginTop: '10px',
         fontSize: '14px',
@@ -158,6 +187,20 @@ const styles = {
         fontSize: '16px',
         color: 'grey.600',
         ml: '4px',
+    },
+    squareIconButton: {
+        aspectRatio: '1 / 1',
+        minWidth: 0,
+        textAlign: 'center',
+        flex: 1,
+        justifyContent: 'center',
+    },
+    allSpace: {
+        width: '100%',
+        height: '100%',
+    },
+    preWrap: {
+        whiteSpace: 'pre-wrap',
     },
 };
 
@@ -187,12 +230,12 @@ const DatasetViewUI: React.FC<{
     handleCellClick: (rowIndex: number, columnIndex: number) => void;
     handleMouseDown: (rowIndex: number, columnIndex: number) => void;
     handleMouseOver: (rowIndex: number, columnIndex: number) => void;
+    handleResizeEnd: () => void;
     isLoading: boolean;
-    dynamicRowHeight: boolean;
     rowVirtualizer: Virtualizer<HTMLDivElement, Element>;
     sorting: ISortingState;
     onSortingChange: (updater: IUpdater<ISortingState>) => void;
-    hasPagination: boolean;
+    settings: TableSettings;
     handleContextMenu?: (
         event: React.MouseEvent<HTMLTableCellElement, MouseEvent>,
         rowIndex: number,
@@ -200,8 +243,7 @@ const DatasetViewUI: React.FC<{
     ) => void;
     filteredColumns?: string[];
     containerStyle?: React.CSSProperties;
-    hideRowNumbers?: boolean;
-    showTypeIcons?: boolean;
+    annotatedCells?: Map<string, { text: string; color: string }> | null;
 }> = ({
     table,
     tableContainerRef,
@@ -215,27 +257,21 @@ const DatasetViewUI: React.FC<{
     handleCellClick,
     handleMouseDown,
     handleMouseOver,
+    handleResizeEnd,
     isLoading,
-    dynamicRowHeight,
+    settings,
     rowVirtualizer,
     sorting,
     onSortingChange,
-    hasPagination,
     handleContextMenu = (_event, _rowIndex, _columnIndex) => {},
     filteredColumns = [],
     containerStyle = undefined,
-    hideRowNumbers = false,
-    showTypeIcons = false,
+    annotatedCells = null,
 }) => {
     return (
         <Paper
             ref={tableContainerRef}
-            sx={
-                containerStyle ||
-                (hasPagination
-                    ? styles.containerWithPage
-                    : styles.containerWithoutPage)
-            }
+            sx={containerStyle || getContainerStyle(settings)}
         >
             <Table sx={styles.table}>
                 <TableHead sx={styles.header}>
@@ -244,7 +280,7 @@ const DatasetViewUI: React.FC<{
                             key={headerGroup.id}
                             style={styles.headerColumn}
                         >
-                            {!hideRowNumbers && (
+                            {!settings.hideRowNumbers && (
                                 <TableCell
                                     sx={{
                                         ...styles.tableHeaderCell,
@@ -252,13 +288,19 @@ const DatasetViewUI: React.FC<{
                                         ...styles.headerRowNumberCell,
                                     }}
                                 >
-                                    <Box sx={styles.tableHeaderLabel}>
-                                        {flexRender(
-                                            headerGroup.headers[0].column
-                                                .columnDef.header,
-                                            headerGroup.headers[0].getContext(),
-                                        )}
-                                    </Box>
+                                    <Tooltip
+                                        title="Select All"
+                                        enterDelay={1000}
+                                    >
+                                        <IconButton
+                                            sx={styles.squareIconButton}
+                                            onClick={() => {
+                                                handleMouseDown(-1, -1);
+                                            }}
+                                        >
+                                            <SelectAllIcon />
+                                        </IconButton>
+                                    </Tooltip>
                                 </TableCell>
                             )}
                             {virtualPaddingLeft ? (
@@ -303,6 +345,19 @@ const DatasetViewUI: React.FC<{
                                                     },
                                                 ]);
                                             }}
+                                            onMouseDown={(
+                                                event: React.MouseEvent,
+                                            ) => {
+                                                if (event.button === 0) {
+                                                    handleMouseDown(
+                                                        0,
+                                                        vc.index + 1,
+                                                    );
+                                                }
+                                            }}
+                                            onMouseOver={() =>
+                                                handleMouseOver(0, vc.index + 1)
+                                            }
                                             active={
                                                 !!sorting.find(
                                                     (sort) =>
@@ -317,12 +372,16 @@ const DatasetViewUI: React.FC<{
                                                     ? 'desc'
                                                     : 'asc'
                                             }
+                                            sx={styles.tableHeaderLabel}
                                         >
-                                            {flexRender(
-                                                header.column.columnDef.header,
-                                                header.getContext(),
-                                            )}
-                                            {showTypeIcons &&
+                                            <Box sx={styles.tableHeaderText}>
+                                                {flexRender(
+                                                    header.column.columnDef
+                                                        .header,
+                                                    header.getContext(),
+                                                )}
+                                            </Box>
+                                            {settings.showTypeIcons &&
                                                 getTypeIcon(
                                                     header.column.columnDef.meta
                                                         ?.type,
@@ -342,15 +401,13 @@ const DatasetViewUI: React.FC<{
                                                     header.column.resetSize(),
                                                 onMouseDown:
                                                     header.getResizeHandler(),
+                                                onMouseUp: () =>
+                                                    handleResizeEnd(),
                                                 onTouchStart:
                                                     header.getResizeHandler(),
                                                 className: `resizer ${
                                                     table.options
                                                         .columnResizeDirection
-                                                } ${
-                                                    header.column.getIsResizing()
-                                                        ? 'isResizing'
-                                                        : ''
                                                 }`,
                                                 style: {
                                                     transform:
@@ -398,12 +455,12 @@ const DatasetViewUI: React.FC<{
                             return (
                                 <TableRow
                                     data-index={
-                                        dynamicRowHeight
+                                        settings.dynamicRowHeight
                                             ? virtualRow.index
                                             : undefined
                                     }
                                     ref={(node) =>
-                                        dynamicRowHeight
+                                        settings.dynamicRowHeight
                                             ? rowVirtualizer.measureElement(
                                                   node,
                                               )
@@ -412,7 +469,7 @@ const DatasetViewUI: React.FC<{
                                     key={row.id}
                                     sx={{
                                         ...styles.tableRow,
-                                        ...(dynamicRowHeight
+                                        ...(settings.dynamicRowHeight
                                             ? {}
                                             : {
                                                   height: `${virtualRow.size}px`,
@@ -420,10 +477,10 @@ const DatasetViewUI: React.FC<{
                                         transform: `translateY(${virtualRow.start}px)`,
                                     }}
                                 >
-                                    {!hideRowNumbers && (
+                                    {!settings.hideRowNumbers && (
                                         <TableCell
                                             sx={{
-                                                ...(dynamicRowHeight
+                                                ...(settings.dynamicRowHeight
                                                     ? styles.tableCellDynamic
                                                     : styles.tableCellFixed),
                                                 width: visibleCells[0].column.getSize(),
@@ -465,6 +522,14 @@ const DatasetViewUI: React.FC<{
                                     ) : null}
                                     {virtualColumns.map((vc) => {
                                         const cell = visibleCells[vc.index + 1]; // Adjust index for row number
+
+                                        let cellStyle: React.CSSProperties = {
+                                            ...(settings.dynamicRowHeight
+                                                ? styles.tableCellDynamic
+                                                : styles.tableCellFixed),
+                                            width: cell.column.getSize(),
+                                        };
+
                                         const isHighlighted =
                                             highlightedCells.some(
                                                 (highlightedCell) =>
@@ -473,18 +538,43 @@ const DatasetViewUI: React.FC<{
                                                     highlightedCell.column ===
                                                         vc.index + 1,
                                             );
+
+                                        const annotation =
+                                            annotatedCells !== null &&
+                                            annotatedCells.get(
+                                                `${virtualRow.index}#${vc.index + 1}`,
+                                            );
+                                        const isAnnotated = !!annotation;
+
+                                        if (isAnnotated && isHighlighted) {
+                                            cellStyle = {
+                                                ...cellStyle,
+                                                ...styles.highlightedAnnotatedCell,
+                                            };
+                                        } else if (isAnnotated) {
+                                            cellStyle = {
+                                                ...cellStyle,
+                                                ...styles.annotatedCell,
+                                            };
+                                        } else if (isHighlighted) {
+                                            cellStyle = {
+                                                ...cellStyle,
+                                                ...styles.highlightedCell,
+                                            };
+                                        }
+
+                                        if (cell.column.columnDef.meta?.style) {
+                                            cellStyle = {
+                                                ...cellStyle,
+                                                ...cell.column.columnDef.meta
+                                                    .style,
+                                            };
+                                        }
+
                                         return (
                                             <TableCell
                                                 key={cell.id}
-                                                sx={{
-                                                    ...(dynamicRowHeight
-                                                        ? styles.tableCellDynamic
-                                                        : styles.tableCellFixed),
-                                                    width: cell.column.getSize(),
-                                                    ...(isHighlighted
-                                                        ? styles.highlightedCell
-                                                        : {}),
-                                                }}
+                                                sx={cellStyle}
                                                 onClick={() =>
                                                     handleCellClick(
                                                         virtualRow.index,
@@ -511,9 +601,35 @@ const DatasetViewUI: React.FC<{
                                                     )
                                                 }
                                             >
-                                                {flexRender(
-                                                    cell.column.columnDef.cell,
-                                                    cell.getContext(),
+                                                {isAnnotated ? (
+                                                    <Tooltip
+                                                        title={
+                                                            <Box
+                                                                sx={
+                                                                    styles.preWrap
+                                                                }
+                                                            >
+                                                                {
+                                                                    annotation?.text
+                                                                }
+                                                            </Box>
+                                                        }
+                                                        placement="top"
+                                                    >
+                                                        <Box
+                                                            sx={styles.allSpace}
+                                                        >
+                                                            {
+                                                                cell.getValue() as string
+                                                            }
+                                                        </Box>
+                                                    </Tooltip>
+                                                ) : (
+                                                    flexRender(
+                                                        cell.column.columnDef
+                                                            .cell,
+                                                        cell.getContext(),
+                                                    )
                                                 )}
                                             </TableCell>
                                         );
@@ -532,7 +648,7 @@ const DatasetViewUI: React.FC<{
                 </TableBody>
             </Table>
             {isLoading && (
-                <Box sx={styles.loading}>
+                <Box sx={getLoadingStyle(settings)}>
                     <Loading />
                     <Box sx={styles.sponsored}>Sponsored by:</Box>
                 </Box>

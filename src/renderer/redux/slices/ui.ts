@@ -3,10 +3,13 @@ import { ui as initialUi } from 'renderer/redux/initialState';
 import {
     IUiSnackbar,
     IUiModal,
+    IUiValidation,
+    IUiValidationPage,
     AllowedPathnames,
     DatasetType,
     ModalType,
     DatasetMode,
+    IUiViewer,
 } from 'interfaces/common';
 import { paths } from 'misc/constants';
 
@@ -68,6 +71,11 @@ export const uiSlice = createSlice({
                     state.control = initialUi.control;
                 }
             }
+            // Check if there are any settings
+            if (state.dataSettings[fileId]) {
+                // Remove the settings for this dataset
+                delete state.dataSettings[fileId];
+            }
         },
         setPathname: (
             state,
@@ -90,16 +98,24 @@ export const uiSlice = createSlice({
             action: PayloadAction<{
                 row?: number | null;
                 column?: string | null;
+                cellSelection?: boolean;
             }>,
         ) => {
-            const { row, column } = action.payload;
+            const { row, column, cellSelection } = action.payload;
             if (row !== undefined) {
                 state.control.goTo.row = row;
             }
             if (column !== undefined) {
                 state.control.goTo.column = column;
             }
-            if (row !== undefined && column !== undefined) {
+            if (cellSelection !== undefined) {
+                state.control.goTo.cellSelection = cellSelection;
+            }
+            if (
+                row !== undefined &&
+                column !== undefined &&
+                cellSelection === undefined
+            ) {
                 state.control.goTo.cellSelection = true;
             } else if (!state.control.goTo.row && !state.control.goTo.column) {
                 // Reset the value once both column and cell are selected
@@ -139,6 +155,12 @@ export const uiSlice = createSlice({
         setDatasetInfoTab: (state, action: PayloadAction<0 | 1>) => {
             state.viewer.datasetInfoTab = action.payload;
         },
+        setValidationModalTab: (
+            state,
+            action: PayloadAction<IUiViewer['validatorTab']>,
+        ) => {
+            state.viewer.validatorTab = action.payload;
+        },
         setFilterInputMode: (
             state,
             action: PayloadAction<'manual' | 'interactive'>,
@@ -147,6 +169,95 @@ export const uiSlice = createSlice({
         },
         toggleSidebar: (state) => {
             state.viewer.sidebarOpen = !state.viewer.sidebarOpen;
+        },
+        setValidationTab: (
+            state,
+            action: PayloadAction<IUiValidationPage['currentTab']>,
+        ) => {
+            state.validationPage.currentTab = action.payload;
+        },
+        setValidationReport: (state, action: PayloadAction<string | null>) => {
+            state.validationPage.currentReportId = action.payload;
+        },
+        setValidationReportTab: (
+            state,
+            action: PayloadAction<IUiValidationPage['currentReportTab']>,
+        ) => {
+            state.validationPage.currentReportTab = action.payload;
+        },
+        toggleShowOnlyDatasetsWithIssues: (state) => {
+            state.validationPage.showOnlyDatasetsWithIssues =
+                !state.validationPage.showOnlyDatasetsWithIssues;
+        },
+        setReportSummaryType: (
+            state,
+            action: PayloadAction<IUiValidationPage['reportSummaryType']>,
+        ) => {
+            state.validationPage.reportSummaryType = action.payload;
+        },
+        setZoomLevel: (state, action: PayloadAction<number>) => {
+            state.zoomLevel = action.payload;
+        },
+        updateValidation: (
+            state,
+            action: PayloadAction<{
+                validationId: string;
+                validation: Partial<IUiValidation>;
+            }>,
+        ) => {
+            const { validationId, validation } = action.payload;
+            if (!state.validation[validationId]) {
+                state.validation[validationId] = {
+                    status: 'not started',
+                    validationProgress: 0,
+                    conversionProgress: null,
+                    dateCompleted: null,
+                    ...validation,
+                };
+            } else {
+                state.validation[validationId] = {
+                    ...state.validation[validationId],
+                    ...validation,
+                };
+            }
+        },
+        setShowIssues: (
+            state,
+            action: PayloadAction<{
+                id: string;
+                show: boolean;
+                filteredIssues?: string[];
+            }>,
+        ) => {
+            const { id, show, filteredIssues = null } = action.payload;
+            if (!state.dataSettings[id]) {
+                state.dataSettings[id] = {
+                    showIssues: show,
+                    filteredIssues: filteredIssues || [],
+                };
+            } else {
+                state.dataSettings[id].showIssues = show;
+                if (filteredIssues && filteredIssues.length > 0) {
+                    state.dataSettings[id].filteredIssues = filteredIssues;
+                } else if (!show) {
+                    // Clear filtered issues when disabling issue view
+                    state.dataSettings[id].filteredIssues = [];
+                }
+            }
+        },
+        setIssueFilter: (
+            state,
+            action: PayloadAction<{ id: string; filter: string[] }>,
+        ) => {
+            const { id, filter } = action.payload;
+            if (!state.dataSettings[id]) {
+                state.dataSettings[id] = {
+                    showIssues: true,
+                    filteredIssues: filter,
+                };
+            } else {
+                state.dataSettings[id].filteredIssues = filter;
+            }
         },
     },
 });
@@ -164,8 +275,18 @@ export const {
     setSelect,
     setPage,
     setDatasetInfoTab,
+    setValidationModalTab,
     setFilterInputMode,
     toggleSidebar,
+    updateValidation,
+    setValidationReport,
+    setValidationTab,
+    setValidationReportTab,
+    toggleShowOnlyDatasetsWithIssues,
+    setReportSummaryType,
+    setZoomLevel,
+    setShowIssues,
+    setIssueFilter,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

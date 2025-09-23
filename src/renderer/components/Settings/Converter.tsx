@@ -107,7 +107,7 @@ export const Converter: React.FC<ConverterProps> = ({
                         {...params}
                         label="Date Formats"
                         helperText="Date formats used for conversion"
-                        sx={styles.inputField}
+                        sx={styles.inputFieldLong}
                     />
                 )}
             />
@@ -146,7 +146,7 @@ export const Converter: React.FC<ConverterProps> = ({
                         {...params}
                         label="Time Formats"
                         helperText="Time formats used for conversion"
-                        sx={styles.inputField}
+                        sx={styles.inputFieldLong}
                     />
                 )}
             />
@@ -186,7 +186,7 @@ export const Converter: React.FC<ConverterProps> = ({
                         {...params}
                         label="Datetime Formats"
                         helperText="Datetime formats used for conversion"
-                        sx={styles.inputField}
+                        sx={styles.inputFieldLong}
                     />
                 )}
             />
@@ -226,7 +226,29 @@ export const Converter: React.FC<ConverterProps> = ({
                     }
                     label="Convert --DTM variables as datetime"
                 />
+                <FormControlLabel
+                    control={
+                        <Checkbox
+                            checked={
+                                settings.converter.sas7bdatUpcaseDatasetNames
+                            }
+                            onChange={onSettingChange}
+                            name="converter.sas7bdatUpcaseDatasetNames"
+                        />
+                    }
+                    label="Upcase dataset names when converting SAS7BDAT files"
+                />
             </Stack>
+            <TextField
+                label="XPT Numeric Round Precision"
+                name="converter.xptRoundPrecision"
+                helperText="Numeric variables in XPT files are rounded to this precision"
+                type="number"
+                value={settings.converter.xptRoundPrecision}
+                onChange={onSettingChange}
+                slotProps={{ htmlInput: { min: 1, max: 16 } }}
+                sx={styles.inputField}
+            />
             <Typography variant="h6">CSV Conversion Settings</Typography>
             <Typography variant="caption">
                 Epoch used to convert date/time/datetime values.

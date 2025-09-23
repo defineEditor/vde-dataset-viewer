@@ -15,19 +15,30 @@ import {
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { resetSettings, setSettings } from 'renderer/redux/slices/settings';
 import { openSnackbar } from 'renderer/redux/slices/ui';
+import {
+    resetValidatorInfo,
+    setValidatorData,
+} from 'renderer/redux/slices/data';
 import AppContext from 'renderer/utils/AppContext';
 import store from 'renderer/redux/store';
-import { ISettings } from 'interfaces/common';
+import { dehydrateState } from 'renderer/redux/stateUtils';
 import { styles } from 'renderer/components/Settings/styles';
+import { ISettings } from 'interfaces/common';
 import { Viewer } from 'renderer/components/Settings/Viewer';
 import { Converter } from 'renderer/components/Settings/Converter';
+import { Validator } from 'renderer/components/Settings/Validator';
 import { Other } from 'renderer/components/Settings/Other';
 
 const Settings: React.FC = () => {
     const [tabIndex, setTabIndex] = useState(0);
     const initialSettings = useAppSelector((state) => state.settings);
+    const initialValidatorInfo = useAppSelector(
+        (state) => state.data.validator.info,
+    );
     const dispatch = useAppDispatch();
     const [newSettings, setNewSettings] = useState<ISettings>(initialSettings);
+    const [newValidatorInfo, setNewValidatorInfo] =
+        useState(initialValidatorInfo);
     const [reloadSettings, setReloadSettings] = useState(false);
     const [openResetDialog, setOpenResetDialog] = useState(false);
 
@@ -42,6 +53,19 @@ const Settings: React.FC = () => {
 
     const handleSave = React.useCallback(() => {
         dispatch(setSettings(newSettings));
+        // If validator path was removed, reset the validator info
+        if (
+            newSettings.validator.validatorPath === '' &&
+            initialSettings.validator.validatorPath !== ''
+        ) {
+            dispatch(resetValidatorInfo());
+        } else if (
+            JSON.stringify(initialValidatorInfo) !==
+            JSON.stringify(newValidatorInfo)
+        ) {
+            // Save validator info if it was changed
+            dispatch(setValidatorData({ info: newValidatorInfo }));
+        }
         dispatch(
             openSnackbar({
                 message: 'Settings saved',
@@ -49,9 +73,16 @@ const Settings: React.FC = () => {
                 props: { duration: 1000 },
             }),
         );
-        const state = store.getState();
+        const state = dehydrateState(store.getState());
         apiService.saveLocalStore({ reduxStore: state });
-    }, [dispatch, newSettings, apiService]);
+    }, [
+        dispatch,
+        newSettings,
+        newValidatorInfo,
+        apiService,
+        initialSettings.validator.validatorPath,
+        initialValidatorInfo,
+    ]);
 
     const handleCancel = () => {
         setSettings(initialSettings);
@@ -108,7 +139,9 @@ const Settings: React.FC = () => {
     };
 
     const settingsChanged =
-        JSON.stringify(initialSettings) !== JSON.stringify(newSettings);
+        JSON.stringify(initialSettings) !== JSON.stringify(newSettings) ||
+        JSON.stringify(initialValidatorInfo) !==
+            JSON.stringify(newValidatorInfo);
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -126,42 +159,64 @@ const Settings: React.FC = () => {
 
     return (
         <Paper sx={styles.paper}>
-            <Stack sx={styles.main} spacing={2} justifyContent="space-between">
+            <Box sx={styles.contentContainer}>
                 <Tabs
                     value={tabIndex}
                     onChange={handleTabChange}
                     variant="fullWidth"
+                    sx={styles.tabs}
                 >
-                    <Tab label="Viewer" sx={styles.tab} />
-                    <Tab label="Converter" sx={styles.tab} />
-                    <Tab label="Other" sx={styles.tab} />
+                    <Tab label="VIEWER" />
+                    <Tab label="CONVERTER" />
+                    <Tab label="VALIDATION" />
+                    <Tab label="OTHER" />
                 </Tabs>
-                <Box hidden={tabIndex !== 0} sx={styles.tabPanel}>
-                    <Viewer
-                        settings={newSettings}
-                        onSettingChange={handleInputChange}
-                    />
+                <Box sx={styles.scrollableContent}>
+                    <Box hidden={tabIndex !== 0} sx={styles.tabPanel}>
+                        <Viewer
+                            settings={newSettings}
+                            onSettingChange={handleInputChange}
+                        />
+                    </Box>
+                    <Box hidden={tabIndex !== 1} sx={styles.tabPanel}>
+                        <Converter
+                            settings={newSettings}
+                            onSettingChange={handleInputChange}
+                        />
+                    </Box>
+                    <Box hidden={tabIndex !== 2} sx={styles.tabPanel}>
+                        <Validator
+                            settings={newSettings}
+                            onSettingChange={handleInputChange}
+                            validatorInfo={newValidatorInfo}
+                            onChangeValidatorInfo={setNewValidatorInfo}
+                            initialValidatorPath={
+                                initialSettings.validator.validatorPath
+                            }
+                        />
+                    </Box>
+                    <Box hidden={tabIndex !== 3} sx={styles.tabPanel}>
+                        <Other
+                            settings={newSettings}
+                            onSettingChange={handleInputChange}
+                        />
+                    </Box>
                 </Box>
-                <Box hidden={tabIndex !== 1} sx={styles.tabPanel}>
-                    <Converter
-                        settings={newSettings}
-                        onSettingChange={handleInputChange}
-                    />
-                </Box>
-                <Box hidden={tabIndex !== 2} sx={styles.tabPanel}>
-                    <Other
-                        settings={newSettings}
-                        onSettingChange={handleInputChange}
-                    />
-                </Box>
+            </Box>
+            <Box sx={styles.fixedButtonBar}>
                 <Stack direction="row" spacing={2} sx={styles.buttonContainer}>
-                    <Button onClick={handleReset} color="primary">
+                    <Button
+                        onClick={handleReset}
+                        color="primary"
+                        variant="contained"
+                    >
                         Reset to default
                     </Button>
                     <Button
                         onClick={handleCancel}
                         disabled={!settingsChanged}
                         color="primary"
+                        variant="contained"
                     >
                         Cancel
                     </Button>
@@ -169,11 +224,12 @@ const Settings: React.FC = () => {
                         onClick={handleSave}
                         disabled={!settingsChanged}
                         color="primary"
+                        variant="contained"
                     >
                         Save
                     </Button>
                 </Stack>
-            </Stack>
+            </Box>
             <Dialog open={openResetDialog} onClose={handleCloseResetDialog}>
                 <DialogTitle>Confirm Reset</DialogTitle>
                 <DialogContent>

@@ -1,7 +1,13 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { data as initialData } from 'renderer/redux/initialState';
-import { IRecentFile, BasicFilter, ConverterData } from 'interfaces/common';
-import { IMask } from 'interfaces/store';
+import {
+    IRecentFile,
+    BasicFilter,
+    ConverterData,
+    ValidationReport,
+    ParsedValidationReport,
+} from 'interfaces/common';
+import { IMask, IUiValidationPage, ValidatorData } from 'interfaces/common';
 import deepEqual from 'renderer/utils/deepEqual';
 import getFolderName from 'renderer/utils/getFolderName';
 import { closeDataset, openDataset } from 'renderer/redux/slices/ui';
@@ -44,16 +50,20 @@ export const dataSlice = createSlice({
             state,
             action: PayloadAction<{ filter: BasicFilter; datasetName: string }>,
         ) => {
-            // If there are more than 100 recent filters, remove the oldest one
             const newRecentFilters = state.filterData.recentFilters.slice();
             // Check if the new filter is already present in the recent filters
             const index = newRecentFilters.findIndex((recentFilter) =>
-                deepEqual(recentFilter.filter, action.payload.filter),
+                // Do not compare options
+                deepEqual(
+                    { ...recentFilter.filter, options: {} },
+                    { ...action.payload.filter, options: {} },
+                ),
             );
             if (index !== -1) {
                 // If it is, remove the old entry
                 newRecentFilters.splice(index, 1);
             } else if (newRecentFilters.length >= 100) {
+                // If there are more than 100 recent filters, remove the oldest one
                 newRecentFilters.pop();
             }
             newRecentFilters.unshift({
@@ -123,6 +133,78 @@ export const dataSlice = createSlice({
             state.maskData.currentMask = null;
             return state;
         },
+        setValidatorData: (
+            state,
+            action: PayloadAction<Partial<ValidatorData>>,
+        ) => {
+            // Set validator info
+            state.validator = {
+                ...state.validator,
+                ...action.payload,
+            };
+        },
+        resetValidatorInfo: (state) => {
+            // Reset validator info
+            state.validator.info = initialData.validator.info;
+        },
+        addValidationReport: (
+            state,
+            action: PayloadAction<ValidationReport>,
+        ) => {
+            state.validator.reports = {
+                ...state.validator.reports,
+                [action.payload.id]: action.payload,
+            };
+        },
+        removeValidationReport: (
+            state,
+            action: PayloadAction<{ id: string }>,
+        ) => {
+            // Remove a validation report
+            if (state.validator.reports[action.payload.id]) {
+                delete state.validator.reports[action.payload.id];
+            }
+            // If it is currently loaded, then clean the report data
+            if (state.validator.reportData[action.payload.id]) {
+                delete state.validator.reportData[action.payload.id];
+            }
+        },
+        setReport: (
+            state,
+            action: PayloadAction<{
+                reportId: string;
+                report: ParsedValidationReport;
+            }>,
+        ) => {
+            const sameReport =
+                state.validator.reportData[action.payload.reportId] !==
+                undefined;
+            // Keep only one report in memory
+            state.validator.reportData = {
+                [action.payload.reportId]: action.payload.report,
+            };
+            // Clean the filters if the report was changed
+            if (!sameReport) {
+                state.validator.reportFilters = {};
+            }
+        },
+        setReportFilter: (
+            state,
+            action: PayloadAction<{
+                filter: BasicFilter | null;
+                reportTab: IUiValidationPage['currentReportTab'];
+            }>,
+        ) => {
+            state.validator.reportFilters = {
+                [action.payload.reportTab]: action.payload.filter,
+            };
+        },
+        resetReportFilter: (state) => {
+            state.validator.reportFilters = {};
+        },
+        setReportLastSaveFolder: (state, action: PayloadAction<string>) => {
+            state.validator.lastReportSaveFolder = action.payload;
+        },
     },
     extraReducers: (builder) => {
         builder.addCase(openDataset, (state, action) => {
@@ -189,6 +271,14 @@ export const {
     saveMask,
     deleteMask,
     clearMask,
+    setValidatorData,
+    resetValidatorInfo,
+    addValidationReport,
+    removeValidationReport,
+    setReport,
+    setReportFilter,
+    resetReportFilter,
+    setReportLastSaveFolder,
 } = dataSlice.actions;
 
 export default dataSlice.reducer;

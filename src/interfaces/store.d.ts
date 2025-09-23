@@ -1,5 +1,12 @@
 import { BasicFilter, IApiStudy, IApiStudyDataset } from 'interfaces/api';
-import { ICheckUpdateResult, SettingsConverter } from 'interfaces/main';
+import {
+    ICheckUpdateResult,
+    SettingsConverter,
+    SettingsValidator,
+    ValidatorConfig,
+    ValidationReport,
+} from 'interfaces/main';
+import { ParsedValidationReport } from 'interfaces/core.report';
 import { modals, ModalType, AllowedPathnames } from 'misc/constants';
 import { ConversionConfig } from 'interfaces/converter';
 
@@ -10,20 +17,26 @@ export interface IMask {
     sticky?: boolean;
 }
 
+export type ClipboardCopyFormat = 'tab' | 'csv' | 'json';
+
+export interface SettingsViewer {
+    pageSize: number;
+    estimateWidthRows: number;
+    dynamicRowHeight: boolean;
+    maxColWidth: number;
+    dateFormat: 'ISO8601' | 'DDMONYEAR';
+    roundNumbers: boolean;
+    maxPrecision?: number;
+    applyDateFormat: boolean;
+    copyFormat: ClipboardCopyFormat;
+    showTypeIcons: boolean;
+    copyWithHeaders: boolean;
+}
+
 export interface ISettings {
-    viewer: {
-        pageSize: number;
-        estimateWidthRows: number;
-        dynamicRowHeight: boolean;
-        maxColWidth: number;
-        dateFormat: 'ISO8601' | 'DDMONYEAR';
-        roundNumbers: boolean;
-        maxPrecision?: number;
-        applyDateFormat: boolean;
-        copyFormat: 'tab' | 'csv' | 'json';
-        showTypeIcons: boolean;
-    };
+    viewer: SettingsViewer;
     converter: SettingsConverter;
+    validator: SettingsValidator;
     other: {
         checkForUpdates: boolean;
         loadingAnimation: 'santa' | 'cat' | 'dog' | 'normal' | 'random';
@@ -55,7 +68,8 @@ export interface IUiModalGeneral extends IUiModalBase {
         | typeof modals.DATASETINFO
         | typeof modals.FILTER
         | typeof modals.VARIABLEINFO
-        | typeof modals.MASK;
+        | typeof modals.MASK
+        | typeof modals.VALIDATOR;
     data: {};
 }
 
@@ -76,8 +90,14 @@ export interface IUiModalVariableInfo extends IUiModalBase {
     data: { columnId: string };
 }
 
+export interface IUiModalFilter extends IUiModalBase {
+    type: typeof modals.FILTER;
+    filterType: 'dataset' | 'report';
+}
+
 export type IUiModal =
     | IUiModalAppUpdate
+    | IUiModalFilter
     | IUiModalVariableInfo
     | IUiModalGeneral
     | IUiModalEditApi
@@ -105,18 +125,48 @@ export interface IUiControl {
 
 export interface IUiViewer {
     datasetInfoTab: 0 | 1;
+    validatorTab: 'validation' | 'results' | 'issues';
     filterInputMode: 'manual' | 'interactive';
     sidebarOpen: boolean;
+}
+
+export interface IUiValidation {
+    validationProgress: number;
+    status: 'not started' | 'validating' | 'completed';
+    conversionProgress: number | null;
+    dateCompleted: number | null;
+}
+
+export interface IUiValidationPage {
+    currentTab: 'validation' | 'results' | 'report';
+    currentReportTab:
+        | 'overview'
+        | 'summary'
+        | 'details'
+        | 'rules'
+        | 'configuration';
+    currentReportId: string | null;
+    showOnlyDatasetsWithIssues: boolean;
+    reportSummaryType: 'datasets' | 'issues';
 }
 
 export interface IUi {
     pathname: AllowedPathnames;
     currentFileId: string;
     currentPage: number;
+    zoomLevel: number;
     viewer: IUiViewer;
     modals: IUiModal[];
     snackbar: IUiSnackbar;
     control: IUiControl;
+    validation: { [validationId: string]: IUiValidation };
+    dataSettings: {
+        [datasetId: string]: {
+            showIssues: boolean;
+            filteredIssues: string[];
+        };
+    };
+    validationPage: IUiValidationPage;
 }
 
 export interface IRecentFile {
@@ -125,12 +175,25 @@ export interface IRecentFile {
     path: string;
 }
 
-export type DatasetMode = 'local' | 'remote';
-
 export interface ConverterData {
     configuration: ConversionConfig;
     destinationDir: string;
     sourceDir: string;
+}
+
+export interface ValidatorData {
+    info: {
+        version: string;
+        standards: string[];
+        terminology: string[];
+    };
+    reports: { [id: string]: ValidationReport };
+    reportData: { [id: string]: ParsedValidationReport };
+    reportFilters: {
+        [id: string]: BasicFilter | null;
+    };
+    lastReportSaveFolder: string;
+    configuration: ValidatorConfig;
 }
 
 export interface IData {
@@ -159,6 +222,7 @@ export interface IData {
         savedMasks: IMask[];
     };
     converter: ConverterData;
+    validator: ValidatorData;
 }
 
 export interface IApiRecord {
