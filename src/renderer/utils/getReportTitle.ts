@@ -17,26 +17,26 @@ const getTimeAgo = (date: number): string => {
     }
     if (diffMs < hour) {
         const minutes = Math.floor(diffMs / minute);
-        return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+        return `${minutes} minute${minutes === 1 ? '' : 's'}`;
     }
     if (diffMs < day) {
         const hours = Math.floor(diffMs / hour);
-        return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+        return `${hours} hour${hours === 1 ? '' : 's'}`;
     }
     if (diffMs < week) {
         const days = Math.floor(diffMs / day);
-        return `${days} day${days === 1 ? '' : 's'} ago`;
+        return `${days} day${days === 1 ? '' : 's'}`;
     }
     if (diffMs < month) {
         const weeks = Math.floor(diffMs / week);
-        return `${weeks} week${weeks === 1 ? '' : 's'} ago`;
+        return `${weeks} week${weeks === 1 ? '' : 's'}`;
     }
     if (diffMs < year) {
         const months = Math.floor(diffMs / month);
-        return `${months} month${months === 1 ? '' : 's'} ago`;
+        return `${months} month${months === 1 ? '' : 's'}`;
     }
     const years = Math.floor(diffMs / year);
-    return `${years} year${years === 1 ? '' : 's'} ago`;
+    return `${years} year${years === 1 ? '' : 's'}`;
 };
 
 const getReportTitle = (report: ValidationReport): string => {

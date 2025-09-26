@@ -45,17 +45,19 @@ const styles = {
 const ProgressContainer: React.FC<{
     validationId: string | null;
 }> = ({ validationId }) => {
-    const { conversionProgress, validationProgress } =
-        useAppSelector<IUiValidation>(
-            (state) =>
-                (validationId !== null &&
-                    state.ui.validation[validationId]) || {
-                    status: 'not started',
-                    validationProgress: 0,
-                    conversionProgress: null,
-                    dateCompleted: null,
-                },
-        );
+    const {
+        conversionProgress,
+        validationProgress,
+        error = null,
+    } = useAppSelector<IUiValidation>(
+        (state) =>
+            (validationId !== null && state.ui.validation[validationId]) || {
+                status: 'not started',
+                validationProgress: 0,
+                conversionProgress: null,
+                dateCompleted: null,
+            },
+    );
 
     return (
         <>
@@ -86,13 +88,19 @@ const ProgressContainer: React.FC<{
                         value={validationProgress}
                         sx={styles.progressBar}
                     />
-                    <Typography variant="caption" color="text.secondary">
-                        {validationProgress === 100
-                            ? 'Complete'
-                            : validationProgress === 0
-                              ? 'Pending'
-                              : `Validating (${Math.round(validationProgress)}%)`}
-                    </Typography>
+                    {error !== null ? (
+                        <Typography variant="caption" color="error.main">
+                            {error !== null && ` ${error}`}
+                        </Typography>
+                    ) : (
+                        <Typography variant="caption" color="text.secondary">
+                            {validationProgress === 100
+                                ? 'Complete'
+                                : validationProgress === 0
+                                  ? 'Pending'
+                                  : `Validating (${Math.round(validationProgress)}%)`}
+                        </Typography>
+                    )}
                 </Paper>
             </Grow>
         </>

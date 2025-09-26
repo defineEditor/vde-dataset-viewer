@@ -7,8 +7,15 @@ import {
     FormControlLabel,
     Checkbox,
     Alert,
+    Box,
+    Tooltip,
 } from '@mui/material';
 import { ISettings } from 'interfaces/common';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import FontDownloadIcon from '@mui/icons-material/FontDownload';
+import LooksOneIcon from '@mui/icons-material/LooksOne';
+import AccessTimeIcon from '@mui/icons-material/HourglassFull';
+import ExposureIcon from '@mui/icons-material/Exposure';
 import { styles } from 'renderer/components/Settings/styles';
 
 interface ViewerProps {
@@ -169,7 +176,38 @@ export const Viewer: React.FC<ViewerProps> = ({
                         name="viewer.showTypeIcons"
                     />
                 }
-                label="Show Type Icons"
+                label={
+                    <Stack direction="row" alignItems="center">
+                        <Box>Show Type Icons</Box>
+                        <Tooltip
+                            title={
+                                <Stack>
+                                    <Box>
+                                        <LooksOneIcon sx={styles.typeIcon} />
+                                        numeric
+                                    </Box>
+                                    <Box>
+                                        <FontDownloadIcon
+                                            sx={styles.typeIcon}
+                                        />
+                                        text
+                                    </Box>
+                                    <Box>
+                                        <AccessTimeIcon sx={styles.typeIcon} />
+                                        date
+                                    </Box>
+                                    <Box>
+                                        <ExposureIcon sx={styles.typeIcon} />
+                                        boolean
+                                    </Box>
+                                </Stack>
+                            }
+                            sx={styles.helperIcon}
+                        >
+                            <HelpOutlineIcon />
+                        </Tooltip>
+                    </Stack>
+                }
             />
             <Typography variant="caption" sx={styles.helperText}>
                 When enabled, type icons are shown in the header of the table

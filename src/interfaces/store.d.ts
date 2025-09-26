@@ -135,6 +135,7 @@ export interface IUiValidation {
     status: 'not started' | 'validating' | 'completed';
     conversionProgress: number | null;
     dateCompleted: number | null;
+    error?: string;
 }
 
 export interface IUiValidationPage {

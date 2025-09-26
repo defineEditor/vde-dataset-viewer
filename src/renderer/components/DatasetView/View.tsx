@@ -22,6 +22,7 @@ import {
 import SelectAllIcon from '@mui/icons-material/SelectAll';
 import FilterIcon from '@mui/icons-material/FilterAlt';
 import FontDownloadIcon from '@mui/icons-material/FontDownload';
+import ExposureIcon from '@mui/icons-material/Exposure';
 import LooksOneIcon from '@mui/icons-material/LooksOne';
 import AccessTimeIcon from '@mui/icons-material/HourglassFull';
 import { VirtualItem, Virtualizer } from '@tanstack/react-virtual';
@@ -213,6 +214,9 @@ const getTypeIcon = (type: string | undefined) => {
     }
     if (['integer', 'float', 'double', 'decimal'].includes(type)) {
         return <LooksOneIcon sx={styles.typeIcon} />;
+    }
+    if (['boolean'].includes(type)) {
+        return <ExposureIcon sx={styles.typeIcon} />;
     }
     return <FontDownloadIcon sx={styles.typeIcon} />;
 };
