@@ -91,7 +91,7 @@ const ValidationReportPage: React.FC = () => {
         (state) => state.data.validator.reportData[reportId || ''] || null,
     );
 
-    const validationReportInfo = useAppSelector(
+    const runReport = useAppSelector(
         (state) => state.data.validator.reports[reportId || ''],
     );
 
@@ -106,7 +106,7 @@ const ValidationReportPage: React.FC = () => {
             coreId?: string,
         ) => {
             // Find filename by ID
-            const filePath = validationReportInfo?.files.find(
+            const filePath = runReport?.files.find(
                 (file) =>
                     file.file
                         .replace(/.*?([^\\/]+)\.[^/.]+$/, '$1')
@@ -137,7 +137,7 @@ const ValidationReportPage: React.FC = () => {
                 }
             }
         },
-        [validationReportInfo, apiService, dispatch, currentFileId, reportId],
+        [runReport, apiService, dispatch, currentFileId, reportId],
     );
 
     const handleFilterIssues = React.useCallback(
@@ -153,6 +153,13 @@ const ValidationReportPage: React.FC = () => {
         },
         [dispatch],
     );
+
+    const handleCopyToClipboard = (text: string) => {
+        apiService.writeToClipboard(text);
+        dispatch(
+            openSnackbar({ message: 'Copied to clipboard', type: 'info' }),
+        );
+    };
 
     useEffect(() => {
         const getReport = async () => {
@@ -293,7 +300,11 @@ const ValidationReportPage: React.FC = () => {
                         <DatasetContainer data={tables?.rules} type="rules" />
                     </TabPanel>
                     <TabPanel value="configuration" sx={styles.tabPanel}>
-                        <Configuration report={report} />
+                        <Configuration
+                            report={report}
+                            runReport={runReport}
+                            onCopyToClipboard={handleCopyToClipboard}
+                        />
                     </TabPanel>
                 </Box>
             </TabContext>

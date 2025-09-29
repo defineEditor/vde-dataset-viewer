@@ -158,16 +158,17 @@ export const startValidation = async (
                 }
             }
             if (info.progress === 100) {
-                store.dispatch(
-                    updateValidation({
-                        validationId,
-                        validation: {
-                            status: 'completed',
-                            dateCompleted: new Date().getTime(),
-                        },
-                    }),
-                );
                 if (info.error) {
+                    store.dispatch(
+                        updateValidation({
+                            validationId,
+                            validation: {
+                                status: 'completed',
+                                error: info.error,
+                                dateCompleted: new Date().getTime(),
+                            },
+                        }),
+                    );
                     store.dispatch(
                         openSnackbar({
                             message: info.error,
@@ -175,7 +176,16 @@ export const startValidation = async (
                         }),
                     );
                 } else if (info.result) {
-                    // Only dispatch if result is a ValidationReport (has required properties)
+                    store.dispatch(
+                        updateValidation({
+                            validationId,
+                            validation: {
+                                status: 'completed',
+                                dateCompleted: new Date().getTime(),
+                            },
+                        }),
+                    );
+                    // Only dispatch if result is a ValidationRunReport (has required properties)
 
                     if (
                         info.result &&

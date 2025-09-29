@@ -57,6 +57,17 @@ export const styles = {
         margin: 0,
         mt: 0,
     },
+    helperIcon: {
+        color: 'primary.main',
+        fontSize: 24,
+        mb: 0.5,
+        ml: 1,
+    },
+    typeIcon: {
+        fontSize: 16,
+        verticalAlign: 'middle',
+        mr: 0.5,
+    },
     alert: {
         mt: 1,
         mb: 2,

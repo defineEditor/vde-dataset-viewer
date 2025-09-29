@@ -54,27 +54,28 @@ const Dog = styled(Box)({
 
 const Ears = styled(Box)({
     position: 'relative',
-    left: 50,
-    top: 28,
+    left: 70,
+    top: 79,
     display: 'flex',
-    gap: 80,
+    gap: 55,
     '&::before': {
         // Left ear
         content: '""',
-        height: '50px',
-        width: '40px',
+        height: 73,
+        zIndex: 3,
+        width: 32,
         borderRadius: '50%',
-        transform: 'rotate(-50deg)',
+        transform: 'rotate(-176deg)',
         background: '#475881',
         boxShadow: 'inset -2px -2px 0 rgba(0,0,0,0.2)', // Add depth
     },
     '&::after': {
         // Right ear
         content: '""',
-        height: '50px',
-        width: '40px',
+        height: 50,
+        width: 40,
         borderRadius: '50%',
-        transform: 'rotate(45deg)',
+        transform: 'rotate(0deg)',
         background: '#475881',
         boxShadow: 'inset -2px -2px 0 rgba(0,0,0,0.2)', // Add depth
     },
@@ -82,9 +83,9 @@ const Ears = styled(Box)({
 
 const Head = styled(Box)({
     height: 74,
-    width: 135,
+    width: 105,
     position: 'relative',
-    left: 65,
+    left: 85,
     zIndex: 2,
     boxShadow: '-8px 0 0 #475881',
     borderRadius: 37,
@@ -96,7 +97,7 @@ const Eyes = styled(Box)<{ speed?: number }>(({ speed = 1 }) => ({
     width: 12,
     position: 'relative',
     top: 37,
-    left: 60,
+    left: 50,
     borderRadius: '100%',
     animation: `dogRead ${speed}s infinite`,
     background: 'black',
@@ -125,7 +126,7 @@ const Nose = styled(Box)({
     width: 48,
     position: 'relative',
     top: 40,
-    left: 58,
+    left: 48,
     borderRadius: 20,
     background: '#FBF1D8',
     '&::before': {
@@ -134,7 +135,7 @@ const Nose = styled(Box)({
         height: 0,
         width: 0,
         position: 'relative',
-        top: 3,
+        top: 1,
         left: 14,
         borderRadius: 15,
         borderTop: '12px solid black',

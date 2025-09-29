@@ -155,6 +155,12 @@ export const uiSlice = createSlice({
         setDatasetInfoTab: (state, action: PayloadAction<0 | 1>) => {
             state.viewer.datasetInfoTab = action.payload;
         },
+        setBottomSection: (
+            state,
+            action: PayloadAction<'dataset' | 'issues'>,
+        ) => {
+            state.viewer.bottomSection = action.payload;
+        },
         setValidationModalTab: (
             state,
             action: PayloadAction<IUiViewer['validatorTab']>,
@@ -234,15 +240,26 @@ export const uiSlice = createSlice({
                 state.dataSettings[id] = {
                     showIssues: show,
                     filteredIssues: filteredIssues || [],
+                    currentIssueIndex: 0,
                 };
             } else {
                 state.dataSettings[id].showIssues = show;
                 if (filteredIssues && filteredIssues.length > 0) {
                     state.dataSettings[id].filteredIssues = filteredIssues;
+                    state.dataSettings[id].currentIssueIndex = 0;
                 } else if (!show) {
                     // Clear filtered issues when disabling issue view
                     state.dataSettings[id].filteredIssues = [];
+                    state.dataSettings[id].currentIssueIndex = 0;
                 }
+            }
+            // If issue navigation is enabled and showIsssues is false, switch to dataset navigation
+            if (
+                state.currentFileId === id &&
+                !show &&
+                state.viewer.bottomSection === 'issues'
+            ) {
+                state.viewer.bottomSection = 'dataset';
             }
         },
         setIssueFilter: (
@@ -254,9 +271,27 @@ export const uiSlice = createSlice({
                 state.dataSettings[id] = {
                     showIssues: true,
                     filteredIssues: filter,
+                    currentIssueIndex: 0,
                 };
             } else {
                 state.dataSettings[id].filteredIssues = filter;
+                // Reset current issue index
+                state.dataSettings[id].currentIssueIndex = 0;
+            }
+        },
+        setCurrentIssueIndex: (
+            state,
+            action: PayloadAction<{ id: string; index: number }>,
+        ) => {
+            const { id, index } = action.payload;
+            if (!state.dataSettings[id]) {
+                state.dataSettings[id] = {
+                    showIssues: true,
+                    filteredIssues: [],
+                    currentIssueIndex: index,
+                };
+            } else {
+                state.dataSettings[id].currentIssueIndex = index;
             }
         },
     },
@@ -275,6 +310,7 @@ export const {
     setSelect,
     setPage,
     setDatasetInfoTab,
+    setBottomSection,
     setValidationModalTab,
     setFilterInputMode,
     toggleSidebar,
@@ -287,6 +323,7 @@ export const {
     setZoomLevel,
     setShowIssues,
     setIssueFilter,
+    setCurrentIssueIndex,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

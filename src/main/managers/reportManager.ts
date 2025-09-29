@@ -2,12 +2,15 @@ import { IpcMainInvokeEvent } from 'electron';
 import fs from 'fs';
 import fsPromises from 'fs/promises';
 import path from 'path';
+import zlib from 'zlib';
+import { promisify } from 'util';
 import {
     ParsedValidationReport,
     ValidationReportCompare,
 } from 'interfaces/common';
 import FileManager from 'main/managers/fileManager';
 
+const gunzipPromise = promisify(zlib.gunzip);
 class ReportManager {
     private reportsDirectory: string;
 
@@ -19,29 +22,6 @@ class ReportManager {
             fs.mkdirSync(this.reportsDirectory, { recursive: true });
         }
     }
-
-    /**
-     * Reads a validation report from the file system
-     * @param fileName The name of the report file to read
-     * @returns The report content as a string, or null if file doesn't exist
-     */
-    public readValidationReport = (
-        _event: IpcMainInvokeEvent,
-        fileName: string,
-    ): string | null => {
-        try {
-            const filePath = path.join(this.reportsDirectory, fileName);
-
-            if (!fs.existsSync(filePath)) {
-                return null;
-            }
-
-            return fs.readFileSync(filePath, 'utf-8');
-        } catch (error) {
-            // Error reading report file
-            return null;
-        }
-    };
 
     /**
      * Deletes a validation report from the file system
@@ -64,10 +44,19 @@ class ReportManager {
             // Delete the XLSX file if present
             const xlsxFileName = path.join(
                 this.reportsDirectory,
-                fileName.replace('.json', '.xlsx'),
+                fileName.replace(/\.json\.gz$|\.json$/, '.xlsx'),
             );
             if (fs.existsSync(xlsxFileName)) {
                 fs.unlinkSync(xlsxFileName);
+            }
+
+            // Delete the log file if present
+            const logFileName = path.join(
+                this.reportsDirectory,
+                fileName.replace(/\.json\.gz$|\.json$/, '.log'),
+            );
+            if (fs.existsSync(logFileName)) {
+                fs.unlinkSync(logFileName);
             }
 
             return true;
@@ -88,10 +77,18 @@ class ReportManager {
                 return null;
             }
 
-            // Try to serialize
-            const rawData = await fsPromises.readFile(filePath, 'utf-8');
-            const report = JSON.parse(rawData);
-            return report;
+            // Report is gzipped
+            if (fileName.endsWith('.gz')) {
+                const compressedData = await fsPromises.readFile(filePath);
+                const decompressedData = await gunzipPromise(compressedData);
+                const report = JSON.parse(decompressedData.toString('utf-8'));
+                return report;
+            } else {
+                const rawData = await fsPromises.readFile(filePath, 'utf-8');
+                // Try to serialize
+                const report = JSON.parse(rawData);
+                return report;
+            }
         } catch (error) {
             // Error reading report file
             return null;

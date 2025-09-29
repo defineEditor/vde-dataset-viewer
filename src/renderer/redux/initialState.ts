@@ -67,6 +67,7 @@ export const ui: IUi = {
         validatorTab: 'validation',
         filterInputMode: 'manual',
         sidebarOpen: false,
+        bottomSection: 'dataset',
     },
     modals: [],
     snackbar: {

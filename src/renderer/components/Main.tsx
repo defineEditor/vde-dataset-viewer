@@ -15,7 +15,7 @@ import {
 import SelectDataset from 'renderer/components/SelectDataset';
 import Api from 'renderer/components/Api';
 import AppContext from 'renderer/utils/AppContext';
-import ViewFile from 'renderer/components/ViewFile';
+import ViewFile from 'renderer/components/ViewDataset';
 import Settings from 'renderer/components/Settings';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import { setPathname, setZoomLevel } from 'renderer/redux/slices/ui';

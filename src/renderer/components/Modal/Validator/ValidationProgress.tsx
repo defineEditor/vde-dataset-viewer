@@ -45,21 +45,23 @@ const styles = {
 const ProgressContainer: React.FC<{
     validationId: string | null;
 }> = ({ validationId }) => {
-    const { conversionProgress, validationProgress } =
-        useAppSelector<IUiValidation>(
-            (state) =>
-                (validationId !== null &&
-                    state.ui.validation[validationId]) || {
-                    status: 'not started',
-                    validationProgress: 0,
-                    conversionProgress: null,
-                    dateCompleted: null,
-                },
-        );
+    const {
+        conversionProgress,
+        validationProgress,
+        error = null,
+    } = useAppSelector<IUiValidation>(
+        (state) =>
+            (validationId !== null && state.ui.validation[validationId]) || {
+                status: 'not started',
+                validationProgress: 0,
+                conversionProgress: null,
+                dateCompleted: null,
+            },
+    );
 
     return (
         <>
-            <Grow in={conversionProgress !== null} timeout={500}>
+            <Grow in={conversionProgress !== null} timeout={500} unmountOnExit>
                 <Paper sx={styles.progressContainer}>
                     <>
                         <Typography variant="subtitle1">Conversion</Typography>
@@ -86,13 +88,19 @@ const ProgressContainer: React.FC<{
                         value={validationProgress}
                         sx={styles.progressBar}
                     />
-                    <Typography variant="caption" color="text.secondary">
-                        {validationProgress === 100
-                            ? 'Complete'
-                            : validationProgress === 0
-                              ? 'Pending'
-                              : `Validating (${Math.round(validationProgress)}%)`}
-                    </Typography>
+                    {error !== null ? (
+                        <Typography variant="caption" color="error.main">
+                            {error}
+                        </Typography>
+                    ) : (
+                        <Typography variant="caption" color="text.secondary">
+                            {validationProgress === 100
+                                ? 'Complete'
+                                : validationProgress === 0
+                                  ? 'Pending'
+                                  : `Validating (${Math.round(validationProgress)}%)`}
+                        </Typography>
+                    )}
                 </Paper>
             </Grow>
         </>
@@ -131,11 +139,13 @@ const ValidationProgress: React.FC<{
         <Stack spacing={2} sx={styles.container} alignItems="flex-start">
             <Typography variant="h6">Processing</Typography>
             <ProgressContainer validationId={validationId} />
+            <Typography variant="body2" sx={styles.closeWindowNote}>
+                {validationStatus !== 'completed'
+                    ? 'You can continue working on other tasks'
+                    : 'Press DONE to see results or start a new validation'}
+            </Typography>
             <Zoom in={validationStatus !== 'completed'} timeout={1000}>
                 <Box sx={styles.closeWindowNote}>
-                    <Typography variant="body2" sx={styles.closeWindowNote}>
-                        You can continue working on other tasks
-                    </Typography>
                     {loadingAnimation !== 'normal' && (
                         <Box sx={styles.workers}>
                             <Worker loadingAnimation={loadingAnimation} />

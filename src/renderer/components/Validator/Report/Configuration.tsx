@@ -3,30 +3,79 @@ import {
     Card,
     CardContent,
     Typography,
+    Tooltip,
     Stack,
     Table,
     TableBody,
     TableCell,
     TableContainer,
     TableRow,
+    IconButton,
 } from '@mui/material';
-import { ParsedValidationReport } from 'interfaces/common';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { ParsedValidationReport, ValidationRunReport } from 'interfaces/common';
 
 const styles = {
     container: {
         p: 2,
     },
+    subContainer: {
+        flex: 1,
+        backgroundColor: 'grey.300',
+    },
     card: {
         flex: 1,
         backgroundColor: 'grey.200',
     },
+    command: {
+        display: '-webkit-box',
+        WebkitLineClamp: 3,
+        WebkitBoxOrient: 'vertical',
+        overflow: 'auto',
+        textOverflow: 'ellipsis',
+        wordBreak: 'break-word',
+    },
+    copyIcon: {
+        color: 'primary.main',
+        width: 24,
+        height: 24,
+        m: 1,
+    },
+};
+
+const Command: React.FC<{
+    command: string;
+    onCopyToClipboard: (text: string) => void;
+}> = ({ command, onCopyToClipboard }) => {
+    return (
+        <Stack direction="row" alignItems="center">
+            <Typography variant="caption" sx={styles.command}>
+                {command}
+            </Typography>
+            <IconButton
+                size="small"
+                onClick={() => onCopyToClipboard(command)}
+                sx={styles.copyIcon}
+            >
+                <Tooltip title="Copy to clipboard">
+                    <ContentCopyIcon />
+                </Tooltip>
+            </IconButton>
+        </Stack>
+    );
 };
 
 interface ConfigurationProps {
     report: ParsedValidationReport;
+    runReport: ValidationRunReport;
+    onCopyToClipboard: (text: string) => void;
 }
 
-const Configuration: React.FC<ConfigurationProps> = ({ report }) => {
+const Configuration: React.FC<ConfigurationProps> = ({
+    report,
+    runReport,
+    onCopyToClipboard,
+}) => {
     const formatDateTime = (dateString: string) => {
         try {
             const date = new Date(dateString);
@@ -49,6 +98,8 @@ const Configuration: React.FC<ConfigurationProps> = ({ report }) => {
             value: conformanceDetails.CORE_Engine_Version,
         },
     ];
+
+    const executionData = [{ label: 'Command', value: runReport.command }];
 
     const standardsData = [
         { label: 'Standard', value: conformanceDetails.Standard },
@@ -93,39 +144,83 @@ const Configuration: React.FC<ConfigurationProps> = ({ report }) => {
             direction={{ xs: 'column', md: 'row' }}
             sx={styles.container}
         >
-            {/* Conformance Details */}
-            <Card sx={styles.card}>
-                <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                        Conformance Details
-                    </Typography>
-                    <TableContainer>
-                        <Table size="small">
-                            <TableBody>
-                                {conformanceData.map((row) => (
-                                    <TableRow key={row.label}>
-                                        <TableCell
-                                            component="th"
-                                            scope="row"
-                                            sx={{
-                                                fontWeight: 'medium',
-                                                borderBottom: 'none',
-                                            }}
-                                        >
-                                            {row.label}
-                                        </TableCell>
-                                        <TableCell
-                                            sx={{ borderBottom: 'none' }}
-                                        >
-                                            {row.value}
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                </CardContent>
-            </Card>
+            <Stack sx={styles.subContainer} spacing={3}>
+                {/* Conformance Details */}
+                <Card sx={styles.card}>
+                    <CardContent>
+                        <Typography variant="h6" gutterBottom>
+                            Conformance Details
+                        </Typography>
+                        <TableContainer>
+                            <Table size="small">
+                                <TableBody>
+                                    {conformanceData.map((row) => (
+                                        <TableRow key={row.label}>
+                                            <TableCell
+                                                component="th"
+                                                scope="row"
+                                                sx={{
+                                                    fontWeight: 'medium',
+                                                    borderBottom: 'none',
+                                                }}
+                                            >
+                                                {row.label}
+                                            </TableCell>
+                                            <TableCell
+                                                sx={{ borderBottom: 'none' }}
+                                            >
+                                                {row.value}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </CardContent>
+                </Card>
+                {/* Execution Details */}
+                <Card sx={styles.card}>
+                    <CardContent>
+                        <Typography variant="h6" gutterBottom>
+                            Execution Details
+                        </Typography>
+                        <TableContainer>
+                            <Table size="small">
+                                <TableBody>
+                                    {executionData.map((row) => (
+                                        <TableRow key={row.label}>
+                                            <TableCell
+                                                component="th"
+                                                scope="row"
+                                                sx={{
+                                                    fontWeight: 'medium',
+                                                    borderBottom: 'none',
+                                                }}
+                                            >
+                                                {row.label}
+                                            </TableCell>
+                                            <TableCell
+                                                sx={{ borderBottom: 'none' }}
+                                            >
+                                                {row.label === 'Command' ? (
+                                                    <Command
+                                                        command={row.value}
+                                                        onCopyToClipboard={
+                                                            onCopyToClipboard
+                                                        }
+                                                    />
+                                                ) : (
+                                                    row.value
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </CardContent>
+                </Card>
+            </Stack>
 
             {/* Standards Details */}
             <Card sx={styles.card}>

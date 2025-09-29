@@ -9,12 +9,23 @@ const getIssueAnnotations = (
     table: ITableData | null,
     currentMask: IMask | null,
     filteredIssues: string[],
-): Map<string, { text: string; color: string }> | null => {
+    page: number,
+    pageSize: number,
+): {
+    annotations: Map<string, { text: string; color: string }>;
+    byRow: { row: number; ruleId: string; column: string; text: string }[];
+} | null => {
     if (!table || !report) {
         return null;
     }
 
     const issueAnnotations = new Map();
+    const byRow: {
+        row: number;
+        ruleId: string;
+        column: string;
+        text: string;
+    }[] = [];
     // Select all issues, related to the current dataset;
     const issues = report.Issue_Details.filter((detail) => {
         return (
@@ -47,12 +58,25 @@ const getIssueAnnotations = (
             return;
         }
 
+        let variableFound = false;
         vars.forEach((variable) => {
             // Check the variable is present
             if (!variableIndices.has(variable)) {
                 return;
             }
+            if (!variableFound) {
+                // Mark the first variable for the byRow mapping
+                byRow.push({
+                    row: rowIndex,
+                    ruleId: issue.core_id,
+                    column: variable,
+                    text: issue.message,
+                });
+                variableFound = true;
+            }
             const colIndex = variableIndices.get(variable);
+            // Recalculate row index based on pagination
+            rowIndex = rowIndex - page * pageSize;
             // Check if there is already an annotation present
             const existingAnnotation = issueAnnotations.get(
                 `${rowIndex}#${colIndex}`,
@@ -70,7 +94,10 @@ const getIssueAnnotations = (
         });
     });
 
-    return issueAnnotations;
+    // Sort byRow by row number
+    byRow.sort((a, b) => a.row - b.row);
+
+    return { annotations: issueAnnotations, byRow };
 };
 
 export default getIssueAnnotations;

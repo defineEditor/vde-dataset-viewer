@@ -122,6 +122,7 @@ const Validator: React.FC = () => {
                 },
             }),
         );
+        dispatch(setValidationTab('results'));
     };
 
     return (

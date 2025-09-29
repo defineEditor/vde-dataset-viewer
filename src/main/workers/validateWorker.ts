@@ -2,16 +2,20 @@ import {
     ValidatorProcessTask,
     ValidateSubTask,
     ValidatorTaskProgress,
-    ValidationReport,
+    ValidationRunReport,
     IssueSummaryItem,
 } from 'interfaces/common';
 import fs from 'fs';
+import fsPromises from 'fs/promises';
 import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { tmpdir } from 'os';
+import zlib from 'zlib';
 
 const execAsync = promisify(exec);
+const gzipPromise = promisify(zlib.gzip);
+const unzipPromise = promisify(zlib.unzip);
 
 /**
  * Checks if a file is executable
@@ -313,7 +317,7 @@ const runValidation = async (
     validatorPath: string,
     outputPath: string,
     sendMessage: (progress: number) => void,
-): Promise<{ fileName: string; date: number }> => {
+): Promise<{ fileName: string; date: number; logFileName: string | null }> => {
     const now = new Date();
 
     return new Promise((resolve, reject) => {
@@ -369,14 +373,38 @@ const runValidation = async (
         }
 
         // Handle process completion
-        childProcess.on('close', (code) => {
+        childProcess.on('close', async (code) => {
             if (code === 0) {
                 // Validation completed successfully
                 const outputFileName = path.basename(outputPath);
-                resolve({
-                    fileName: `${outputFileName}.json`,
-                    date: now.getTime(),
-                });
+                // Gzip the JSON report to save space
+                try {
+                    if (fs.existsSync(`${outputPath}.json`)) {
+                        const fileContents = await fsPromises.readFile(
+                            `${outputPath}.json`,
+                        );
+                        const gzipped = await gzipPromise(fileContents);
+                        await fsPromises.writeFile(
+                            `${outputPath}.json.gz`,
+                            gzipped,
+                        );
+                        // Remove the original JSON file
+                        fs.unlinkSync(`${outputPath}.json`);
+                        // Check if log file exists
+                        let logFileName: string | null = null;
+                        if (fs.existsSync(`${outputPath}.log`)) {
+                            logFileName = `${outputFileName}.log`;
+                        }
+                        resolve({
+                            fileName: `${outputFileName}.json.gz`,
+                            date: now.getTime(),
+                            logFileName,
+                        });
+                    }
+                    reject(new Error('Report file not created'));
+                } catch (error) {
+                    reject(error);
+                }
             } else {
                 reject(
                     new Error(
@@ -422,12 +450,13 @@ const getLastModified = (
  * and the total number of issues (sum of "issues" attribute for each unique issue).
  * @param filePath Path to the validation report JSON file
  */
-export function getIssueSummary(filePath: string): {
+export async function getIssueSummary(filePath: string): Promise<{
     uniqueIssues: number;
     totalIssues: number;
-} {
-    const raw = fs.readFileSync(filePath, 'utf-8');
-    const report = JSON.parse(raw);
+}> {
+    const rawCompressed = await fsPromises.readFile(filePath);
+    const raw = await unzipPromise(rawCompressed);
+    const report = JSON.parse(raw.toString('utf-8'));
     const summary: IssueSummaryItem[] = report.Issue_Summary || [];
     const uniqueIssues = summary.length;
     const totalIssues = summary.reduce(
@@ -532,7 +561,7 @@ process.parentPort.once(
 
                         // Generate output filename and path
                         const outputDir = data.outputDir || '';
-                        
+
                         // If the output directory does not exist, create it
                         if (!fs.existsSync(outputDir)) {
                             fs.mkdirSync(outputDir, { recursive: true });
@@ -548,16 +577,24 @@ process.parentPort.once(
 
                         // Get filename from the first file in validation details or use 'validation'
                         let baseFileName = 'validation';
-                        if (data.validationDetails?.files && data.validationDetails.files.length > 0) {
+                        if (
+                            data.validationDetails?.files &&
+                            data.validationDetails.files.length > 0
+                        ) {
                             // Take the first file's name as base
                             // If there are more than 5 files, use the first 5 file names
                             const fileNames = data.validationDetails.files
                                 .slice(0, 5)
-                                .map((file) => path.basename(file).split('.')[0]);
-                            const totalCount = data.validationDetails.files.length;
+                                .map(
+                                    (file) => path.basename(file).split('.')[0],
+                                );
+                            const totalCount =
+                                data.validationDetails.files.length;
                             baseFileName = path.parse(
                                 fileNames.join('_') +
-                                    (totalCount > 5 ? `+${totalCount - 5}_datasets` : ''),
+                                    (totalCount > 5
+                                        ? `+${totalCount - 5}_datasets`
+                                        : ''),
                             ).name;
                         }
 
@@ -583,27 +620,31 @@ process.parentPort.once(
                         // Delete temporary files (files coverted for validation)
                         cleanTemporaryFiles(data.validationDetails);
 
-                        const summary = getIssueSummary(
+                        const summary = await getIssueSummary(
                             path.join(outputDir, result.fileName),
                         );
 
                         // Form validate report record
-                        const report: ValidationReport = {
+                        const runReport: ValidationRunReport = {
                             id: result.fileName,
                             date: result.date,
+                            command,
                             files: getLastModified(
                                 data.validationDetails?.originalFiles || [],
                             ),
                             output: result.fileName,
+                            logFileName: result.logFileName,
                             config: data.configuration,
                             summary,
                         };
                         process.parentPort.postMessage({
                             id: processId,
-                            result: report,
+                            result: runReport,
                             progress: 100,
                         });
                     } catch (error) {
+                        // Delete temporary files (files coverted for validation)
+                        cleanTemporaryFiles(data.validationDetails);
                         if (error instanceof Error) {
                             process.parentPort.postMessage({
                                 id: processId,

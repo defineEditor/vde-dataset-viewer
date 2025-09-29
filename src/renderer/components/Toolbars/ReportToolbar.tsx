@@ -18,7 +18,7 @@ const styles = {
         paddingLeft: 1,
     },
     reportName: {
-        color: 'text.primary',
+        color: 'grey.600',
         fontWeight: 'bold',
         alignContent: 'center',
     },
@@ -175,9 +175,9 @@ const Header: React.FC = () => {
                             <FilterIcon
                                 sx={{
                                     color: isFilterEnabled
-                                        ? 'success.main'
+                                        ? 'primary.main'
                                         : tabHasFilter
-                                          ? 'primary.main'
+                                          ? 'grey.600'
                                           : 'primary.disabled',
                                 }}
                             />
@@ -193,7 +193,7 @@ const Header: React.FC = () => {
                             <FilterOffIcon
                                 sx={{
                                     color: isFilterEnabled
-                                        ? 'primary.main'
+                                        ? 'grey.600'
                                         : 'primary.disabled',
                                 }}
                             />
@@ -207,7 +207,7 @@ const Header: React.FC = () => {
                     id="downloadReport"
                     size="small"
                 >
-                    <DownloadIcon sx={{ color: 'primary.main' }} />
+                    <DownloadIcon sx={{ color: 'grey.600' }} />
                 </IconButton>
             </Tooltip>
         </Stack>

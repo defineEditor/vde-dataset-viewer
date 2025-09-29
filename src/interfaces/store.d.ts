@@ -4,7 +4,7 @@ import {
     SettingsConverter,
     SettingsValidator,
     ValidatorConfig,
-    ValidationReport,
+    ValidationRunReport,
 } from 'interfaces/main';
 import { ParsedValidationReport } from 'interfaces/core.report';
 import { modals, ModalType, AllowedPathnames } from 'misc/constants';
@@ -128,6 +128,7 @@ export interface IUiViewer {
     validatorTab: 'validation' | 'results' | 'issues';
     filterInputMode: 'manual' | 'interactive';
     sidebarOpen: boolean;
+    bottomSection: 'dataset' | 'issues';
 }
 
 export interface IUiValidation {
@@ -135,6 +136,7 @@ export interface IUiValidation {
     status: 'not started' | 'validating' | 'completed';
     conversionProgress: number | null;
     dateCompleted: number | null;
+    error?: string;
 }
 
 export interface IUiValidationPage {
@@ -164,6 +166,7 @@ export interface IUi {
         [datasetId: string]: {
             showIssues: boolean;
             filteredIssues: string[];
+            currentIssueIndex: number;
         };
     };
     validationPage: IUiValidationPage;
@@ -187,7 +190,7 @@ export interface ValidatorData {
         standards: string[];
         terminology: string[];
     };
-    reports: { [id: string]: ValidationReport };
+    reports: { [id: string]: ValidationRunReport };
     reportData: { [id: string]: ParsedValidationReport };
     reportFilters: {
         [id: string]: BasicFilter | null;

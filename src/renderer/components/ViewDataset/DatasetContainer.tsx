@@ -7,7 +7,6 @@ import React, {
 } from 'react';
 import Stack from '@mui/material/Stack';
 import Paper from '@mui/material/Paper';
-import TablePagination from '@mui/material/TablePagination';
 import {
     IHeaderCell,
     ITableData,
@@ -29,6 +28,7 @@ import estimateWidth from 'renderer/utils/estimateWidth';
 import deepEqual from 'renderer/utils/deepEqual';
 import DatasetSidebar from 'renderer/components/DatasetView/Sidebar';
 import getIssueAnnotations from 'renderer/utils/getIssueAnnotations';
+import BottomToolbar from './BottomToolbar';
 
 const styles = {
     main: {
@@ -36,11 +36,6 @@ const styles = {
     },
     table: {
         height: '100%',
-    },
-    pagination: {
-        display: 'flex',
-        flex: '0 1 1%',
-        justifyContent: 'flex-end',
     },
 };
 
@@ -159,9 +154,9 @@ const DatasetContainer: React.FC = () => {
             // If table is already loaded for the current fileId, do not reload
             return;
         }
-        setTable(null);
         const readDataset = async () => {
             if (currentFileId === '' || apiService === null) {
+                setTable(null);
                 return;
             }
 
@@ -390,7 +385,7 @@ const DatasetContainer: React.FC = () => {
 
     // Convert report into annotation map
     const issueAnnotations = useMemo(() => {
-        if (!isCurrentFileInReport) {
+        if (!isCurrentFileInReport || currentFilter !== null) {
             return null;
         }
         return getIssueAnnotations(
@@ -398,8 +393,19 @@ const DatasetContainer: React.FC = () => {
             table,
             currentMask,
             filteredIssues,
+            page,
+            pageSize,
         );
-    }, [reportData, table, currentMask, isCurrentFileInReport, filteredIssues]);
+    }, [
+        reportData,
+        table,
+        currentMask,
+        isCurrentFileInReport,
+        filteredIssues,
+        page,
+        pageSize,
+        currentFilter,
+    ]);
 
     if (table === null) {
         return null;
@@ -417,7 +423,7 @@ const DatasetContainer: React.FC = () => {
                         handleContextMenu={handleContextMenu}
                         currentPage={page}
                         currentMask={currentMask}
-                        annotatedCells={issueAnnotations}
+                        annotatedCells={issueAnnotations?.annotations || null}
                     />
                     <ContextMenu
                         open={contextMenu.open}
@@ -429,20 +435,16 @@ const DatasetContainer: React.FC = () => {
                         isHeader={contextMenu.isHeader}
                     />
                 </Paper>
-                {pageSize < table.metadata.records && (
-                    <Paper sx={styles.pagination}>
-                        <TablePagination
-                            sx={{ mr: 2, borderRadius: 0 }}
-                            component="div"
-                            count={totalRecords}
-                            page={page}
-                            disabled={currentFilter !== null}
-                            onPageChange={handleChangePage}
-                            rowsPerPage={pageSize}
-                            rowsPerPageOptions={[-1]}
-                        />
-                    </Paper>
-                )}
+                <BottomToolbar
+                    totalRecords={totalRecords}
+                    page={page}
+                    pageSize={pageSize}
+                    records={table.metadata.records}
+                    onPageChange={handleChangePage}
+                    disablePagination={currentFilter !== null}
+                    issuesByRow={issueAnnotations?.byRow || null}
+                    showIssues={showIssues}
+                />
             </Stack>
             <DatasetSidebar open={sidebarOpen} onClose={handleCloseSidebar} />
         </>

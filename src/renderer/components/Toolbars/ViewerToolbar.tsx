@@ -271,7 +271,7 @@ const Header: React.FC = () => {
                             color:
                                 currentFileMode === 'remote'
                                     ? 'grey.500'
-                                    : 'primary.main',
+                                    : 'grey.600',
                         }}
                     />
                 </IconButton>
@@ -284,7 +284,7 @@ const Header: React.FC = () => {
                 >
                     <NextPlanOutlinedIcon
                         sx={{
-                            color: 'primary.main',
+                            color: 'grey.600',
                         }}
                     />
                 </IconButton>
@@ -298,7 +298,7 @@ const Header: React.FC = () => {
                 >
                     <ShortcutIcon
                         sx={{
-                            color: 'primary.main',
+                            color: 'grey.600',
                         }}
                     />
                 </IconButton>
@@ -313,8 +313,8 @@ const Header: React.FC = () => {
                     <FilterIcon
                         sx={{
                             color: isFilterEnabled
-                                ? 'success.main'
-                                : 'primary.main',
+                                ? 'primary.main'
+                                : 'grey.600',
                         }}
                     />
                 </IconButton>
@@ -328,9 +328,7 @@ const Header: React.FC = () => {
                 >
                     <VisibilityIcon
                         sx={{
-                            color: isMaskEnabled
-                                ? 'success.main'
-                                : 'primary.main',
+                            color: isMaskEnabled ? 'primary.main' : 'grey.600',
                         }}
                     />
                 </IconButton>
@@ -346,8 +344,8 @@ const Header: React.FC = () => {
                         sx={{
                             color: validatorVersion
                                 ? showIssues
-                                    ? 'success.main'
-                                    : 'primary.main'
+                                    ? 'primary.main'
+                                    : 'grey.600'
                                 : 'grey.500',
                         }}
                     />
@@ -362,7 +360,7 @@ const Header: React.FC = () => {
                 >
                     <InfoIcon
                         sx={{
-                            color: 'primary.main',
+                            color: 'grey.600',
                         }}
                     />
                 </IconButton>
@@ -379,7 +377,7 @@ const Header: React.FC = () => {
                             color:
                                 currentFileMode === 'remote'
                                     ? 'grey.500'
-                                    : 'primary.main',
+                                    : 'grey.600',
                         }}
                     />
                 </IconButton>
