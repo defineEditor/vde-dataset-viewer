@@ -90,7 +90,7 @@ const ProgressContainer: React.FC<{
                     />
                     {error !== null ? (
                         <Typography variant="caption" color="error.main">
-                            {error !== null && ` ${error}`}
+                            {error}
                         </Typography>
                     ) : (
                         <Typography variant="caption" color="text.secondary">
