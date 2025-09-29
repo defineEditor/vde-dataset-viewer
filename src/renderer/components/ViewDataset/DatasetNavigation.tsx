@@ -62,9 +62,6 @@ const DatasetNavigation: React.FC = () => {
         newValue: string,
     ) => {
         dispatch(openDataset({ fileId: newValue, currentFileId }));
-        if (newValue === 'fdsfdsfdasfdas') {
-            handleCloseDataset(_event, newValue);
-        }
     };
 
     return (

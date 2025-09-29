@@ -12,7 +12,7 @@ import FactCheckIcon from '@mui/icons-material/FactCheck';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import { setBottomSection } from 'renderer/redux/slices/ui';
 import DatasetNavigation from 'renderer/components/ViewDataset/DatasetNavigation';
-import IssueNavigation from './IssueNavitation';
+import IssueNavigation from 'renderer/components/ViewDataset/IssueNavigation';
 
 const styles = {
     container: {

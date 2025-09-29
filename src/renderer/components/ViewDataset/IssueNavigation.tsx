@@ -47,8 +47,7 @@ const IssueNavigation: React.FC<{
         return dataSettings?.currentIssueIndex || 0;
     });
 
-    const issueRows = Array.from(issuesByRow?.keys() || []);
-    const totalIssues = issueRows.length;
+    const totalIssues = issuesByRow?.length || 0;
 
     const throttledSetGoTo = useCallback(
         (row: number, column?: string) => {

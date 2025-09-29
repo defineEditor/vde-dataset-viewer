@@ -402,7 +402,9 @@ const runValidation = async (
                         });
                     }
                     reject(new Error('Report file not created'));
-                } catch (error) {}
+                } catch (error) {
+                    reject(error);
+                }
             } else {
                 reject(
                     new Error(
