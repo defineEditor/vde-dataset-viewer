@@ -1,4 +1,4 @@
-import { ValidationReport } from 'interfaces/common';
+import { ValidationRunReport } from 'interfaces/common';
 
 const getTimeAgo = (date: number): string => {
     const now = new Date();
@@ -39,7 +39,7 @@ const getTimeAgo = (date: number): string => {
     return `${years} year${years === 1 ? '' : 's'}`;
 };
 
-const getReportTitle = (report: ValidationReport): string => {
+const getReportTitle = (report: ValidationRunReport): string => {
     const date = new Date(report.date);
     const reportDate =
         `${date.getFullYear()}` +
@@ -65,10 +65,14 @@ const getReportTitle = (report: ValidationReport): string => {
             ? ` (+${report.files.length - 5} more)`
             : '';
 
+    let timeAgo = getTimeAgo(report.date);
+    if (timeAgo !== 'just now') {
+        timeAgo = `${timeAgo} ago`;
+    }
+
     const reportTitle =
         `${datasetNames}${additionalCount || ''} ` +
-            `${reportDate} (${getTimeAgo(report.date)} ago)` ||
-        'Validation Report';
+            `${reportDate} (${timeAgo})` || 'Validation Report';
     return reportTitle;
 };
 

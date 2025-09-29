@@ -31,7 +31,7 @@ import {
     removeValidationReport,
     setReportLastSaveFolder,
 } from 'renderer/redux/slices/data';
-import { ValidationReport } from 'interfaces/common';
+import { ValidationRunReport } from 'interfaces/common';
 import getReportTitle from 'renderer/utils/getReportTitle';
 import { paths } from 'misc/constants';
 
@@ -281,7 +281,7 @@ const ValidationResults: React.FC<ResultsProps> = ({
         }
     };
 
-    const getDatasetCount = (report: ValidationReport): number => {
+    const getDatasetCount = (report: ValidationRunReport): number => {
         try {
             // Parse the output to count datasets if it's JSON
             const output = JSON.parse(report.output);

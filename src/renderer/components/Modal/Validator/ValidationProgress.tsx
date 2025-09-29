@@ -61,7 +61,7 @@ const ProgressContainer: React.FC<{
 
     return (
         <>
-            <Grow in={conversionProgress !== null} timeout={500}>
+            <Grow in={conversionProgress !== null} timeout={500} unmountOnExit>
                 <Paper sx={styles.progressContainer}>
                     <>
                         <Typography variant="subtitle1">Conversion</Typography>
@@ -139,11 +139,13 @@ const ValidationProgress: React.FC<{
         <Stack spacing={2} sx={styles.container} alignItems="flex-start">
             <Typography variant="h6">Processing</Typography>
             <ProgressContainer validationId={validationId} />
+            <Typography variant="body2" sx={styles.closeWindowNote}>
+                {validationStatus !== 'completed'
+                    ? 'You can continue working on other tasks'
+                    : 'Press DONE to see results or start a new validation'}
+            </Typography>
             <Zoom in={validationStatus !== 'completed'} timeout={1000}>
                 <Box sx={styles.closeWindowNote}>
-                    <Typography variant="body2" sx={styles.closeWindowNote}>
-                        You can continue working on other tasks
-                    </Typography>
                     {loadingAnimation !== 'normal' && (
                         <Box sx={styles.workers}>
                             <Worker loadingAnimation={loadingAnimation} />

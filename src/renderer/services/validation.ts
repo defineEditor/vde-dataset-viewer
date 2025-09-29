@@ -185,7 +185,7 @@ export const startValidation = async (
                             },
                         }),
                     );
-                    // Only dispatch if result is a ValidationReport (has required properties)
+                    // Only dispatch if result is a ValidationRunReport (has required properties)
 
                     if (
                         info.result &&

@@ -157,12 +157,14 @@ export interface ConverterTaskProgress {
     error?: string;
 }
 
-export interface ValidationReport {
+export interface ValidationRunReport {
     id: string;
     date: number;
     files: { file: string; lastModified: number }[];
     output: string;
+    logFileName: string | null;
     config: ValidatorConfig;
+    command: string;
     summary: {
         uniqueIssues: number;
         totalIssues: number;
@@ -177,7 +179,7 @@ export interface ValidatorTaskProgress {
     type: typeof mainTaskTypes.VALIDATE;
     id: string;
     progress: number;
-    result?: ValidateGetInfoResult | ValidationReport;
+    result?: ValidateGetInfoResult | ValidationRunReport;
     error?: string;
 }
 

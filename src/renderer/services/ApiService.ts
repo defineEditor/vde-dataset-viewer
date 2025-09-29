@@ -843,6 +843,10 @@ class ApiService {
     public removeFileOpenListener = () => {
         window.electron.removeFileOpenListener();
     };
+
+    public writeToClipboard = (text: string) => {
+        window.electron.writeToClipboard(text);
+    };
 }
 
 export default ApiService;

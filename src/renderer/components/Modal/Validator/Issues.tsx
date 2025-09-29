@@ -13,8 +13,8 @@ import {
     TextField,
     InputAdornment,
 } from '@mui/material';
-import FilterIcon from '@mui/icons-material/FilterAlt';
-import FilterOffIcon from '@mui/icons-material/FilterAltOff';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import SearchIcon from '@mui/icons-material/Search';
 import AppContext from 'renderer/utils/AppContext';
 import { IssueSummaryItem } from 'interfaces/core.report';
@@ -348,9 +348,9 @@ const Issues: React.FC<IssuesProps> = ({
                             sx={styles.toggleAll}
                         >
                             {filteredIssues.length === 0 ? (
-                                <FilterIcon />
+                                <VisibilityIcon />
                             ) : (
-                                <FilterOffIcon />
+                                <VisibilityOffIcon />
                             )}
                         </IconButton>
                     </Tooltip>
@@ -404,9 +404,9 @@ const Issues: React.FC<IssuesProps> = ({
                                                     {filteredIssues.includes(
                                                         issue.core_id,
                                                     ) && hasLocation ? (
-                                                        <FilterOffIcon />
+                                                        <VisibilityOffIcon />
                                                     ) : (
-                                                        <FilterIcon />
+                                                        <VisibilityIcon />
                                                     )}
                                                 </IconButton>
                                             </Tooltip>

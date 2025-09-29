@@ -4,7 +4,7 @@ import {
     IRecentFile,
     BasicFilter,
     ConverterData,
-    ValidationReport,
+    ValidationRunReport,
     ParsedValidationReport,
 } from 'interfaces/common';
 import { IMask, IUiValidationPage, ValidatorData } from 'interfaces/common';
@@ -149,7 +149,7 @@ export const dataSlice = createSlice({
         },
         addValidationReport: (
             state,
-            action: PayloadAction<ValidationReport>,
+            action: PayloadAction<ValidationRunReport>,
         ) => {
             state.validator.reports = {
                 ...state.validator.reports,
