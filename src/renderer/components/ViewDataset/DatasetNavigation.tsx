@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { openDataset, closeDataset } from 'renderer/redux/slices/ui';
 import AppContext from 'renderer/utils/AppContext';
@@ -35,6 +35,25 @@ const DatasetNavigation: React.FC = () => {
     );
 
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+    const loadedRecords = useAppSelector((state) => state.data.loadedRecords);
+
+    const currentFileOpened = openedFiles.some(
+        (file) => file.fileId === currentFileId,
+    );
+
+    useEffect(() => {
+        // If the number of opened files changes, update the state
+        const newOpenedFiles = apiService
+            .getOpenedFiles()
+            .filter((file) => file.mode === 'local');
+
+        // Show only files with loaded records
+        const openedFilesWithRecords = newOpenedFiles.filter((file) =>
+            Object.prototype.hasOwnProperty.call(loadedRecords, file.fileId),
+        );
+
+        setOpenedFiles(openedFilesWithRecords);
+    }, [apiService, currentFileId, loadedRecords]);
 
     const handleCloseDataset = (
         event: React.SyntheticEvent,
@@ -66,7 +85,11 @@ const DatasetNavigation: React.FC = () => {
 
     return (
         <Tabs
-            value={currentFileId}
+            value={
+                currentFileOpened
+                    ? currentFileId
+                    : openedFiles[0]?.fileId || false
+            }
             onChange={handleDatasetChange}
             variant="scrollable"
             scrollButtons="auto"

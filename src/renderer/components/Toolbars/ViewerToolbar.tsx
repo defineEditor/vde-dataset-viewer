@@ -7,7 +7,7 @@ import FilterIcon from '@mui/icons-material/FilterAlt';
 import NextPlanOutlinedIcon from '@mui/icons-material/NextPlan';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
-import CachedIcon from '@mui/icons-material/Cached';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import {
     openDataset,
     closeDataset,
@@ -28,7 +28,7 @@ const styles = {
         paddingLeft: 1,
     },
     dataset: {
-        color: 'primary.main',
+        color: 'grey.800',
         fontWeight: 'bold',
         alignContent: 'center',
     },
@@ -372,7 +372,7 @@ const Header: React.FC = () => {
                     size="small"
                     disabled={currentFileMode === 'remote'}
                 >
-                    <CachedIcon
+                    <RefreshIcon
                         sx={{
                             color:
                                 currentFileMode === 'remote'
