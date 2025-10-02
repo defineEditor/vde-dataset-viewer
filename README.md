@@ -48,6 +48,8 @@ Supported Formats:
 * Automatic updates
 * Automated testing
 * API access
+* Converter between formats
+* Validation results view
 
 ## Viewing Customization Settings
 * Numeric date format

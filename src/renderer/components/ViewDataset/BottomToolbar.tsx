@@ -4,7 +4,6 @@ import {
     Stack,
     IconButton,
     Box,
-    Collapse,
     Tooltip,
 } from '@mui/material';
 import TableViewOutlinedIcon from '@mui/icons-material/TableViewOutlined';
@@ -22,6 +21,7 @@ const styles = {
     },
     mainStack: {
         width: '100%',
+        overflow: 'hidden',
     },
     leftSection: {
         maxWidth: '100%',
@@ -29,10 +29,11 @@ const styles = {
     },
     navigationSectionExpanded: {
         height: '100%',
-        flex: '1 0 auto',
+        flex: '1 1 auto',
         maxWidth: '100%',
         display: 'flex',
         alignItems: 'center',
+        overflow: 'auto',
     },
     navigationSectionCollapsed: {
         height: '100%',
@@ -130,12 +131,7 @@ const BottomToolbar: React.FC<BottomToolbarProps> = ({
                                 <TableViewOutlinedIcon />
                             </IconButton>
                         </Tooltip>
-                        <Collapse
-                            in={section === 'dataset' || disableIssues}
-                            orientation="horizontal"
-                        >
-                            <DatasetNavigation />
-                        </Collapse>
+                        {section === 'dataset' && <DatasetNavigation />}
                     </Box>
 
                     {/* Issues Navigation Section */}
@@ -160,12 +156,9 @@ const BottomToolbar: React.FC<BottomToolbarProps> = ({
                                 </IconButton>
                             </span>
                         </Tooltip>
-                        <Collapse
-                            in={section === 'issues' && !disableIssues}
-                            orientation="horizontal"
-                        >
+                        {section === 'issues' && !disableIssues && (
                             <IssueNavigation issuesByRow={issuesByRow} />
-                        </Collapse>
+                        )}
                     </Box>
                 </Stack>
 
