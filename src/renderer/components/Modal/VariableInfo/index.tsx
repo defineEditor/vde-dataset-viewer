@@ -1,4 +1,10 @@
-import React, { useEffect, useCallback, useContext, useState } from 'react';
+import React, {
+    useEffect,
+    useCallback,
+    useContext,
+    useState,
+    useRef,
+} from 'react';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
@@ -11,11 +17,14 @@ import { closeModal } from 'renderer/redux/slices/ui';
 import UniqueValues from 'renderer/components/Modal/VariableInfo/UniqueValues';
 import { IUiModalVariableInfo, TableRowValue } from 'interfaces/common';
 import { List, ListItem, ListItemText, Typography } from '@mui/material';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import SearchIcon from '@mui/icons-material/Search';
 
 const styles = {
     dialog: {
-        minWidth: '60%',
-        maxWidth: '80%',
+        minWidth: { xs: '95%', sm: '95%', md: '90%', lg: '80%', xl: '65%' },
+        maxWidth: '95%',
     },
     title: {
         backgroundColor: 'primary.main',
@@ -43,6 +52,22 @@ const styles = {
     properties: {
         minWidth: '300px',
     },
+    searchInput: {
+        color: 'white',
+        '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'rgba(255, 255, 255, 0.5)',
+        },
+        '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'white',
+        },
+        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'white',
+        },
+        '&::placeholder': {
+            color: 'rgba(255, 255, 255, 0.7)',
+        },
+    },
+    searchIcon: { color: 'white' },
 };
 
 const VariableInfo: React.FC<IUiModalVariableInfo> = ({
@@ -60,6 +85,9 @@ const VariableInfo: React.FC<IUiModalVariableInfo> = ({
         values: TableRowValue[];
         counts: { [value: string]: number };
     }>({ values: [], counts: {} });
+    const [searchTerm, setSearchTerm] = useState('');
+    const [loading, setLoading] = useState(false);
+    const searchInputRef = useRef<HTMLInputElement>(null);
 
     const totalRecords = currentMetadata.records;
 
@@ -77,6 +105,13 @@ const VariableInfo: React.FC<IUiModalVariableInfo> = ({
             if (event.key === 'Escape') {
                 handleClose();
             }
+            // Focus search input when Ctrl+F is pressed and Columns tab is active
+            if (event.ctrlKey && event.key === 'f') {
+                event.preventDefault();
+                if (searchInputRef.current) {
+                    searchInputRef.current.focus();
+                }
+            }
         };
 
         window.addEventListener('keydown', handleKeyDown);
@@ -88,6 +123,7 @@ const VariableInfo: React.FC<IUiModalVariableInfo> = ({
     // On load use the values which are currently available
     useEffect(() => {
         const getValues = async () => {
+            setLoading(true);
             const initialValues = await apiService.getUniqueValues(
                 currentFileId,
                 [columnId],
@@ -95,6 +131,7 @@ const VariableInfo: React.FC<IUiModalVariableInfo> = ({
                 true,
             );
             setValues(initialValues[columnId]);
+            setLoading(false);
         };
 
         getValues();
@@ -129,7 +166,7 @@ const VariableInfo: React.FC<IUiModalVariableInfo> = ({
     ];
 
     const handleGetValues = async () => {
-        setHasAllValues(true);
+        setLoading(true);
         const newValues = await apiService.getUniqueValues(
             currentFileId,
             [columnId],
@@ -137,17 +174,40 @@ const VariableInfo: React.FC<IUiModalVariableInfo> = ({
             true,
             true,
         );
+        setLoading(false);
         setValues(newValues[columnId]);
+        setHasAllValues(true);
     };
 
     return (
-        <Dialog
-            open
-            onClose={handleClose}
-            PaperProps={{ sx: { ...styles.dialog } }}
-        >
+        <Dialog open onClose={handleClose} PaperProps={{ sx: styles.dialog }}>
             <DialogTitle sx={styles.title}>
-                Variable Information: {variableInfo.name}
+                <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                >
+                    Variable Information: {variableInfo.name}
+                    <TextField
+                        size="small"
+                        value={searchTerm}
+                        inputRef={searchInputRef}
+                        placeholder="Ctrl + F to search"
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        variant="outlined"
+                        sx={{ minWidth: 200, maxWidth: 300 }}
+                        slotProps={{
+                            input: {
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <SearchIcon sx={styles.searchIcon} />
+                                    </InputAdornment>
+                                ),
+                                sx: styles.searchInput,
+                            },
+                        }}
+                    />
+                </Stack>
             </DialogTitle>
             <DialogContent sx={styles.content}>
                 <Stack direction="row" spacing={2}>
@@ -169,12 +229,18 @@ const VariableInfo: React.FC<IUiModalVariableInfo> = ({
                                 ))}
                         </List>
                     </Stack>
-                    <UniqueValues
-                        counts={values.counts}
-                        hasAllValues={hasAllValues}
-                        onGetValues={handleGetValues}
-                        totalRecords={totalRecords}
-                    />
+                    <Stack direction="column" flex={1}>
+                        <UniqueValues
+                            counts={values.counts}
+                            loading={loading}
+                            hasAllValues={hasAllValues}
+                            onGetValues={handleGetValues}
+                            totalRecords={totalRecords}
+                            columnId={columnId}
+                            onClose={handleClose}
+                            searchTerm={searchTerm}
+                        />
+                    </Stack>
                 </Stack>
             </DialogContent>
             <DialogActions sx={styles.actions}>

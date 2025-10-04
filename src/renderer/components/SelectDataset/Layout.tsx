@@ -3,11 +3,11 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Carousel from 'renderer/components/SelectDataset/Carousel';
 import Box from '@mui/material/Box';
-import { DatasetType, IRecentFile } from 'interfaces/common';
+import { IRecentFile, ApiOpenedFileWithMetadata } from 'interfaces/common';
 import FileCard from 'renderer/components/SelectDataset/FileCard';
 import FolderCard from 'renderer/components/SelectDataset/FolderCard';
-import DatasetCard from './DatasetCard';
-import OpenNewCard from './OpenNewCard';
+import DatasetCard from 'renderer/components/SelectDataset/DatasetCard';
+import OpenNewCard from 'renderer/components/SelectDataset/OpenNewCard';
 
 const styles = {
     main: {
@@ -32,14 +32,7 @@ const styles = {
 };
 
 const Layout: React.FC<{
-    openedFiles: {
-        name: string;
-        fileId: string;
-        label: string;
-        nCols: number;
-        records: number;
-        type: DatasetType;
-    }[];
+    openedFiles: ApiOpenedFileWithMetadata[];
     recentFiles: IRecentFile[];
     recentFolders: string[];
 

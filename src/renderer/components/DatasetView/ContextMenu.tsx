@@ -6,7 +6,10 @@ import HeaderContextMenu from 'renderer/components/DatasetView/HeaderContextMenu
 interface ContextMenuProps {
     open: boolean;
     anchorPosition: { top: number; left: number };
-    onClose: () => void;
+    onClose: (
+        event: {},
+        reason: 'backdropClick' | 'escapeKeyDown' | 'action',
+    ) => void;
     value: string | number | boolean | null;
     metadata: DatasetJsonMetadata;
     header: IHeaderCell;

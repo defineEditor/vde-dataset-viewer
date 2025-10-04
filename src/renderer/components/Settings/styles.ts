@@ -32,7 +32,10 @@ export const styles = {
     buttonContainer: {
         justifyContent: 'flex-end',
     },
-    tab: {
+    refreshContainer: {
+        alignContent: 'center',
+    },
+    tabs: {
         background:
             'radial-gradient(circle farthest-corner at bottom center,#eeeeee,#e5e4e4)',
         textTransform: 'none',
@@ -54,8 +57,25 @@ export const styles = {
         margin: 0,
         mt: 0,
     },
+    helperIcon: {
+        color: 'primary.main',
+        fontSize: 24,
+        mb: 0.5,
+        ml: 1,
+    },
+    typeIcon: {
+        fontSize: 16,
+        verticalAlign: 'middle',
+        mr: 0.5,
+    },
     alert: {
         mt: 1,
         mb: 2,
+    },
+    circularProgress: {
+        color: 'white',
+    },
+    refreshButton: {
+        width: '90px',
     },
 };

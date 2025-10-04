@@ -24,10 +24,12 @@ const DragAndDrop: React.FC<Props> = ({ children }) => {
         async (event: React.DragEvent) => {
             event.preventDefault();
             event.stopPropagation();
-            setIsDragging(false);
 
             const files = Array.from(event.dataTransfer.files);
-            if (files.length === 0) return;
+            if (files.length === 0) {
+                setIsDragging(false);
+                return;
+            }
 
             const filePath = window.electron.pathForFile(files[0]);
             const newDataInfo = await openNewDataset(
@@ -45,6 +47,7 @@ const DragAndDrop: React.FC<Props> = ({ children }) => {
                         }),
                     );
                 }
+                setIsDragging(false);
                 return;
             }
 
@@ -67,12 +70,18 @@ const DragAndDrop: React.FC<Props> = ({ children }) => {
                     currentFileId,
                 }),
             );
+            setIsDragging(false);
         },
         [apiService, dispatch, currentFileId],
     );
 
     const handleDragOver = useCallback(
         (event: React.DragEvent) => {
+            // Do not react in case there are no files being dragged
+            const files = Array.from(event.dataTransfer.files);
+            if (files.length === 0) {
+                return;
+            }
             event.preventDefault();
             event.stopPropagation();
             setIsDragging(true);

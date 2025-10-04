@@ -108,7 +108,7 @@ const updateConditionValue = (
             handleSingleValue(value, columnType, false),
         ) as unknown as string[] | number[];
     } else {
-        newCondition.value = handleSingleValue(newValue, columnType);
+        newCondition.value = handleSingleValue(newValue, columnType, false);
     }
     return newCondition;
 };

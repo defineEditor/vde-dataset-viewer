@@ -1,7 +1,6 @@
 import {
     ItemDataArray,
     DatasetJsonMetadata,
-    DatasetType,
     IOpenFile,
     BasicFilter,
     ColumnMetadata,
@@ -14,25 +13,32 @@ import {
     IApiRecord,
     IApiStudy,
     IApiStudyDataset,
-    DatasetMode,
     MainTask,
-    ProgressInfo,
+    TaskProgress,
     TableRowValue,
+    ValidatorConfig,
+    ValidationTaskFile,
+    ApiOpenedFile,
+    ApiOpenedFileWithMetadata,
+    ParsedValidationReport,
+    ValidationReportCompare,
+    NewWindowProps,
 } from 'interfaces/common';
 import store from 'renderer/redux/store';
 import transformData from 'renderer/services/transformData';
 import Filter from 'js-array-filter';
 import { setLoadedRecords } from 'renderer/redux/slices/data';
+import {
+    startValidation,
+    deleteValidationReport,
+    compareValidationReports,
+    getValidationReport,
+    downloadValidationReport,
+} from 'renderer/services/validation';
 
 class ApiService {
     // List of opened files with basic information
-    private openedFiles: {
-        fileId: string;
-        name: string;
-        mode: 'local' | 'remote';
-        path: string;
-        type: DatasetType;
-    }[] = [];
+    private openedFiles: ApiOpenedFile[] = [];
 
     // List of opened files metadata
     private openedFilesMetadata: {
@@ -62,6 +68,7 @@ class ApiService {
                         fileId: file.fileId,
                         type: file.type,
                         path: file.path,
+                        lastModified: file.lastModified || 0,
                     };
                 }
             });
@@ -87,6 +94,7 @@ class ApiService {
                     path: '',
                     metadata: {} as DatasetJsonMetadata,
                     errorMessage: 'API info not provided reading metadata',
+                    lastModified: 0,
                 };
             }
             fileData = await this.openFileRemote(apiInfo);
@@ -120,6 +128,7 @@ class ApiService {
                 type: fileData.type,
                 mode,
                 name: fileData.path,
+                lastModified: fileData.lastModified,
             };
         } else {
             this.openedFiles.push({
@@ -128,6 +137,7 @@ class ApiService {
                 type: fileData.type,
                 mode,
                 name: fileData.path,
+                lastModified: fileData.lastModified,
             });
         }
 
@@ -162,6 +172,7 @@ class ApiService {
                 type: 'json',
                 path: '',
                 errorMessage: 'Failed to open the file',
+                lastModified: 0,
             };
         }
         return response;
@@ -173,10 +184,17 @@ class ApiService {
         dataset: IApiStudyDataset;
     }): Promise<IOpenFile> => {
         // At this stage it is already know that the dataset exists
+        let lastModified = 0;
+        if (apiInfo.dataset.datasetJSONCreationDateTime) {
+            lastModified = new Date(
+                apiInfo.dataset.datasetJSONCreationDateTime,
+            ).getTime();
+        }
         const result: IOpenFile = {
             fileId: `${apiInfo.api.id}-${apiInfo.study.studyOID}-${apiInfo.dataset.itemGroupOID}`,
             type: 'json',
             path: `${apiInfo.api.address}${apiInfo.dataset.href}`,
+            lastModified,
         };
         return result;
     };
@@ -538,17 +556,7 @@ class ApiService {
     };
 
     // Get all opened files
-    public getOpenedFiles = (
-        fileId?: string,
-    ): {
-        fileId: string;
-        name: string;
-        label: string;
-        mode: DatasetMode;
-        nCols: number;
-        records: number;
-        type: DatasetType;
-    }[] => {
+    public getOpenedFiles = (fileId?: string): ApiOpenedFileWithMetadata[] => {
         // If fileId is not specified return all opened files
         return this.openedFiles
             .filter((file) => (fileId ? file.fileId === fileId : true))
@@ -562,6 +570,8 @@ class ApiService {
                     nCols: metadata?.columns.length || 0,
                     records: metadata?.records || 0,
                     type: file.type,
+                    path: file.path,
+                    lastModified: file.lastModified || 0,
                 };
             });
     };
@@ -647,6 +657,7 @@ class ApiService {
         return result;
     };
 
+    // Retrieve datasets via API
     public getApiAbout = async (
         apiRecord: IApiRecord,
     ): Promise<IApiAbout | null> => {
@@ -733,13 +744,14 @@ class ApiService {
         return result;
     };
 
+    // Tasks
     public startTask = async (task: MainTask) => {
         const result = await window.electron.startTask(task);
         return result;
     };
 
-    public subscriteToTaskProgress = (
-        callback: (info: ProgressInfo) => void,
+    public subscribeToTaskProgress = (
+        callback: (info: TaskProgress) => void,
     ) => {
         window.electron.onTaskProgress(callback);
     };
@@ -748,9 +760,92 @@ class ApiService {
         window.electron.cleanTaskProgressListeners();
     };
 
+    // Validation
+    public startValidation = async ({
+        files,
+        configuration,
+        settings,
+        validationId,
+    }: {
+        files: ValidationTaskFile[];
+        configuration: ValidatorConfig;
+        settings: ISettings;
+        validationId: string;
+    }): Promise<boolean | { error: string }> => {
+        return startValidation(this, {
+            files,
+            configuration,
+            settings,
+            validationId,
+        });
+    };
+
+    public deleteValidationReport = async (
+        fileName: string,
+    ): Promise<boolean> => {
+        return deleteValidationReport(fileName);
+    };
+
+    public getValidationReport = async (
+        fileName: string,
+    ): Promise<ParsedValidationReport | null> => {
+        return getValidationReport(fileName);
+    };
+
+    public downloadValidationReport = async (
+        fileName: string,
+        initialFolder?: string,
+    ): Promise<string | false> => {
+        return downloadValidationReport(fileName, initialFolder);
+    };
+
+    public compareValidationReports = async (
+        fileNameBase: string,
+        fileNameComp: string,
+    ): Promise<ValidationReportCompare | null> => {
+        return compareValidationReports(fileNameBase, fileNameComp);
+    };
+
+    // Misc
     public getAppVersion = async (): Promise<string> => {
         const result = await window.electron.getAppVersion();
         return result;
+    };
+
+    public openInNewWindow = async (
+        filePath: string,
+        position?: 'top' | 'bottom' | 'left' | 'right',
+        props?: NewWindowProps,
+    ): Promise<void> => {
+        await window.electron.openInNewWindow(filePath, position, props);
+    };
+
+    public resizeWindow = async (
+        position: 'top' | 'bottom' | 'left' | 'right',
+    ): Promise<void> => {
+        await window.electron.resizeWindow(position);
+    };
+
+    public setZoom = async (level: number): Promise<void> => {
+        await window.electron.setZoom(level);
+    };
+
+    public getZoom = async (): Promise<number> => {
+        return window.electron.getZoom();
+    };
+
+    public onFileOpen = (
+        callback: (filePath: string, newWindowProps?: NewWindowProps) => void,
+    ) => {
+        window.electron.onFileOpen(callback);
+    };
+
+    public removeFileOpenListener = () => {
+        window.electron.removeFileOpenListener();
+    };
+
+    public writeToClipboard = (text: string) => {
+        window.electron.writeToClipboard(text);
     };
 }
 

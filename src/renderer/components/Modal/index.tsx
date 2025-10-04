@@ -8,6 +8,7 @@ import AppUpdate from 'renderer/components/Modal/AppUpdate';
 import EditApi from 'renderer/components/Modal/EditApi';
 import ErrorModal from 'renderer/components/Modal/ErrorModal';
 import Mask from 'renderer/components/Modal/Mask';
+import Validator from 'renderer/components/Modal/Validator';
 import { modals as modalNames } from 'misc/constants';
 import { IUiModal } from 'interfaces/store';
 
@@ -20,6 +21,7 @@ const MODAL_COMPONENTS = {
     [modalNames.ERROR]: ErrorModal,
     [modalNames.VARIABLEINFO]: VariableInfo,
     [modalNames.MASK]: Mask,
+    [modalNames.VALIDATOR]: Validator,
 };
 
 const ModalRoot: React.FC = () => {

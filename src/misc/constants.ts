@@ -7,6 +7,7 @@ export const modals = {
     ERROR: 'ERROR',
     VARIABLEINFO: 'VARIABLEINFO',
     MASK: 'MASK',
+    VALIDATOR: 'VALIDATOR',
 } as const;
 
 export const paths = {
@@ -16,10 +17,12 @@ export const paths = {
     SETTINGS: '/settings',
     ABOUT: '/about',
     CONVERTER: '/converter',
+    VALIDATOR: '/validator',
 } as const;
 
 export const mainTaskTypes = {
     CONVERT: 'convert',
+    VALIDATE: 'validate',
 } as const;
 
 export type ModalType = (typeof modals)[keyof typeof modals];

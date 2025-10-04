@@ -1,14 +1,21 @@
-import { ConvertedFileInfo, ConvertTask } from 'interfaces/main';
+import {
+    ConvertedFileInfo,
+    ConverterProcessTask,
+    ConvertTask,
+} from 'interfaces/main';
 import DatasetXpt from 'xport-js';
 import DatasetJson, { ItemDataArray } from 'js-stream-dataset-json';
+import DatasetSas7bdat from 'js-stream-sas7bdat';
 import path from 'path';
 import fs from 'fs';
+import { tmpdir } from 'os';
 import { DatasetJsonMetadata, ItemType } from 'interfaces/common';
 
-const processXptMetadata = (
+const processSasMetadata = (
     metadata: DatasetJsonMetadata,
     options: ConvertTask['options'],
     outputName: string,
+    inputFormat: 'XPT' | 'SAS7BDAT',
 ): DatasetJsonMetadata => {
     const newColumns = metadata.columns.map((column) => {
         const newColumn = { ...column };
@@ -105,6 +112,11 @@ const processXptMetadata = (
 
     // FileOID;
     newMetadata.fileOID = outputName;
+
+    // Upcase dataset name if requested
+    if (options.sas7bdatUpcaseDatasetNames && inputFormat === 'SAS7BDAT') {
+        newMetadata.name = newMetadata.name.toUpperCase();
+    }
 
     return newMetadata;
 };
@@ -269,10 +281,11 @@ const convertXpt = async (
             );
 
             const metadata = await datasetXpt.getMetadata('dataset-json1.1');
-            let updatedMetadata = processXptMetadata(
+            let updatedMetadata = processSasMetadata(
                 metadata,
                 options,
                 outputName,
+                'XPT',
             );
 
             // Standard metadata updates;
@@ -308,6 +321,7 @@ const convertXpt = async (
                     options.inEncoding === 'default'
                         ? undefined
                         : options.inEncoding,
+                roundPrecision: options.xptRoundPrecision || 12,
             })) {
                 // Convert datetime values if needed
                 if (dtIndexes.length > 0) {
@@ -318,8 +332,10 @@ const convertXpt = async (
                             dataType,
                         );
                     });
+                    buffer.push(row as ItemDataArray);
+                } else {
+                    buffer.push(obs as ItemDataArray);
                 }
-                buffer.push(obs as ItemDataArray);
                 currentRecord++;
                 if (currentRecord % 10000 === 0) {
                     await datasetJson.write({
@@ -329,7 +345,7 @@ const convertXpt = async (
                     });
                     buffer = [];
 
-                    sendMessage(currentRecord / records);
+                    sendMessage((currentRecord / records) * 100);
                 }
             }
 
@@ -342,7 +358,7 @@ const convertXpt = async (
         }
 
         // Send the final message informing that the conversion is done
-        sendMessage(1);
+        sendMessage(100);
 
         return true;
     } catch (error) {
@@ -432,7 +448,7 @@ const datasetJson2Csv = async (
             currentRecord++;
             if (currentRecord % 10000 === 0) {
                 // Report progress periodically
-                sendMessage(currentRecord / records);
+                sendMessage((currentRecord / records) * 100);
             }
         }
 
@@ -445,7 +461,7 @@ const datasetJson2Csv = async (
         });
 
         // Send final progress
-        sendMessage(1);
+        sendMessage(100);
         return true;
     } catch (error) {
         return false;
@@ -515,7 +531,7 @@ const convertJson = async (
                 });
                 buffer = [];
 
-                sendMessage(currentRecord / records);
+                sendMessage((currentRecord / records) * 100);
             }
         }
 
@@ -527,8 +543,186 @@ const convertJson = async (
         });
 
         // Send the final message informing that the conversion is done
-        sendMessage(1);
+        sendMessage(100);
 
+        return true;
+    } catch (error) {
+        return false;
+    }
+};
+
+const convertSas7bdat = async (
+    file: ConvertedFileInfo,
+    options: ConvertTask['options'],
+    sendMessage: (progress: number) => void,
+): Promise<boolean> => {
+    try {
+        const { destinationDir, prettyPrint } = options;
+        const { outputName, fullPath } = file;
+        const datasetSas7bdat = new DatasetSas7bdat(fullPath);
+
+        if (options.outputFormat === 'CSV') {
+            // Direct conversion to CSV
+            const outputPath = path.join(destinationDir, outputName);
+            const writeStream = fs.createWriteStream(outputPath, {
+                encoding:
+                    options.outEncoding === 'default'
+                        ? 'utf8'
+                        : options.outEncoding,
+            });
+
+            const metadata = await datasetSas7bdat.getMetadata();
+            const { columns } = metadata;
+
+            // Write header row
+            const header = columns.map((col) => `"${col.name}"`).join(',');
+            writeStream.write(`${header}\n`);
+
+            let currentRecord = 0;
+            const totalRecords = metadata.records || 0;
+
+            // Process records using readRecords instead of read
+            for await (const obs of datasetSas7bdat.readRecords({
+                bufferLength: 10000,
+            })) {
+                const row = obs as ItemDataArray;
+
+                // Format for CSV
+                const csvRow = row
+                    .map((value) => {
+                        if (value === null || value === undefined) return '';
+                        if (typeof value === 'string')
+                            return `"${value.replace(/"/g, '""')}"`;
+                        return String(value);
+                    })
+                    .join(',');
+
+                writeStream.write(`${csvRow}\n`);
+
+                currentRecord++;
+                if (currentRecord % 10000 === 0) {
+                    sendMessage(
+                        totalRecords > 0
+                            ? (currentRecord / totalRecords) * 100
+                            : 0,
+                    );
+                }
+            }
+
+            // Close the write stream
+            await new Promise<void>((resolve, reject) => {
+                writeStream.end((err: Error | null) => {
+                    if (err) reject(err);
+                    else resolve();
+                });
+            });
+        } else {
+            // Convert to Dataset-JSON format
+            const datasetJson = new DatasetJson(
+                path.join(destinationDir, outputName),
+                {
+                    encoding:
+                        options.outEncoding === 'default'
+                            ? undefined
+                            : options.outEncoding,
+                    isNdJson: options.outputFormat === 'DNJ1.1',
+                    isCompressed: options.outputFormat === 'DJC1.1',
+                },
+            );
+
+            // Get and process metadata
+            const metadata = await datasetSas7bdat.getMetadata();
+            let updatedMetadata = processSasMetadata(
+                metadata,
+                options,
+                outputName,
+                'SAS7BDAT',
+            );
+
+            // Set Dataset-JSON version
+            if (
+                options.outputFormat === 'DJ1.1' ||
+                options.outputFormat === 'DNJ1.1' ||
+                options.outputFormat === 'DJC1.1'
+            ) {
+                updatedMetadata.datasetJSONVersion = '1.1.0';
+            }
+
+            // Set standard metadata values
+            updatedMetadata.fileOID = outputName;
+            updatedMetadata.itemGroupOID = `IG.${updatedMetadata.name.toUpperCase()}`;
+
+            // Apply standard metadata updates
+            updatedMetadata = updateMetadata(updatedMetadata, options);
+
+            await datasetJson.write({
+                metadata: updatedMetadata,
+                action: 'create',
+                options: { prettify: prettyPrint },
+            });
+
+            // Identify datetime columns that need conversion
+            const dtIndexes = updatedMetadata.columns.reduce(
+                (acc, column, index) => {
+                    if (
+                        ['datetime', 'date', 'time'].includes(column.dataType)
+                    ) {
+                        acc.push({ index, dataType: column.dataType });
+                    }
+                    return acc;
+                },
+                [] as Array<{ index: number; dataType: ItemType }>,
+            );
+
+            const totalRecords = updatedMetadata.records || 0;
+            let currentRecord = 0;
+
+            let buffer: ItemDataArray[] = [];
+            // Read and process in blocks using readRecords instead of read
+            for await (const obs of datasetSas7bdat.readRecords({
+                bufferLength: 10000,
+                type: 'array',
+            })) {
+                if (dtIndexes.length > 0) {
+                    const row = obs as ItemDataArray;
+                    dtIndexes.forEach(({ index, dataType }) => {
+                        row[index] = convertNum2Dt(
+                            row[index] as number,
+                            dataType,
+                        );
+                    });
+                    buffer.push(row as ItemDataArray);
+                } else {
+                    buffer.push(obs as ItemDataArray);
+                }
+                currentRecord++;
+
+                if (currentRecord % 10000 === 0) {
+                    await datasetJson.write({
+                        data: buffer,
+                        action: 'write',
+                        options: { prettify: prettyPrint },
+                    });
+                    buffer = [];
+
+                    sendMessage(
+                        totalRecords > 0
+                            ? (currentRecord / totalRecords) * 100
+                            : 0,
+                    );
+                }
+            }
+
+            // Write remaining records
+            await datasetJson.write({
+                data: buffer,
+                action: 'finalize',
+                options: { prettify: prettyPrint },
+            });
+        }
+
+        // Send final progress
+        sendMessage(100);
         return true;
     } catch (error) {
         return false;
@@ -537,28 +731,34 @@ const convertJson = async (
 
 process.parentPort.once(
     'message',
-    async (messageData: {
-        data: {
-            processId: string;
-            file: ConvertedFileInfo;
-            options: ConvertTask['options'];
-        };
-    }) => {
+    async (messageData: { data: ConverterProcessTask }) => {
         const { data } = messageData;
-        const { processId, file, options } = data;
+        const { id, file, options } = data;
 
         const sendMessage = (progress: number) => {
             process.parentPort.postMessage({
-                id: processId,
+                id,
                 progress,
+                fullPath: file.fullPath,
+                fileName: file.filename,
             });
         };
 
+        // If destination directory is __TEMP__, use the temp directory
+        if (options.destinationDir === '__TEMP__') {
+            const tempDir = path.join(tmpdir(), 'vde-convert');
+            if (!fs.existsSync(tempDir)) {
+                fs.mkdirSync(tempDir, { recursive: true });
+            }
+            options.destinationDir = tempDir;
+        }
+
         if (file.format === 'xpt') {
             await convertXpt(file, options, sendMessage);
-        }
-        if (file.format === 'json' || file.format === 'ndjson') {
+        } else if (file.format === 'json' || file.format === 'ndjson') {
             await convertJson(file, options, sendMessage);
+        } else if (file.format === 'sas7bdat') {
+            await convertSas7bdat(file, options, sendMessage);
         }
         process.exit();
     },

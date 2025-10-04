@@ -48,6 +48,8 @@ Supported Formats:
 * Automatic updates
 * Automated testing
 * API access
+* Converter between formats
+* Validation results view
 
 ## Viewing Customization Settings
 * Numeric date format
@@ -62,11 +64,6 @@ To develop the VDE Dataset Viewer, follow these steps:
 2. Navigate to the project directory: `cd vde-dataset-viewer`
 3. Install the dependencies: `npm install`
 4. Start the development mode: `npm run start`
-
-## Testing
-The VDE Dataset Viewer uses Jest for testing. Tests are located in the `__tests__` folder. To run the tests, use:
-1. Execute all tests : `npm test`
-2. Run specific tests: `npm test -- <test-file-name>`
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

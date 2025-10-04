@@ -5,6 +5,7 @@ import {
     ISettings,
     IApi,
     ConverterData,
+    ValidatorData,
 } from 'interfaces/common';
 import { paths } from 'misc/constants';
 
@@ -20,6 +21,7 @@ export const settings: ISettings = {
         copyFormat: 'tab',
         applyDateFormat: true,
         showTypeIcons: false,
+        copyWithHeaders: false,
     },
     converter: {
         threads: 2,
@@ -36,6 +38,8 @@ export const settings: ISettings = {
         convertSuffixDt: false,
         convertSuffixTm: false,
         convertSuffixDtm: false,
+        xptRoundPrecision: 12,
+        sas7bdatUpcaseDatasetNames: true,
         csvEpoch: '1960-01-01',
     },
     other: {
@@ -45,15 +49,25 @@ export const settings: ISettings = {
         dragoverAnimation: true,
         disableUiAnimation: false,
     },
+    validator: {
+        validatorPath: '',
+        poolSize: 4,
+        cachePath: '',
+        localRulesPath: '',
+        reportTemplate: '',
+    },
 };
 export const ui: IUi = {
     pathname: paths.SELECT,
     currentFileId: '',
     currentPage: 0,
+    zoomLevel: 0,
     viewer: {
         datasetInfoTab: 0,
+        validatorTab: 'validation',
         filterInputMode: 'manual',
         sidebarOpen: false,
+        bottomSection: 'dataset',
     },
     modals: [],
     snackbar: {
@@ -72,6 +86,15 @@ export const ui: IUi = {
             column: null,
         },
     },
+    validation: {},
+    validationPage: {
+        currentTab: 'validation',
+        currentReportTab: 'summary',
+        currentReportId: null,
+        showOnlyDatasetsWithIssues: false,
+        reportSummaryType: 'datasets',
+    },
+    dataSettings: {},
 };
 
 export const converter: ConverterData = {
@@ -90,6 +113,36 @@ export const converter: ConverterData = {
     },
     destinationDir: '',
     sourceDir: '',
+};
+
+export const validator: ValidatorData = {
+    info: {
+        version: '',
+        standards: [],
+        terminology: [],
+    },
+    configuration: {
+        whodrugPath: '',
+        meddraPath: '',
+        loincPath: '',
+        medrtPath: '',
+        uniiPath: '',
+        snomedVersion: '',
+        snomedUrl: '',
+        snomedEdition: '',
+        customStandard: false,
+        defineXmlPath: '',
+        validateXml: false,
+        defineVersion: '',
+        standard: '',
+        ctPackages: [],
+        version: '',
+        rules: [],
+    },
+    reports: {},
+    reportData: {},
+    reportFilters: {},
+    lastReportSaveFolder: '',
 };
 
 export const data: IData = {
@@ -114,6 +167,7 @@ export const data: IData = {
         ],
     },
     converter,
+    validator,
 };
 
 export const api: IApi = {
