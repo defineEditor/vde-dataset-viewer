@@ -83,21 +83,19 @@ const DatasetNavigation: React.FC = () => {
     ) => {
         event.stopPropagation();
         // Open the dataset in a new window if Shift or Ctrl key is pressed
-        if ('shiftKey' in event && 'ctrlKey' in event) {
-            if (event.shiftKey && event.ctrlKey) {
-                handleCloseDataset(event, fileId);
-                apiService.openInNewWindow(filePath);
-            } else if (event.shiftKey) {
-                handleCloseDataset(event, fileId);
-                apiService.openInNewWindow(filePath, 'right');
-                apiService.resizeWindow('left');
-            } else if (event.ctrlKey) {
-                handleCloseDataset(event, fileId);
-                apiService.openInNewWindow(filePath, 'bottom');
-                apiService.resizeWindow('top');
-            } else {
-                dispatch(openDataset({ fileId, currentFileId }));
-            }
+        if (event.shiftKey && event.ctrlKey) {
+            handleCloseDataset(event, fileId);
+            apiService.openInNewWindow(filePath);
+        } else if (event.shiftKey) {
+            handleCloseDataset(event, fileId);
+            apiService.openInNewWindow(filePath, 'right');
+            apiService.resizeWindow('left');
+        } else if (event.ctrlKey) {
+            handleCloseDataset(event, fileId);
+            apiService.openInNewWindow(filePath, 'bottom');
+            apiService.resizeWindow('top');
+        } else {
+            dispatch(openDataset({ fileId, currentFileId }));
         }
     };
 

@@ -27,7 +27,6 @@ const styles = {
     leftSection: {
         maxWidth: '100%',
         flex: '1 1 auto',
-        heigth: 52,
     },
     navigationSectionExpanded: {
         height: '100%',
