@@ -205,6 +205,7 @@ export interface ValidatorTaskProgress {
     progress: number;
     result?: ValidateGetInfoResult | ValidationRunReport;
     error?: string;
+    logFileName?: string | null;
 }
 
 export type TaskProgress = ValidatorTaskProgress | ConverterTaskProgress;

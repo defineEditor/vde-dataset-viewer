@@ -102,6 +102,13 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
             null,
     );
 
+    const validationLogFileName = useAppSelector<string | null>(
+        (state) =>
+            (validationId !== null &&
+                state.ui.validation[validationId]?.logFileName) ||
+            null,
+    );
+
     const { apiService } = useContext(AppContext);
 
     // Get last modified time for the current file
@@ -125,6 +132,9 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
                         status: 'not started',
                         validationProgress: 0,
                         conversionProgress: null,
+                        error: null,
+                        dateCompleted: null,
+                        logFileName: null,
                     },
                 }),
             );
@@ -273,6 +283,13 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
         dispatch(closeModal({ type }));
     };
 
+    const handleShowLog = () => {
+        if (!validationLogFileName) {
+            return;
+        }
+        apiService.showValidationLog(validationLogFileName);
+    };
+
     return (
         <Dialog
             open
@@ -317,6 +334,7 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
                     {['completed', 'validating'].includes(validationStatus) ? (
                         <ValidationProgress
                             validationId={validationId}
+                            onShowLog={handleShowLog}
                             validationStatus={validationStatus}
                         />
                     ) : (

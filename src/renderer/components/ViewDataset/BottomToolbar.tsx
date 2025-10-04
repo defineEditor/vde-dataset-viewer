@@ -22,10 +22,12 @@ const styles = {
     mainStack: {
         width: '100%',
         overflow: 'hidden',
+        height: 52,
     },
     leftSection: {
         maxWidth: '100%',
         flex: '1 1 auto',
+        heigth: 52,
     },
     navigationSectionExpanded: {
         height: '100%',

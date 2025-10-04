@@ -89,6 +89,7 @@ export interface ElectronApi {
         fileNameBase: string,
         fileNameComp: string,
     ) => Promise<ValidationReportCompare | null>;
+    showValidationLog: (logFileName: string) => Promise<boolean>;
     getAppVersion: () => Promise<string>;
     openInNewWindow: (
         filePath: string,

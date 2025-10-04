@@ -34,6 +34,7 @@ import {
     compareValidationReports,
     getValidationReport,
     downloadValidationReport,
+    showValidationLog,
 } from 'renderer/services/validation';
 
 class ApiService {
@@ -797,6 +798,12 @@ class ApiService {
         initialFolder?: string,
     ): Promise<string | false> => {
         return downloadValidationReport(fileName, initialFolder);
+    };
+
+    public showValidationLog = async (
+        logFileName: string,
+    ): Promise<boolean> => {
+        return showValidationLog(logFileName);
     };
 
     public compareValidationReports = async (

@@ -1,4 +1,4 @@
-import { IpcMainInvokeEvent } from 'electron';
+import { IpcMainInvokeEvent, BrowserWindow } from 'electron';
 import fs from 'fs';
 import fsPromises from 'fs/promises';
 import path from 'path';
@@ -229,6 +229,74 @@ class ReportManager {
             return false;
         } catch (error) {
             return false;
+        }
+    };
+
+    public showValidationLog = async (
+        _event: IpcMainInvokeEvent,
+        logFileName: string,
+    ): Promise<string | null> => {
+        try {
+            const logFilePath = path.join(this.reportsDirectory, logFileName);
+
+            if (fs.existsSync(logFilePath)) {
+                // Read the log file content
+                const logContent = await fsPromises.readFile(
+                    logFilePath,
+                    'utf-8',
+                );
+
+                // Create new window
+                const logWindow = new BrowserWindow({
+                    width: 800,
+                    height: 600,
+                    title: `Log File: ${logFileName}`,
+                    autoHideMenuBar: true,
+                    webPreferences: {
+                        nodeIntegration: false,
+                        contextIsolation: true,
+                        sandbox: true,
+                    },
+                });
+
+                // Create HTML content with the log
+                const htmlContent = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Log File: ${logFileName}</title>
+                        <style>
+                            body {
+                                font-family: 'Courier New', monospace;
+                                margin: 20px;
+                                background: #ffffffff;
+                                color: #181818ff;
+                            }
+                            pre {
+                                white-space: pre-wrap;
+                                word-wrap: break-word;
+                                font-size: 12px;
+                                line-height: 1.4;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h2>Log File: ${logFileName}</h2>
+                        <pre>${logContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+                    </body>
+                    </html>
+                `;
+
+                // Load the HTML content
+                logWindow.loadURL(
+                    `data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`,
+                );
+
+                return logFilePath;
+            }
+            return null;
+        } catch (error) {
+            return null;
         }
     };
 }
