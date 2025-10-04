@@ -56,6 +56,7 @@ const ProgressContainer: React.FC<{
                 validationProgress: 0,
                 conversionProgress: null,
                 dateCompleted: null,
+                error: null,
             },
     );
 

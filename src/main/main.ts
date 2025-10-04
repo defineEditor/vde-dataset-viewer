@@ -226,6 +226,7 @@ const handleSetZoom = async (
         return Promise.resolve();
     }
     event.sender.setZoomLevel(zoomLevel);
+    return Promise.resolve();
 };
 
 // Function to handle getting current zoom level

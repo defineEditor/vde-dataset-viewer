@@ -27,6 +27,17 @@ interface ApiServiceContext {
 
 // Validation functions
 
+export const compareValidationReports = async (
+    fileNameBase: string,
+    fileNameComp: string,
+): Promise<ValidationReportCompare | null> => {
+    const result = await window.electron.compareValidationReports(
+        fileNameBase,
+        fileNameComp,
+    );
+    return result;
+};
+
 export const startValidation = async (
     context: ApiServiceContext,
     {
@@ -353,17 +364,6 @@ export const getValidationReport = async (
     fileName: string,
 ): Promise<ParsedValidationReport | null> => {
     const result = await window.electron.getValidationReport(fileName);
-    return result;
-};
-
-export const compareValidationReports = async (
-    fileNameBase: string,
-    fileNameComp: string,
-): Promise<ValidationReportCompare | null> => {
-    const result = await window.electron.compareValidationReports(
-        fileNameBase,
-        fileNameComp,
-    );
     return result;
 };
 

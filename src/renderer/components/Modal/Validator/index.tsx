@@ -95,6 +95,13 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
             null,
     );
 
+    const validationError = useAppSelector<string | null>(
+        (state) =>
+            (validationId !== null &&
+                state.ui.validation[validationId]?.error) ||
+            null,
+    );
+
     const { apiService } = useContext(AppContext);
 
     // Get last modified time for the current file
@@ -145,6 +152,15 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
         ...validatorData.configuration,
     });
 
+    // Check if current file is in the report
+    const currentReportId = useAppSelector(
+        (state) => state.ui.validationPage.currentReportId,
+    );
+
+    const validationReport = useAppSelector(
+        (state) => state.data.validator.reports[currentReportId || ''] || null,
+    );
+
     // Save configuration and trigger validation
     const handleValidate = useCallback(() => {
         const runTask = async () => {
@@ -185,13 +201,16 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
                         validationProgress: 0,
                         conversionProgress: null,
                         dateCompleted: null,
+                        error: null,
                     },
                 }),
             );
         }
-        // Switch to results tab
-        dispatch(setValidationModalTab('results'));
-    }, [dispatch, validationId]);
+        // Switch to results tab if there are no errors
+        if (!validationError) {
+            dispatch(setValidationModalTab('results'));
+        }
+    }, [dispatch, validationId, validationError]);
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -205,15 +224,6 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
             window.removeEventListener('keydown', handleKeyDown);
         };
     }, [handleClose]);
-
-    // Check if current file is in the report
-    const currentReportId = useAppSelector(
-        (state) => state.ui.validationPage.currentReportId,
-    );
-
-    const validationReport = useAppSelector(
-        (state) => state.data.validator.reports[currentReportId || ''] || null,
-    );
 
     const isCurrentFileInReport = useMemo(() => {
         // If issues are not enabled, no need to check further

@@ -831,7 +831,7 @@ class ApiService {
     };
 
     public getZoom = async (): Promise<number> => {
-        return await window.electron.getZoom();
+        return window.electron.getZoom();
     };
 
     public onFileOpen = (

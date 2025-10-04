@@ -4,7 +4,7 @@ import data from 'renderer/redux/slices/data';
 import settings from 'renderer/redux/slices/settings';
 import api from 'renderer/redux/slices/api';
 import { PayloadAction } from '@reduxjs/toolkit';
-import { IStore } from 'interfaces/common';
+import { IStore } from 'interfaces/store.d';
 
 const combinedReducer = combineReducers({ ui, data, settings, api });
 

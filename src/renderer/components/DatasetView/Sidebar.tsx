@@ -59,6 +59,7 @@ const DatasetSidebar: React.FC<{
     const [openedFiles, setOpenedFiles] = useState(
         apiService.getOpenedFiles().filter((file) => file.mode === 'local'),
     );
+    const loadedRecords = useAppSelector((state) => state.data.loadedRecords);
 
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
 
@@ -67,6 +68,20 @@ const DatasetSidebar: React.FC<{
     );
 
     const [selectedIndex, setSelectedIndex] = useState(0);
+
+    useEffect(() => {
+        // If the number of opened files changes, update the state
+        const newOpenedFiles = apiService
+            .getOpenedFiles()
+            .filter((file) => file.mode === 'local');
+
+        // Show only files with loaded records
+        const openedFilesWithRecords = newOpenedFiles.filter((file) =>
+            Object.prototype.hasOwnProperty.call(loadedRecords, file.fileId),
+        );
+
+        setOpenedFiles(openedFilesWithRecords);
+    }, [apiService, currentFileId, loadedRecords]);
 
     const filteredFiles = openedFiles
         .filter((file) =>

@@ -155,20 +155,14 @@ const cleanTemporaryFiles = async (
                     fs.unlinkSync(file);
                 }
             } catch (error) {
-                // Log error but continue
-                console.error(
-                    `Validate Worker: Error deleting temporary file ${file}: ${
-                        (error as Error).message
-                    }`,
-                );
+                // Continue even if one file deletion fails
                 failedToDelete = true;
             }
         }
         return !failedToDelete;
-    } else {
-        // No temporary files to delete
-        return true;
     }
+    // No temporary files to delete
+    return true;
 };
 
 /**

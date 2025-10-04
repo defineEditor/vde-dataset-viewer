@@ -1,7 +1,6 @@
 import { UpdateCheckResult } from 'electron-updater';
 import { DatasetMetadata } from 'interfaces/datasetJson';
 import { mainTaskTypes } from 'misc/constants';
-import { IssueSummaryItem } from './core.report';
 
 export interface SettingsConverter {
     threads: number;
@@ -157,6 +156,31 @@ export interface ConverterTaskProgress {
     error?: string;
 }
 
+export interface ValidationReportCompare {
+    counts: {
+        newIssues: number;
+        changedIssues: number;
+        resolvedIssues: number;
+        skippedIssues: number;
+        byDataset?: {
+            [dataset: string]: {
+                newIssues: string[];
+                changedIssues: string[];
+                resolvedIssues: string[];
+                skippedIssues: string[];
+            };
+        };
+        byIssue?: {
+            [core_id: string]: {
+                newDatasets: string[];
+                changedDatasets: string[];
+                resolvedDatasets: string[];
+                skippedDatasets: string[];
+            };
+        };
+    };
+}
+
 export interface ValidationRunReport {
     id: string;
     date: number;
@@ -184,31 +208,6 @@ export interface ValidatorTaskProgress {
 }
 
 export type TaskProgress = ValidatorTaskProgress | ConverterTaskProgress;
-
-export interface ValidationReportCompare {
-    counts: {
-        newIssues: number;
-        changedIssues: number;
-        resolvedIssues: number;
-        skippedIssues: number;
-        byDataset?: {
-            [dataset: string]: {
-                newIssues: string[];
-                changedIssues: string[];
-                resolvedIssues: string[];
-                skippedIssues: string[];
-            };
-        };
-        byIssue?: {
-            [core_id: string]: {
-                newDatasets: string[];
-                changedDatasets: string[];
-                resolvedDatasets: string[];
-                skippedDatasets: string[];
-            };
-        };
-    };
-}
 
 export interface NewWindowProps {
     goTo?: {

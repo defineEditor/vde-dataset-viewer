@@ -218,6 +218,7 @@ export const uiSlice = createSlice({
                     validationProgress: 0,
                     conversionProgress: null,
                     dateCompleted: null,
+                    error: null,
                     ...validation,
                 };
             } else {

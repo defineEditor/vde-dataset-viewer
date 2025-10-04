@@ -83,12 +83,12 @@ class ReportManager {
                 const decompressedData = await gunzipPromise(compressedData);
                 const report = JSON.parse(decompressedData.toString('utf-8'));
                 return report;
-            } else {
-                const rawData = await fsPromises.readFile(filePath, 'utf-8');
-                // Try to serialize
-                const report = JSON.parse(rawData);
-                return report;
             }
+
+            const rawData = await fsPromises.readFile(filePath, 'utf-8');
+            // Try to serialize
+            const report = JSON.parse(rawData);
+            return report;
         } catch (error) {
             // Error reading report file
             return null;
@@ -223,9 +223,8 @@ class ReportManager {
                     );
                     await fsPromises.copyFile(xlsxFilePath, destXlsxPath);
                     return destination[0];
-                } else {
-                    return false;
                 }
+                return false;
             }
             return false;
         } catch (error) {

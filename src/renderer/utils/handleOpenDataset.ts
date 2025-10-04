@@ -8,7 +8,8 @@ import {
 import { addRecent } from 'renderer/redux/slices/data';
 import { openNewDataset } from 'renderer/utils/readData';
 
-import { NewWindowProps, AppDispatch } from 'interfaces/common';
+import { NewWindowProps } from 'interfaces/common';
+import { AppDispatch } from 'renderer/redux/store';
 import ApiService from 'renderer/services/ApiService';
 
 const handleOpenDataset = async (

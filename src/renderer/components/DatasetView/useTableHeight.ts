@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 const useTableHeight = () => {
     const [tableHeight, setTableHeight] = useState(0);
     const viewContainerRef = useRef<HTMLDivElement>(null);
-    const resizeTimeoutRef = useRef<NodeJS.Timeout>();
+    const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
     const measureHeight = useCallback(() => {
         if (viewContainerRef.current) {
@@ -44,13 +44,6 @@ const useTableHeight = () => {
         }
     }, [tableHeight, measureHeight]);
 
-    // Initial measurement effect
-    useEffect(() => {
-        // Only measure initially if height is 0
-        if (tableHeight === 0) {
-            measureHeight();
-        }
-    }, [measureHeight]); // This will run once on mount
     return { tableHeight, viewContainerRef };
 };
 
