@@ -219,6 +219,7 @@ export const uiSlice = createSlice({
                     conversionProgress: null,
                     dateCompleted: null,
                     error: null,
+                    logFileName: null,
                     ...validation,
                 };
             } else {

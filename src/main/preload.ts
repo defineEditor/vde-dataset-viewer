@@ -114,6 +114,9 @@ const compareValidationReports: ElectronApi['compareValidationReports'] = (
         fileNameComp,
     );
 
+const showValidationLog: ElectronApi['showValidationLog'] = (logFileName) =>
+    ipcRenderer.invoke('main:showValidationLog', logFileName);
+
 const getValidationReport: ElectronApi['getValidationReport'] = (fileName) =>
     ipcRenderer.invoke('main:getValidationReport', fileName);
 
@@ -184,6 +187,7 @@ contextBridge.exposeInMainWorld('electron', {
     openDirectoryDialog,
     deleteValidationReport,
     compareValidationReports,
+    showValidationLog,
     getValidationReport,
     downloadValidationReport,
     isWindows,

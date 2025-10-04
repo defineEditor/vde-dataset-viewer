@@ -137,6 +137,7 @@ export interface IUiValidation {
     conversionProgress: number | null;
     dateCompleted: number | null;
     error: string | null;
+    logFileName: string | null;
 }
 
 export interface IUiValidationPage {

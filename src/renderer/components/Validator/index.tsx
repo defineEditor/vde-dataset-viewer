@@ -74,6 +74,21 @@ const Validator: React.FC = () => {
                 state.ui.validation[validationId]?.status) ||
             'not started',
     );
+
+    const validationError = useAppSelector<string | null>(
+        (state) =>
+            (validationId !== null &&
+                state.ui.validation[validationId]?.error) ||
+            null,
+    );
+
+    const validationLogFileName = useAppSelector<string | null>(
+        (state) =>
+            (validationId !== null &&
+                state.ui.validation[validationId]?.logFileName) ||
+            null,
+    );
+
     const dispatch = useAppDispatch();
 
     const [config, setConfig] = useState<ValidatorConfig>({
@@ -122,7 +137,16 @@ const Validator: React.FC = () => {
                 },
             }),
         );
-        dispatch(setValidationTab('results'));
+        if (!validationError) {
+            dispatch(setValidationTab('results'));
+        }
+    };
+
+    const handleShowLog = () => {
+        if (!validationLogFileName) {
+            return;
+        }
+        apiService.showValidationLog(validationLogFileName);
     };
 
     return (
@@ -149,6 +173,7 @@ const Validator: React.FC = () => {
                                 <ValidationProgress
                                     validationId={validationId}
                                     validationStatus={validationStatus}
+                                    onShowLog={handleShowLog}
                                 />
                             ) : (
                                 <Configuration

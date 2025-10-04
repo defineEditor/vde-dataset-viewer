@@ -22,6 +22,7 @@ const styles = {
     mainStack: {
         width: '100%',
         overflow: 'hidden',
+        height: 52,
     },
     leftSection: {
         maxWidth: '100%',

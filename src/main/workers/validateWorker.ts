@@ -313,6 +313,7 @@ const runValidation = async (
     sendMessage: (progress: number) => void,
 ): Promise<{ fileName: string; date: number; logFileName: string | null }> => {
     const now = new Date();
+    let logFileName: string | null = null;
 
     return new Promise((resolve, reject) => {
         const childProcess = exec(command, {
@@ -348,13 +349,14 @@ const runValidation = async (
 
                     // Log command if file is not yet created
                     if (!fs.existsSync(`${outputPath}.log`)) {
+                        logFileName = `${path.basename(outputPath)}.log`;
                         fs.writeFileSync(
                             path.join(`${outputPath}.log`),
                             `Log file for validation run on ${now.toISOString()}\n\n`,
                         );
                         fs.appendFileSync(
                             path.join(`${outputPath}.log`),
-                            `CLI command:\n${command}\nError Messages:\n`,
+                            `CLI command:\n${command}\n\nError Messages:\n`,
                         );
                     }
                     // Log stdout errors to file
@@ -385,9 +387,8 @@ const runValidation = async (
                         // Remove the original JSON file
                         fs.unlinkSync(`${outputPath}.json`);
                         // Check if log file exists
-                        let logFileName: string | null = null;
-                        if (fs.existsSync(`${outputPath}.log`)) {
-                            logFileName = `${outputFileName}.log`;
+                        if (!fs.existsSync(`${outputPath}.log`)) {
+                            logFileName = null;
                         }
                         resolve({
                             fileName: `${outputFileName}.json.gz`,
@@ -395,14 +396,26 @@ const runValidation = async (
                             logFileName,
                         });
                     }
-                    reject(new Error('Report file not created'));
+                    reject(
+                        new Error('Report file not created', {
+                            cause: logFileName,
+                        }),
+                    );
                 } catch (error) {
+                    if (error instanceof Error) {
+                        reject(
+                            new Error(error.message, {
+                                cause: logFileName,
+                            }),
+                        );
+                    }
                     reject(error);
                 }
             } else {
                 reject(
                     new Error(
                         `CDISC Core validation failed with exit code ${code}`,
+                        { cause: logFileName },
                     ),
                 );
             }
@@ -643,6 +656,11 @@ process.parentPort.once(
                             process.parentPort.postMessage({
                                 id: processId,
                                 error: `Validation failed: ${error.message}`,
+                                logFileName:
+                                    typeof error?.cause === 'string' &&
+                                    /\.log$/.test(error?.cause)
+                                        ? error.cause
+                                        : null,
                                 progress: 100,
                             });
                         }
@@ -658,9 +676,15 @@ process.parentPort.once(
             }
         } catch (error) {
             if (error instanceof Error) {
+                const logFileName =
+                    typeof error?.cause === 'string' &&
+                    /\.log$/.test(error?.cause)
+                        ? error.cause
+                        : null;
                 process.parentPort.postMessage({
                     id: processId,
                     error: `Error executing task: ${error.message || error}`,
+                    logFileName,
                     progress: 100,
                 });
             }

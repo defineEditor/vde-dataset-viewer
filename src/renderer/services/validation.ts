@@ -60,6 +60,9 @@ export const startValidation = async (
                 status: 'not started',
                 validationProgress: 0,
                 conversionProgress: null,
+                error: null,
+                dateCompleted: null,
+                logFileName: null,
             },
         }),
     );
@@ -176,6 +179,7 @@ export const startValidation = async (
                             validation: {
                                 status: 'completed',
                                 error: info.error,
+                                logFileName: info.logFileName || null,
                                 dateCompleted: new Date().getTime(),
                             },
                         }),
@@ -375,5 +379,12 @@ export const downloadValidationReport = async (
         fileName,
         initialFolder,
     );
+    return result;
+};
+
+export const showValidationLog = async (
+    logFileName: string,
+): Promise<boolean> => {
+    const result = await window.electron.showValidationLog(logFileName);
     return result;
 };
