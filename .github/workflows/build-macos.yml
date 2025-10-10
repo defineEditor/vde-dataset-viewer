@@ -1,0 +1,77 @@
+name: macOS build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  build-macos:
+    runs-on: macos-13
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64, x64]
+    env:
+      ELECTRON_CACHE: ${{ runner.temp }}/electron
+      ELECTRON_BUILDER_CACHE: ${{ runner.temp }}/electron-builder
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Restore Electron caches
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.ELECTRON_CACHE }}
+            ${{ env.ELECTRON_BUILDER_CACHE }}
+          key: ${{ runner.os }}-electron-${{ matrix.arch }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-electron-${{ matrix.arch }}-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build renderer and main bundles
+        run: npm run build
+
+      - name: Decode signing certificate
+        if: ${{ secrets.MAC_CERTIFICATE_BASE64 != '' }}
+        run: |
+          CERT_PATH="${RUNNER_TEMP}/mac_cert.p12"
+          echo "${MAC_CERTIFICATE_BASE64}" | base64 --decode > "$CERT_PATH"
+          echo "CSC_LINK=$CERT_PATH" >> $GITHUB_ENV
+        env:
+          MAC_CERTIFICATE_BASE64: ${{ secrets.MAC_CERTIFICATE_BASE64 }}
+
+      - name: Disable auto discovery when unsigned
+        if: ${{ secrets.MAC_CERTIFICATE_BASE64 == '' }}
+        run: echo "CSC_IDENTITY_AUTO_DISCOVERY=false" >> $GITHUB_ENV
+
+      - name: Package macOS build (${{ matrix.arch }})
+        run: |
+          npx electron-builder build --mac --${{ matrix.arch }} --publish never
+        env:
+          npm_config_arch: ${{ matrix.arch }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-${{ matrix.arch }}
+          path: release/build/**/*
