@@ -52,6 +52,7 @@ export const dehydrateState = (state: IStore): IStore => {
         ...newData.validator,
         reportFilters: {},
         reportData: {},
+        selectedFiles: [],
     };
     // Keep zoom level between sessions
     const newUi: IUi = {

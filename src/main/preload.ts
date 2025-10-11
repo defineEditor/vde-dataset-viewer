@@ -100,6 +100,9 @@ const openDirectoryDialog: ElectronApi['openDirectoryDialog'] = (
     initialFolder,
 ) => ipcRenderer.invoke('main:openDirectoryDialog', initialFolder);
 
+const getFilesInfo: ElectronApi['getFilesInfo'] = (filePaths) =>
+    ipcRenderer.invoke('main:getFilesInfo', filePaths);
+
 const deleteValidationReport: ElectronApi['deleteValidationReport'] = (
     fileName,
 ) => ipcRenderer.invoke('main:deleteValidationReport', fileName);
@@ -185,6 +188,7 @@ contextBridge.exposeInMainWorld('electron', {
     fetch,
     openFileDialog,
     openDirectoryDialog,
+    getFilesInfo,
     deleteValidationReport,
     compareValidationReports,
     showValidationLog,

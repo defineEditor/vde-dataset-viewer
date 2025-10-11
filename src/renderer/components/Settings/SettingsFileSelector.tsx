@@ -1,5 +1,5 @@
 import React from 'react';
-import FileSelector from 'renderer/components/FileSelector';
+import FileSelector from 'renderer/components/Common/SingleFileSelector';
 import { styles } from 'renderer/components/Settings/styles';
 
 const SettingsFileSelector: React.FC<{

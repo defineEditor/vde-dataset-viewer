@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Box, Tabs, Tab, Paper, Button, Stack } from '@mui/material';
 import Results from 'renderer/components/Common/ValidationResults';
 import Report from 'renderer/components/Validator/Report';
@@ -72,12 +72,13 @@ const styles = {
 };
 
 const Validator: React.FC = () => {
-    const [selectedFiles, setSelectedFiles] = useState<FileInfo[]>([]);
-
     const { apiService } = useContext(AppContext);
     const validatorData = useAppSelector((state) => state.data.validator);
     const settings = useAppSelector((state) => state.settings);
     const tab = useAppSelector((state) => state.ui.validationPage.currentTab);
+    const selectedFiles = useAppSelector(
+        (state) => state.data.validator.selectedFiles,
+    );
 
     const validationId = 'globalvalidation';
     const validationStatus = useAppSelector<IUiValidation['status']>(
@@ -107,6 +108,10 @@ const Validator: React.FC = () => {
         ...validatorData.configuration,
     });
 
+    useEffect(() => {
+        setConfig({ ...validatorData.configuration });
+    }, [validatorData.configuration]);
+
     const handleTabChange = (
         _event: React.SyntheticEvent,
         newValue: IUiValidationPage['currentTab'],
@@ -135,6 +140,14 @@ const Validator: React.FC = () => {
             settings,
             validationId: 'globalvalidation',
         });
+    };
+
+    const handleSetSelectedFiles = (files: FileInfo[]) => {
+        dispatch(
+            setValidatorData({
+                selectedFiles: files,
+            }),
+        );
     };
 
     const handleReset = () => {
@@ -196,7 +209,7 @@ const Validator: React.FC = () => {
                             ) : (
                                 <Configuration
                                     selectedFiles={selectedFiles}
-                                    setSelectedFiles={setSelectedFiles}
+                                    setSelectedFiles={handleSetSelectedFiles}
                                     config={config}
                                     setConfig={setConfig}
                                 />

@@ -103,6 +103,7 @@ export interface ValidatorConfig {
     ctPackages: string[];
     version: string;
     rules: string[];
+    excludedRules: string[];
 }
 
 export interface ValidateTask {

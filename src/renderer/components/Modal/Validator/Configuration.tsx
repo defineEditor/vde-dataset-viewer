@@ -14,7 +14,7 @@ import {
     Autocomplete,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import FileSelector from 'renderer/components/FileSelector';
+import FileSelector from 'renderer/components/Common/SingleFileSelector';
 import AppContext from 'renderer/utils/AppContext';
 import { ValidatorConfig } from 'interfaces/main';
 import OptionsModal from 'renderer/components/Validator/OptionsModal';
