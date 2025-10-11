@@ -17,8 +17,6 @@ jobs:
       matrix:
         arch: [arm64, x64]
     env:
-      ELECTRON_CACHE: ${{ runner.temp }}/electron
-      ELECTRON_BUILDER_CACHE: ${{ runner.temp }}/electron-builder
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
@@ -29,18 +27,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Use Node.js 20
+      - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Restore Electron caches
         uses: actions/cache@v4
         with:
           path: |
-            ${{ env.ELECTRON_CACHE }}
-            ${{ env.ELECTRON_BUILDER_CACHE }}
+            ${{ runner.temp }}/electron
+            ${{ runner.temp }}/electron-builder
           key: ${{ runner.os }}-electron-${{ matrix.arch }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-electron-${{ matrix.arch }}-
