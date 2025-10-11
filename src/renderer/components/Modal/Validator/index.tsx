@@ -378,7 +378,11 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
                         <Button
                             onClick={handleValidate}
                             color="primary"
-                            disabled={validatorTab !== 'validation'}
+                            disabled={
+                                validatorTab !== 'validation' ||
+                                !config.standard ||
+                                !config.version
+                            }
                         >
                             Validate
                         </Button>

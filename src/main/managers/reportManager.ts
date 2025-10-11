@@ -211,7 +211,10 @@ class ReportManager {
                     return '';
                 }
                 // Copy Excel file to the destination folder
-                const xlsxFileName = fileName.replace('.json', '.xlsx');
+                const xlsxFileName = fileName.replace(
+                    /(.json|.json.gz)$/,
+                    '.xlsx',
+                );
                 const xlsxFilePath = path.join(
                     this.reportsDirectory,
                     xlsxFileName,

@@ -26,6 +26,18 @@ const styles = {
         flexDirection: 'column',
         backgroundColor: 'grey.100',
     },
+    missingValidator: {
+        p: 2,
+        width: '100%',
+        height: '100%',
+        margin: '0 auto',
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: 'grey.100',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '1.2rem',
+    },
     tabPanel: {
         overflow: 'auto',
         flex: '1 1 auto',
@@ -149,6 +161,12 @@ const Validator: React.FC = () => {
         apiService.showValidationLog(validationLogFileName);
     };
 
+    if (!validatorData?.info?.version) {
+        return (
+            <Box sx={styles.missingValidator}>Setup Validator in Settings.</Box>
+        );
+    }
+
     return (
         <Box sx={styles.container}>
             <Paper sx={styles.paper}>
@@ -203,7 +221,8 @@ const Validator: React.FC = () => {
                                     variant="contained"
                                     disabled={
                                         selectedFiles.length === 0 ||
-                                        validationStatus === 'validating'
+                                        !config.standard ||
+                                        !config.version
                                     }
                                 >
                                     Validate
