@@ -43,7 +43,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-electron-${{ matrix.arch }}-
 
-      - name: Install dependencies
+      - name: Install dependencies for the build
         run: npm ci
 
       - name: Build renderer and main bundles
