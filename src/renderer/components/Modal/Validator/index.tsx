@@ -294,7 +294,7 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
         <Dialog
             open
             onClose={handleClose}
-            PaperProps={{ sx: { ...styles.dialog } }}
+            slotProps={{ paper: { sx: styles.dialog } }}
         >
             <DialogTitle sx={styles.title}>
                 <Box
@@ -378,7 +378,11 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
                         <Button
                             onClick={handleValidate}
                             color="primary"
-                            disabled={validatorTab !== 'validation'}
+                            disabled={
+                                validatorTab !== 'validation' ||
+                                !config.standard ||
+                                !config.version
+                            }
                         >
                             Validate
                         </Button>

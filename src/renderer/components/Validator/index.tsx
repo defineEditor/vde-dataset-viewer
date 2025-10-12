@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Box, Tabs, Tab, Paper, Button, Stack } from '@mui/material';
 import Results from 'renderer/components/Common/ValidationResults';
 import Report from 'renderer/components/Validator/Report';
@@ -25,6 +25,18 @@ const styles = {
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: 'grey.100',
+    },
+    missingValidator: {
+        p: 2,
+        width: '100%',
+        height: '100%',
+        margin: '0 auto',
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: 'grey.100',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '1.2rem',
     },
     tabPanel: {
         overflow: 'auto',
@@ -60,12 +72,13 @@ const styles = {
 };
 
 const Validator: React.FC = () => {
-    const [selectedFiles, setSelectedFiles] = useState<FileInfo[]>([]);
-
     const { apiService } = useContext(AppContext);
     const validatorData = useAppSelector((state) => state.data.validator);
     const settings = useAppSelector((state) => state.settings);
     const tab = useAppSelector((state) => state.ui.validationPage.currentTab);
+    const selectedFiles = useAppSelector(
+        (state) => state.data.validator.selectedFiles,
+    );
 
     const validationId = 'globalvalidation';
     const validationStatus = useAppSelector<IUiValidation['status']>(
@@ -94,6 +107,10 @@ const Validator: React.FC = () => {
     const [config, setConfig] = useState<ValidatorConfig>({
         ...validatorData.configuration,
     });
+
+    useEffect(() => {
+        setConfig({ ...validatorData.configuration });
+    }, [validatorData.configuration]);
 
     const handleTabChange = (
         _event: React.SyntheticEvent,
@@ -125,6 +142,14 @@ const Validator: React.FC = () => {
         });
     };
 
+    const handleSetSelectedFiles = (files: FileInfo[]) => {
+        dispatch(
+            setValidatorData({
+                selectedFiles: files,
+            }),
+        );
+    };
+
     const handleReset = () => {
         dispatch(
             updateValidation({
@@ -148,6 +173,12 @@ const Validator: React.FC = () => {
         }
         apiService.showValidationLog(validationLogFileName);
     };
+
+    if (!validatorData?.info?.version) {
+        return (
+            <Box sx={styles.missingValidator}>Setup Validator in Settings.</Box>
+        );
+    }
 
     return (
         <Box sx={styles.container}>
@@ -178,7 +209,7 @@ const Validator: React.FC = () => {
                             ) : (
                                 <Configuration
                                     selectedFiles={selectedFiles}
-                                    setSelectedFiles={setSelectedFiles}
+                                    setSelectedFiles={handleSetSelectedFiles}
                                     config={config}
                                     setConfig={setConfig}
                                 />
@@ -203,7 +234,8 @@ const Validator: React.FC = () => {
                                     variant="contained"
                                     disabled={
                                         selectedFiles.length === 0 ||
-                                        validationStatus === 'validating'
+                                        !config.standard ||
+                                        !config.version
                                     }
                                 >
                                     Validate

@@ -3,7 +3,7 @@ import { TextField, IconButton, InputAdornment } from '@mui/material';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import CloseIcon from '@mui/icons-material/Close';
 
-const FileSelector: React.FC<{
+const SingleFileSelector: React.FC<{
     label: string;
     value: string;
     onSelectDestination: () => void;
@@ -51,4 +51,4 @@ const FileSelector: React.FC<{
     );
 };
 
-export default FileSelector;
+export default SingleFileSelector;

@@ -18,7 +18,7 @@ import { useAppSelector } from 'renderer/redux/hooks';
 import FileSelector from 'renderer/components/Common/FileSelector';
 import DictionaryConfigModal from 'renderer/components/Validator/DictionaryConfigModal';
 import OptionsModal from 'renderer/components/Validator/OptionsModal';
-import PathSelector from 'renderer/components/FileSelector';
+import PathSelector from 'renderer/components/Common/SingleFileSelector';
 import AppContext from 'renderer/utils/AppContext';
 
 const styles = {
@@ -61,7 +61,7 @@ const styles = {
 
 interface ValidatorConfigurationProps {
     selectedFiles: FileInfo[];
-    setSelectedFiles: React.Dispatch<React.SetStateAction<FileInfo[]>>;
+    setSelectedFiles: (files: FileInfo[]) => void;
     config: ValidatorConfig;
     setConfig: React.Dispatch<React.SetStateAction<ValidatorConfig>>;
 }

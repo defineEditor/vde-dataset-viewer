@@ -543,10 +543,13 @@ process.parentPort.once(
             // Execute different commands based on the task
             switch (task) {
                 case 'getInfo': {
-                    const version = await getVersion(validatorPath);
-                    const standards = await getStandards(validatorPath);
-                    const terminology =
-                        await getControlledTerminology(validatorPath);
+                    const [version, standards, terminology] = await Promise.all(
+                        [
+                            getVersion(validatorPath),
+                            getStandards(validatorPath),
+                            getControlledTerminology(validatorPath),
+                        ],
+                    );
                     process.parentPort.postMessage({
                         id: processId,
                         result: {

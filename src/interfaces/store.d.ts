@@ -5,6 +5,7 @@ import {
     SettingsValidator,
     ValidatorConfig,
     ValidationRunReport,
+    FileInfo,
 } from 'interfaces/main';
 import { ParsedValidationReport } from 'interfaces/core.report';
 import { modals, ModalType, AllowedPathnames } from 'misc/constants';
@@ -198,6 +199,7 @@ export interface ValidatorData {
     };
     lastReportSaveFolder: string;
     configuration: ValidatorConfig;
+    selectedFiles: FileInfo[];
 }
 
 export interface IData {

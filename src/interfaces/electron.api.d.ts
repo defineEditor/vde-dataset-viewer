@@ -77,6 +77,7 @@ export interface ElectronApi {
         filters?: { name: string; extensions: string[] }[];
     }) => Promise<FileInfo[] | null>;
     openDirectoryDialog: (initialFolder: string | null) => Promise<string>;
+    getFilesInfo: (filePaths: string[]) => Promise<FileInfo[]>;
     deleteValidationReport: (fileName: string) => Promise<boolean>;
     getValidationReport: (
         fileName: string,

@@ -302,6 +302,7 @@ app.whenReady()
             'main:openDirectoryDialog',
             fileManager.openDirectoryDialog,
         );
+        ipcMain.handle('main:getFilesInfo', fileManager.getFilesInfo);
         ipcMain.handle(
             'main:startTask',
             (event: IpcMainInvokeEvent, task: MainTask) => {

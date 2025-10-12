@@ -13,6 +13,7 @@ import {
 } from 'interfaces/common';
 import openFile from 'main/openFile';
 import fs from 'fs';
+import fsPromises from 'fs/promises';
 import Filter from 'js-array-filter';
 import crypto from 'crypto';
 import path from 'path';
@@ -313,7 +314,7 @@ class FileManager {
     };
 
     public openFileDialog = async (
-        _event: IpcMainInvokeEvent,
+        event: IpcMainInvokeEvent,
         options: {
             multiple?: boolean;
             initialFolder?: string;
@@ -344,33 +345,8 @@ class FileManager {
             if (result.canceled) {
                 return [];
             }
-            return result.filePaths.map((filePath) => {
-                const parsedPath = path.parse(filePath);
-                // Get data of the last modification and size of the file
-                const stats = fs.statSync(filePath);
-                let format: InputFileExtension | '';
-                if (parsedPath.ext.toLowerCase() === '.xpt') {
-                    format = 'xpt';
-                } else if (parsedPath.ext.toLowerCase() === '.json') {
-                    format = 'json';
-                } else if (parsedPath.ext.toLowerCase() === '.sas7bdat') {
-                    format = 'sas7bdat';
-                } else if (parsedPath.ext.toLowerCase() === '.ndjson') {
-                    format = 'ndjson';
-                } else if (parsedPath.ext.toLowerCase() === '.dsjc') {
-                    format = 'dsjc';
-                } else {
-                    format = '';
-                }
-                return {
-                    filename: parsedPath.base,
-                    fullPath: filePath,
-                    folder: parsedPath.dir,
-                    format,
-                    size: stats.size,
-                    lastModified: stats.mtime.getTime(),
-                };
-            });
+
+            return this.getFilesInfo(event, result.filePaths);
         } catch (error) {
             return null;
         }
@@ -437,6 +413,53 @@ class FileManager {
         } catch (error) {
             return null;
         }
+    };
+
+    public getFilesInfo = async (
+        _event: IpcMainInvokeEvent,
+        filePaths: string[],
+    ): Promise<FileInfo[]> => {
+        const filesInfoPromises = filePaths.map(
+            async (filePath): Promise<FileInfo> => {
+                const parsedPath = path.parse(filePath);
+                if (fs.existsSync(filePath)) {
+                    // Get data of the last modification and size of the file
+                    const stats = await fsPromises.stat(filePath);
+                    let format: InputFileExtension | '';
+                    if (parsedPath.ext.toLowerCase() === '.xpt') {
+                        format = 'xpt';
+                    } else if (parsedPath.ext.toLowerCase() === '.json') {
+                        format = 'json';
+                    } else if (parsedPath.ext.toLowerCase() === '.sas7bdat') {
+                        format = 'sas7bdat';
+                    } else if (parsedPath.ext.toLowerCase() === '.ndjson') {
+                        format = 'ndjson';
+                    } else if (parsedPath.ext.toLowerCase() === '.dsjc') {
+                        format = 'dsjc';
+                    } else {
+                        format = '';
+                    }
+                    return {
+                        filename: parsedPath.base,
+                        fullPath: filePath,
+                        folder: parsedPath.dir,
+                        format,
+                        size: stats.size,
+                        lastModified: stats.mtime.getTime(),
+                    };
+                }
+                return {
+                    filename: parsedPath.base,
+                    fullPath: filePath,
+                    folder: parsedPath.dir,
+                    format: '',
+                    size: -1,
+                    lastModified: -1,
+                };
+            },
+        );
+        const filesInfo = await Promise.all(filesInfoPromises);
+        return filesInfo;
     };
 }
 
