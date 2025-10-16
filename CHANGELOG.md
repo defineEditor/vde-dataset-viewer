@@ -1,6 +1,5 @@
 # 0.6.1
 ### Improvements
-* Open datasets in a new window from the bottom navigation #57
 * Open datasets in a new window from the bottom navigation [#57](https://github.com/defineEditor/vde-dataset-viewer/issues/57)
 * Save "Only dataset issues" flag state [#65](https://github.com/defineEditor/vde-dataset-viewer/issues/65)
 * Add ability to repeat a validation [#66](https://github.com/defineEditor/vde-dataset-viewer/issues/66)
