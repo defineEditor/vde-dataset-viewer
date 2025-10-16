@@ -113,6 +113,34 @@ const moveFiles = async () => {
                         `vde-dataset-viewer.${appVersion}.deb`,
                     ),
                 );
+                // Update latest-linux.yml file to point to the .deb file
+                const latestLinuxYmlPath = path.join(
+                    destFolder,
+                    'latest-linux.yml',
+                );
+
+                try {
+                    const latestLinuxYml = await readFile(
+                        latestLinuxYmlPath,
+                        'utf-8',
+                    );
+                    const updatedYml = latestLinuxYml.replace(
+                        /vde-dataset-viewer_.*_amd64.deb/,
+                        `vde-dataset-viewer.${appVersion}.deb`,
+                    );
+                    await fs.promises.writeFile(
+                        latestLinuxYmlPath,
+                        updatedYml,
+                        'utf-8',
+                    );
+                } catch (error) {
+                    if (error instanceof Error) {
+                        console.error(
+                            `Failed updating file: ${latestLinuxYmlPath}. Error: ${error.message}`,
+                        );
+                    }
+                    return;
+                }
             }
         }),
     );

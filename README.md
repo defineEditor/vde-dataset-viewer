@@ -26,7 +26,11 @@ You can download installation packages or portable version for your operating sy
 ### Installation Options
 - **Windows**: Run the installer (vde-dataset-viewer.Setup.x.y.z.exe) or use the portable version (vde-dataset-viewer.x.y.z.exe)
 - **Linux**: Use the AppImage file (make it executable with `chmod +x filename.AppImage`)
+- **Mac**: MacOS executables are unsigned and can be shown as damaged. See MacOS [instruction](https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unknown-developer-mh40616/mac) for details.
 - **From Source**: Follow the Development instructions below to build from source
+
+For CDISC CORE validation, the CORE executable should be installed separately.
+See [CDISC CORE](https://github.com/cdisc-org/cdisc-rules-engine) repository for details.
 
 Supported Formats:
 * [Dataset-JSON v1.1](https://github.com/cdisc-org/DataExchange-DatasetJson)
@@ -38,7 +42,7 @@ Supported Formats:
 
 ## Features
 * Reading large size datasets
-* Multiplatform: Windows, Linux (and MacOS if someone with Mac packages it)
+* Multiplatform: Windows, Linux, MacOS
 * Filtering with value autocomplete
 * Sorting
 * Row and column navigation
@@ -49,6 +53,7 @@ Supported Formats:
 * Automated testing
 * API access
 * Converter between formats
+* UI for [CDISC CORE](https://github.com/cdisc-org/cdisc-rules-engine)
 * Validation results view
 
 ## Viewing Customization Settings
