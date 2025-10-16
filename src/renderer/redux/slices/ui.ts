@@ -6,9 +6,9 @@ import {
     IUiValidation,
     IUiValidationPage,
     AllowedPathnames,
-    DatasetType,
+    DataType,
     ModalType,
-    DatasetMode,
+    DataMode,
     IUiViewer,
 } from 'interfaces/common';
 import { paths } from 'misc/constants';
@@ -21,10 +21,10 @@ export const uiSlice = createSlice({
             state,
             action: PayloadAction<{
                 fileId: string;
-                type?: DatasetType;
+                type?: DataType;
                 name?: string;
                 label?: string;
-                mode?: DatasetMode;
+                mode?: DataMode;
                 currentFileId?: string;
                 totalRecords?: number;
             }>,

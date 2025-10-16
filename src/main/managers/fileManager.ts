@@ -3,7 +3,7 @@ import DatasetJson from 'js-stream-dataset-json';
 import DatasetSas7bdat from 'js-stream-sas7bdat';
 import DatasetXpt from 'xport-js';
 import {
-    DatasetType,
+    DataType,
     BasicFilter,
     IOpenFile,
     ColumnMetadata,
@@ -106,7 +106,7 @@ class FileManager {
             newFile = await openFile(folderPath);
         }
 
-        let type: DatasetType;
+        let type: DataType;
 
         if (newFile === undefined) {
             return {

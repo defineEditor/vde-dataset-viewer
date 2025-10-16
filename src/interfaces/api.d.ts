@@ -15,15 +15,15 @@ export {
     ColumnMetadata,
 } from 'js-array-filter';
 
-export type DatasetType = 'json' | 'xpt' | 'sas7bdat';
-export type DatasetMode = 'local' | 'remote';
+export type DataType = 'json' | 'xpt' | 'sas7bdat' | 'definexml';
+export type DataMode = 'local' | 'remote';
 
 export interface ApiOpenedFile {
     fileId: string;
     name: string;
-    mode: DatasetMode;
+    mode: DataMode;
     path: string;
-    type: DatasetType;
+    type: DataType;
     lastModified?: number;
 }
 
@@ -36,7 +36,7 @@ export interface ApiOpenedFileWithMetadata extends ApiOpenedFile {
 
 export interface IOpenFile {
     fileId: string;
-    type: DatasetType;
+    type: DataType;
     path: string;
     lastModified: number;
     datasetNames?: string[];

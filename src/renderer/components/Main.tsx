@@ -8,6 +8,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import SettingsIcon from '@mui/icons-material/Settings';
 import KeyboardIcon from '@mui/icons-material/Keyboard';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
+import DescriptionIcon from '@mui/icons-material/Description';
 import {
     DashboardLayout,
     DashboardLayoutSlots,
@@ -17,6 +18,7 @@ import Api from 'renderer/components/Api';
 import AppContext from 'renderer/utils/AppContext';
 import ViewFile from 'renderer/components/ViewDataset';
 import Settings from 'renderer/components/Settings';
+import DefineXml from 'renderer/components/DefineXml';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import { setPathname, setZoomLevel } from 'renderer/redux/slices/ui';
 import { AllowedPathnames, NewWindowProps } from 'interfaces/common';
@@ -57,6 +59,11 @@ const NAVIGATION: Navigation = [
         segment: 'select',
         title: 'Viewer',
         icon: <WysiwygIcon />,
+    },
+    {
+        segment: 'definexml',
+        title: 'Define-XML',
+        icon: <DescriptionIcon />,
     },
     {
         segment: 'api',
@@ -184,6 +191,13 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                         dispatch(
                             setPathname({
                                 pathname: paths.ABOUT,
+                            }),
+                        );
+                        break;
+                    case 'F7':
+                        dispatch(
+                            setPathname({
+                                pathname: paths.DEFINEXML,
                             }),
                         );
                         break;
@@ -320,6 +334,7 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                     {pathname === paths.VIEWFILE && isDataLoaded && (
                         <ViewFile />
                     )}
+                    {pathname === paths.DEFINEXML && <DefineXml />}
                     {pathname === paths.SETTINGS && <Settings />}
                     {pathname === paths.API && <Api />}
                     {pathname === paths.CONVERTER && <Converter />}

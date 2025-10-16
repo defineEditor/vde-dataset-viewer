@@ -36,7 +36,8 @@ export type InputFileExtension =
     | 'sas7bdat'
     | 'json'
     | 'ndjson'
-    | 'dsjc';
+    | 'dsjc'
+    | 'xml';
 
 export interface FileInfo {
     fullPath: string;

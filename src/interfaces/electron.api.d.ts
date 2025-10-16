@@ -1,5 +1,5 @@
 import {
-    DatasetType,
+    DataType,
     DatasetJsonMetadata,
     ItemDataArray,
     BasicFilter,
@@ -28,7 +28,7 @@ export interface ElectronApi {
         },
     ) => Promise<{
         fileId: string;
-        type: DatasetType;
+        type: DataType;
         path: string;
         lastModified: number;
     } | null>;
