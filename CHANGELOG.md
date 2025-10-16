@@ -1,3 +1,18 @@
+# 0.6.1
+### Improvements
+* Open datasets in a new window from the bottom navigation [#57](https://github.com/defineEditor/vde-dataset-viewer/issues/57)
+* Save "Only dataset issues" flag state [#65](https://github.com/defineEditor/vde-dataset-viewer/issues/65)
+* Add ability to repeat a validation [#66](https://github.com/defineEditor/vde-dataset-viewer/issues/66)
+* Prevent validation when it is not supposed to be executable [#69](https://github.com/defineEditor/vde-dataset-viewer/issues/69)
+* MacOS executables, thanks to Charles Shadles for suggesting how to do it without Mac. MacOS version is not thoroughly tested.
+
+### Fixes
+* Failed validation status is not reset [#58](https://github.com/defineEditor/vde-dataset-viewer/issues/58)
+* Sidebar navigation does not update [#56](https://github.com/defineEditor/vde-dataset-viewer/issues/56)
+* Bottom navigation sometimes does not fit vertical container [#62](https://github.com/defineEditor/vde-dataset-viewer/issues/62)
+* XLSX report cannot be downloaded [#68](https://github.com/defineEditor/vde-dataset-viewer/issues/68)
+* Incorrect autoupdate link to DEB [#73](https://github.com/defineEditor/vde-dataset-viewer/issues/73)
+
 # 0.6.0
 ### Core Changes
 * Add CORE configuration. ([#78](https://trello.com/c/ez2Hcayg))
