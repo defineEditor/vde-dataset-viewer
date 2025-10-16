@@ -1,0 +1,75 @@
+name: macOS build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-macos:
+    runs-on: macos-13
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64, x64]
+    env:
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Restore Electron caches
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ runner.temp }}/electron
+            ${{ runner.temp }}/electron-builder
+          key: ${{ runner.os }}-electron-${{ matrix.arch }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-electron-${{ matrix.arch }}-
+
+      - name: Install dependencies for the build
+        run: npm ci
+
+      - name: Build renderer and main bundles
+        run: npm run build
+
+      - name: Package macOS build (${{ matrix.arch }})
+        run: |
+          npx electron-builder build --mac --${{ matrix.arch }} --publish never
+        env:
+          npm_config_arch: ${{ matrix.arch }}
+
+      - name: Upload artifacts (x64)
+        if: matrix.arch == 'x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-${{ matrix.arch }}
+          path: |
+            release/build/vde-dataset-viewer-[0-9]*.[0-9]*.[0-9]*.dmg
+            release/build/vde-dataset-viewer-[0-9]*.[0-9]*.[0-9]*.dmg.blockmap
+            release/build/latest-mac.yml
+
+      - name: Upload artifacts (arm64)
+        if: matrix.arch == 'arm64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-${{ matrix.arch }}
+          path: |
+            release/build/vde-dataset-viewer-[0-9]*.[0-9]*.[0-9]*-arm64.dmg
+            release/build/vde-dataset-viewer-[0-9]*.[0-9]*.[0-9]*-arm64.dmg.blockmap

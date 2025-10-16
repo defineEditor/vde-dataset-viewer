@@ -18,6 +18,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
 import SearchIcon from '@mui/icons-material/Search';
+import RepeatIcon from '@mui/icons-material/Repeat';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import {
@@ -30,6 +31,7 @@ import {
 import {
     removeValidationReport,
     setReportLastSaveFolder,
+    setValidatorData,
 } from 'renderer/redux/slices/data';
 import { ValidationRunReport } from 'interfaces/common';
 import getReportTitle from 'renderer/utils/getReportTitle';
@@ -267,6 +269,30 @@ const ValidationResults: React.FC<ResultsProps> = ({
         }
     };
 
+    const handleRepeatValidation = async (
+        event: React.MouseEvent<HTMLButtonElement>,
+        index: number,
+    ) => {
+        event.stopPropagation();
+        // Get files from the report
+        const reportFilePaths = reports[index].files.map((file) => file.file);
+        const filesInfo = await apiService.getFilesInfo(reportFilePaths);
+        const { config } = reports[index];
+        dispatch(
+            setValidatorData({
+                configuration: config,
+                selectedFiles: filesInfo,
+            }),
+        );
+        // Switch to Validator tab
+        dispatch(
+            setPathname({
+                pathname: paths.VALIDATOR,
+            }),
+        );
+        dispatch(setValidationTab('validation'));
+    };
+
     const handleOpenReport = (index: number) => {
         dispatch(setValidationReport(reports[index].output));
         if (isModal) {
@@ -448,6 +474,27 @@ const ValidationResults: React.FC<ResultsProps> = ({
                                         </Stack>
                                     ) : (
                                         <Stack direction="row" spacing={1}>
+                                            {!isModal && (
+                                                <Tooltip
+                                                    title="Repeat Validation"
+                                                    enterDelay={1000}
+                                                >
+                                                    <IconButton
+                                                        edge="end"
+                                                        aria-label="repeat validation"
+                                                        onClick={(event) =>
+                                                            handleRepeatValidation(
+                                                                event,
+                                                                actualIndex,
+                                                            )
+                                                        }
+                                                        size="small"
+                                                        color="default"
+                                                    >
+                                                        <RepeatIcon />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            )}
                                             <Tooltip
                                                 title="Save Report"
                                                 enterDelay={1000}

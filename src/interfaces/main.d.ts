@@ -1,7 +1,6 @@
 import { UpdateCheckResult } from 'electron-updater';
 import { DatasetMetadata } from 'interfaces/datasetJson';
 import { mainTaskTypes } from 'misc/constants';
-import { IssueSummaryItem } from './core.report';
 
 export interface SettingsConverter {
     threads: number;
@@ -104,6 +103,7 @@ export interface ValidatorConfig {
     ctPackages: string[];
     version: string;
     rules: string[];
+    excludedRules: string[];
 }
 
 export interface ValidateTask {
@@ -157,34 +157,6 @@ export interface ConverterTaskProgress {
     error?: string;
 }
 
-export interface ValidationRunReport {
-    id: string;
-    date: number;
-    files: { file: string; lastModified: number }[];
-    output: string;
-    logFileName: string | null;
-    config: ValidatorConfig;
-    command: string;
-    summary: {
-        uniqueIssues: number;
-        totalIssues: number;
-        newIssues?: number;
-        changes?: ValidationReportCompare['counts'] | null;
-        resolvedIssues?: number;
-        changedIssues?: number;
-    };
-}
-
-export interface ValidatorTaskProgress {
-    type: typeof mainTaskTypes.VALIDATE;
-    id: string;
-    progress: number;
-    result?: ValidateGetInfoResult | ValidationRunReport;
-    error?: string;
-}
-
-export type TaskProgress = ValidatorTaskProgress | ConverterTaskProgress;
-
 export interface ValidationReportCompare {
     counts: {
         newIssues: number;
@@ -209,6 +181,35 @@ export interface ValidationReportCompare {
         };
     };
 }
+
+export interface ValidationRunReport {
+    id: string;
+    date: number;
+    files: { file: string; lastModified: number }[];
+    output: string;
+    logFileName: string | null;
+    config: ValidatorConfig;
+    command: string;
+    summary: {
+        uniqueIssues: number;
+        totalIssues: number;
+        newIssues?: number;
+        changes?: ValidationReportCompare['counts'] | null;
+        resolvedIssues?: number;
+        changedIssues?: number;
+    };
+}
+
+export interface ValidatorTaskProgress {
+    type: typeof mainTaskTypes.VALIDATE;
+    id: string;
+    progress: number;
+    result?: ValidateGetInfoResult | ValidationRunReport;
+    error?: string;
+    logFileName?: string | null;
+}
+
+export type TaskProgress = ValidatorTaskProgress | ConverterTaskProgress;
 
 export interface NewWindowProps {
     goTo?: {

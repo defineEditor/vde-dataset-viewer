@@ -1,12 +1,19 @@
+import React from 'react';
 import { DatasetJsonMetadata } from 'interfaces/api.d';
 import { SettingsViewer } from 'interfaces/store.d';
 import { ItemType } from 'interfaces/datasetJson.d';
 import { BasicFilter } from 'js-array-filter';
+import { CoreCell } from '@tanstack/react-table';
 
 export type SortOrder = 'asc' | 'desc';
 export type AlignType = 'left' | 'center' | 'right' | 'justify';
 export type StyleObject = { [name: string]: string | number };
 
+export type TableRowValue = string | number | boolean | null;
+
+export interface ITableRow {
+    [key: string]: TableRowValue;
+}
 export interface IHeaderCell {
     /** Property containing column value */
     id: string;
@@ -42,15 +49,9 @@ export interface IHeaderCell {
     /** Numeric variable with datetime format */
     numericDatetimeType?: 'date' | 'time' | 'datetime';
     /** Cell render */
-    cell?: (cell: any) => React.JSX.Element;
+    cell?: (cell: CoreCell<ITableRow, unknown>) => React.JSX.Element;
     /** Style */
     style?: React.CSSProperties;
-}
-
-export type TableRowValue = string | number | boolean | null;
-
-export interface ITableRow {
-    [key: string]: TableRowValue;
 }
 
 export interface ITableData {

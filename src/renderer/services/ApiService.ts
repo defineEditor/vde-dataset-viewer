@@ -23,6 +23,7 @@ import {
     ParsedValidationReport,
     ValidationReportCompare,
     NewWindowProps,
+    FileInfo,
 } from 'interfaces/common';
 import store from 'renderer/redux/store';
 import transformData from 'renderer/services/transformData';
@@ -34,6 +35,7 @@ import {
     compareValidationReports,
     getValidationReport,
     downloadValidationReport,
+    showValidationLog,
 } from 'renderer/services/validation';
 
 class ApiService {
@@ -799,6 +801,12 @@ class ApiService {
         return downloadValidationReport(fileName, initialFolder);
     };
 
+    public showValidationLog = async (
+        logFileName: string,
+    ): Promise<boolean> => {
+        return showValidationLog(logFileName);
+    };
+
     public compareValidationReports = async (
         fileNameBase: string,
         fileNameComp: string,
@@ -831,7 +839,7 @@ class ApiService {
     };
 
     public getZoom = async (): Promise<number> => {
-        return await window.electron.getZoom();
+        return window.electron.getZoom();
     };
 
     public onFileOpen = (
@@ -846,6 +854,11 @@ class ApiService {
 
     public writeToClipboard = (text: string) => {
         window.electron.writeToClipboard(text);
+    };
+
+    public getFilesInfo = async (filePaths: string[]): Promise<FileInfo[]> => {
+        const result = await window.electron.getFilesInfo(filePaths);
+        return result;
     };
 }
 

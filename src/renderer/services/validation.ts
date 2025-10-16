@@ -27,6 +27,17 @@ interface ApiServiceContext {
 
 // Validation functions
 
+export const compareValidationReports = async (
+    fileNameBase: string,
+    fileNameComp: string,
+): Promise<ValidationReportCompare | null> => {
+    const result = await window.electron.compareValidationReports(
+        fileNameBase,
+        fileNameComp,
+    );
+    return result;
+};
+
 export const startValidation = async (
     context: ApiServiceContext,
     {
@@ -49,6 +60,9 @@ export const startValidation = async (
                 status: 'not started',
                 validationProgress: 0,
                 conversionProgress: null,
+                error: null,
+                dateCompleted: null,
+                logFileName: null,
             },
         }),
     );
@@ -165,6 +179,7 @@ export const startValidation = async (
                             validation: {
                                 status: 'completed',
                                 error: info.error,
+                                logFileName: info.logFileName || null,
                                 dateCompleted: new Date().getTime(),
                             },
                         }),
@@ -356,17 +371,6 @@ export const getValidationReport = async (
     return result;
 };
 
-export const compareValidationReports = async (
-    fileNameBase: string,
-    fileNameComp: string,
-): Promise<ValidationReportCompare | null> => {
-    const result = await window.electron.compareValidationReports(
-        fileNameBase,
-        fileNameComp,
-    );
-    return result;
-};
-
 export const downloadValidationReport = async (
     fileName: string,
     initialFolder?: string,
@@ -375,5 +379,12 @@ export const downloadValidationReport = async (
         fileName,
         initialFolder,
     );
+    return result;
+};
+
+export const showValidationLog = async (
+    logFileName: string,
+): Promise<boolean> => {
+    const result = await window.electron.showValidationLog(logFileName);
     return result;
 };

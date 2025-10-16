@@ -76,7 +76,7 @@ const getIssueAnnotations = (
             }
             const colIndex = variableIndices.get(variable);
             // Recalculate row index based on pagination
-            rowIndex = rowIndex - page * pageSize;
+            rowIndex -= page * pageSize;
             // Check if there is already an annotation present
             const existingAnnotation = issueAnnotations.get(
                 `${rowIndex}#${colIndex}`,

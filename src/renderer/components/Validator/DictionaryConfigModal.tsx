@@ -10,7 +10,7 @@ import {
     DialogActions,
 } from '@mui/material';
 import { ValidatorConfig } from 'interfaces/main';
-import PathSelector from 'renderer/components/FileSelector';
+import PathSelector from 'renderer/components/Common/SingleFileSelector';
 
 const styles = {
     dialogContent: {

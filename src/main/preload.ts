@@ -100,6 +100,9 @@ const openDirectoryDialog: ElectronApi['openDirectoryDialog'] = (
     initialFolder,
 ) => ipcRenderer.invoke('main:openDirectoryDialog', initialFolder);
 
+const getFilesInfo: ElectronApi['getFilesInfo'] = (filePaths) =>
+    ipcRenderer.invoke('main:getFilesInfo', filePaths);
+
 const deleteValidationReport: ElectronApi['deleteValidationReport'] = (
     fileName,
 ) => ipcRenderer.invoke('main:deleteValidationReport', fileName);
@@ -113,6 +116,9 @@ const compareValidationReports: ElectronApi['compareValidationReports'] = (
         fileNameBase,
         fileNameComp,
     );
+
+const showValidationLog: ElectronApi['showValidationLog'] = (logFileName) =>
+    ipcRenderer.invoke('main:showValidationLog', logFileName);
 
 const getValidationReport: ElectronApi['getValidationReport'] = (fileName) =>
     ipcRenderer.invoke('main:getValidationReport', fileName);
@@ -182,8 +188,10 @@ contextBridge.exposeInMainWorld('electron', {
     fetch,
     openFileDialog,
     openDirectoryDialog,
+    getFilesInfo,
     deleteValidationReport,
     compareValidationReports,
+    showValidationLog,
     getValidationReport,
     downloadValidationReport,
     isWindows,

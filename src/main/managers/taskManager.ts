@@ -84,6 +84,7 @@ class TaskManager {
                             progress: progressResult.progress,
                             result: progressResult.result,
                             error: progressResult.error,
+                            logFileName: progressResult.logFileName,
                         });
                     } else {
                         webContents.send('renderer:taskProgress', {

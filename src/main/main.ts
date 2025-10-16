@@ -226,6 +226,7 @@ const handleSetZoom = async (
         return Promise.resolve();
     }
     event.sender.setZoomLevel(zoomLevel);
+    return Promise.resolve();
 };
 
 // Function to handle getting current zoom level
@@ -281,6 +282,10 @@ app.whenReady()
             'main:compareValidationReports',
             reportManager.compareValidationReports,
         );
+        ipcMain.handle(
+            'main:showValidationLog',
+            reportManager.showValidationLog,
+        );
         ipcMain.handle('read:getMetadata', fileManager.handleGetMetadata);
         ipcMain.handle(
             'read:getObservations',
@@ -297,6 +302,7 @@ app.whenReady()
             'main:openDirectoryDialog',
             fileManager.openDirectoryDialog,
         );
+        ipcMain.handle('main:getFilesInfo', fileManager.getFilesInfo);
         ipcMain.handle(
             'main:startTask',
             (event: IpcMainInvokeEvent, task: MainTask) => {

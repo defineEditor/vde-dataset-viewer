@@ -7,6 +7,7 @@ import {
     LinearProgress,
     Stack,
     Box,
+    ButtonBase,
 } from '@mui/material';
 import DogWorker from 'renderer/components/Loading/DogWorker';
 import CatWorker from 'renderer/components/Loading/CatWorker';
@@ -40,11 +41,15 @@ const styles = {
         justifyContent: 'center',
         pr: 4,
     },
+    error: {
+        mt: 0.5,
+    },
 };
 
 const ProgressContainer: React.FC<{
     validationId: string | null;
-}> = ({ validationId }) => {
+    onShowLog: () => void;
+}> = ({ validationId, onShowLog }) => {
     const {
         conversionProgress,
         validationProgress,
@@ -56,6 +61,8 @@ const ProgressContainer: React.FC<{
                 validationProgress: 0,
                 conversionProgress: null,
                 dateCompleted: null,
+                error: null,
+                logFileName: null,
             },
     );
 
@@ -89,9 +96,25 @@ const ProgressContainer: React.FC<{
                         sx={styles.progressBar}
                     />
                     {error !== null ? (
-                        <Typography variant="caption" color="error.main">
-                            {error}
-                        </Typography>
+                        <Stack
+                            spacing={1}
+                            alignItems="center"
+                            direction="row"
+                            justifyContent="flex-start"
+                            sx={styles.error}
+                        >
+                            <Typography variant="caption" color="error.main">
+                                {error}
+                            </Typography>
+                            <ButtonBase onClick={() => onShowLog()}>
+                                <Typography
+                                    variant="caption"
+                                    color="primary.main"
+                                >
+                                    Click to show the log
+                                </Typography>
+                            </ButtonBase>
+                        </Stack>
                     ) : (
                         <Typography variant="caption" color="text.secondary">
                             {validationProgress === 100
@@ -130,7 +153,8 @@ const Worker: React.FC<{
 const ValidationProgress: React.FC<{
     validationId: string | null;
     validationStatus: IUiValidation['status'];
-}> = ({ validationId, validationStatus }) => {
+    onShowLog: () => void;
+}> = ({ validationId, validationStatus, onShowLog }) => {
     const loadingAnimation = useAppSelector(
         (state) => state.settings.other.loadingAnimation,
     );
@@ -138,7 +162,10 @@ const ValidationProgress: React.FC<{
     return (
         <Stack spacing={2} sx={styles.container} alignItems="flex-start">
             <Typography variant="h6">Processing</Typography>
-            <ProgressContainer validationId={validationId} />
+            <ProgressContainer
+                validationId={validationId}
+                onShowLog={onShowLog}
+            />
             <Typography variant="body2" sx={styles.closeWindowNote}>
                 {validationStatus !== 'completed'
                     ? 'You can continue working on other tasks'

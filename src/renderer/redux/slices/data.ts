@@ -6,8 +6,10 @@ import {
     ConverterData,
     ValidationRunReport,
     ParsedValidationReport,
+    IMask,
+    IUiValidationPage,
+    ValidatorData,
 } from 'interfaces/common';
-import { IMask, IUiValidationPage, ValidatorData } from 'interfaces/common';
 import deepEqual from 'renderer/utils/deepEqual';
 import getFolderName from 'renderer/utils/getFolderName';
 import { closeDataset, openDataset } from 'renderer/redux/slices/ui';

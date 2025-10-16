@@ -77,10 +77,26 @@ const DatasetNavigation: React.FC = () => {
     };
 
     const handleDatasetChange = (
-        _event: React.SyntheticEvent,
-        newValue: string,
+        event: React.MouseEvent<HTMLElement>,
+        fileId: string,
+        filePath: string,
     ) => {
-        dispatch(openDataset({ fileId: newValue, currentFileId }));
+        event.stopPropagation();
+        // Open the dataset in a new window if Shift or Ctrl key is pressed
+        if (event.shiftKey && event.ctrlKey) {
+            handleCloseDataset(event, fileId);
+            apiService.openInNewWindow(filePath);
+        } else if (event.shiftKey) {
+            handleCloseDataset(event, fileId);
+            apiService.openInNewWindow(filePath, 'right');
+            apiService.resizeWindow('left');
+        } else if (event.ctrlKey) {
+            handleCloseDataset(event, fileId);
+            apiService.openInNewWindow(filePath, 'bottom');
+            apiService.resizeWindow('top');
+        } else {
+            dispatch(openDataset({ fileId, currentFileId }));
+        }
     };
 
     return (
@@ -90,7 +106,6 @@ const DatasetNavigation: React.FC = () => {
                     ? currentFileId
                     : openedFiles[0]?.fileId || false
             }
-            onChange={handleDatasetChange}
             variant="scrollable"
             scrollButtons="auto"
             sx={styles.tabs}
@@ -98,6 +113,9 @@ const DatasetNavigation: React.FC = () => {
             {openedFiles.map((file) => (
                 <Tab
                     key={file.fileId}
+                    onClick={(e) =>
+                        handleDatasetChange(e, file.fileId, file.path)
+                    }
                     label={
                         <Stack
                             direction="row"

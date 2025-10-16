@@ -95,6 +95,20 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
             null,
     );
 
+    const validationError = useAppSelector<string | null>(
+        (state) =>
+            (validationId !== null &&
+                state.ui.validation[validationId]?.error) ||
+            null,
+    );
+
+    const validationLogFileName = useAppSelector<string | null>(
+        (state) =>
+            (validationId !== null &&
+                state.ui.validation[validationId]?.logFileName) ||
+            null,
+    );
+
     const { apiService } = useContext(AppContext);
 
     // Get last modified time for the current file
@@ -118,6 +132,9 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
                         status: 'not started',
                         validationProgress: 0,
                         conversionProgress: null,
+                        error: null,
+                        dateCompleted: null,
+                        logFileName: null,
                     },
                 }),
             );
@@ -144,6 +161,15 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
     const [config, setConfig] = useState<ValidatorConfig>({
         ...validatorData.configuration,
     });
+
+    // Check if current file is in the report
+    const currentReportId = useAppSelector(
+        (state) => state.ui.validationPage.currentReportId,
+    );
+
+    const validationReport = useAppSelector(
+        (state) => state.data.validator.reports[currentReportId || ''] || null,
+    );
 
     // Save configuration and trigger validation
     const handleValidate = useCallback(() => {
@@ -185,13 +211,16 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
                         validationProgress: 0,
                         conversionProgress: null,
                         dateCompleted: null,
+                        error: null,
                     },
                 }),
             );
         }
-        // Switch to results tab
-        dispatch(setValidationModalTab('results'));
-    }, [dispatch, validationId]);
+        // Switch to results tab if there are no errors
+        if (!validationError) {
+            dispatch(setValidationModalTab('results'));
+        }
+    }, [dispatch, validationId, validationError]);
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -205,15 +234,6 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
             window.removeEventListener('keydown', handleKeyDown);
         };
     }, [handleClose]);
-
-    // Check if current file is in the report
-    const currentReportId = useAppSelector(
-        (state) => state.ui.validationPage.currentReportId,
-    );
-
-    const validationReport = useAppSelector(
-        (state) => state.data.validator.reports[currentReportId || ''] || null,
-    );
 
     const isCurrentFileInReport = useMemo(() => {
         // If issues are not enabled, no need to check further
@@ -263,11 +283,18 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
         dispatch(closeModal({ type }));
     };
 
+    const handleShowLog = () => {
+        if (!validationLogFileName) {
+            return;
+        }
+        apiService.showValidationLog(validationLogFileName);
+    };
+
     return (
         <Dialog
             open
             onClose={handleClose}
-            PaperProps={{ sx: { ...styles.dialog } }}
+            slotProps={{ paper: { sx: styles.dialog } }}
         >
             <DialogTitle sx={styles.title}>
                 <Box
@@ -307,6 +334,7 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
                     {['completed', 'validating'].includes(validationStatus) ? (
                         <ValidationProgress
                             validationId={validationId}
+                            onShowLog={handleShowLog}
                             validationStatus={validationStatus}
                         />
                     ) : (
@@ -350,7 +378,11 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
                         <Button
                             onClick={handleValidate}
                             color="primary"
-                            disabled={validatorTab !== 'validation'}
+                            disabled={
+                                validatorTab !== 'validation' ||
+                                !config.standard ||
+                                !config.version
+                            }
                         >
                             Validate
                         </Button>
