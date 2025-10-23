@@ -19,6 +19,7 @@ import FileManager from 'main/managers/fileManager';
 import NetManager from 'main/managers/netManager';
 import TaskManager from 'main/managers/taskManager';
 import ReportManager from 'main/managers/reportManager';
+import DefineXmlManager from 'main/managers/defineXmlManager';
 import { MainTask, NewWindowProps } from 'interfaces/main';
 
 let mainWindow: BrowserWindow | null = null;
@@ -256,6 +257,7 @@ app.whenReady()
         const netManager = new NetManager();
         const reportManager = new ReportManager(reportsDirectory);
         const taskManager = new TaskManager({ reportsDirectory });
+        const defineXmlManager = new DefineXmlManager();
         ipcMain.handle('main:openFile', fileManager.handleFileOpen);
         ipcMain.handle('main:fetch', netManager.fetch);
         ipcMain.handle('main:closeFile', fileManager.handleFileClose);
@@ -303,6 +305,12 @@ app.whenReady()
             fileManager.openDirectoryDialog,
         );
         ipcMain.handle('main:getFilesInfo', fileManager.getFilesInfo);
+        ipcMain.handle('main:openDefineXml', defineXmlManager.openDefineXml);
+        ipcMain.handle(
+            'main:getDefineXmlContent',
+            defineXmlManager.getDefineXmlContent,
+        );
+        ipcMain.handle('main:closeDefineXml', defineXmlManager.closeDefineXml);
         ipcMain.handle(
             'main:startTask',
             (event: IpcMainInvokeEvent, task: MainTask) => {

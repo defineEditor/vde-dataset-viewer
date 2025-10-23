@@ -39,6 +39,17 @@ export type InputFileExtension =
     | 'dsjc'
     | 'xml';
 
+export interface DefineFileInfo {
+    fullPath: string;
+    folder: string;
+    filename: string;
+    format: 'xml' | 'json';
+    size: number;
+    lastModified: number;
+    defineVersion: '2.0' | '2.1';
+    arm: boolean;
+    datasetJsonVersion?: string;
+}
 export interface FileInfo {
     fullPath: string;
     folder: string;

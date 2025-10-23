@@ -24,6 +24,8 @@ import {
     ValidationReportCompare,
     NewWindowProps,
     FileInfo,
+    DefineFileInfo,
+    DefineXmlContent,
 } from 'interfaces/common';
 import store from 'renderer/redux/store';
 import transformData from 'renderer/services/transformData';
@@ -859,6 +861,22 @@ class ApiService {
     public getFilesInfo = async (filePaths: string[]): Promise<FileInfo[]> => {
         const result = await window.electron.getFilesInfo(filePaths);
         return result;
+    };
+
+    public openDefineXml = async (
+        filePath?: string,
+    ): Promise<DefineFileInfo | null> => {
+        return window.electron.openDefineXml(filePath);
+    };
+
+    public getDefineXmlContent = async (
+        fileId: string,
+    ): Promise<DefineXmlContent | null> => {
+        return window.electron.getDefineXmlContent(fileId);
+    };
+
+    public closeDefineXml = async (fileId: string): Promise<boolean> => {
+        return window.electron.closeDefineXml(fileId);
     };
 }
 

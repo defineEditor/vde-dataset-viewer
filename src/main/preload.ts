@@ -170,6 +170,15 @@ const setZoom: ElectronApi['setZoom'] = (zoomLevel) =>
 const getZoom: ElectronApi['getZoom'] = () =>
     ipcRenderer.invoke('main:getZoom');
 
+const openDefineXml: ElectronApi['openDefineXml'] = (filePath) =>
+    ipcRenderer.invoke('main:openDefineXml', filePath);
+
+const getDefineXmlContent: ElectronApi['getDefineXmlContent'] = (fileId) =>
+    ipcRenderer.invoke('main:getDefineXmlContent', fileId);
+
+const closeDefineXml: ElectronApi['closeDefineXml'] = (fileId) =>
+    ipcRenderer.invoke('main:closeDefineXml', fileId);
+
 contextBridge.exposeInMainWorld('electron', {
     openFile,
     writeToClipboard,
@@ -203,6 +212,9 @@ contextBridge.exposeInMainWorld('electron', {
     resizeWindow,
     setZoom,
     getZoom,
+    openDefineXml,
+    getDefineXmlContent,
+    closeDefineXml,
     ipcRenderer: {
         sendMessage(channel: Channels, args: unknown[]) {
             ipcRenderer.send(channel, args);

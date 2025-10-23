@@ -1,12 +1,10 @@
-import { FileInfo } from 'interfaces/main';
-import { ArmDefine20, ArmDefine21, Define20, Define21 } from 'parse-define-xml';
-
-export interface DefineXmlFileInfo extends FileInfo {
-    stylesheet?: string;
-    defineVersion: '2.0' | '2.1';
-    arm: boolean;
-    type: 'json' | 'xml';
-}
+import {
+    ArmDefine20,
+    ArmDefine21,
+    Define20,
+    Define21,
+    DefineXml,
+} from 'parse-define-xml';
 
 // Helper type to ensure correct content type based on version and arm
 type DefineXmlContentType<
@@ -22,7 +20,6 @@ type DefineXmlContentType<
 
 // Type-safe content interface using conditional types
 export interface DefineXmlContent {
-    stylesheet?: string;
     defineVersion: '2.0' | '2.1';
     arm: boolean;
     type: 'json' | 'xml';
@@ -31,3 +28,5 @@ export interface DefineXmlContent {
         DefineXmlContent['arm']
     >;
 }
+
+export type { DefineXml };

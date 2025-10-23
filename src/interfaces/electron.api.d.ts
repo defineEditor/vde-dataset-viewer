@@ -14,6 +14,8 @@ import {
     ParsedValidationReport,
     ValidationReportCompare,
     NewWindowProps,
+    DefineFileInfo,
+    DefineXmlContent,
 } from 'interfaces/common';
 
 export type Channels = 'ipc-vde';
@@ -97,6 +99,9 @@ export interface ElectronApi {
         position?: 'top' | 'bottom' | 'left' | 'right',
         props?: NewWindowProps,
     ) => Promise<void>;
+    openDefineXml: (filePath?: string) => Promise<DefineFileInfo | null>;
+    getDefineXmlContent: (fileId: string) => Promise<DefineXmlContent | null>;
+    closeDefineXml: (fileId: string) => Promise<boolean>;
     isWindows: boolean;
     resizeWindow: (
         position: 'top' | 'bottom' | 'left' | 'right',
