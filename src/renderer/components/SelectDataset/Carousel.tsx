@@ -66,7 +66,12 @@ const Carousel: React.FC<{
                     <ArrowBackIosIcon sx={styles.iconLeft} />
                 </Button>
             )}
-            {childrenArray.slice(currentIndex, currentIndex + elementsToShow)}
+            {childrenArray.length > elementsToShow
+                ? childrenArray.slice(
+                      currentIndex,
+                      currentIndex + elementsToShow,
+                  )
+                : childrenArray}
             {childrenArray.length > elementsToShow && (
                 <Button
                     sx={styles.slideButton}
