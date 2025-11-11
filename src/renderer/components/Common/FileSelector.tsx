@@ -11,8 +11,10 @@ import {
     TableRow,
     Paper,
     IconButton,
+    Tooltip,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import WarningRoundedIcon from '@mui/icons-material/WarningRounded';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import TableSortLabel from '@mui/material/TableSortLabel';
 import AppContext from 'renderer/utils/AppContext';
@@ -51,6 +53,7 @@ interface FileSelectorProps {
         extensions: string[];
     }>;
     initialFolder?: string;
+    filesWithIssues?: string[];
 }
 
 const FileSelector: React.FC<FileSelectorProps> = ({
@@ -85,6 +88,7 @@ const FileSelector: React.FC<FileSelectorProps> = ({
         },
     ],
     initialFolder = '',
+    filesWithIssues = [],
 }) => {
     const { apiService } = useContext(AppContext);
     const dispatch = useAppDispatch();
@@ -278,14 +282,28 @@ const FileSelector: React.FC<FileSelectorProps> = ({
                                     <TableCell>{file.outputName}</TableCell>
                                 )}
                                 <TableCell>
-                                    <IconButton
-                                        onClick={() =>
-                                            handleDeleteFile(file.fullPath)
-                                        }
-                                        size="small"
-                                    >
-                                        <DeleteIcon />
-                                    </IconButton>
+                                    <Tooltip title="Delete File">
+                                        <IconButton
+                                            onClick={() =>
+                                                handleDeleteFile(file.fullPath)
+                                            }
+                                            size="small"
+                                        >
+                                            <DeleteIcon />
+                                        </IconButton>
+                                    </Tooltip>
+                                    {filesWithIssues.includes(
+                                        file.fullPath,
+                                    ) && (
+                                        <Tooltip title="This file has issues">
+                                            <IconButton
+                                                size="small"
+                                                color="error"
+                                            >
+                                                <WarningRoundedIcon />
+                                            </IconButton>
+                                        </Tooltip>
+                                    )}
                                 </TableCell>
                             </TableRow>
                         ))}
