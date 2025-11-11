@@ -88,15 +88,20 @@ const Layout: React.FC<{
                     Opened Datasets
                 </Typography>
                 <Carousel elementsToShow={numberOfElements}>
-                    <OpenNewCard handleOpenLocal={handleOpenLocal} />
-                    {openedFiles.reverse().map((file) => (
-                        <DatasetCard
-                            key={file.fileId}
-                            file={file}
-                            handleDatasetClose={handleDatasetClose}
-                            handleSelectFileClick={handleSelectFileClick}
-                        />
-                    ))}
+                    {[<OpenNewCard handleOpenLocal={handleOpenLocal} />].concat(
+                        openedFiles
+                            .reverse()
+                            .map((file) => (
+                                <DatasetCard
+                                    key={file.fileId}
+                                    file={file}
+                                    handleDatasetClose={handleDatasetClose}
+                                    handleSelectFileClick={
+                                        handleSelectFileClick
+                                    }
+                                />
+                            )),
+                    )}
                 </Carousel>
             </Box>
             <Box sx={styles.section}>
