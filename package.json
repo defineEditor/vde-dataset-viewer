@@ -103,7 +103,7 @@
         "electron-debug": "^3.2.0",
         "electron-log": "^4.4.8",
         "electron-updater": "^6.1.4",
-        "js-array-filter": "^0.1.5",
+        "js-array-filter": "^0.1.6",
         "js-stream-dataset-json": "^0.7.1",
         "parse-define-xml": "^0.1.5",
         "react": "^18.2.0",
