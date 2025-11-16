@@ -6,6 +6,7 @@ import {
     ValidatorConfig,
     ValidationRunReport,
     FileInfo,
+    DefineFileInfo,
 } from 'interfaces/main';
 import { ParsedValidationReport } from 'interfaces/core.report';
 import { modals, ModalType, AllowedPathnames } from 'misc/constants';
@@ -154,6 +155,27 @@ export interface IUiValidationPage {
     reportSummaryType: 'datasets' | 'issues';
 }
 
+export type DefineTab =
+    | 'overview'
+    | 'datasets'
+    | 'variables'
+    | 'codelists'
+    | 'methods'
+    | 'comments'
+    | 'analysis';
+
+export interface IDefineXmlFiles {
+    [fileId: string]: DefineFileInfo;
+}
+
+export interface IUiDefine {
+    currentFileId: string | null;
+    currentTab: DefineTab;
+    selectedItemGroupOid: string | null;
+    selectedVariableOid: string | null;
+    searchTerm: string;
+}
+
 export interface IUi {
     pathname: AllowedPathnames;
     currentFileId: string;
@@ -172,6 +194,7 @@ export interface IUi {
         };
     };
     validationPage: IUiValidationPage;
+    define: IUiDefine;
 }
 
 export interface IRecentFile {

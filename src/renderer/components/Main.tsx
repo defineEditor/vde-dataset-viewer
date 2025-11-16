@@ -24,6 +24,7 @@ import { setPathname, setZoomLevel } from 'renderer/redux/slices/ui';
 import { AllowedPathnames, NewWindowProps } from 'interfaces/common';
 import ViewerToolbar from 'renderer/components/Toolbars/ViewerToolbar';
 import ReportToolbar from 'renderer/components/Toolbars/ReportToolbar';
+import DefineToolbar from 'renderer/components/Toolbars/DefineToolbar';
 import ToolbarActions from 'renderer/components/ToolbarActions';
 import Shortcuts from 'renderer/components/Shortcuts';
 import Converter from 'renderer/components/Converter';
@@ -319,6 +320,10 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
 
     if (pathname === paths.VALIDATOR && currentValidatorTab === 'report') {
         slots.appTitle = ReportToolbar;
+    }
+
+    if (pathname === paths.DEFINEXML) {
+        slots.appTitle = DefineToolbar;
     }
 
     return (

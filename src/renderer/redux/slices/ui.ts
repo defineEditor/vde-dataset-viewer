@@ -10,6 +10,7 @@ import {
     ModalType,
     DataMode,
     IUiViewer,
+    DefineTab,
 } from 'interfaces/common';
 import { paths } from 'misc/constants';
 
@@ -204,6 +205,24 @@ export const uiSlice = createSlice({
         setZoomLevel: (state, action: PayloadAction<number>) => {
             state.zoomLevel = action.payload;
         },
+        setDefineFileId: (state, action: PayloadAction<string | null>) => {
+            state.define.currentFileId = action.payload;
+        },
+        setDefineTab: (state, action: PayloadAction<DefineTab>) => {
+            state.define.currentTab = action.payload;
+        },
+        setDefineItemGroup: (state, action: PayloadAction<string | null>) => {
+            state.define.selectedItemGroupOid = action.payload;
+        },
+        setDefineVariable: (state, action: PayloadAction<string | null>) => {
+            state.define.selectedVariableOid = action.payload;
+        },
+        setDefineSearchTerm: (state, action: PayloadAction<string>) => {
+            state.define.searchTerm = action.payload;
+        },
+        resetDefineUi: (state) => {
+            state.define = initialUi.define;
+        },
         updateValidation: (
             state,
             action: PayloadAction<{
@@ -326,6 +345,12 @@ export const {
     setShowIssues,
     setIssueFilter,
     setCurrentIssueIndex,
+    setDefineFileId,
+    setDefineTab,
+    setDefineItemGroup,
+    setDefineVariable,
+    setDefineSearchTerm,
+    resetDefineUi,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

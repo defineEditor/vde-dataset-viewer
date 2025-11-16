@@ -95,6 +95,13 @@ export const ui: IUi = {
         reportSummaryType: 'datasets',
     },
     dataSettings: {},
+    define: {
+        currentFileId: null,
+        currentTab: 'overview',
+        selectedItemGroupOid: null,
+        selectedVariableOid: null,
+        searchTerm: '',
+    },
 };
 
 export const converter: ConverterData = {

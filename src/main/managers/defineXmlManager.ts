@@ -139,8 +139,14 @@ class DefineXmlManager {
         // If the file is not specified, allow user to select via dialog
         let definePath: string = filePath || '';
         if (!filePath) {
-            const newPath = await openFile();
+            const newPath = await openFile(undefined, [
+                {
+                    name: 'Define-XML',
+                    extensions: ['xml'],
+                },
+            ]);
             if (!newPath) {
+                // Open cancelled
                 return null;
             }
             definePath = newPath.path;
@@ -162,6 +168,7 @@ class DefineXmlManager {
 
         // Return metadata only
         const fileInfo: DefineFileInfo = {
+            fileId,
             fullPath: definePath,
             folder: parsedPath.dir,
             filename: parsedPath.base,
