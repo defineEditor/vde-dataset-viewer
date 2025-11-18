@@ -71,7 +71,7 @@ class DefineXmlManager {
         try {
             for await (const line of rl) {
                 // Look for the opening <ODM tag
-                if (!insideOdmTag && /^\s*<odm\s+/i.test(line)) {
+                if (!insideOdmTag && /^\s*<odm(\s+|$)/i.test(line)) {
                     insideOdmTag = true;
                     odmTag += line;
                 } else if (insideOdmTag) {

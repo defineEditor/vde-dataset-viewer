@@ -3,7 +3,7 @@ import { Box } from '@mui/material';
 import AppContext from 'renderer/utils/AppContext';
 import { DefineXmlContent } from 'interfaces/defineXml';
 import { useAppSelector } from 'renderer/redux/hooks';
-import DefineViewerLayout from 'renderer/components/DefineXml/DefineViewerLayout';
+import DefineViewerLayout from 'renderer/components/DefineXmlStylesheet/DefineViewerLayout';
 
 const DefineXml: React.FC = () => {
     const { apiService } = useContext(AppContext);

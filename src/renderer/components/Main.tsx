@@ -18,7 +18,7 @@ import Api from 'renderer/components/Api';
 import AppContext from 'renderer/utils/AppContext';
 import ViewFile from 'renderer/components/ViewDataset';
 import Settings from 'renderer/components/Settings';
-import DefineXml from 'renderer/components/DefineXml';
+import DefineXml from 'renderer/components/DefineXmlStylesheet';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import { setPathname, setZoomLevel } from 'renderer/redux/slices/ui';
 import { AllowedPathnames, NewWindowProps } from 'interfaces/common';

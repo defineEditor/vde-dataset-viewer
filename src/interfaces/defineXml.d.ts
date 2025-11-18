@@ -29,4 +29,4 @@ export interface DefineXmlContent {
     >;
 }
 
-export type { DefineXml };
+export type { DefineXml, ArmDefine20, ArmDefine21, Define20, Define21 };
