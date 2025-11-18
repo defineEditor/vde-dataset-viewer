@@ -1,6 +1,12 @@
+/* eslint-disable react/no-array-index-key */
 import React from 'react';
 import { DefineXmlContent } from 'interfaces/defineXml';
-import { getMethodDefs, getTranslatedText } from '../utils/defineXmlHelpers';
+import { renderDocumentRefs } from 'renderer/components/DefineXmlStylesheet/utils/itemRenderHelpers';
+import {
+    getMetaDataVersion,
+    getMethodDefs,
+    getTranslatedText,
+} from 'renderer/components/DefineXmlStylesheet/utils/defineXmlHelpers';
 
 interface MethodsProps {
     content: DefineXmlContent;
@@ -8,6 +14,8 @@ interface MethodsProps {
 
 const Methods: React.FC<MethodsProps> = ({ content }) => {
     const methodDefs = getMethodDefs(content);
+    const metaDataVersion = getMetaDataVersion(content);
+    const leafs = metaDataVersion.leafs || {};
 
     if (methodDefs.length === 0) {
         return null;
@@ -77,6 +85,10 @@ const Methods: React.FC<MethodsProps> = ({ content }) => {
                                                     </div>
                                                 ),
                                             )}
+                                        {renderDocumentRefs(
+                                            method.documentRefs || [],
+                                            leafs,
+                                        )}
                                     </td>
                                 </tr>
                             );

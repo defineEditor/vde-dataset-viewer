@@ -95,7 +95,9 @@ export const getLeafs = (content: DefineXmlContent) => {
 };
 
 // ARM-specific helpers
-export const getAnalysisResultDisplays = (content: DefineXmlContent) => {
+export const getAnalysisResultDisplays = (
+    content: DefineXmlContent,
+): ArmDefine21.ResultDisplay[] => {
     if (!content.arm) return [];
     const metaDataVersion = getMetaDataVersion(content);
     if (content.defineVersion === '2.0') {

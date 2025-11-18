@@ -14,7 +14,14 @@ import {
     getMethodDefs,
     getMetaDataVersion,
     getStandards,
-} from '../utils/defineXmlHelpers';
+} from 'renderer/components/DefineXmlStylesheet/utils/defineXmlHelpers';
+import {
+    getItemAttributes,
+    getOriginContent,
+    getMethodContent,
+    getCommentContent,
+    getWhereClauseText,
+} from 'renderer/components/DefineXmlStylesheet/utils/itemRenderHelpers';
 
 type ItemGroupDef =
     | Define20.ItemGroupDef
@@ -104,11 +111,53 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
         {} as Record<string, (typeof methodDefsArray)[0]>,
     );
 
+    // Get where clause definitions for VLM
+    const whereClauseDefs = metaDataVersion.whereClauseDefs || {};
+
     return (
         <>
             {/* eslint-disable-next-line jsx-a11y/anchor-has-content, jsx-a11y/anchor-is-valid */}
             <a id={`IG.${dataset.oid}`} />
             <div className="containerbox">
+                {hasVLM && (
+                    <div style={{ marginBottom: '10px' }}>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const vlmRows =
+                                    document.querySelectorAll('tr.vlm');
+                                vlmRows.forEach((row) => {
+                                    const htmlRow = row as HTMLElement;
+                                    htmlRow.style.display = '';
+                                });
+                            }}
+                            style={{
+                                marginRight: '10px',
+                                padding: '5px 10px',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            Expand All VLM
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const vlmRows =
+                                    document.querySelectorAll('tr.vlm');
+                                vlmRows.forEach((row) => {
+                                    const htmlRow = row as HTMLElement;
+                                    htmlRow.style.display = 'none';
+                                });
+                            }}
+                            style={{
+                                padding: '5px 10px',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            Collapse All VLM
+                        </button>
+                    </div>
+                )}
                 <table>
                     <caption>
                         <span>
@@ -163,173 +212,31 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
                                 return null;
                             }
 
-                            const label = getTranslatedText(
-                                itemDef.description,
+                            // Use utility function to get all item attributes
+                            const {
+                                label,
+                                dataType,
+                                role,
+                                lengthDisplay,
+                                codeListContent,
+                            } = getItemAttributes(itemDef, itemRef, codeLists);
+
+                            // Get origin, method, comment content using utility functions
+                            const originContent = getOriginContent(
+                                itemDef,
+                                leafs,
                             );
-                            const dataType = itemDef.dataType || '';
+                            const methodContent = getMethodContent(
+                                itemRef.methodOid,
+                                methodDefs,
+                                leafs,
+                            );
+                            const commentContent = getCommentContent(
+                                itemDef.commentOid,
+                                commentDefs,
+                                leafs,
+                            );
 
-                            // Get length or display format
-                            let lengthDisplay = '';
-                            if (itemDef.length) {
-                                lengthDisplay = String(itemDef.length);
-                            }
-                            // Check for display format (ISO 8601, etc.)
-                            const defDisplayFormat = itemDef.displayFormat;
-                            if (defDisplayFormat) {
-                                lengthDisplay = ''; // Display format takes precedence over length
-                            }
-
-                            // Get CodeList or ISO format for "Controlled Terms or ISO Format" column
-                            let codeListContent: React.ReactNode = '';
-                            const { codeListRef } = itemDef;
-
-                            if (codeListRef) {
-                                const codeList = codeLists[codeListRef];
-                                if (codeList) {
-                                    // Display codelist name as link and first 5 items inline
-                                    const codeListItems =
-                                        codeList.codeListItems || [];
-                                    const enumeratedItems =
-                                        codeList.enumeratedItems || [];
-
-                                    const displayItems = codeListItems.slice(
-                                        0,
-                                        5,
-                                    );
-                                    const enumItems = enumeratedItems.slice(
-                                        0,
-                                        5,
-                                    );
-
-                                    codeListContent = (
-                                        <>
-                                            <span className="linebreakcell">
-                                                <a href={`#${codeListRef}`}>
-                                                    {codeList.name}
-                                                </a>
-                                            </span>
-                                            {displayItems.length > 0 && (
-                                                <ul className="codelist">
-                                                    {displayItems.map(
-                                                        (item) => {
-                                                            const decode =
-                                                                getTranslatedText(
-                                                                    item.decode,
-                                                                );
-                                                            return (
-                                                                <li
-                                                                    key={
-                                                                        item.codedValue
-                                                                    }
-                                                                    className="codelist-item"
-                                                                >
-                                                                    •&nbsp;
-                                                                    &quot;
-                                                                    {
-                                                                        item.codedValue
-                                                                    }
-                                                                    &quot;
-                                                                    {decode &&
-                                                                        ` = "${decode}"`}
-                                                                </li>
-                                                            );
-                                                        },
-                                                    )}
-                                                </ul>
-                                            )}
-                                            {enumItems.length > 0 && (
-                                                <ul className="codelist">
-                                                    {enumItems.map((item) => (
-                                                        <li
-                                                            key={
-                                                                item.codedValue
-                                                            }
-                                                            className="codelist-item"
-                                                        >
-                                                            •&nbsp;&quot;
-                                                            {item.codedValue}
-                                                            &quot;
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            )}
-                                        </>
-                                    );
-                                }
-                            } else if (defDisplayFormat) {
-                                codeListContent = defDisplayFormat;
-                            }
-
-                            // Get Origin with full details
-                            let originContent: React.ReactNode = null;
-                            const { origins } = itemDef;
-                            if (origins) {
-                                originContent = origins.map((o, originIdx) => {
-                                    if (!o.type) return null;
-
-                                    const key = `origin-${originIdx}`;
-                                    let originText = o.type;
-                                    if (o.source) {
-                                        originText += ` (Source: ${o.source})`;
-                                    }
-
-                                    const originDesc = o.description
-                                        ? getTranslatedText(o.description)
-                                        : '';
-
-                                    return (
-                                        <div key={key}>
-                                            <div className="linebreakcell">
-                                                {originText}
-                                                {o.type === 'Predecessor' &&
-                                                    originDesc &&
-                                                    `: ${originDesc}`}
-                                            </div>
-                                            {o.type !== 'Predecessor' &&
-                                                originDesc && (
-                                                    <p className="linebreakcell">
-                                                        {originDesc}
-                                                    </p>
-                                                )}
-                                        </div>
-                                    );
-                                });
-                            }
-
-                            // Get Method
-                            let methodContent: React.ReactNode = '';
-                            const { methodOid } = itemRef;
-                            if (methodOid) {
-                                const method = methodDefs[methodOid];
-                                if (method) {
-                                    const methodDesc = getTranslatedText(
-                                        method.description,
-                                    );
-                                    methodContent = (
-                                        <div className="method-code">
-                                            {methodDesc}
-                                        </div>
-                                    );
-                                }
-                            }
-
-                            // Get Comment
-                            let commentContent: React.ReactNode = '';
-                            const { commentOid } = itemDef;
-                            if (commentOid) {
-                                const comment = commentDefs[commentOid];
-                                if (comment) {
-                                    commentContent = (
-                                        <p className="linebreakcell">
-                                            {getTranslatedText(
-                                                comment.description,
-                                            )}
-                                        </p>
-                                    );
-                                }
-                            }
-
-                            // Build the Origin/Source/Method/Comment column content
                             const originMethodCommentContent = (
                                 <>
                                     {originContent}
@@ -337,9 +244,6 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
                                     {commentContent}
                                 </>
                             );
-
-                            // Get Role from ItemRef
-                            const role = itemRef.role || '';
 
                             const rowClass =
                                 index % 2 === 0
@@ -367,172 +271,52 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
 
                                     if (!vlItemDef) return;
 
-                                    // Get where clause
+                                    // Use utility functions for VLM item attributes
+                                    const {
+                                        label: vlLabel,
+                                        dataType: vlDataType,
+                                        role: vlRole,
+                                        lengthDisplay: vlLengthDisplay,
+                                        codeListContent: vlCodeListContent,
+                                    } = getItemAttributes(
+                                        vlItemDef,
+                                        vlItemRef,
+                                        codeLists,
+                                    );
+
+                                    // Get where clause text using utility function
                                     let whereClauseDisplay: React.ReactNode =
                                         '';
                                     const whereClauseRefs =
                                         vlItemRef.whereClauseRefs || [];
                                     if (whereClauseRefs.length > 0) {
-                                        // For now, simple display - full implementation needs WhereClauseDef lookup
                                         whereClauseDisplay = (
                                             <div className="qval-indent">
-                                                ➤ Where clause condition
+                                                {getWhereClauseText(
+                                                    whereClauseRefs,
+                                                    whereClauseDefs,
+                                                    itemDefs,
+                                                    dataset.oid,
+                                                )}
                                             </div>
                                         );
                                     }
 
-                                    // Get VLM item details
-                                    const vlLabel = getTranslatedText(
-                                        vlItemDef.description,
+                                    // Get VLM origin/method/comment using utility functions
+                                    const vlOriginContent = getOriginContent(
+                                        vlItemDef,
+                                        leafs,
                                     );
-                                    const vlDataType = vlItemDef.dataType || '';
-                                    const vlRole = vlItemRef.role || '';
-
-                                    let vlLengthDisplay = '';
-                                    if (vlItemDef.length) {
-                                        vlLengthDisplay = String(
-                                            vlItemDef.length,
-                                        );
-                                    }
-
-                                    // Get codelist for VLM item
-                                    let vlCodeListContent: React.ReactNode = '';
-                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                    const vlCodeListOid = vlItemDef.codeListRef;
-                                    if (vlCodeListOid) {
-                                        const vlCodeList =
-                                            codeLists[vlCodeListOid];
-                                        if (vlCodeList) {
-                                            const vlCodeListItems =
-                                                vlCodeList.codeListItems || [];
-                                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                            const displayItems =
-                                                vlCodeListItems.slice(0, 5);
-
-                                            vlCodeListContent = (
-                                                <>
-                                                    <span className="linebreakcell">
-                                                        <a
-                                                            href={`#CL.${vlCodeListOid}`}
-                                                        >
-                                                            {vlCodeList.name}
-                                                        </a>
-                                                    </span>
-                                                    {displayItems.length >
-                                                        0 && (
-                                                        <ul className="codelist">
-                                                            {displayItems.map(
-                                                                (item) => {
-                                                                    const decode =
-                                                                        getTranslatedText(
-                                                                            item.decode,
-                                                                        );
-                                                                    return (
-                                                                        <li
-                                                                            key={
-                                                                                item.codedValue
-                                                                            }
-                                                                            className="codelist-item"
-                                                                        >
-                                                                            •&nbsp;&quot;
-                                                                            {
-                                                                                item.codedValue
-                                                                            }
-                                                                            &quot;
-                                                                            =
-                                                                            &quot;
-                                                                            {
-                                                                                decode
-                                                                            }
-                                                                            &quot;
-                                                                        </li>
-                                                                    );
-                                                                },
-                                                            )}
-                                                        </ul>
-                                                    )}
-                                                </>
-                                            );
-                                        }
-                                    }
-
-                                    // Get VLM origin/method/comment
-                                    let vlOriginContent: React.ReactNode = '';
-                                    const vlOrigins =
-                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                        vlItemDef.origins || [];
-                                    if (vlOrigins.length > 0) {
-                                        vlOriginContent = vlOrigins.map(
-                                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                            (o: any, originIdx: number) => {
-                                                let originText = o.type;
-                                                if (o.source) {
-                                                    originText += ` (Source: ${o.source})`;
-                                                }
-                                                const originDesc = o.description
-                                                    ? getTranslatedText(
-                                                          o.description,
-                                                      )
-                                                    : '';
-
-                                                const key = `origin-${o.type}-${originIdx}`;
-                                                return (
-                                                    <div key={key}>
-                                                        <div className="linebreakcell">
-                                                            {originText}
-                                                            {o.type ===
-                                                                'Predecessor' &&
-                                                                originDesc &&
-                                                                `: ${originDesc}`}
-                                                        </div>
-                                                        {o.type !==
-                                                            'Predecessor' &&
-                                                            originDesc && (
-                                                                <p className="linebreakcell">
-                                                                    {originDesc}
-                                                                </p>
-                                                            )}
-                                                    </div>
-                                                );
-                                            },
-                                        );
-                                    }
-
-                                    let vlMethodContent: React.ReactNode = '';
-                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                    const vlMethodOid = vlItemRef.methodOid;
-                                    if (vlMethodOid) {
-                                        const vlMethod =
-                                            methodDefs[vlMethodOid];
-                                        if (vlMethod) {
-                                            const vlMethodDesc =
-                                                getTranslatedText(
-                                                    vlMethod.description,
-                                                );
-                                            vlMethodContent = (
-                                                <div className="method-code">
-                                                    {vlMethodDesc}
-                                                </div>
-                                            );
-                                        }
-                                    }
-
-                                    let vlCommentContent: React.ReactNode = '';
-                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                    const vlCommentOid = vlItemDef.commentOid;
-                                    if (vlCommentOid) {
-                                        const vlComment =
-                                            commentDefs[vlCommentOid];
-                                        if (vlComment) {
-                                            vlCommentContent = (
-                                                <p className="linebreakcell">
-                                                    {getTranslatedText(
-                                                        vlComment.description,
-                                                    )}
-                                                </p>
-                                            );
-                                        }
-                                    }
+                                    const vlMethodContent = getMethodContent(
+                                        vlItemRef.methodOid,
+                                        methodDefs,
+                                        leafs,
+                                    );
+                                    const vlCommentContent = getCommentContent(
+                                        vlItemDef.commentOid,
+                                        commentDefs,
+                                        leafs,
+                                    );
 
                                     const vlOriginMethodCommentContent = (
                                         <>
