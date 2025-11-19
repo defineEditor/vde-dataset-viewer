@@ -75,7 +75,11 @@ const DefineViewerLayout: React.FC<DefineViewerLayoutProps> = ({ content }) => {
     return (
         <Box
             className="define-xml-viewer"
-            sx={{ display: 'flex', height: '100vh', position: 'relative' }}
+            sx={{
+                display: 'flex',
+                height: '100vh',
+                position: 'relative',
+            }}
         >
             {/* Menu - Fixed Left Side */}
             <Box

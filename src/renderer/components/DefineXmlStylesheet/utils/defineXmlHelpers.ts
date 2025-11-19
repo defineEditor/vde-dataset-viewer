@@ -1,3 +1,4 @@
+import React from 'react';
 import { DefineXmlContent } from 'interfaces/defineXml';
 import type { Define21, ArmDefine20, ArmDefine21 } from 'parse-define-xml';
 
@@ -133,4 +134,69 @@ export const getTextContent = (
     if (!element) return '';
     if (typeof element === 'string') return element;
     return element.$t || '';
+};
+
+/**
+ * Display Standard reference (Define-XML v2.1)
+ * Returns formatted standard reference like "[SDTMIG 3.2]"
+ */
+export const displayStandard = (
+    standardOid: string | undefined,
+    standards: Array<{
+        oid: string;
+        name?: string;
+        publishingSet?: string;
+        version?: string;
+    }>,
+): React.ReactNode => {
+    if (!standardOid) return null;
+
+    const standard = standards.find((s) => s.oid === standardOid);
+    if (!standard) return null;
+
+    const parts = [
+        standard.name,
+        standard.publishingSet,
+        standard.version,
+    ].filter(Boolean);
+
+    if (parts.length === 0) return null;
+
+    return React.createElement(
+        'span',
+        { className: 'standard-refeference' },
+        `[${parts.join(' ')}]`,
+    );
+};
+
+/**
+ * Display Non Standard indicator (Define-XML v2.1)
+ * Returns "[Non Standard]" if item is marked as non-standard
+ */
+export const displayNonStandard = (
+    isNonStandard: boolean | undefined,
+): React.ReactNode => {
+    const isNonStandardValue = isNonStandard === true;
+
+    if (!isNonStandardValue) return null;
+
+    return React.createElement(
+        'span',
+        { className: 'standard-refeference' },
+        '[Non Standard]',
+    );
+};
+
+/**
+ * Display No Data indicator (Define-XML v2.1)
+ * Returns "[No Data]" if dataset has no data
+ */
+export const displayNoData = (
+    hasNoData: boolean | undefined,
+): React.ReactNode => {
+    const hasNoDataValue = hasNoData === true;
+
+    if (!hasNoDataValue) return null;
+
+    return React.createElement('span', { className: 'nodata' }, '[No Data]');
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { DefineXmlContent, ArmDefine21 } from 'interfaces/defineXml';
+import { DefineXmlContent, ArmDefine21 } from 'interfaces/common';
 import {
     getItemGroupDefs,
     getItemDefs,
@@ -7,7 +7,8 @@ import {
     getStandards,
     getTranslatedText,
     getMetaDataVersion,
-} from '../utils/defineXmlHelpers';
+} from 'renderer/components/DefineXmlStylesheet/utils/defineXmlHelpers';
+import { getCommentContent } from 'renderer/components/DefineXmlStylesheet/utils/itemRenderHelpers';
 
 interface DatasetsProps {
     content: DefineXmlContent;
@@ -53,16 +54,13 @@ const Datasets: React.FC<DatasetsProps> = ({ content }) => {
             <a id="datasets" />
             <h1 className="invisible">Datasets</h1>
             <div className="containerbox">
-                <table summary="Data Definition Tables">
+                <table summary="Data Definition Tables" className="datatable">
                     <caption className="header">Datasets</caption>
                     <thead>
                         <tr className="header">
                             <th scope="col">Dataset</th>
                             <th scope="col">Description</th>
-                            <th scope="col">
-                                Class
-                                {/* TODO: Add SubClass support for Define 2.1 */}
-                            </th>
+                            <th scope="col">Class</th>
                             <th scope="col">Structure</th>
                             <th scope="col">Purpose</th>
                             <th scope="col">Keys</th>
@@ -94,15 +92,13 @@ const Datasets: React.FC<DatasetsProps> = ({ content }) => {
                                 .join(', ');
 
                             // Get comment
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            const { commentOid, standardOid } = dataset as any;
-                            const comment =
-                                commentOid && commentDefs[commentOid]
-                                    ? getTranslatedText(
-                                          commentDefs[commentOid].description,
-                                      )
-                                    : '';
-
+                            const { commentOid, standardOid } =
+                                dataset as ArmDefine21.ItemGroupDef;
+                            const comment = getCommentContent(
+                                commentOid,
+                                commentDefs,
+                                leafs,
+                            );
                             // Get standard reference if present
                             const standard = standardOid
                                 ? standardsMap[standardOid]
@@ -123,8 +119,7 @@ const Datasets: React.FC<DatasetsProps> = ({ content }) => {
                                 archiveLeaf?.title || archiveLocationId || '';
 
                             // Get class and subclass
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            const classObj = (dataset as any).class;
+                            const classObj = dataset.class;
                             let classDisplay = '';
                             if (typeof classObj === 'string') {
                                 classDisplay = classObj;
@@ -135,12 +130,12 @@ const Datasets: React.FC<DatasetsProps> = ({ content }) => {
                                 // Define 2.1 structure with subClass
                                 classDisplay = classObj.name || '';
                                 if (
-                                    classObj.subClass &&
-                                    Array.isArray(classObj.subClass)
+                                    (classObj as ArmDefine21.ItemGroupDefClass)
+                                        .subClasses &&
+                                    Array.isArray(classObj.subClasses)
                                 ) {
-                                    const subClasses = classObj.subClass
-                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                        .map((sc: any) => sc.name)
+                                    const subClasses = classObj.subClasses
+                                        .map((sc) => sc.name)
                                         .filter(Boolean)
                                         .join(', ');
                                     if (subClasses) {
@@ -152,7 +147,6 @@ const Datasets: React.FC<DatasetsProps> = ({ content }) => {
                             }
 
                             // Check for NoData indicator
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             let hasNoData = false;
                             if (defineVersion.startsWith('2.1')) {
                                 hasNoData =
@@ -215,6 +209,10 @@ const Datasets: React.FC<DatasetsProps> = ({ content }) => {
                     </tbody>
                 </table>
             </div>
+            <p className="linktop">
+                Go to the <a href="#main">top</a> of the Define-XML document
+            </p>
+            <br />
         </>
     );
 };

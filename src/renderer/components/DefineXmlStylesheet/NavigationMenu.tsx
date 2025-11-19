@@ -20,7 +20,15 @@ import {
     FolderOpen,
 } from '@mui/icons-material';
 import { DefineXmlContent } from 'interfaces/defineXml';
-import { Section } from './DefineViewerLayout';
+
+export type Section =
+    | 'study'
+    | 'standards'
+    | 'datasets'
+    | 'codelists'
+    | 'methods'
+    | 'comments'
+    | 'analysis';
 
 interface NavigationMenuProps {
     content: DefineXmlContent;

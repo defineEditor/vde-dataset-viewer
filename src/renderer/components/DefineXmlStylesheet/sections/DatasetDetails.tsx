@@ -14,6 +14,9 @@ import {
     getMethodDefs,
     getMetaDataVersion,
     getStandards,
+    displayNoData,
+    displayNonStandard,
+    displayStandard,
 } from 'renderer/components/DefineXmlStylesheet/utils/defineXmlHelpers';
 import {
     getItemAttributes,
@@ -51,20 +54,13 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
     const leafs = metaDataVersion.leafs || {};
 
     // Get standard reference if present
-    const { archiveLocationId } = dataset;
-    let standardOid: string | undefined;
-    if (Object.prototype.hasOwnProperty.call(dataset, 'standardOid')) {
-        standardOid = (dataset as Define21.ItemGroupDef).standardOid;
-    }
-    const standard = standardOid
-        ? standards.find((s) => s.oid === standardOid)
-        : null;
-    const standardRef = standard
-        ? ` [${[standard.name, standard.publishingSet, standard.version].filter(Boolean).join(' ')}]`
-        : '';
+    const { archiveLocationId, hasNoData, standardOid, isNonStandard } =
+        dataset as Define21.ItemGroupDef;
 
     // Get archive location
-    const archiveLeaf = archiveLocationId ? leafs[archiveLocationId] : null;
+    const archiveLeaf: null | Define21.Leaf = archiveLocationId
+        ? dataset?.leaf || null
+        : null;
     const archiveHref = archiveLeaf?.xlink_href || '';
     const archiveTitle = archiveLeaf?.title || archiveLocationId || '';
 
@@ -111,6 +107,14 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
         {} as Record<string, (typeof methodDefsArray)[0]>,
     );
 
+    const classObj = dataset.class;
+    let classDisplay = '';
+    if (typeof classObj === 'string') {
+        classDisplay = classObj;
+    } else if (classObj && typeof classObj === 'object') {
+        classDisplay = classObj.name;
+    }
+
     // Get where clause definitions for VLM
     const whereClauseDefs = metaDataVersion.whereClauseDefs || {};
 
@@ -119,54 +123,14 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
             {/* eslint-disable-next-line jsx-a11y/anchor-has-content, jsx-a11y/anchor-is-valid */}
             <a id={`IG.${dataset.oid}`} />
             <div className="containerbox">
-                {hasVLM && (
-                    <div style={{ marginBottom: '10px' }}>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                const vlmRows =
-                                    document.querySelectorAll('tr.vlm');
-                                vlmRows.forEach((row) => {
-                                    const htmlRow = row as HTMLElement;
-                                    htmlRow.style.display = '';
-                                });
-                            }}
-                            style={{
-                                marginRight: '10px',
-                                padding: '5px 10px',
-                                cursor: 'pointer',
-                            }}
-                        >
-                            Expand All VLM
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                const vlmRows =
-                                    document.querySelectorAll('tr.vlm');
-                                vlmRows.forEach((row) => {
-                                    const htmlRow = row as HTMLElement;
-                                    htmlRow.style.display = 'none';
-                                });
-                            }}
-                            style={{
-                                padding: '5px 10px',
-                                cursor: 'pointer',
-                            }}
-                        >
-                            Collapse All VLM
-                        </button>
-                    </div>
-                )}
-                <table>
+                <table className="datatable">
                     <caption>
                         <span>
-                            {dataset.name} ({description}) -{' '}
-                            {standardRef && (
-                                <span className="standard-refeference">
-                                    {standardRef}
-                                </span>
-                            )}
+                            {dataset.name} ({description}) - {classDisplay}
+                            {standardOid &&
+                                displayStandard(standardOid, standards)}
+                            {hasNoData && displayNoData(hasNoData)}
+                            {isNonStandard && displayNonStandard(isNonStandard)}
                             {archiveHref && (
                                 <span className="dataset">
                                     Location:{' '}

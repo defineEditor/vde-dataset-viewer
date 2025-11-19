@@ -2,393 +2,413 @@
 
 /* Color Variables */
 :root {
-    --color-menu-body-bg: #ffffff;
-    --color-menu-body-fg: #000000;
-    --color-hmenu-text: #004a95;
-    --color-hmenu-bullet: #aaaaaa;
-    --color-caption: #696969;
-    --color-table-bg: #eeeeee;
-    --color-tr-header-back: #6699cc;
-    --color-tr-header: #ffffff;
-    --color-tablerow-odd: #ffffff;
-    --color-tablerow-even: #eeeeee;
-    --color-tr-vlm-back: #d3d3d3;
-    --color-border: #000000;
-    --color-error: #000000;
-    --color-warning: #000000;
-    --color-link: #0000ff;
-    --color-link-hover: #ff9900;
-    --color-link-visited: #551a8b;
+  --color-menu-body-bg: #ffffff;
+  --color-menu-body-fg: #000000;
+  --color-hmenu-text: #004a95;
+  --color-hmenu-bullet: #aaaaaa;
+  --color-caption: #696969;
+  --color-table-bg: #eeeeee;
+  --color-tr-header-back: #6699cc;
+  --color-tr-header: #ffffff;
+  --color-tablerow-odd: #ffffff;
+  --color-tablerow-even: #eeeeee;
+  --color-tr-vlm-back: #d3d3d3;
+  --color-border: #000000;
+  --color-error: #000000;
+  --color-warning: #000000;
+  --color-link: #0000ff;
+  --color-link-hover: #ff9900;
+  --color-link-visited: #551a8b;
 }
 
 /* Global Styles */
 .define-xml-viewer {
-    background-color: var(--color-menu-body-background);
-    font-family: Verdana, Arial, Helvetica, sans-serif;
-    font-size: 62.5%;
-    margin: 0;
-    padding: 30px;
-    min-height: 100vh;
+  background-color: var(--color-menu-body-background);
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: 62.5%;
+  margin: 0;
+  padding: 30px;
+  min-height: 100vh;
 }
 
 /* Document Info */
 .define-xml-viewer #main .docinfo {
-    width: 95%;
-    text-align: right;
-    padding: 0px 5px;
+  width: 95%;
+  text-align: right;
+  padding: 0px 5px;
 }
 
 .define-xml-viewer .documentinfo,
 .define-xml-viewer .stylesheetinfo {
-    font-size: 1.1em;
-    margin: 0;
-    padding: 0;
+  font-size: 1.1em;
+  margin: 0;
+  padding: 0;
 }
 
 /* Container Box */
 .define-xml-viewer .containerbox {
-    padding: 0px;
-    margin: 10px auto;
-    border: 0px;
-    page-break-after: always;
+  padding: 0px;
+  margin: 10px auto;
+  border: 0px;
+  page-break-after: always;
 }
 
 .define-xml-viewer div.containerbox {
-    padding: 0px;
-    margin: 10px auto;
-    border: 0px;
+  padding: 0px;
+  margin: 10px auto;
+  border: 0px;
 }
 
 /* Invisible heading (for accessibility) */
 .define-xml-viewer h1.invisible {
-    position: absolute;
-    left: -10000px;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
 }
 
 /* Typography */
 .define-xml-viewer h1 {
-    font-size: 1.6em;
-    margin-left: 0;
-    font-weight: bolder;
-    text-align: left;
-    color: var(--color-caption);
+  font-size: 1.6em;
+  margin-left: 0;
+  font-weight: bolder;
+  text-align: left;
+  color: var(--color-caption);
 }
 
 .define-xml-viewer .study-metadata {
-    font-size: 1.6em;
-    font-weight: bold;
-    text-align: left;
-    padding: 0px;
-    margin-left: 0px;
-    margin-top: 0px;
-    margin-right: 0px;
-    margin-bottom: 0px;
-    color: var(--color-caption);
-    border: 0px;
+  font-size: 1.6em;
+  font-weight: bold;
+  text-align: left;
+  padding: 0px;
+  margin-left: 0px;
+  margin-top: 0px;
+  margin-right: 0px;
+  margin-bottom: 0px;
+  color: var(--color-caption);
+  border: 0px;
 }
 
 .define-xml-viewer div.study-metadata {
-    font-size: 1.6em;
-    font-weight: bold;
-    text-align: left;
-    padding: 0px;
-    margin-left: 0px;
-    margin-top: 0px;
-    margin-right: 0px;
-    margin-bottom: 0px;
-    color: var(--color-caption);
-    border: 0px;
+  font-size: 1.6em;
+  font-weight: bold;
+  text-align: left;
+  padding: 0px;
+  margin-left: 0px;
+  margin-top: 0px;
+  margin-right: 0px;
+  margin-bottom: 0px;
+  color: var(--color-caption);
+  border: 0px;
 }
 
 .define-xml-viewer .study-name {
-    font-size: 1.6em;
-    font-weight: bold;
-    text-align: left;
-    padding: 15px;
-    margin-left: 20px;
-    margin-top: 40px;
-    margin-right: 20px;
-    margin-bottom: 20px;
-    color: var(--color-caption);
-    border: 0px;
+  font-size: 1.6em;
+  font-weight: bold;
+  text-align: left;
+  padding: 15px;
+  margin-left: 20px;
+  margin-top: 40px;
+  margin-right: 20px;
+  margin-bottom: 20px;
+  color: var(--color-caption);
+  border: 0px;
 }
 
 /* Navigation Menu */
 .define-xml-viewer .hmenu-bullet {
-    color: var(--color-hmenu-bullet);
-    font-size: 1.2em;
+  color: var(--color-hmenu-bullet);
+  font-size: 1.2em;
 }
 
 .define-xml-viewer .tocItem {
-    color: var(--color-hmenu-text);
-    text-decoration: none;
-    font-size: 1.4em;
+  color: var(--color-hmenu-text);
+  text-decoration: none;
+  font-size: 1.4em;
 }
 
 /* Tables */
 .define-xml-viewer table {
-    width: 95%;
-    border-spacing: 4px;
-    border: 1px solid var(--color-border);
-    background-color: var(--color-table-bg);
-    margin-top: 5px;
-    border-collapse: collapse;
-    padding: 5px;
-    empty-cells: show;
+  width: 95%;
+  border-spacing: 4px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-table-bg);
+  margin-top: 5px;
+  border-collapse: collapse;
+  padding: 5px;
+  empty-cells: show;
 }
 
 .define-xml-viewer table caption {
-    border: 0px;
-    left: 20px;
-    font-size: 1.4em;
-    font-weight: bolder;
-    color: var(--color-caption);
-    margin: 10px auto;
-    text-align: left;
+  border: 0px;
+  left: 20px;
+  font-size: 1.4em;
+  font-weight: bolder;
+  color: var(--color-caption);
+  margin: 10px auto;
+  text-align: left;
 }
 
 .define-xml-viewer table caption.header {
-    font-size: 1.6em;
-    margin-left: 0;
-    font-weight: bolder;
-    text-align: center;
-    color: var(--color-caption);
+  font-size: 1.6em;
+  margin-left: 0;
+  font-weight: bolder;
+  text-align: center;
+  color: var(--color-caption);
 }
 
 .define-xml-viewer .dataset-name {
-    font-weight: bold;
+  font-weight: bold;
 }
 
 .define-xml-viewer .dataset-description {
-    font-weight: normal;
+  font-weight: normal;
 }
 
 .define-xml-viewer table tr.header {
-    background-color: var(--color-tr-header-back);
-    color: var(--color-tr-header);
-    font-weight: bold;
+  background-color: var(--color-tr-header-back);
+  color: var(--color-tr-header);
+  font-weight: bold;
 }
 
 .define-xml-viewer table th {
-    font-weight: bold;
-    vertical-align: top;
-    text-align: left;
-    padding: 5px;
-    border: 1px solid var(--color-border);
-    font-size: 1.3em;
-    background-color: var(--color-tr-header-back);
-    color: var(--color-tr-header);
+  font-weight: bold;
+  vertical-align: top;
+  text-align: left;
+  padding: 5px;
+  border: 1px solid var(--color-border);
+  font-size: 1.3em;
+  background-color: var(--color-tr-header-back);
+  color: var(--color-tr-header);
 }
 
 .define-xml-viewer table td {
-    vertical-align: top;
-    padding: 5px;
-    border: 1px solid var(--color-border);
-    font-size: 1.2em;
-    line-height: 150%;
+  vertical-align: top;
+  padding: 5px;
+  border: 1px solid var(--color-border);
+  font-size: 1.2em;
+  line-height: 150%;
 }
 
 .define-xml-viewer tr.tablerowodd {
-    background-color: var(--color-tablerow-odd);
+  background-color: var(--color-tablerow-odd);
 }
 
 .define-xml-viewer tr.tableroweven {
-    background-color: var(--color-tablerow-even);
+  background-color: var(--color-tablerow-even);
 }
 
 /* Study Metadata */
 .define-xml-viewer dl.study-metadata {
-    width: 95%;
-    padding: 5px 0px;
-    font-size: 0.8em;
-    color: black;
+  width: 95%;
+  padding: 5px 0px;
+  font-size: 0.8em;
+  color: black;
 }
 
 .define-xml-viewer dl.study-metadata dt {
-    clear: left;
-    float: left;
-    width: 200px;
-    margin: 0;
-    padding: 5px 5px 5px 0px;
-    font-weight: bold;
+  clear: left;
+  float: left;
+  width: 200px;
+  margin: 0;
+  padding: 5px 5px 5px 0px;
+  font-weight: bold;
 }
 
 .define-xml-viewer dl.study-metadata dd {
-    margin-left: 210px;
-    padding: 5px;
-    font-weight: normal;
-    min-height: 20px;
+  margin-left: 210px;
+  padding: 5px;
+  font-weight: normal;
+  min-height: 20px;
 }
 
 /* Description text */
 .define-xml-viewer .description {
-    margin-left: 0px;
-    color: black;
-    font-weight: normal;
-    font-size: 0.85em;
+  margin-left: 0px;
+  color: black;
+  font-weight: normal;
+  font-size: 0.85em;
 }
 
 /* Links */
 .define-xml-viewer a {
-    color: var(--color-link);
-    text-decoration: underline;
+  color: var(--color-link);
+  text-decoration: underline;
 }
 
 .define-xml-viewer a:hover {
-    color: var(--color-link-hover);
-    text-decoration: underline;
+  color: var(--color-link-hover);
+  text-decoration: underline;
 }
 
 .define-xml-viewer a:visited {
-    color: var(--color-link-visited);
-    text-decoration: underline;
+  color: var(--color-link-visited);
+  text-decoration: underline;
 }
 
 /* Unresolved references */
 .define-xml-viewer .unresolved {
-    color: var(--color-error);
+  color: var(--color-error);
 }
 
 /* Line break cells */
 .define-xml-viewer .linebreakcell {
-    vertical-align: top;
-    margin-top: 3px;
-    margin-bottom: 3px;
+  vertical-align: top;
+  margin-top: 3px;
+  margin-bottom: 3px;
 }
 
 /* Method and Expression styles */
 .define-xml-viewer .method-code {
-    vertical-align: top;
-    white-space: pre-wrap;
-    word-wrap: break-word;
+  vertical-align: top;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .define-xml-viewer .formalexpression-code {
-    font-family: 'Courier New', monospace, serif;
-    font-size: 1.2em;
-    line-height: 120%;
-    display: block;
-    margin: 0px;
-    padding: 5px 0 0 20px;
-    white-space: pre-wrap;
-    word-wrap: break-word;
+  font-family: 'Courier New', monospace, serif;
+  font-size: 1.2em;
+  line-height: 120%;
+  display: block;
+  margin: 0px;
+  padding: 5px 0 0 20px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.define-xml-viewer .formalexpression-reference {
+  vertical-align: super;
+  font-size: 0.8em;
+  padding-left: 5px;
 }
 
 /* CodeList styles */
 .define-xml-viewer .codelist-caption {
-    font-size: 1.4em;
-    margin-top: 20px;
-    margin-bottom: 10px;
-    margin-left: 0;
-    font-weight: bolder;
-    text-align: left;
-    color: var(--color-caption);
+  font-size: 1.4em;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  margin-left: 0;
+  font-weight: bolder;
+  text-align: left;
+  color: var(--color-caption);
 }
 
 .define-xml-viewer .codelist-item-decode {
-    white-space: pre-wrap;
-    word-wrap: break-word;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 /* SubClass list */
 .define-xml-viewer ul.SubClass {
-    list-style-type: '- ';
-    padding-left: 5px;
-    margin: 0;
+  list-style-type: '- ';
+  padding-left: 5px;
+  margin: 0;
 }
 
 /* Value List Reference */
 .define-xml-viewer .valuelist-reference {
-    vertical-align: super;
-    font-size: 0.8em;
-    padding-left: 5px;
-    cursor: pointer;
+  vertical-align: super;
+  font-size: 0.8em;
+  padding-left: 5px;
+  cursor: pointer;
 }
 
 /* Prefix styles */
 .define-xml-viewer .prefix {
-    font-weight: normal;
+  font-weight: normal;
 }
 
 /* Extended/NCI styles */
 .define-xml-viewer .nci,
 .define-xml-viewer .extended {
-    font-style: italic;
+  font-style: italic;
 }
 
 /* Standard reference */
 .define-xml-viewer .standard-reference {
-    width: 95%;
-    font-size: 1em;
-    font-weight: bold;
-    padding: 5px;
-    color: var(--color-caption);
-    white-space: nowrap;
+  width: 95%;
+  font-size: 1em;
+  font-weight: bold;
+  padding: 5px;
+  color: var(--color-caption);
+  white-space: nowrap;
 }
 
 /* No data warning */
 .define-xml-viewer .nodata {
-    width: 95%;
-    font-size: 1em;
-    font-weight: bold;
-    padding: 5px;
-    color: var(--color-warning);
-    white-space: nowrap;
+  width: 95%;
+  font-size: 1em;
+  font-weight: bold;
+  padding: 5px;
+  color: var(--color-warning);
+  white-space: nowrap;
 }
 
 /* Inline codelist styles */
 .define-xml-viewer ul.codelist {
-    padding: 1px;
-    margin-left: 1px;
-    margin-right: 1px;
-    margin-top: 1px;
-    margin-bottom: 1px;
+  padding: 1px;
+  margin-left: 1px;
+  margin-right: 1px;
+  margin-top: 1px;
+  margin-bottom: 1px;
 }
 
 .define-xml-viewer .codelist li {
-    list-style-type: none;
-    line-height: 200%;
-    padding-left: 0;
-    text-indent: -4px;
+  list-style-type: none;
+  line-height: 200%;
+  padding-left: 0;
+  text-indent: -4px;
 }
 
 .define-xml-viewer .codelist-item {
-    list-style-type: disc;
-    list-style-position: inside;
-    padding-left: 0;
-    padding-right: 0;
-    margin: 0 0 0 0;
+  list-style-type: disc;
+  list-style-position: inside;
+  padding-left: 0;
+  padding-right: 0;
+  margin: 0 0 0 0;
 }
 
 .define-xml-viewer .linebreakcell {
-    vertical-align: top;
-    margin-top: 3px;
-    margin-bottom: 3px;
+  vertical-align: top;
+  margin-top: 3px;
+  margin-bottom: 3px;
 }
 
 /* External link icon */
 .define-xml-viewer .external-link-gif {
-    background: url(data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAAXNSR0IArs4c6QAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9gCGhErDWL4mOoAAAB6SURBVBjTbVCxDcAgDHNRP2KDY9gYO5YbWNno1mPY6E3pAJEIYCmCOCQOPogII6wNkug4d49KiXMz1EiUEg8uLBN3Ui7FVduYmxjG3JRru+facubVuIdLEV4Dzwe8V4BYg7t4Ap+d57qUnuWICBzi116v1ggfd3bM+AEZWXFvnym8EwAAAABJRU5ErkJggg==)
-        no-repeat right center;
-    padding: 8px;
+  background: url(data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAAXNSR0IArs4c6QAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9gCGhErDWL4mOoAAAB6SURBVBjTbVCxDcAgDHNRP2KDY9gYO5YbWNno1mPY6E3pAJEIYCmCOCQOPogII6wNkug4d49KiXMz1EiUEg8uLBN3Ui7FVduYmxjG3JRru+facubVuIdLEV4Dzwe8V4BYg7t4Ap+d57qUnuWICBzi116v1ggfd3bM+AEZWXFvnym8EwAAAABJRU5ErkJggg==)
+    no-repeat right center;
+  padding: 8px;
 }
 
 /* VLM (Value Level Metadata) styles */
 .define-xml-viewer tr.vlm {
-    display: none; /* Hidden by default, toggled by JavaScript */
+  display: none; /* Hidden by default, toggled by JavaScript */
 }
 
 .define-xml-viewer .qval-indent {
-    padding-left: 15px;
+  padding-left: 15px;
 }
 
 .define-xml-viewer .qval-indent2 {
-    padding-left: 30px;
+  padding-left: 30px;
 }
 
-.define-xml-viewer .label{
-    font-weight: bold;
+.define-xml-viewer .label {
+  font-weight: bold;
+}
+
+.define-xml-viewer .datatable {
+  font-size: 100%;
+}
+
+.define-xml-viewer .linktop {
+  font-size: 1.2em;
+  margin-top: 5px;
+}
+
+.define-xml-viewer table caption .dataset {
+  font-weight: normal;
+  float: right;
 }
