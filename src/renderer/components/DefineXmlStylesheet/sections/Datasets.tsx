@@ -148,10 +148,14 @@ const Datasets: React.FC<DatasetsProps> = ({ content }) => {
 
                             // Check for NoData indicator
                             let hasNoData = false;
+                            let isNonStandard = false;
                             if (defineVersion.startsWith('2.1')) {
                                 hasNoData =
                                     (dataset as ArmDefine21.ItemGroupDef)
                                         .hasNoData || false;
+                                isNonStandard =
+                                    (dataset as ArmDefine21.ItemGroupDef)
+                                        .isNonStandard || false;
                             }
 
                             const rowClass =
@@ -172,6 +176,11 @@ const Datasets: React.FC<DatasetsProps> = ({ content }) => {
                                         {standardRef && (
                                             <span className="standard-reference">
                                                 {standardRef}
+                                            </span>
+                                        )}
+                                        {isNonStandard && (
+                                            <span className="standard-reference">
+                                                {' [Non Standard]'}
                                             </span>
                                         )}
                                         {hasNoData && (

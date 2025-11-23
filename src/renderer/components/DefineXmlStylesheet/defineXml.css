@@ -22,7 +22,7 @@
 }
 
 /* Global Styles */
-.define-xml-viewer {
+.define-xml-stylesheet {
   background-color: var(--color-menu-body-background);
   font-family: Verdana, Arial, Helvetica, sans-serif;
   font-size: 62.5%;
@@ -32,35 +32,35 @@
 }
 
 /* Document Info */
-.define-xml-viewer #main .docinfo {
+.define-xml-stylesheet #main .docinfo {
   width: 95%;
   text-align: right;
   padding: 0px 5px;
 }
 
-.define-xml-viewer .documentinfo,
-.define-xml-viewer .stylesheetinfo {
+.define-xml-stylesheet .documentinfo,
+.define-xml-stylesheet .stylesheetinfo {
   font-size: 1.1em;
   margin: 0;
   padding: 0;
 }
 
 /* Container Box */
-.define-xml-viewer .containerbox {
+.define-xml-stylesheet .containerbox {
   padding: 0px;
   margin: 10px auto;
   border: 0px;
   page-break-after: always;
 }
 
-.define-xml-viewer div.containerbox {
+.define-xml-stylesheet div.containerbox {
   padding: 0px;
   margin: 10px auto;
   border: 0px;
 }
 
 /* Invisible heading (for accessibility) */
-.define-xml-viewer h1.invisible {
+.define-xml-stylesheet h1.invisible {
   position: absolute;
   left: -10000px;
   width: 1px;
@@ -69,7 +69,7 @@
 }
 
 /* Typography */
-.define-xml-viewer h1 {
+.define-xml-stylesheet h1 {
   font-size: 1.6em;
   margin-left: 0;
   font-weight: bolder;
@@ -77,7 +77,7 @@
   color: var(--color-caption);
 }
 
-.define-xml-viewer .study-metadata {
+.define-xml-stylesheet .study-metadata {
   font-size: 1.6em;
   font-weight: bold;
   text-align: left;
@@ -90,7 +90,7 @@
   border: 0px;
 }
 
-.define-xml-viewer div.study-metadata {
+.define-xml-stylesheet div.study-metadata {
   font-size: 1.6em;
   font-weight: bold;
   text-align: left;
@@ -103,7 +103,7 @@
   border: 0px;
 }
 
-.define-xml-viewer .study-name {
+.define-xml-stylesheet .study-name {
   font-size: 1.6em;
   font-weight: bold;
   text-align: left;
@@ -117,19 +117,19 @@
 }
 
 /* Navigation Menu */
-.define-xml-viewer .hmenu-bullet {
+.define-xml-stylesheet .hmenu-bullet {
   color: var(--color-hmenu-bullet);
   font-size: 1.2em;
 }
 
-.define-xml-viewer .tocItem {
+.define-xml-stylesheet .tocItem {
   color: var(--color-hmenu-text);
   text-decoration: none;
   font-size: 1.4em;
 }
 
 /* Tables */
-.define-xml-viewer table {
+.define-xml-stylesheet table {
   width: 95%;
   border-spacing: 4px;
   border: 1px solid var(--color-border);
@@ -140,7 +140,7 @@
   empty-cells: show;
 }
 
-.define-xml-viewer table caption {
+.define-xml-stylesheet table caption {
   border: 0px;
   left: 20px;
   font-size: 1.4em;
@@ -150,7 +150,7 @@
   text-align: left;
 }
 
-.define-xml-viewer table caption.header {
+.define-xml-stylesheet table caption.header {
   font-size: 1.6em;
   margin-left: 0;
   font-weight: bolder;
@@ -158,21 +158,21 @@
   color: var(--color-caption);
 }
 
-.define-xml-viewer .dataset-name {
+.define-xml-stylesheet .dataset-name {
   font-weight: bold;
 }
 
-.define-xml-viewer .dataset-description {
+.define-xml-stylesheet .dataset-description {
   font-weight: normal;
 }
 
-.define-xml-viewer table tr.header {
+.define-xml-stylesheet table tr.header {
   background-color: var(--color-tr-header-back);
   color: var(--color-tr-header);
   font-weight: bold;
 }
 
-.define-xml-viewer table th {
+.define-xml-stylesheet table th {
   font-weight: bold;
   vertical-align: top;
   text-align: left;
@@ -183,7 +183,17 @@
   color: var(--color-tr-header);
 }
 
-.define-xml-viewer table td {
+.define-xml-stylesheet th.codedvalue {
+  width: 20%;
+}
+.define-xml-stylesheet table th.length {
+  width: 7%;
+}
+.define-xml-stylesheet table th.label {
+  width: 13%;
+}
+
+.define-xml-stylesheet table td {
   vertical-align: top;
   padding: 5px;
   border: 1px solid var(--color-border);
@@ -191,23 +201,34 @@
   line-height: 150%;
 }
 
-.define-xml-viewer tr.tablerowodd {
+.define-xml-stylesheet table td.datatype {
+  text-align: left;
+}
+
+.define-xml-stylesheet table td.role {
+  text-align: left;
+}
+.define-xml-stylesheet table td.number {
+  text-align: right;
+}
+
+.define-xml-stylesheet tr.tablerowodd {
   background-color: var(--color-tablerow-odd);
 }
 
-.define-xml-viewer tr.tableroweven {
+.define-xml-stylesheet tr.tableroweven {
   background-color: var(--color-tablerow-even);
 }
 
 /* Study Metadata */
-.define-xml-viewer dl.study-metadata {
+.define-xml-stylesheet dl.study-metadata {
   width: 95%;
   padding: 5px 0px;
   font-size: 0.8em;
   color: black;
 }
 
-.define-xml-viewer dl.study-metadata dt {
+.define-xml-stylesheet dl.study-metadata dt {
   clear: left;
   float: left;
   width: 200px;
@@ -216,7 +237,7 @@
   font-weight: bold;
 }
 
-.define-xml-viewer dl.study-metadata dd {
+.define-xml-stylesheet dl.study-metadata dd {
   margin-left: 210px;
   padding: 5px;
   font-weight: normal;
@@ -224,7 +245,7 @@
 }
 
 /* Description text */
-.define-xml-viewer .description {
+.define-xml-stylesheet .description {
   margin-left: 0px;
   color: black;
   font-weight: normal;
@@ -232,41 +253,41 @@
 }
 
 /* Links */
-.define-xml-viewer a {
+.define-xml-stylesheet a {
   color: var(--color-link);
   text-decoration: underline;
 }
 
-.define-xml-viewer a:hover {
+.define-xml-stylesheet a:hover {
   color: var(--color-link-hover);
   text-decoration: underline;
 }
 
-.define-xml-viewer a:visited {
+.define-xml-stylesheet a:visited {
   color: var(--color-link-visited);
   text-decoration: underline;
 }
 
 /* Unresolved references */
-.define-xml-viewer .unresolved {
+.define-xml-stylesheet .unresolved {
   color: var(--color-error);
 }
 
 /* Line break cells */
-.define-xml-viewer .linebreakcell {
+.define-xml-stylesheet .linebreakcell {
   vertical-align: top;
   margin-top: 3px;
   margin-bottom: 3px;
 }
 
 /* Method and Expression styles */
-.define-xml-viewer .method-code {
+.define-xml-stylesheet .method-code {
   vertical-align: top;
   white-space: pre-wrap;
   word-wrap: break-word;
 }
 
-.define-xml-viewer .formalexpression-code {
+.define-xml-stylesheet .formalexpression-code {
   font-family: 'Courier New', monospace, serif;
   font-size: 1.2em;
   line-height: 120%;
@@ -277,14 +298,14 @@
   word-wrap: break-word;
 }
 
-.define-xml-viewer .formalexpression-reference {
+.define-xml-stylesheet .formalexpression-reference {
   vertical-align: super;
   font-size: 0.8em;
   padding-left: 5px;
 }
 
 /* CodeList styles */
-.define-xml-viewer .codelist-caption {
+.define-xml-stylesheet .codelist-caption {
   font-size: 1.4em;
   margin-top: 20px;
   margin-bottom: 10px;
@@ -294,20 +315,20 @@
   color: var(--color-caption);
 }
 
-.define-xml-viewer .codelist-item-decode {
+.define-xml-stylesheet .codelist-item-decode {
   white-space: pre-wrap;
   word-wrap: break-word;
 }
 
 /* SubClass list */
-.define-xml-viewer ul.SubClass {
+.define-xml-stylesheet ul.SubClass {
   list-style-type: '- ';
   padding-left: 5px;
   margin: 0;
 }
 
 /* Value List Reference */
-.define-xml-viewer .valuelist-reference {
+.define-xml-stylesheet .valuelist-reference {
   vertical-align: super;
   font-size: 0.8em;
   padding-left: 5px;
@@ -315,18 +336,18 @@
 }
 
 /* Prefix styles */
-.define-xml-viewer .prefix {
+.define-xml-stylesheet .prefix {
   font-weight: normal;
 }
 
 /* Extended/NCI styles */
-.define-xml-viewer .nci,
-.define-xml-viewer .extended {
+.define-xml-stylesheet .nci,
+.define-xml-stylesheet .extended {
   font-style: italic;
 }
 
 /* Standard reference */
-.define-xml-viewer .standard-reference {
+.define-xml-stylesheet .standard-reference {
   width: 95%;
   font-size: 1em;
   font-weight: bold;
@@ -336,7 +357,7 @@
 }
 
 /* No data warning */
-.define-xml-viewer .nodata {
+.define-xml-stylesheet .nodata {
   width: 95%;
   font-size: 1em;
   font-weight: bold;
@@ -346,7 +367,7 @@
 }
 
 /* Inline codelist styles */
-.define-xml-viewer ul.codelist {
+.define-xml-stylesheet ul.codelist {
   padding: 1px;
   margin-left: 1px;
   margin-right: 1px;
@@ -354,14 +375,14 @@
   margin-bottom: 1px;
 }
 
-.define-xml-viewer .codelist li {
+.define-xml-stylesheet .codelist li {
   list-style-type: none;
   line-height: 200%;
   padding-left: 0;
   text-indent: -4px;
 }
 
-.define-xml-viewer .codelist-item {
+.define-xml-stylesheet .codelist-item {
   list-style-type: disc;
   list-style-position: inside;
   padding-left: 0;
@@ -369,46 +390,54 @@
   margin: 0 0 0 0;
 }
 
-.define-xml-viewer .linebreakcell {
+.define-xml-stylesheet .linebreakcell {
   vertical-align: top;
   margin-top: 3px;
   margin-bottom: 3px;
 }
 
 /* External link icon */
-.define-xml-viewer .external-link-gif {
+.define-xml-stylesheet .external-link-gif {
   background: url(data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAAXNSR0IArs4c6QAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9gCGhErDWL4mOoAAAB6SURBVBjTbVCxDcAgDHNRP2KDY9gYO5YbWNno1mPY6E3pAJEIYCmCOCQOPogII6wNkug4d49KiXMz1EiUEg8uLBN3Ui7FVduYmxjG3JRru+facubVuIdLEV4Dzwe8V4BYg7t4Ap+d57qUnuWICBzi116v1ggfd3bM+AEZWXFvnym8EwAAAABJRU5ErkJggg==)
     no-repeat right center;
   padding: 8px;
 }
 
 /* VLM (Value Level Metadata) styles */
-.define-xml-viewer tr.vlm {
-  display: none; /* Hidden by default, toggled by JavaScript */
+.define-xml-stylesheet tr.vlm {
+  display: table-row;
 }
 
-.define-xml-viewer .qval-indent {
+.define-xml-stylesheet .qval-indent {
   padding-left: 15px;
 }
 
-.define-xml-viewer .qval-indent2 {
+.define-xml-stylesheet .qval-indent2 {
   padding-left: 30px;
 }
 
-.define-xml-viewer .label {
+.define-xml-stylesheet .label {
   font-weight: bold;
 }
 
-.define-xml-viewer .datatable {
+.define-xml-stylesheet .datatable {
   font-size: 100%;
 }
 
-.define-xml-viewer .linktop {
+.define-xml-stylesheet .linktop {
   font-size: 1.2em;
   margin-top: 5px;
 }
 
-.define-xml-viewer table caption .dataset {
+.define-xml-stylesheet table caption .dataset {
   font-weight: normal;
   float: right;
+}
+
+.define-xml-stylesheet .super {
+    vertical-align: super;
+}
+
+.define-xml-stylesheet .footnote{
+    font-size: 1.2em;
 }

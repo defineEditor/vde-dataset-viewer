@@ -20,7 +20,7 @@ const Comments: React.FC<CommentsProps> = ({ content }) => {
             <div className="containerbox">
                 <h1 className="invisible">Comments</h1>
 
-                <table summary="Comments">
+                <table summary="Comments" className="datatable">
                     <caption className="header">Comments</caption>
 
                     <thead>

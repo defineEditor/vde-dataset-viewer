@@ -74,7 +74,7 @@ const DefineViewerLayout: React.FC<DefineViewerLayoutProps> = ({ content }) => {
 
     return (
         <Box
-            className="define-xml-viewer"
+            className="define-xml-stylesheet"
             sx={{
                 display: 'flex',
                 height: '100vh',

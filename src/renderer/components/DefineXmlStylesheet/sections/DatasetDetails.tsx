@@ -115,6 +115,12 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
         classDisplay = classObj.name;
     }
 
+    // Check if there is at least one Role present
+    const hasRole = itemRefsOrder.some((refOid) => {
+        const itemRef = itemRefs[refOid];
+        return itemRef && itemRef.role;
+    });
+
     // Get where clause definitions for VLM
     const whereClauseDefs = metaDataVersion.whereClauseDefs || {};
 
@@ -153,7 +159,7 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
                             {hasVLM && <th scope="col">Where Condition</th>}
                             <th scope="col">Label / Description</th>
                             <th scope="col">Type</th>
-                            <th scope="col">Role</th>
+                            {hasRole && <th scope="col">Role</th>}
                             <th scope="col" className="length">
                                 Length or Display Format
                             </th>
@@ -255,14 +261,15 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
                                         vlItemRef.whereClauseRefs || [];
                                     if (whereClauseRefs.length > 0) {
                                         whereClauseDisplay = (
-                                            <div className="qval-indent">
+                                            <>
                                                 {getWhereClauseText(
                                                     whereClauseRefs,
                                                     whereClauseDefs,
                                                     itemDefs,
+                                                    codeLists,
                                                     dataset.oid,
                                                 )}
-                                            </div>
+                                            </>
                                         );
                                     }
 
@@ -298,10 +305,8 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
                                             key={vlmRowKey}
                                             className={`vlm ${rowClass} ${vlmId}`}
                                         >
+                                            <td>{null}</td>
                                             <td>{whereClauseDisplay}</td>
-                                            {hasVLM && (
-                                                <td aria-label="Where Condition" />
-                                            )}
                                             <td>{vlLabel}</td>
                                             <td className="datatype">
                                                 {vlDataType}
@@ -406,10 +411,12 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
                                                 </span>
                                             )}
                                         </td>
-                                        {hasVLM && <td>{undefined}</td>}
+                                        {hasVLM && <td>{null}</td>}
                                         <td>{label}</td>
                                         <td className="datatype">{dataType}</td>
-                                        <td className="role">{role}</td>
+                                        {hasRole && (
+                                            <td className="role">{role}</td>
+                                        )}
                                         <td className="number">
                                             {lengthDisplay}
                                         </td>

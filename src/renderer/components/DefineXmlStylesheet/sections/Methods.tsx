@@ -28,7 +28,7 @@ const Methods: React.FC<MethodsProps> = ({ content }) => {
             <div className="containerbox">
                 <h1 className="invisible">Methods</h1>
 
-                <table summary="Methods">
+                <table summary="Methods" className="datatable">
                     <caption className="header">Methods</caption>
 
                     <thead>

@@ -1,6 +1,13 @@
 import React from 'react';
-import { DefineXmlContent } from 'interfaces/defineXml';
-import { getCodeLists, getTranslatedText } from '../utils/defineXmlHelpers';
+import { Define21, DefineXmlContent } from 'interfaces/defineXml';
+import {
+    getCodeLists,
+    getStandards,
+    getCommentDefs,
+    getTranslatedText,
+    getLeafs,
+} from 'renderer/components/DefineXmlStylesheet/utils/defineXmlHelpers';
+import { getCommentContent } from 'renderer/components/DefineXmlStylesheet/utils/itemRenderHelpers';
 
 interface CodeListsProps {
     content: DefineXmlContent;
@@ -8,6 +15,24 @@ interface CodeListsProps {
 
 const CodeLists: React.FC<CodeListsProps> = ({ content }) => {
     const codeListsArray = getCodeLists(content);
+    const standards = getStandards(content);
+    const commentDefsArray = getCommentDefs(content);
+    const commentDefs = commentDefsArray.reduce(
+        (acc, comment) => {
+            acc[comment.oid] = comment;
+            return acc;
+        },
+        {} as Record<string, (typeof commentDefsArray)[0]>,
+    );
+    const leafsArray = getLeafs(content);
+    const leafs = leafsArray.reduce(
+        (acc, leaf) => {
+            acc[leaf.id] = leaf;
+            return acc;
+        },
+        {} as Record<string, (typeof leafsArray)[0]>,
+    );
+    const { defineVersion } = content;
 
     // Filter codelists that have items (CodeListItems or EnumeratedItems)
     const codeListsWithItems = codeListsArray.filter((cl) => {
@@ -36,6 +61,43 @@ const CodeLists: React.FC<CodeListsProps> = ({ content }) => {
                     const hasEnumItems =
                         codeList.enumeratedItems &&
                         Object.keys(codeList.enumeratedItems).length > 0;
+                    // Check if codelist is standard;
+                    const { alias } = codeList;
+                    let standardName: string | undefined;
+                    let standardVersion: string | undefined;
+                    let isNonStandard: boolean | undefined;
+                    let commentContent: React.ReactNode | undefined;
+                    if (defineVersion === '2.1') {
+                        const { standardOid, commentOid } =
+                            codeList as Define21.CodeList;
+                        // Standard attributes
+                        isNonStandard = (codeList as Define21.CodeList)
+                            .isNonStandard;
+                        const standard = standards.find(
+                            (std) => std.oid === standardOid,
+                        );
+                        standardName = standard?.name;
+                        standardVersion = standard?.version;
+                        // Comment
+                        commentContent = getCommentContent(
+                            commentOid,
+                            commentDefs,
+                            leafs,
+                        );
+                    }
+
+                    // Check if any of the codelist items has an extendedValue
+                    let hasExtendedValue = false;
+                    if (hasCodeListItems) {
+                        hasExtendedValue = Object.values(
+                            codeList.codeListItems!,
+                        ).some((item) => item.extendedValue);
+                    }
+                    if (!hasExtendedValue && hasEnumItems) {
+                        hasExtendedValue = Object.values(
+                            codeList.enumeratedItems!,
+                        ).some((item) => item.extendedValue);
+                    }
 
                     return (
                         <div
@@ -45,12 +107,31 @@ const CodeLists: React.FC<CodeListsProps> = ({ content }) => {
                         >
                             <div className="codelist-caption">
                                 {codeList.name}
-                                {/* TODO: Add NCI code, standard, description, comment */}
+                                {alias &&
+                                    alias.map((a) => <span> [{a.name}]</span>)}
+                                {standardName && (
+                                    <span>
+                                        {' '}
+                                        [{standardName} {standardVersion}]
+                                    </span>
+                                )}
+                                {defineVersion === '2.1' && isNonStandard && (
+                                    <span> [Non Standard]</span>
+                                )}
+                            </div>
+
+                            <div className="description">
+                                {commentContent && (
+                                    <p className="linebreakcell">
+                                        {commentContent}
+                                    </p>
+                                )}
                             </div>
 
                             {hasCodeListItems && (
                                 <table
                                     summary={`Controlled Term - ${codeList.name}`}
+                                    className="datatable"
                                 >
                                     <thead>
                                         <tr className="header">
@@ -72,6 +153,10 @@ const CodeLists: React.FC<CodeListsProps> = ({ content }) => {
                                             const decode = getTranslatedText(
                                                 item.decode,
                                             );
+                                            const {
+                                                alias: itemAlias,
+                                                extendedValue,
+                                            } = item;
                                             const rowClass =
                                                 index % 2 === 0
                                                     ? 'tableroweven'
@@ -82,7 +167,25 @@ const CodeLists: React.FC<CodeListsProps> = ({ content }) => {
                                                     key={item.codedValue}
                                                     className={rowClass}
                                                 >
-                                                    <td>{item.codedValue}</td>
+                                                    <td>
+                                                        {item.codedValue}
+                                                        {itemAlias &&
+                                                            itemAlias.map(
+                                                                (a) => (
+                                                                    <span>
+                                                                        {' '}
+                                                                        [
+                                                                        {a.name}
+                                                                        ]
+                                                                    </span>
+                                                                ),
+                                                            )}
+                                                        {extendedValue && (
+                                                            <span>
+                                                                {' [*]'}
+                                                            </span>
+                                                        )}
+                                                    </td>
                                                     <td className="codelist-item-decode">
                                                         {decode}
                                                     </td>
@@ -96,6 +199,7 @@ const CodeLists: React.FC<CodeListsProps> = ({ content }) => {
                             {hasEnumItems && (
                                 <table
                                     summary={`Controlled Term - ${codeList.name}`}
+                                    className="datatable"
                                 >
                                     <thead>
                                         <tr className="header">
@@ -116,17 +220,46 @@ const CodeLists: React.FC<CodeListsProps> = ({ content }) => {
                                                     ? 'tableroweven'
                                                     : 'tablerowodd';
 
+                                            const {
+                                                alias: itemAlias,
+                                                extendedValue,
+                                            } = item;
                                             return (
                                                 <tr
                                                     key={item.codedValue}
                                                     className={rowClass}
                                                 >
-                                                    <td>{item.codedValue}</td>
+                                                    <td>
+                                                        {item.codedValue}
+
+                                                        {itemAlias &&
+                                                            itemAlias.map(
+                                                                (a) => (
+                                                                    <span>
+                                                                        {' '}
+                                                                        [
+                                                                        {a.name}
+                                                                        ]
+                                                                    </span>
+                                                                ),
+                                                            )}
+                                                        {extendedValue && (
+                                                            <span>
+                                                                {' [*]'}
+                                                            </span>
+                                                        )}
+                                                    </td>
                                                 </tr>
                                             );
                                         })}
                                     </tbody>
                                 </table>
+                            )}
+                            {hasExtendedValue && (
+                                <p className="footnote">
+                                    <span className="super">*</span> Extended
+                                    Value
+                                </p>
                             )}
                         </div>
                     );

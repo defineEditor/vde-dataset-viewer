@@ -37,7 +37,11 @@ const Standards: React.FC<StandardsProps> = ({ content }) => {
             <h1 className="invisible">Standards for Study {studyName}</h1>
 
             <div className="containerbox">
-                <table id="Standards_Table" summary="Standards">
+                <table
+                    id="Standards_Table"
+                    summary="Standards"
+                    className="datatable"
+                >
                     <caption className="header">
                         Standards for Study {studyName}
                     </caption>

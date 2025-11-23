@@ -1,6 +1,11 @@
 import React from 'react';
 import { DefineXmlContent } from 'interfaces/defineXml';
-import type { Define21, ArmDefine20, ArmDefine21 } from 'parse-define-xml';
+import type {
+    Define21,
+    Define20,
+    ArmDefine20,
+    ArmDefine21,
+} from 'parse-define-xml';
 
 /**
  * Helper functions to safely access Define-XML content
@@ -42,9 +47,10 @@ export const getItemDefs = (content: DefineXmlContent) => {
 
 export const getCodeLists = (content: DefineXmlContent) => {
     const metaDataVersion = getMetaDataVersion(content);
-    const lists = metaDataVersion.codeLists || {};
+    const codeLists: Record<string, Define21.CodeList | Define20.CodeList> =
+        metaDataVersion.codeLists || {};
     const order = metaDataVersion.codeListsOrder || [];
-    return order.map((oid) => lists[oid]);
+    return order.map((oid) => codeLists[oid]);
 };
 
 export const getMethodDefs = (content: DefineXmlContent) => {
