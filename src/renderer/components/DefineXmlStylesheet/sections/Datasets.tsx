@@ -166,11 +166,11 @@ const Datasets: React.FC<DatasetsProps> = ({ content }) => {
                             return (
                                 <tr
                                     key={dataset.oid}
-                                    id={dataset.oid}
+                                    id={`IG.${dataset.oid}`}
                                     className={rowClass}
                                 >
                                     <td>
-                                        <a href={`#IG.${dataset.oid}`}>
+                                        <a href={`#${dataset.oid}`}>
                                             {dataset.name}
                                         </a>
                                         {standardRef && (

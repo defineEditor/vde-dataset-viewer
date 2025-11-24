@@ -1,6 +1,6 @@
 /* eslint-disable react/no-array-index-key */
 import React from 'react';
-import type { Define20, Define21 } from 'parse-define-xml';
+import type { Define20, Define21, ArmDefine21 } from 'parse-define-xml';
 import { getTranslatedText } from './defineXmlHelpers';
 
 type ItemDef = Define20.ItemDef | Define21.ItemDef;
@@ -385,16 +385,22 @@ export function getCommentContent(
 /**
  * Helper to display value with quotes and decode if applicable
  */
-function displayValue(
+export function displayValue(
     value: string,
     dataType: string,
     codeList: CodeList | undefined,
+    isArm: boolean = false,
 ): string {
     let display = '';
     if (dataType !== 'integer' && dataType !== 'float') {
         display = `"${value}"`;
     } else {
         display = value;
+    }
+
+    // In case of ARM, label is not shown
+    if (isArm) {
+        return display;
     }
 
     if (codeList && codeList.codeListItems) {
@@ -422,6 +428,7 @@ export function getWhereClauseText(
     itemDefs: Record<string, ItemDef>,
     codelists: Record<string, CodeList>,
     datasetOid: string,
+    isArm: boolean = false,
 ): React.ReactNode {
     if (!whereClauseRefs || whereClauseRefs.length === 0) {
         return '';
@@ -462,7 +469,7 @@ export function getWhereClauseText(
                                 key={`${whereOid}-val-${idx}`}
                                 className="linebreakcell"
                             >
-                                {displayValue(val, dataType, codeList)}
+                                {displayValue(val, dataType, codeList, isArm)}
                                 {idx !== checkValues.length - 1 ? ', ' : ''}
                             </p>
                         ))}
@@ -493,21 +500,13 @@ export function getWhereClauseText(
                         operatorText = ` ${comparator} `;
                 }
                 const val = checkValues[0] || '';
-                valueDisplay = displayValue(val, dataType, codeList);
+                valueDisplay = displayValue(val, dataType, codeList, isArm);
             }
 
             return (
                 <React.Fragment key={whereOid}>
-                    {rangeIndex > 0 && (
-                        <>
-                            {' '}
-                            and <br />
-                        </>
-                    )}
-                    <a
-                        href={`#IG.${datasetOid}.IT.${datasetOid}.${itemName}`}
-                        title={itemDef?.name}
-                    >
+                    {rangeIndex > 0 && <> and {!isArm && <br />}</>}
+                    <a href={`#${datasetOid}.${itemOid}`} title={itemDef?.name}>
                         {itemName}
                     </a>
                     {operatorText}
@@ -528,4 +527,135 @@ export function getWhereClauseText(
             </React.Fragment>
         );
     });
+}
+
+/**
+ * Get Analysis Parameter display
+ * Based on XSLT logic for displaying analysis parameters
+ */
+export function getAnalysisParameterDisplay(
+    dataset: ArmDefine21.AnalysisDataset,
+    parameterOid: string,
+    whereClauseDefs: Record<
+        string,
+        Define20.WhereClauseDef | Define21.WhereClauseDef
+    >,
+    itemDefs: Record<string, ItemDef>,
+    codeLists: Record<string, CodeList>,
+): React.ReactNode {
+    const { whereClauseRefs } = dataset;
+    if (!whereClauseRefs || whereClauseRefs.length === 0) return null;
+
+    return (
+        <React.Fragment key={dataset.itemGroupOid}>
+            {whereClauseRefs.map((whereOid) => {
+                const whereDef = whereClauseDefs[whereOid];
+                if (!whereDef) return null;
+
+                const rangeChecks = whereDef.rangeChecks.filter(
+                    (rc) => rc.itemOid === parameterOid,
+                );
+
+                if (rangeChecks.length === 0) return null;
+
+                return (
+                    <React.Fragment key={whereOid}>
+                        {rangeChecks.map((rangeCheck, rangeIndex: number) => {
+                            const { itemOid } = rangeCheck;
+                            const comparator = rangeCheck.comparator || '';
+                            const checkValues = rangeCheck.checkValues || [];
+
+                            const itemDef = itemDefs[itemOid];
+                            const itemName = itemDef?.name || itemOid;
+                            const dataType = itemDef?.dataType || 'text';
+                            const codeListRef = itemDef?.codeListRef;
+                            const codeList = codeListRef
+                                ? codeLists[codeListRef]
+                                : undefined;
+
+                            let operatorText = '';
+                            let valueDisplay: React.ReactNode = '';
+
+                            if (comparator === 'IN' || comparator === 'NOTIN') {
+                                operatorText =
+                                    comparator === 'IN' ? ' IN ' : ' NOT IN ';
+                                valueDisplay = (
+                                    <>
+                                        {' ('}
+                                        {checkValues.map(
+                                            (val: string, idx: number) => (
+                                                <p
+                                                    key={`${whereOid}-val-${idx}`}
+                                                    className="linebreakcell"
+                                                >
+                                                    {displayValue(
+                                                        val,
+                                                        dataType,
+                                                        codeList,
+                                                        false,
+                                                    )}
+                                                    {idx !==
+                                                    checkValues.length - 1
+                                                        ? ', '
+                                                        : ''}
+                                                </p>
+                                            ),
+                                        )}
+                                        {' ) '}
+                                    </>
+                                );
+                            } else {
+                                switch (comparator) {
+                                    case 'EQ':
+                                        operatorText = ' = ';
+                                        break;
+                                    case 'NE':
+                                        operatorText = ' \u2260 ';
+                                        break;
+                                    case 'LT':
+                                        operatorText = ' < ';
+                                        break;
+                                    case 'LE':
+                                        operatorText = ' \u2264 ';
+                                        break;
+                                    case 'GT':
+                                        operatorText = ' > ';
+                                        break;
+                                    case 'GE':
+                                        operatorText = ' \u2265 ';
+                                        break;
+                                    default:
+                                        operatorText = ` ${comparator} `;
+                                }
+                                const val = checkValues[0] || '';
+                                valueDisplay = displayValue(
+                                    val,
+                                    dataType,
+                                    codeList,
+                                    false,
+                                );
+                            }
+
+                            return (
+                                <React.Fragment
+                                    key={`${whereOid}-${rangeIndex}`}
+                                >
+                                    {rangeIndex > 0 && <> and </>}
+                                    <a
+                                        href={`#${dataset.itemGroupOid}.${itemOid}`}
+                                        title={itemDef?.name}
+                                    >
+                                        {itemName}
+                                    </a>
+                                    {operatorText}
+                                    {valueDisplay}
+                                    <br />
+                                </React.Fragment>
+                            );
+                        })}
+                    </React.Fragment>
+                );
+            })}
+        </React.Fragment>
+    );
 }

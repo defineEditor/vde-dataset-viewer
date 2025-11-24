@@ -43,233 +43,384 @@ const CodeLists: React.FC<CodeListsProps> = ({ content }) => {
         return hasCodeListItems || hasEnumItems;
     });
 
-    if (codeListsWithItems.length === 0) {
+    // Filter codelists that have externalCodeList
+    const externalCodeLists = codeListsArray.filter(
+        (cl) => cl.externalCodeList,
+    );
+
+    if (codeListsWithItems.length === 0 && externalCodeLists.length === 0) {
         return null;
     }
 
     return (
         <>
-            {/* eslint-disable-next-line jsx-a11y/anchor-has-content, jsx-a11y/anchor-is-valid */}
-            <a id="decodelist" />
-            <div className="containerbox">
-                <h1 className="header">CodeLists</h1>
+            {codeListsWithItems.length > 0 && (
+                <>
+                    {/* eslint-disable-next-line jsx-a11y/anchor-has-content, jsx-a11y/anchor-is-valid */}
+                    <a id="decodelist" />
+                    <div className="containerbox">
+                        <h1 className="header">CodeLists</h1>
 
-                {codeListsWithItems.map((codeList) => {
-                    const hasCodeListItems =
-                        codeList.codeListItems &&
-                        Object.keys(codeList.codeListItems).length > 0;
-                    const hasEnumItems =
-                        codeList.enumeratedItems &&
-                        Object.keys(codeList.enumeratedItems).length > 0;
-                    // Check if codelist is standard;
-                    const { alias } = codeList;
-                    let standardName: string | undefined;
-                    let standardVersion: string | undefined;
-                    let isNonStandard: boolean | undefined;
-                    let commentContent: React.ReactNode | undefined;
-                    if (defineVersion === '2.1') {
-                        const { standardOid, commentOid } =
-                            codeList as Define21.CodeList;
-                        // Standard attributes
-                        isNonStandard = (codeList as Define21.CodeList)
-                            .isNonStandard;
-                        const standard = standards.find(
-                            (std) => std.oid === standardOid,
-                        );
-                        standardName = standard?.name;
-                        standardVersion = standard?.version;
-                        // Comment
-                        commentContent = getCommentContent(
-                            commentOid,
-                            commentDefs,
-                            leafs,
-                        );
-                    }
+                        {codeListsWithItems.map((codeList) => {
+                            const hasCodeListItems =
+                                codeList.codeListItems &&
+                                Object.keys(codeList.codeListItems).length > 0;
+                            const hasEnumItems =
+                                codeList.enumeratedItems &&
+                                Object.keys(codeList.enumeratedItems).length >
+                                    0;
+                            // Check if codelist is standard;
+                            const { alias } = codeList;
+                            let standardName: string | undefined;
+                            let standardVersion: string | undefined;
+                            let isNonStandard: boolean | undefined;
+                            let commentContent: React.ReactNode | undefined;
+                            if (defineVersion === '2.1') {
+                                const { standardOid, commentOid } =
+                                    codeList as Define21.CodeList;
+                                // Standard attributes
+                                isNonStandard = (codeList as Define21.CodeList)
+                                    .isNonStandard;
+                                const standard = standards.find(
+                                    (std) => std.oid === standardOid,
+                                );
+                                standardName = standard?.name;
+                                standardVersion = standard?.version;
+                                // Comment
+                                commentContent = getCommentContent(
+                                    commentOid,
+                                    commentDefs,
+                                    leafs,
+                                );
+                            }
 
-                    // Check if any of the codelist items has an extendedValue
-                    let hasExtendedValue = false;
-                    if (hasCodeListItems) {
-                        hasExtendedValue = Object.values(
-                            codeList.codeListItems!,
-                        ).some((item) => item.extendedValue);
-                    }
-                    if (!hasExtendedValue && hasEnumItems) {
-                        hasExtendedValue = Object.values(
-                            codeList.enumeratedItems!,
-                        ).some((item) => item.extendedValue);
-                    }
+                            // Check if any of the codelist items has an extendedValue
+                            let hasExtendedValue = false;
+                            if (hasCodeListItems) {
+                                hasExtendedValue = Object.values(
+                                    codeList.codeListItems!,
+                                ).some((item) => item.extendedValue);
+                            }
+                            if (!hasExtendedValue && hasEnumItems) {
+                                hasExtendedValue = Object.values(
+                                    codeList.enumeratedItems!,
+                                ).some((item) => item.extendedValue);
+                            }
 
-                    return (
-                        <div
-                            key={codeList.oid}
-                            id={`${codeList.oid}`}
-                            className="codelist"
+                            return (
+                                <div
+                                    key={codeList.oid}
+                                    id={`${codeList.oid}`}
+                                    className="codelist"
+                                >
+                                    <div className="codelist-caption">
+                                        {codeList.name}
+                                        {alias &&
+                                            alias.map((a) => (
+                                                <span> [{a.name}]</span>
+                                            ))}
+                                        {standardName && (
+                                            <span>
+                                                {' '}
+                                                [{standardName}{' '}
+                                                {standardVersion}]
+                                            </span>
+                                        )}
+                                        {defineVersion === '2.1' &&
+                                            isNonStandard && (
+                                                <span> [Non Standard]</span>
+                                            )}
+                                    </div>
+
+                                    <div className="description">
+                                        {commentContent && (
+                                            <p className="linebreakcell">
+                                                {commentContent}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {hasCodeListItems && (
+                                        <table
+                                            summary={`Controlled Term - ${codeList.name}`}
+                                            className="datatable"
+                                        >
+                                            <thead>
+                                                <tr className="header">
+                                                    <th
+                                                        scope="col"
+                                                        className="codedvalue"
+                                                    >
+                                                        Permitted Value (Code)
+                                                    </th>
+                                                    <th scope="col">
+                                                        Display Value (Decode)
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {Object.values(
+                                                    codeList.codeListItems!,
+                                                ).map((item, index) => {
+                                                    const decode =
+                                                        getTranslatedText(
+                                                            item.decode,
+                                                        );
+                                                    const {
+                                                        alias: itemAlias,
+                                                        extendedValue,
+                                                    } = item;
+                                                    const rowClass =
+                                                        index % 2 === 0
+                                                            ? 'tableroweven'
+                                                            : 'tablerowodd';
+
+                                                    return (
+                                                        <tr
+                                                            key={
+                                                                item.codedValue
+                                                            }
+                                                            className={rowClass}
+                                                        >
+                                                            <td>
+                                                                {
+                                                                    item.codedValue
+                                                                }
+                                                                {itemAlias &&
+                                                                    itemAlias.map(
+                                                                        (a) => (
+                                                                            <span>
+                                                                                {' '}
+                                                                                [
+                                                                                {
+                                                                                    a.name
+                                                                                }
+
+                                                                                ]
+                                                                            </span>
+                                                                        ),
+                                                                    )}
+                                                                {extendedValue && (
+                                                                    <span>
+                                                                        {' [*]'}
+                                                                    </span>
+                                                                )}
+                                                            </td>
+                                                            <td className="codelist-item-decode">
+                                                                {decode}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    )}
+
+                                    {hasEnumItems && (
+                                        <table
+                                            summary={`Controlled Term - ${codeList.name}`}
+                                            className="datatable"
+                                        >
+                                            <thead>
+                                                <tr className="header">
+                                                    <th
+                                                        scope="col"
+                                                        className="codedvalue"
+                                                    >
+                                                        Permitted Value
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {Object.values(
+                                                    codeList.enumeratedItems!,
+                                                ).map((item, index) => {
+                                                    const rowClass =
+                                                        index % 2 === 0
+                                                            ? 'tableroweven'
+                                                            : 'tablerowodd';
+
+                                                    const {
+                                                        alias: itemAlias,
+                                                        extendedValue,
+                                                    } = item;
+                                                    return (
+                                                        <tr
+                                                            key={
+                                                                item.codedValue
+                                                            }
+                                                            className={rowClass}
+                                                        >
+                                                            <td>
+                                                                {
+                                                                    item.codedValue
+                                                                }
+
+                                                                {itemAlias &&
+                                                                    itemAlias.map(
+                                                                        (a) => (
+                                                                            <span>
+                                                                                {' '}
+                                                                                [
+                                                                                {
+                                                                                    a.name
+                                                                                }
+
+                                                                                ]
+                                                                            </span>
+                                                                        ),
+                                                                    )}
+                                                                {extendedValue && (
+                                                                    <span>
+                                                                        {' [*]'}
+                                                                    </span>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    )}
+                                    {hasExtendedValue && (
+                                        <p className="footnote">
+                                            <span className="super">*</span>{' '}
+                                            Extended Value
+                                        </p>
+                                    )}
+                                </div>
+                            );
+                        })}
+
+                        <p className="linktop">
+                            Go to the <a href="#main">top</a> of the Define-XML
+                            document
+                        </p>
+                        <br />
+                    </div>
+                </>
+            )}
+
+            {externalCodeLists.length > 0 && (
+                <>
+                    {/* eslint-disable-next-line jsx-a11y/anchor-has-content, jsx-a11y/anchor-is-valid */}
+                    <a id="externaldictionary" />
+                    <h1 className="invisible">External Dictionaries</h1>
+                    <div className="containerbox">
+                        <table
+                            summary="External Dictionaries"
+                            className="datatable"
                         >
-                            <div className="codelist-caption">
-                                {codeList.name}
-                                {alias &&
-                                    alias.map((a) => <span> [{a.name}]</span>)}
-                                {standardName && (
-                                    <span>
-                                        {' '}
-                                        [{standardName} {standardVersion}]
-                                    </span>
-                                )}
-                                {defineVersion === '2.1' && isNonStandard && (
-                                    <span> [Non Standard]</span>
-                                )}
-                            </div>
+                            <caption className="header">
+                                External Dictionaries
+                            </caption>
+                            <thead>
+                                <tr className="header">
+                                    <th scope="col">Reference Name</th>
+                                    <th scope="col">External Dictionary</th>
+                                    <th scope="col">Dictionary Version</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {externalCodeLists.map((codeList, index) => {
+                                    const { name, externalCodeList, oid } =
+                                        codeList;
+                                    let description:
+                                        | Define21.CodeList['description']
+                                        | undefined;
+                                    const rowClass =
+                                        index % 2 === 0
+                                            ? 'tableroweven'
+                                            : 'tablerowodd';
 
-                            <div className="description">
-                                {commentContent && (
-                                    <p className="linebreakcell">
-                                        {commentContent}
-                                    </p>
-                                )}
-                            </div>
+                                    let commentContent:
+                                        | React.ReactNode
+                                        | undefined;
+                                    if (defineVersion === '2.1') {
+                                        const { commentOid } =
+                                            codeList as Define21.CodeList;
+                                        description = (
+                                            codeList as Define21.CodeList
+                                        ).description;
+                                        commentContent = getCommentContent(
+                                            commentOid,
+                                            commentDefs,
+                                            leafs,
+                                        );
+                                    }
 
-                            {hasCodeListItems && (
-                                <table
-                                    summary={`Controlled Term - ${codeList.name}`}
-                                    className="datatable"
-                                >
-                                    <thead>
-                                        <tr className="header">
-                                            <th
-                                                scope="col"
-                                                className="codedvalue"
-                                            >
-                                                Permitted Value (Code)
-                                            </th>
-                                            <th scope="col">
-                                                Display Value (Decode)
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {Object.values(
-                                            codeList.codeListItems!,
-                                        ).map((item, index) => {
-                                            const decode = getTranslatedText(
-                                                item.decode,
-                                            );
-                                            const {
-                                                alias: itemAlias,
-                                                extendedValue,
-                                            } = item;
-                                            const rowClass =
-                                                index % 2 === 0
-                                                    ? 'tableroweven'
-                                                    : 'tablerowodd';
-
-                                            return (
-                                                <tr
-                                                    key={item.codedValue}
-                                                    className={rowClass}
-                                                >
-                                                    <td>
-                                                        {item.codedValue}
-                                                        {itemAlias &&
-                                                            itemAlias.map(
-                                                                (a) => (
-                                                                    <span>
-                                                                        {' '}
-                                                                        [
-                                                                        {a.name}
-                                                                        ]
-                                                                    </span>
-                                                                ),
-                                                            )}
-                                                        {extendedValue && (
-                                                            <span>
-                                                                {' [*]'}
-                                                            </span>
+                                    return (
+                                        <tr
+                                            key={oid}
+                                            id={`CL.${oid}`}
+                                            className={rowClass}
+                                        >
+                                            <td>
+                                                {name}
+                                                {description && (
+                                                    <div className="description">
+                                                        {getTranslatedText(
+                                                            description,
                                                         )}
-                                                    </td>
-                                                    <td className="codelist-item-decode">
-                                                        {decode}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            )}
-
-                            {hasEnumItems && (
-                                <table
-                                    summary={`Controlled Term - ${codeList.name}`}
-                                    className="datatable"
-                                >
-                                    <thead>
-                                        <tr className="header">
-                                            <th
-                                                scope="col"
-                                                className="codedvalue"
-                                            >
-                                                Permitted Value
-                                            </th>
+                                                    </div>
+                                                )}
+                                                {commentContent && (
+                                                    <div className="description">
+                                                        {commentContent}
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td>
+                                                {externalCodeList?.href ? (
+                                                    <>
+                                                        <a
+                                                            href={
+                                                                externalCodeList.href
+                                                            }
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                        >
+                                                            {
+                                                                externalCodeList.dictionary
+                                                            }
+                                                        </a>
+                                                        <span className="external-link-gif" />
+                                                    </>
+                                                ) : (
+                                                    externalCodeList?.dictionary
+                                                )}
+                                                {externalCodeList?.ref && (
+                                                    <>
+                                                        {' ('}
+                                                        <a
+                                                            href={
+                                                                externalCodeList.ref
+                                                            }
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                        >
+                                                            {
+                                                                externalCodeList.ref
+                                                            }
+                                                        </a>
+                                                        )
+                                                    </>
+                                                )}
+                                            </td>
+                                            <td>{externalCodeList?.version}</td>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        {Object.values(
-                                            codeList.enumeratedItems!,
-                                        ).map((item, index) => {
-                                            const rowClass =
-                                                index % 2 === 0
-                                                    ? 'tableroweven'
-                                                    : 'tablerowodd';
-
-                                            const {
-                                                alias: itemAlias,
-                                                extendedValue,
-                                            } = item;
-                                            return (
-                                                <tr
-                                                    key={item.codedValue}
-                                                    className={rowClass}
-                                                >
-                                                    <td>
-                                                        {item.codedValue}
-
-                                                        {itemAlias &&
-                                                            itemAlias.map(
-                                                                (a) => (
-                                                                    <span>
-                                                                        {' '}
-                                                                        [
-                                                                        {a.name}
-                                                                        ]
-                                                                    </span>
-                                                                ),
-                                                            )}
-                                                        {extendedValue && (
-                                                            <span>
-                                                                {' [*]'}
-                                                            </span>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            )}
-                            {hasExtendedValue && (
-                                <p className="footnote">
-                                    <span className="super">*</span> Extended
-                                    Value
-                                </p>
-                            )}
-                        </div>
-                    );
-                })}
-
-                <p className="linktop">
-                    Go to the <a href="#main">top</a> of the Define-XML document
-                </p>
-                <br />
-            </div>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                        <p className="linktop">
+                            Go to the <a href="#main">top</a> of the Define-XML
+                            document
+                        </p>
+                        <br />
+                    </div>
+                </>
+            )}
         </>
     );
 };

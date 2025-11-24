@@ -183,6 +183,17 @@
   color: var(--color-tr-header);
 }
 
+.define-xml-stylesheet table .arm-resulttitle  th {
+  font-weight: bold;
+  vertical-align: top;
+  text-align: left;
+  padding: 5px;
+  border: 1px solid var(--color-border);
+  font-size: 1.3em;
+  background-color: var(--color-tablerow-even);
+  color:var(--color-warning);
+}
+
 .define-xml-stylesheet th.codedvalue {
   width: 20%;
 }
@@ -435,9 +446,93 @@
 }
 
 .define-xml-stylesheet .super {
-    vertical-align: super;
+  vertical-align: super;
 }
 
-.define-xml-stylesheet .footnote{
-    font-size: 1.2em;
+.define-xml-stylesheet .footnote {
+  font-size: 1.2em;
 }
+
+.define-xml-stylesheet .arm-summary {
+  width: 95%;
+  border-spacing: 5px;
+  border-width: 1px;
+  border-color: #000000;
+  border-style: solid solid none solid;
+  background-color: #eeeeee;
+  font-size: 1.2em;
+  line-height: 150%;
+  vertical-align: top;
+}
+.define-xml-stylesheet .arm-summary-resultdisplay {
+  margin: 0px 0px 0px 0px;
+  padding: 10px 10px 10px 10px;
+  border-spacing: 5px;
+  border-width: 1px;
+  border-color: #000000;
+  border-style: none none solid none;
+}
+
+.define-xml-stylesheet .arm-display-title {
+  margin-left: 5pt;
+}
+
+.define-xml-stylesheet .table.analysisresults-detail {
+  background-color: #eeeeee;
+}
+
+.define-xml-stylesheet .arm-summary-result {
+  margin-left: 20px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+.define-xml-stylesheet th span.arm-displaytitle {
+  font-weight: bold;
+}
+
+.define-xml-stylesheet .arm-resulttitle {
+  font-weight: bold;
+  background-color: var(--color-tablerow-even);
+}
+
+.define-xml-stylesheet tr.arm-analysisresult {
+  background-color: #6699cc;
+  color: #ffffff;
+  font-weight: bold;
+  border: 1px solid #000000;
+}
+
+.define-xml-stylesheet td.arm-label {
+  font-weight: bold;
+}
+
+.define-xml-stylesheet p.arm-analysisvariable {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.define-xml-stylesheet .arm-data-reference {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.define-xml-stylesheet .arm-code-context {
+  padding: 5px 0px;
+}
+
+.define-xml-stylesheet .arm-code-ref {
+  font-size: 1.2em;
+  line-height: 150%;
+  padding: 5px;
+}
+
+.define-xml-stylesheet .arm-code {
+  font-family: 'Courier New', monospace, serif;
+  font-size: 1.2em;
+  line-height: 120%;
+  display: block;
+  margin: 0px;
+  padding: 0px;
+  white-space: pre-wrap; /* CSS 2.1 */
+}
+

@@ -95,6 +95,9 @@ const Methods: React.FC<MethodsProps> = ({ content }) => {
                         })}
                     </tbody>
                 </table>
+                <p className="linktop">
+                    Go to the <a href="#main">top</a> of the Define-XML document
+                </p>
             </div>
         </>
     );

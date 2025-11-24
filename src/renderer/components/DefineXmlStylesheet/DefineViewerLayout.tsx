@@ -137,6 +137,14 @@ const DefineViewerLayout: React.FC<DefineViewerLayoutProps> = ({ content }) => {
                 </Box>
 
                 <Box
+                    ref={setRef('analysis')}
+                    data-section="analysis"
+                    sx={{ mb: 4 }}
+                >
+                    <AnalysisResults content={content} />
+                </Box>
+
+                <Box
                     ref={setRef('datasets')}
                     data-section="datasets"
                     sx={{ mb: 4 }}
@@ -173,14 +181,6 @@ const DefineViewerLayout: React.FC<DefineViewerLayoutProps> = ({ content }) => {
                     sx={{ mb: 4 }}
                 >
                     <Comments content={content} />
-                </Box>
-
-                <Box
-                    ref={setRef('analysis')}
-                    data-section="analysis"
-                    sx={{ mb: 4 }}
-                >
-                    <AnalysisResults content={content} />
                 </Box>
             </Box>
         </Box>

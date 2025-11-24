@@ -52,6 +52,9 @@ const Comments: React.FC<CommentsProps> = ({ content }) => {
                         })}
                     </tbody>
                 </table>
+                <p className="linktop">
+                    Go to the <a href="#main">top</a> of the Define-XML document
+                </p>
             </div>
         </>
     );

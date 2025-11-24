@@ -9,14 +9,12 @@ import { DefineXmlContent } from 'interfaces/defineXml';
 import {
     getTranslatedText,
     getItemDefs,
-    getCodeLists,
-    getCommentDefs,
-    getMethodDefs,
     getMetaDataVersion,
     getStandards,
     displayNoData,
     displayNonStandard,
     displayStandard,
+    getItemGroupDefs,
 } from 'renderer/components/DefineXmlStylesheet/utils/defineXmlHelpers';
 import {
     getItemAttributes,
@@ -41,17 +39,16 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
     content,
     dataset,
 }) => {
+    const { defineVersion } = content;
     const description = getTranslatedText(dataset.description);
     const itemRefsOrder = dataset.itemRefsOrder || [];
     const itemRefs = dataset.itemRefs || {};
 
     const itemDefsArray = getItemDefs(content);
-    const codeListsArray = getCodeLists(content);
-    const commentDefsArray = getCommentDefs(content);
-    const methodDefsArray = getMethodDefs(content);
     const metaDataVersion = getMetaDataVersion(content);
     const standards = getStandards(content);
     const leafs = metaDataVersion.leafs || {};
+    const itemGroupDefsArray = getItemGroupDefs(content);
 
     // Get standard reference if present
     const { archiveLocationId, hasNoData, standardOid, isNonStandard } =
@@ -73,13 +70,7 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
         {} as Record<string, (typeof itemDefsArray)[0]>,
     );
 
-    const codeLists = codeListsArray.reduce(
-        (acc, list) => {
-            acc[list.oid] = list;
-            return acc;
-        },
-        {} as Record<string, (typeof codeListsArray)[0]>,
-    );
+    const codeLists = metaDataVersion.codeLists || {};
 
     // Get value lists for VLM
     const valueLists = metaDataVersion.valueListDefs || {};
@@ -91,21 +82,8 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
         return itemDef && itemDef.valueListRef;
     });
 
-    const commentDefs = commentDefsArray.reduce(
-        (acc, comment) => {
-            acc[comment.oid] = comment;
-            return acc;
-        },
-        {} as Record<string, (typeof commentDefsArray)[0]>,
-    );
-
-    const methodDefs = methodDefsArray.reduce(
-        (acc, method) => {
-            acc[method.oid] = method;
-            return acc;
-        },
-        {} as Record<string, (typeof methodDefsArray)[0]>,
-    );
+    const commentDefs = metaDataVersion.commentDefs || {};
+    const methodDefs = metaDataVersion.methodDefs || {};
 
     const classObj = dataset.class;
     let classDisplay = '';
@@ -124,15 +102,29 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
     // Get where clause definitions for VLM
     const whereClauseDefs = metaDataVersion.whereClauseDefs || {};
 
+    const domain = dataset.domain || '';
+    // Check if there is a parent domain and use it's description in the label
+    const parentDataset = itemGroupDefsArray.find(
+        (ig) => ig.name === domain && ig.name !== dataset.name,
+    );
+
+    const parentDatasetLabel = parentDataset
+        ? getTranslatedText(parentDataset.description)
+        : null;
+
     return (
         <>
             {/* eslint-disable-next-line jsx-a11y/anchor-has-content, jsx-a11y/anchor-is-valid */}
-            <a id={`IG.${dataset.oid}`} />
+            <a id={`${dataset.oid}`} />
             <div className="containerbox">
                 <table className="datatable">
                     <caption>
                         <span>
-                            {dataset.name} ({description}) - {classDisplay}
+                            {dataset.name} ({description}
+                            {parentDatasetLabel
+                                ? `, ${parentDatasetLabel}`
+                                : ''}
+                            ) - {defineVersion === '2.0' ? classDisplay : ''}
                             {standardOid &&
                                 displayStandard(standardOid, standards)}
                             {hasNoData && displayNoData(hasNoData)}
@@ -154,6 +146,21 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
                         </span>
                     </caption>
                     <thead>
+                        {parentDataset && (
+                            <tr>
+                                <td colSpan={8}>
+                                    Related Parent Dataset:{' '}
+                                    <a href={`#${parentDataset.oid}`}>
+                                        {parentDataset.name}
+                                    </a>
+                                    {parentDataset.description
+                                        ? ` (${getTranslatedText(
+                                              parentDataset.description,
+                                          )})`
+                                        : ''}
+                                </td>
+                            </tr>
+                        )}
                         <tr className="header">
                             <th scope="col">Variable</th>
                             {hasVLM && <th scope="col">Where Condition</th>}
@@ -330,7 +337,7 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
                                         <td>
                                             {/* eslint-disable-next-line jsx-a11y/anchor-has-content, jsx-a11y/anchor-is-valid */}
                                             <a
-                                                id={`IG.${dataset.oid}.IT.${dataset.oid}.${itemDef.name}`}
+                                                id={`${dataset.oid}.${itemDef.oid}`}
                                             />
                                             {itemDef.name}
                                             {hasItemVLM && (
@@ -401,7 +408,7 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
                                                 >
                                                     {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
                                                     <a
-                                                        id={`IG.${dataset.oid}.IT.${dataset.oid}.${itemDef.name}`}
+                                                        id={`${dataset.oid}.${itemDef.oid}`}
                                                         style={{
                                                             cursor: 'pointer',
                                                         }}
