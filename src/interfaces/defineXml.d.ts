@@ -6,6 +6,8 @@ import {
     DefineXml,
 } from 'parse-define-xml';
 
+export type { DefineXml, ArmDefine20, ArmDefine21, Define20, Define21 };
+
 // Helper type to ensure correct content type based on version and arm
 type DefineXmlContentType<
     V extends '2.0' | '2.1',
@@ -29,4 +31,11 @@ export interface DefineXmlContent {
     >;
 }
 
-export type { DefineXml, ArmDefine20, ArmDefine21, Define20, Define21 };
+export type DefineStylesheetSection =
+    | 'study'
+    | 'standards'
+    | 'datasets'
+    | 'codelists'
+    | 'methods'
+    | 'comments'
+    | 'analysis';

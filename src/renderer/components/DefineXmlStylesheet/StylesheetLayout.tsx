@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Box } from '@mui/material';
-import { DefineXmlContent } from 'interfaces/defineXml';
+import { Box, Drawer } from '@mui/material';
+import {
+    DefineXmlContent,
+    DefineStylesheetSection as Section,
+} from 'interfaces/common';
 import NavigationMenu from 'renderer/components/DefineXmlStylesheet/NavigationMenu';
 import DocumentInfo from 'renderer/components/DefineXmlStylesheet/sections/DocumentInfo';
 import StudyMetadata from 'renderer/components/DefineXmlStylesheet/sections/StudyMetadata';
@@ -12,23 +15,13 @@ import Methods from 'renderer/components/DefineXmlStylesheet/sections/Methods';
 import Comments from 'renderer/components/DefineXmlStylesheet/sections/Comments';
 import AnalysisResults from 'renderer/components/DefineXmlStylesheet/sections/AnalysisResults';
 import { getItemGroupDefs } from './utils/defineXmlHelpers';
-import './defineXml.css';
-
-const MENU_WIDTH = '20%';
-const MAIN_LEFT = '22%';
-
-export type Section =
-    | 'study'
-    | 'standards'
-    | 'datasets'
-    | 'codelists'
-    | 'methods'
-    | 'comments'
-    | 'analysis';
+import 'renderer/components/DefineXmlStylesheet/defineXml.css';
 
 interface DefineViewerLayoutProps {
     content: DefineXmlContent;
 }
+
+const DRAWER_WIDTH = 300;
 
 const DefineViewerLayout: React.FC<DefineViewerLayoutProps> = ({ content }) => {
     const [activeSection, setActiveSection] = useState<Section>('study');
@@ -74,114 +67,85 @@ const DefineViewerLayout: React.FC<DefineViewerLayoutProps> = ({ content }) => {
 
     return (
         <Box
-            className="define-xml-stylesheet"
             sx={{
                 display: 'flex',
-                height: '100vh',
+                height: '100%',
                 position: 'relative',
+                overflow: 'hidden',
             }}
+            className="define-xml-stylesheet"
         >
-            {/* Menu - Fixed Left Side */}
-            <Box
-                id="menu"
+            <Drawer
+                variant="permanent"
                 sx={{
-                    position: 'fixed',
-                    left: 0,
-                    top: '10px',
-                    width: MENU_WIDTH,
-                    height: '96%',
-                    bottom: 0,
-                    overflowY: 'auto',
-                    backgroundColor: '#FFFFFF',
-                    color: '#000000',
-                    border: 0,
-                    textAlign: 'left',
-                    whiteSpace: 'nowrap',
+                    width: DRAWER_WIDTH,
+                    flexShrink: 0,
+                    [`& .MuiDrawer-paper`]: {
+                        width: DRAWER_WIDTH,
+                        boxSizing: 'border-box',
+                        position: 'relative',
+                        height: '100%',
+                        backgroundColor: '#FFFFFF',
+                        color: '#000000',
+                    },
                 }}
             >
-                <NavigationMenu
-                    content={content}
-                    activeSection={activeSection}
-                    onNavigate={handleNavigate}
-                />
-            </Box>
+                <Box sx={{ overflow: 'auto', p: 2 }}>
+                    <NavigationMenu
+                        content={content}
+                        activeSection={activeSection}
+                        onNavigate={handleNavigate}
+                    />
+                </Box>
+            </Drawer>
 
-            {/* Main Content */}
             <Box
-                id="main"
                 component="main"
                 sx={{
-                    position: 'absolute',
-                    left: MAIN_LEFT,
-                    top: 0,
-                    right: 0,
-                    overflowY: 'auto',
+                    flexGrow: 1,
+                    p: 3,
                     backgroundColor: '#FFFFFF',
                     color: '#000000',
-                    padding: '30px',
+                    overflowX: 'auto',
+                    overflowY: 'auto',
+                    height: '100%',
                 }}
             >
-                {/* Document Info */}
-                <DocumentInfo content={content} />
-
-                <Box ref={setRef('study')} data-section="study" sx={{ mb: 4 }}>
+                <div ref={setRef('study')} data-section="study">
+                    <DocumentInfo content={content} />
                     <StudyMetadata content={content} />
-                </Box>
+                </div>
 
-                <Box
-                    ref={setRef('standards')}
-                    data-section="standards"
-                    sx={{ mb: 4 }}
-                >
+                <div ref={setRef('standards')} data-section="standards">
                     <Standards content={content} />
-                </Box>
+                </div>
 
-                <Box
-                    ref={setRef('analysis')}
-                    data-section="analysis"
-                    sx={{ mb: 4 }}
-                >
+                <div ref={setRef('analysis')} data-section="analysis">
                     <AnalysisResults content={content} />
-                </Box>
+                </div>
 
-                <Box
-                    ref={setRef('datasets')}
-                    data-section="datasets"
-                    sx={{ mb: 4 }}
-                >
+                <div ref={setRef('datasets')} data-section="datasets">
                     <Datasets content={content} />
-                </Box>
+                    {itemGroupDefs.map((itemGroup) => (
+                        <DatasetDetails
+                            key={itemGroup['@OID']}
+                            dataset={itemGroup}
+                            content={content}
+                        />
+                    ))}
+                </div>
 
-                {/* Dataset Details - Individual sections for each dataset */}
-                {itemGroupDefs.map((dataset) => (
-                    <Box key={dataset.oid} sx={{ mb: 4 }}>
-                        <DatasetDetails content={content} dataset={dataset} />
-                    </Box>
-                ))}
-
-                <Box
-                    ref={setRef('codelists')}
-                    data-section="codelists"
-                    sx={{ mb: 4 }}
-                >
+                <div ref={setRef('codelists')} data-section="codelists">
                     <CodeLists content={content} />
-                </Box>
+                </div>
 
-                <Box
-                    ref={setRef('methods')}
-                    data-section="methods"
-                    sx={{ mb: 4 }}
-                >
+                <div ref={setRef('methods')} data-section="methods">
                     <Methods content={content} />
-                </Box>
+                </div>
 
-                <Box
-                    ref={setRef('comments')}
-                    data-section="comments"
-                    sx={{ mb: 4 }}
-                >
+                <div ref={setRef('comments')} data-section="comments">
                     <Comments content={content} />
-                </Box>
+                </div>
             </Box>
         </Box>
     );

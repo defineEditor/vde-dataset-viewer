@@ -3,7 +3,7 @@ import { Box } from '@mui/material';
 import AppContext from 'renderer/utils/AppContext';
 import { DefineXmlContent } from 'interfaces/defineXml';
 import { useAppSelector } from 'renderer/redux/hooks';
-import DefineViewerLayout from 'renderer/components/DefineXmlStylesheet/DefineViewerLayout';
+import StylesheetLayout from 'renderer/components/DefineXmlStylesheet/StylesheetLayout';
 
 const DefineXml: React.FC = () => {
     const { apiService } = useContext(AppContext);
@@ -39,7 +39,7 @@ const DefineXml: React.FC = () => {
         );
     }
 
-    return <DefineViewerLayout content={content} />;
+    return <StylesheetLayout content={content} />;
 };
 
 export default DefineXml;

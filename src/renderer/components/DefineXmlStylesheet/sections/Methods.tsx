@@ -51,7 +51,7 @@ const Methods: React.FC<MethodsProps> = ({ content }) => {
                             return (
                                 <tr
                                     key={method.oid}
-                                    id={`MT.${method.oid}`}
+                                    id={method.oid}
                                     className={rowClass}
                                 >
                                     <td>{method.name}</td>
