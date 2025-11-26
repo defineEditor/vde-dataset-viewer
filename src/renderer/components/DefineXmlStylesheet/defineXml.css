@@ -114,7 +114,25 @@
 }
 
 /* Navigation Menu */
+.define-xml-stylesheet .hmenu {
+  margin-left: 15px;
+  padding-left: 0px;
+}
+
+.define-xml-stylesheet .hmenu li {
+  list-style-type: none;
+  line-height: 200%;
+  padding-left: 0;
+}
+
+.define-xml-stylesheet .hmenu ul {
+  padding-left: 14px;
+  margin-left: 0;
+}
+
 .define-xml-stylesheet .hmenu-bullet {
+  float: left;
+  width: 16px;
   color: var(--color-hmenu-bullet);
   font-size: 1.2em;
 }
@@ -122,7 +140,17 @@
 .define-xml-stylesheet .tocItem {
   color: var(--color-hmenu-text);
   text-decoration: none;
+  margin-top: 2px;
   font-size: 1.4em;
+}
+
+.define-xml-stylesheet a.tocItem:hover {
+  color: var(--color-link-hover);
+  text-decoration: underline;
+}
+
+.define-xml-stylesheet a.external {
+  color: var(--color-hmenu-text);
 }
 
 /* Tables */

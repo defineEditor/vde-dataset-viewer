@@ -99,6 +99,13 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
         return itemRef && itemRef.role;
     });
 
+    // Check if this is a SuppQual dataset (starts with SUPP or SQAP)
+    const isSuppQual =
+        dataset.name.startsWith('SUPP') || dataset.name.startsWith('SQAP');
+
+    // For SuppQual datasets, always show the Role column
+    const showRoleColumn = hasRole || isSuppQual;
+
     // Get where clause definitions for VLM
     const whereClauseDefs = metaDataVersion.whereClauseDefs || {};
 
@@ -111,6 +118,12 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
     const parentDatasetLabel = parentDataset
         ? getTranslatedText(parentDataset.description)
         : null;
+
+    const suppDataset = isSuppQual
+        ? null
+        : itemGroupDefsArray.find(
+              (ig) => ig.domain === domain && ig.name !== dataset.name,
+          );
 
     return (
         <>
@@ -161,12 +174,29 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
                                 </td>
                             </tr>
                         )}
+                        {suppDataset && (
+                            <tr>
+                                <td colSpan={8}>
+                                    Related Supplemental Qualifiers Dataset:{' '}
+                                    <a href={`#${suppDataset.oid}`}>
+                                        {suppDataset.name}
+                                    </a>
+                                    {suppDataset.description
+                                        ? ` (${getTranslatedText(
+                                              suppDataset.description,
+                                          )})`
+                                        : ''}
+                                </td>
+                            </tr>
+                        )}
                         <tr className="header">
                             <th scope="col">Variable</th>
-                            {hasVLM && <th scope="col">Where Condition</th>}
+                            {hasVLM && !isSuppQual && (
+                                <th scope="col">Where Condition</th>
+                            )}
                             <th scope="col">Label / Description</th>
                             <th scope="col">Type</th>
-                            {hasRole && <th scope="col">Role</th>}
+                            {showRoleColumn && <th scope="col">Role</th>}
                             <th scope="col" className="length">
                                 Length or Display Format
                             </th>
@@ -307,27 +337,66 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
                                     // Create VLM row
                                     const vlmRowKey = `${refOid}-vlm-${vlRefOid}`;
                                     const vlmId = `IG.${dataset.oid}.IT.${dataset.oid}.${itemDef.name}`;
-                                    vlmRows.push(
-                                        <tr
-                                            key={vlmRowKey}
-                                            className={`vlm ${rowClass} ${vlmId}`}
-                                        >
-                                            <td>{null}</td>
-                                            <td>{whereClauseDisplay}</td>
-                                            <td>{vlLabel}</td>
-                                            <td className="datatype">
-                                                {vlDataType}
-                                            </td>
-                                            <td className="role">{vlRole}</td>
-                                            <td className="number">
-                                                {vlLengthDisplay}
-                                            </td>
-                                            <td>{vlCodeListContent}</td>
-                                            <td>
-                                                {vlOriginMethodCommentContent}
-                                            </td>
-                                        </tr>,
-                                    );
+
+                                    // For SuppQual datasets, show where clause in variable column with arrow prefix
+                                    if (isSuppQual) {
+                                        vlmRows.push(
+                                            <tr
+                                                key={vlmRowKey}
+                                                className={`vlm ${rowClass} ${vlmId}`}
+                                            >
+                                                <td>
+                                                    <div className="qval-indent">
+                                                        ➤ {whereClauseDisplay}
+                                                    </div>
+                                                </td>
+                                                <td>{vlLabel}</td>
+                                                <td className="datatype">
+                                                    {vlDataType}
+                                                </td>
+                                                <td className="role">
+                                                    {vlRole}
+                                                </td>
+                                                <td className="number">
+                                                    {vlLengthDisplay}
+                                                </td>
+                                                <td>{vlCodeListContent}</td>
+                                                <td>
+                                                    {
+                                                        vlOriginMethodCommentContent
+                                                    }
+                                                </td>
+                                            </tr>,
+                                        );
+                                    } else {
+                                        vlmRows.push(
+                                            <tr
+                                                key={vlmRowKey}
+                                                className={`vlm ${rowClass} ${vlmId}`}
+                                            >
+                                                <td>{null}</td>
+                                                <td>{whereClauseDisplay}</td>
+                                                <td>{vlLabel}</td>
+                                                <td className="datatype">
+                                                    {vlDataType}
+                                                </td>
+                                                {showRoleColumn && (
+                                                    <td className="role">
+                                                        {vlRole}
+                                                    </td>
+                                                )}
+                                                <td className="number">
+                                                    {vlLengthDisplay}
+                                                </td>
+                                                <td>{vlCodeListContent}</td>
+                                                <td>
+                                                    {
+                                                        vlOriginMethodCommentContent
+                                                    }
+                                                </td>
+                                            </tr>,
+                                        );
+                                    }
                                 });
                             }
 
@@ -418,10 +487,12 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
                                                 </span>
                                             )}
                                         </td>
-                                        {hasVLM && <td>{null}</td>}
+                                        {hasVLM && !isSuppQual && (
+                                            <td>{null}</td>
+                                        )}
                                         <td>{label}</td>
                                         <td className="datatype">{dataType}</td>
-                                        {hasRole && (
+                                        {showRoleColumn && (
                                             <td className="role">{role}</td>
                                         )}
                                         <td className="number">

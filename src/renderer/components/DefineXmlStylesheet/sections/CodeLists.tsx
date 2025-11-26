@@ -352,7 +352,7 @@ const CodeLists: React.FC<CodeListsProps> = ({ content }) => {
                                     return (
                                         <tr
                                             key={oid}
-                                            id={`CL.${oid}`}
+                                            id={oid}
                                             className={rowClass}
                                         >
                                             <td>

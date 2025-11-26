@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Box, Drawer } from '@mui/material';
 import {
     DefineXmlContent,
     DefineStylesheetSection as Section,
@@ -20,8 +19,6 @@ import 'renderer/components/DefineXmlStylesheet/defineXml.css';
 interface DefineViewerLayoutProps {
     content: DefineXmlContent;
 }
-
-const DRAWER_WIDTH = 300;
 
 const DefineViewerLayout: React.FC<DefineViewerLayoutProps> = ({ content }) => {
     const [activeSection, setActiveSection] = useState<Section>('study');
@@ -66,44 +63,45 @@ const DefineViewerLayout: React.FC<DefineViewerLayoutProps> = ({ content }) => {
     };
 
     return (
-        <Box
-            sx={{
+        <div
+            className="define-xml-stylesheet"
+            style={{
                 display: 'flex',
                 height: '100%',
                 position: 'relative',
                 overflow: 'hidden',
             }}
-            className="define-xml-stylesheet"
         >
-            <Drawer
-                variant="permanent"
-                sx={{
-                    width: DRAWER_WIDTH,
+            {/* Menu - matching XSLT #menu */}
+            <div
+                id="menu"
+                style={{
+                    width: '20%',
+                    minWidth: '200px',
+                    maxWidth: '300px',
+                    height: '100%',
+                    overflow: 'auto',
+                    backgroundColor: '#FFFFFF',
+                    color: '#000000',
+                    borderRight: '1px solid #eee',
+                    textAlign: 'left',
+                    whiteSpace: 'nowrap',
                     flexShrink: 0,
-                    [`& .MuiDrawer-paper`]: {
-                        width: DRAWER_WIDTH,
-                        boxSizing: 'border-box',
-                        position: 'relative',
-                        height: '100%',
-                        backgroundColor: '#FFFFFF',
-                        color: '#000000',
-                    },
                 }}
             >
-                <Box sx={{ overflow: 'auto', p: 2 }}>
-                    <NavigationMenu
-                        content={content}
-                        activeSection={activeSection}
-                        onNavigate={handleNavigate}
-                    />
-                </Box>
-            </Drawer>
+                <NavigationMenu
+                    content={content}
+                    activeSection={activeSection}
+                    onNavigate={handleNavigate}
+                />
+            </div>
 
-            <Box
-                component="main"
-                sx={{
+            {/* Main Content - matching XSLT #main */}
+            <div
+                id="main"
+                style={{
                     flexGrow: 1,
-                    p: 3,
+                    padding: '0 20px',
                     backgroundColor: '#FFFFFF',
                     color: '#000000',
                     overflowX: 'auto',
@@ -146,8 +144,8 @@ const DefineViewerLayout: React.FC<DefineViewerLayoutProps> = ({ content }) => {
                 <div ref={setRef('comments')} data-section="comments">
                     <Comments content={content} />
                 </div>
-            </Box>
-        </Box>
+            </div>
+        </div>
     );
 };
 

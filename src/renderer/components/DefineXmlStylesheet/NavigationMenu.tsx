@@ -1,12 +1,4 @@
-import React, { useState } from 'react';
-import {
-    List,
-    ListItemButton,
-    ListItemText,
-    Collapse,
-    ListItemIcon,
-} from '@mui/material';
-import { ExpandLess, ExpandMore } from '@mui/icons-material';
+import React, { useState, useCallback } from 'react';
 import { DefineXmlContent } from 'interfaces/defineXml';
 import {
     DefineStylesheetSection as Section,
@@ -30,12 +22,18 @@ interface NavigationMenuProps {
     onNavigate: (section: Section) => void;
 }
 
+// Unicode characters for bullets (matching XSLT)
+const BULLET_CLOSED = '\u25BA'; // ►
+const BULLET_OPEN = '\u25BC'; // ▼
+const BULLET_ITEM = '\u00A0';
+const BULLET_EXTERNAL = '\u00A0';
+
 const NavigationMenu: React.FC<NavigationMenuProps> = ({
     content,
-    activeSection,
+    activeSection: _activeSection,
     onNavigate,
 }) => {
-    const [openSections, setOpenSections] = useState({
+    const [openSections, setOpenSections] = useState<Record<string, boolean>>({
         arm: false,
         datasets: false,
         controlledTerminology: false,
@@ -43,11 +41,22 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
         externalDictionaries: false,
         methods: false,
         comments: false,
+        supplementalDocs: false,
     });
 
-    const toggleSection = (section: keyof typeof openSections) => {
+    const toggleSection = useCallback((section: string) => {
         setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
-    };
+    }, []);
+
+    const handleKeyDown = useCallback(
+        (section: string) => (e: React.KeyboardEvent) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleSection(section);
+            }
+        },
+        [toggleSection],
+    );
 
     const metaDataVersion = getMetaDataVersion(content);
     const itemGroupDefs = getItemGroupDefs(content);
@@ -110,385 +119,436 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
         );
     }
 
-    const handleScrollTo = (id: string) => {
+    const handleScrollTo = useCallback((id: string) => {
         const element = document.getElementById(id);
         if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-    };
+    }, []);
 
-    const renderLeafLink = (leafID: string, noIndent: boolean = false) => {
+    const renderLeafLink = (leafID: string) => {
         const leaf = leafs[leafID];
         if (!leaf) return null;
-        // Try to get title from leaf.title (def:title) or just use href if missing
         const title = leaf.title ? leaf.title : leaf.xlink_href;
 
         return (
-            <ListItemButton
-                key={leafID}
-                component="a"
-                href={leaf.xlink_href}
-                target="_blank"
-                sx={{ pl: noIndent ? 2 : 4 }}
-            >
-                <ListItemText
-                    primary={
-                        <>
-                            {title}
-                            <span className="external-link-gif" />
-                        </>
-                    }
-                />
-            </ListItemButton>
+            <li key={leafID} className="hmenu-item">
+                <span className="hmenu-bullet">{BULLET_EXTERNAL}</span>
+                <a
+                    className="external tocItem"
+                    href={leaf.xlink_href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    {title}
+                </a>
+                <span className="external-link-gif" />
+            </li>
         );
     };
 
     return (
         <>
             <span className="study-name">{studyName}</span>
-            <List component="nav" dense>
-                {/* Annotated CRF */}
-                {aCrf.length > 1 && (
-                    <ListItemButton>
-                        <ListItemText primary="Annotated CRF" />
-                    </ListItemButton>
-                )}
-
-                {aCrf &&
-                    aCrf.map((doc) =>
-                        renderLeafLink(doc.leafId, aCrf.length === 1),
-                    )}
+            <ul className="hmenu">
+                {/* Annotated CRF - render items directly */}
+                {aCrf.map((doc) => renderLeafLink(doc.leafId))}
 
                 {/* Supplemental Documents */}
                 {supplementalDoc && supplementalDoc.length > 0 && (
-                    <ListItemButton>
-                        <ListItemText primary="Supplemental Documents" />
-                    </ListItemButton>
+                    <li className="hmenu-submenu">
+                        <span
+                            className="hmenu-bullet"
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => toggleSection('supplementalDocs')}
+                            onKeyDown={handleKeyDown('supplementalDocs')}
+                            style={{ cursor: 'pointer' }}
+                        >
+                            {openSections.supplementalDocs
+                                ? BULLET_OPEN
+                                : BULLET_CLOSED}
+                        </span>
+                        <span className="tocItem">Supplemental Documents</span>
+                        {openSections.supplementalDocs && (
+                            <ul>
+                                {supplementalDoc.map((doc) =>
+                                    renderLeafLink(doc.leafId),
+                                )}
+                            </ul>
+                        )}
+                    </li>
                 )}
-                {supplementalDoc &&
-                    supplementalDoc.map((doc) => renderLeafLink(doc.leafId))}
 
                 {/* Standards */}
                 {standards.length > 0 && (
-                    <ListItemButton
-                        onClick={() => onNavigate('standards')}
-                        selected={activeSection === 'standards'}
-                        sx={{ pl: 2 }}
-                    >
-                        <ListItemText primary="Standards" />
-                    </ListItemButton>
+                    <li className="hmenu-item">
+                        <span className="hmenu-bullet">{BULLET_ITEM}</span>
+                        <a
+                            className="tocItem"
+                            href="#Standards_Table"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                onNavigate('standards');
+                            }}
+                        >
+                            Standards
+                        </a>
+                    </li>
                 )}
 
                 {/* Analysis Results Metadata */}
                 {analysisResults.length > 0 && (
-                    <>
-                        <ListItemButton onClick={() => toggleSection('arm')}>
-                            <ListItemIcon sx={{ minWidth: 30 }}>
-                                {openSections.arm ? (
-                                    <ExpandLess />
-                                ) : (
-                                    <ExpandMore />
-                                )}
-                            </ListItemIcon>
-                            <ListItemText
-                                primary="Analysis Results Metadata"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onNavigate('analysis');
-                                }}
-                            />
-                        </ListItemButton>
-                        <Collapse
-                            in={openSections.arm}
-                            timeout="auto"
-                            unmountOnExit
+                    <li className="hmenu-submenu">
+                        <span
+                            className="hmenu-bullet"
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => toggleSection('arm')}
+                            onKeyDown={handleKeyDown('arm')}
+                            style={{ cursor: 'pointer' }}
                         >
-                            <List component="div" disablePadding dense>
+                            {openSections.arm ? BULLET_OPEN : BULLET_CLOSED}
+                        </span>
+                        <a
+                            className="tocItem"
+                            href="#ARM_Table_Summary"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                onNavigate('analysis');
+                            }}
+                        >
+                            Analysis Results Metadata
+                        </a>
+                        {openSections.arm && (
+                            <ul>
                                 {analysisResults.map((result) => (
-                                    <ListItemButton
-                                        key={result.oid}
-                                        sx={{ pl: 4 }}
-                                        onClick={() =>
-                                            handleScrollTo(`ARD.${result.oid}`)
-                                        }
-                                    >
-                                        <ListItemText
-                                            primary={result.name}
+                                    <li key={result.oid} className="hmenu-item">
+                                        <span className="hmenu-bullet">
+                                            {BULLET_ITEM}
+                                        </span>
+                                        <a
+                                            className="tocItem"
+                                            href={`#ARD.${result.oid}`}
                                             title={getTranslatedText(
                                                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                                 result.description as any,
                                             )}
-                                        />
-                                    </ListItemButton>
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                handleScrollTo(
+                                                    `ARD.${result.oid}`,
+                                                );
+                                            }}
+                                        >
+                                            {result.name}
+                                        </a>
+                                    </li>
                                 ))}
-                            </List>
-                        </Collapse>
-                    </>
+                            </ul>
+                        )}
+                    </li>
                 )}
 
                 {/* Datasets */}
-                <ListItemButton onClick={() => toggleSection('datasets')}>
-                    <ListItemIcon sx={{ minWidth: 30 }}>
-                        {openSections.datasets ? (
-                            <ExpandLess />
-                        ) : (
-                            <ExpandMore />
-                        )}
-                    </ListItemIcon>
-                    <ListItemText
-                        primary="Datasets"
+                <li className="hmenu-submenu">
+                    <span
+                        className="hmenu-bullet"
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => toggleSection('datasets')}
+                        onKeyDown={handleKeyDown('datasets')}
+                        style={{ cursor: 'pointer' }}
+                    >
+                        {openSections.datasets ? BULLET_OPEN : BULLET_CLOSED}
+                    </span>
+                    <a
+                        className="tocItem"
+                        href="#datasets"
                         onClick={(e) => {
-                            e.stopPropagation();
+                            e.preventDefault();
                             onNavigate('datasets');
                         }}
-                    />
-                </ListItemButton>
-                <Collapse
-                    in={openSections.datasets}
-                    timeout="auto"
-                    unmountOnExit
-                >
-                    <List component="div" disablePadding dense>
-                        {itemGroupDefs.map((itemGroup) => (
-                            <ListItemButton
-                                key={itemGroup.oid}
-                                sx={{ pl: 4 }}
-                                onClick={() => handleScrollTo(itemGroup.oid)}
-                            >
-                                <ListItemText
-                                    primary={`${itemGroup.name} (${getTranslatedText(
-                                        itemGroup.description,
-                                    )})`}
-                                />
-                            </ListItemButton>
-                        ))}
-                    </List>
-                </Collapse>
+                    >
+                        Datasets
+                    </a>
+                    {openSections.datasets && (
+                        <ul>
+                            {itemGroupDefs.map((itemGroup) => (
+                                <li key={itemGroup.oid} className="hmenu-item">
+                                    <span className="hmenu-bullet">
+                                        {BULLET_ITEM}
+                                    </span>
+                                    <a
+                                        className="tocItem"
+                                        href={`#IG.${itemGroup.oid}`}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            handleScrollTo(itemGroup.oid);
+                                        }}
+                                    >
+                                        {`${itemGroup.name} (${getTranslatedText(itemGroup.description)})`}
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </li>
 
                 {/* Controlled Terminology */}
                 {(codeListsWithItems.length > 0 ||
                     externalCodeLists.length > 0) && (
-                    <>
-                        <ListItemButton
+                    <li className="hmenu-submenu">
+                        <span
+                            className="hmenu-bullet"
+                            role="button"
+                            tabIndex={0}
                             onClick={() =>
                                 toggleSection('controlledTerminology')
                             }
+                            onKeyDown={handleKeyDown('controlledTerminology')}
+                            style={{ cursor: 'pointer' }}
                         >
-                            <ListItemIcon sx={{ minWidth: 30 }}>
-                                {openSections.controlledTerminology ? (
-                                    <ExpandLess />
-                                ) : (
-                                    <ExpandMore />
-                                )}
-                            </ListItemIcon>
-                            <ListItemText
-                                primary="Controlled Terminology"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onNavigate('codelists');
-                                }}
-                            />
-                        </ListItemButton>
-                        <Collapse
-                            in={openSections.controlledTerminology}
-                            timeout="auto"
-                            unmountOnExit
+                            {openSections.controlledTerminology
+                                ? BULLET_OPEN
+                                : BULLET_CLOSED}
+                        </span>
+                        <a
+                            className="tocItem"
+                            href="#decodelist"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                onNavigate('codelists');
+                            }}
                         >
-                            <List component="div" disablePadding dense>
+                            Controlled Terminology
+                        </a>
+                        {openSections.controlledTerminology && (
+                            <ul>
                                 {/* CodeLists */}
                                 {codeListsWithItems.length > 0 && (
-                                    <>
-                                        <ListItemButton
-                                            sx={{ pl: 4 }}
+                                    <li className="hmenu-submenu">
+                                        <span
+                                            className="hmenu-bullet"
+                                            role="button"
+                                            tabIndex={0}
                                             onClick={() =>
                                                 toggleSection('codeLists')
                                             }
+                                            onKeyDown={handleKeyDown(
+                                                'codeLists',
+                                            )}
+                                            style={{ cursor: 'pointer' }}
                                         >
-                                            <ListItemIcon sx={{ minWidth: 30 }}>
-                                                {openSections.codeLists ? (
-                                                    <ExpandLess />
-                                                ) : (
-                                                    <ExpandMore />
-                                                )}
-                                            </ListItemIcon>
-                                            <ListItemText primary="CodeLists" />
-                                        </ListItemButton>
-                                        <Collapse
-                                            in={openSections.codeLists}
-                                            timeout="auto"
-                                            unmountOnExit
+                                            {openSections.codeLists
+                                                ? BULLET_OPEN
+                                                : BULLET_CLOSED}
+                                        </span>
+                                        <a
+                                            className="tocItem"
+                                            href="#decodelist"
+                                            onClick={(e) => e.preventDefault()}
                                         >
-                                            <List
-                                                component="div"
-                                                disablePadding
-                                                dense
-                                            >
+                                            CodeLists
+                                        </a>
+                                        {openSections.codeLists && (
+                                            <ul>
                                                 {codeListsWithItems.map(
                                                     (cl) => (
-                                                        <ListItemButton
+                                                        <li
                                                             key={cl.oid}
-                                                            sx={{ pl: 8 }}
-                                                            onClick={() =>
-                                                                handleScrollTo(
-                                                                    cl.oid,
-                                                                )
-                                                            }
+                                                            className="hmenu-item"
                                                         >
-                                                            <ListItemText
-                                                                primary={
-                                                                    cl.name
-                                                                }
-                                                            />
-                                                        </ListItemButton>
+                                                            <span className="hmenu-bullet">
+                                                                {BULLET_ITEM}
+                                                            </span>
+                                                            <a
+                                                                className="tocItem"
+                                                                href={`#CL.${cl.oid}`}
+                                                                onClick={(
+                                                                    e,
+                                                                ) => {
+                                                                    e.preventDefault();
+                                                                    handleScrollTo(
+                                                                        cl.oid,
+                                                                    );
+                                                                }}
+                                                            >
+                                                                {cl.name}
+                                                            </a>
+                                                        </li>
                                                     ),
                                                 )}
-                                            </List>
-                                        </Collapse>
-                                    </>
+                                            </ul>
+                                        )}
+                                    </li>
                                 )}
 
                                 {/* External Dictionaries */}
                                 {externalCodeLists.length > 0 && (
-                                    <>
-                                        <ListItemButton
-                                            sx={{ pl: 4 }}
+                                    <li className="hmenu-submenu">
+                                        <span
+                                            className="hmenu-bullet"
+                                            role="button"
+                                            tabIndex={0}
                                             onClick={() =>
                                                 toggleSection(
                                                     'externalDictionaries',
                                                 )
                                             }
+                                            onKeyDown={handleKeyDown(
+                                                'externalDictionaries',
+                                            )}
+                                            style={{ cursor: 'pointer' }}
                                         >
-                                            <ListItemIcon sx={{ minWidth: 30 }}>
-                                                {openSections.externalDictionaries ? (
-                                                    <ExpandLess />
-                                                ) : (
-                                                    <ExpandMore />
-                                                )}
-                                            </ListItemIcon>
-                                            <ListItemText primary="External Dictionaries" />
-                                        </ListItemButton>
-                                        <Collapse
-                                            in={
-                                                openSections.externalDictionaries
-                                            }
-                                            timeout="auto"
-                                            unmountOnExit
+                                            {openSections.externalDictionaries
+                                                ? BULLET_OPEN
+                                                : BULLET_CLOSED}
+                                        </span>
+                                        <a
+                                            className="tocItem"
+                                            href="#externaldictionary"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                handleScrollTo(
+                                                    'externaldictionary',
+                                                );
+                                            }}
                                         >
-                                            <List
-                                                component="div"
-                                                disablePadding
-                                                dense
-                                            >
+                                            External Dictionaries
+                                        </a>
+                                        {openSections.externalDictionaries && (
+                                            <ul>
                                                 {externalCodeLists.map((cl) => (
-                                                    <ListItemButton
+                                                    <li
                                                         key={cl.oid}
-                                                        sx={{ pl: 8 }}
-                                                        onClick={() =>
-                                                            handleScrollTo(
-                                                                cl.oid,
-                                                            )
-                                                        }
+                                                        className="hmenu-item"
                                                     >
-                                                        <ListItemText
-                                                            primary={cl.name}
-                                                        />
-                                                    </ListItemButton>
+                                                        <span className="hmenu-bullet">
+                                                            {BULLET_ITEM}
+                                                        </span>
+                                                        <a
+                                                            className="tocItem"
+                                                            href={`#CL.${cl.oid}`}
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                handleScrollTo(
+                                                                    cl.oid,
+                                                                );
+                                                            }}
+                                                        >
+                                                            {cl.name}
+                                                        </a>
+                                                    </li>
                                                 ))}
-                                            </List>
-                                        </Collapse>
-                                    </>
+                                            </ul>
+                                        )}
+                                    </li>
                                 )}
-                            </List>
-                        </Collapse>
-                    </>
+                            </ul>
+                        )}
+                    </li>
                 )}
 
                 {/* Methods */}
                 {methodDefs.length > 0 && (
-                    <>
-                        <ListItemButton
+                    <li className="hmenu-submenu">
+                        <span
+                            className="hmenu-bullet"
+                            role="button"
+                            tabIndex={0}
                             onClick={() => toggleSection('methods')}
+                            onKeyDown={handleKeyDown('methods')}
+                            style={{ cursor: 'pointer' }}
                         >
-                            <ListItemIcon sx={{ minWidth: 30 }}>
-                                {openSections.methods ? (
-                                    <ExpandLess />
-                                ) : (
-                                    <ExpandMore />
-                                )}
-                            </ListItemIcon>
-                            <ListItemText
-                                primary="Methods"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onNavigate('methods');
-                                }}
-                            />
-                        </ListItemButton>
-                        <Collapse
-                            in={openSections.methods}
-                            timeout="auto"
-                            unmountOnExit
+                            {openSections.methods ? BULLET_OPEN : BULLET_CLOSED}
+                        </span>
+                        <a
+                            className="tocItem"
+                            href="#compmethod"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                onNavigate('methods');
+                            }}
                         >
-                            <List component="div" disablePadding dense>
+                            Methods
+                        </a>
+                        {openSections.methods && (
+                            <ul>
                                 {methodDefs.map((method) => (
-                                    <ListItemButton
-                                        key={method.oid}
-                                        sx={{ pl: 4 }}
-                                        onClick={() =>
-                                            handleScrollTo(method.oid)
-                                        }
-                                    >
-                                        <ListItemText primary={method.name} />
-                                    </ListItemButton>
+                                    <li key={method.oid} className="hmenu-item">
+                                        <span className="hmenu-bullet">
+                                            {BULLET_ITEM}
+                                        </span>
+                                        <a
+                                            className="tocItem"
+                                            href={`#MT.${method.oid}`}
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                handleScrollTo(method.oid);
+                                            }}
+                                        >
+                                            {method.name}
+                                        </a>
+                                    </li>
                                 ))}
-                            </List>
-                        </Collapse>
-                    </>
+                            </ul>
+                        )}
+                    </li>
                 )}
 
                 {/* Comments */}
                 {commentDefs.length > 0 && (
-                    <>
-                        <ListItemButton
+                    <li className="hmenu-submenu">
+                        <span
+                            className="hmenu-bullet"
+                            role="button"
+                            tabIndex={0}
                             onClick={() => toggleSection('comments')}
+                            onKeyDown={handleKeyDown('comments')}
+                            style={{ cursor: 'pointer' }}
                         >
-                            <ListItemIcon sx={{ minWidth: 30 }}>
-                                {openSections.comments ? (
-                                    <ExpandLess />
-                                ) : (
-                                    <ExpandMore />
-                                )}
-                            </ListItemIcon>
-                            <ListItemText
-                                primary="Comments"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onNavigate('comments');
-                                }}
-                            />
-                        </ListItemButton>
-                        <Collapse
-                            in={openSections.comments}
-                            timeout="auto"
-                            unmountOnExit
+                            {openSections.comments
+                                ? BULLET_OPEN
+                                : BULLET_CLOSED}
+                        </span>
+                        <a
+                            className="tocItem"
+                            href="#comment"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                onNavigate('comments');
+                            }}
                         >
-                            <List component="div" disablePadding dense>
+                            Comments
+                        </a>
+                        {openSections.comments && (
+                            <ul>
                                 {commentDefs.map((comment) => (
-                                    <ListItemButton
+                                    <li
                                         key={comment.oid}
-                                        sx={{ pl: 4 }}
-                                        onClick={() =>
-                                            handleScrollTo(comment.oid)
-                                        }
+                                        className="hmenu-item"
                                     >
-                                        <ListItemText primary={comment.oid} />
-                                    </ListItemButton>
+                                        <span className="hmenu-bullet">
+                                            {BULLET_ITEM}
+                                        </span>
+                                        <a
+                                            className="tocItem"
+                                            href={`#COMM.${comment.oid}`}
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                handleScrollTo(comment.oid);
+                                            }}
+                                        >
+                                            {comment.oid}
+                                        </a>
+                                    </li>
                                 ))}
-                            </List>
-                        </Collapse>
-                    </>
+                            </ul>
+                        )}
+                    </li>
                 )}
-            </List>
+            </ul>
         </>
     );
 };
