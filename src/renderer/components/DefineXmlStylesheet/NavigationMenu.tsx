@@ -58,6 +58,16 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
         [toggleSection],
     );
 
+    const handleVlmState = (open: boolean) => {
+        // ExpandAll
+        const define = document.getElementById('stylesheetContainer');
+        if (!define) return;
+        const rows = define.getElementsByClassName('vlm');
+        for (let j = 0; j < rows.length; j++) {
+            (rows[j] as HTMLElement).style.display = open ? '' : 'none';
+        }
+    };
+
     const metaDataVersion = getMetaDataVersion(content);
     const itemGroupDefs = getItemGroupDefs(content);
     const standards = getStandards(content);
@@ -549,6 +559,28 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
                     </li>
                 )}
             </ul>
+            <div className="buttons">
+                <div className="button">
+                    <button
+                        onClick={(_e) => {
+                            handleVlmState(true);
+                        }}
+                        type="button"
+                    >
+                        Expand All VLM
+                    </button>
+                </div>
+                <div className="button">
+                    <button
+                        onClick={(_e) => {
+                            handleVlmState(false);
+                        }}
+                        type="button"
+                    >
+                        Collapse All VLM
+                    </button>
+                </div>
+            </div>
         </>
     );
 };

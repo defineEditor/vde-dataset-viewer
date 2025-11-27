@@ -16,11 +16,17 @@ import AnalysisResults from 'renderer/components/DefineXmlStylesheet/sections/An
 import { getItemGroupDefs } from './utils/defineXmlHelpers';
 import 'renderer/components/DefineXmlStylesheet/defineXml.css';
 
-interface DefineViewerLayoutProps {
+interface StylesheetLayoutProps {
     content: DefineXmlContent;
+    onOpenDataset: (
+        event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
+    ) => void;
 }
 
-const DefineViewerLayout: React.FC<DefineViewerLayoutProps> = ({ content }) => {
+const StylesheetLayout: React.FC<StylesheetLayoutProps> = ({
+    content,
+    onOpenDataset,
+}) => {
     const [activeSection, setActiveSection] = useState<Section>('study');
     const contentRefs = useRef<{ [key: string]: HTMLElement | null }>({});
     const itemGroupDefs = getItemGroupDefs(content);
@@ -65,14 +71,17 @@ const DefineViewerLayout: React.FC<DefineViewerLayoutProps> = ({ content }) => {
     return (
         <div
             className="define-xml-stylesheet"
+            id="stylesheetContainer"
             style={{
                 display: 'flex',
                 height: '100%',
                 position: 'relative',
                 overflow: 'hidden',
+                isolation: 'isolate',
+                contain: 'layout style paint',
             }}
         >
-            {/* Menu - matching XSLT #menu */}
+            {/* Menu */}
             <div
                 id="menu"
                 style={{
@@ -96,7 +105,7 @@ const DefineViewerLayout: React.FC<DefineViewerLayoutProps> = ({ content }) => {
                 />
             </div>
 
-            {/* Main Content - matching XSLT #main */}
+            {/* Main Content */}
             <div
                 id="main"
                 style={{
@@ -123,12 +132,13 @@ const DefineViewerLayout: React.FC<DefineViewerLayoutProps> = ({ content }) => {
                 </div>
 
                 <div ref={setRef('datasets')} data-section="datasets">
-                    <Datasets content={content} />
+                    <Datasets content={content} onOpenDataset={onOpenDataset} />
                     {itemGroupDefs.map((itemGroup) => (
                         <DatasetDetails
                             key={itemGroup['@OID']}
                             dataset={itemGroup}
                             content={content}
+                            onOpenDataset={onOpenDataset}
                         />
                     ))}
                 </div>
@@ -149,4 +159,4 @@ const DefineViewerLayout: React.FC<DefineViewerLayoutProps> = ({ content }) => {
     );
 };
 
-export default DefineViewerLayout;
+export default StylesheetLayout;

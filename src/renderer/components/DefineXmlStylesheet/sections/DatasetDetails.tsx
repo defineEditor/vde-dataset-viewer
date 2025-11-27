@@ -33,11 +33,15 @@ type ItemGroupDef =
 interface DatasetDetailsProps {
     content: DefineXmlContent;
     dataset: ItemGroupDef;
+    onOpenDataset: (
+        event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
+    ) => void;
 }
 
 const DatasetDetails: React.FC<DatasetDetailsProps> = ({
     content,
     dataset,
+    onOpenDataset,
 }) => {
     const { defineVersion } = content;
     const description = getTranslatedText(dataset.description);
@@ -148,6 +152,7 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
                                     <a
                                         className="external"
                                         href={archiveHref}
+                                        onClick={onOpenDataset}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                     >

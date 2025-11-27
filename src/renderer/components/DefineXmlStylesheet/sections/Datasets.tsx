@@ -12,9 +12,12 @@ import { getCommentContent } from 'renderer/components/DefineXmlStylesheet/utils
 
 interface DatasetsProps {
     content: DefineXmlContent;
+    onOpenDataset: (
+        event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
+    ) => void;
 }
 
-const Datasets: React.FC<DatasetsProps> = ({ content }) => {
+const Datasets: React.FC<DatasetsProps> = ({ content, onOpenDataset }) => {
     const { defineVersion } = content;
     const itemGroupDefs = getItemGroupDefs(content);
     const itemDefsArray = getItemDefs(content);
@@ -201,6 +204,7 @@ const Datasets: React.FC<DatasetsProps> = ({ content }) => {
                                                 <a
                                                     href={archiveHref}
                                                     target="_blank"
+                                                    onClick={onOpenDataset}
                                                     rel="noopener noreferrer"
                                                     className="external"
                                                 >

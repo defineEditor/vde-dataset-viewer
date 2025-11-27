@@ -21,6 +21,10 @@ export interface IMask {
 
 export type ClipboardCopyFormat = 'tab' | 'csv' | 'json';
 
+export interface SettingsDefine {
+    stylesheetShowComments: boolean;
+}
+
 export interface SettingsViewer {
     pageSize: number;
     estimateWidthRows: number;
@@ -37,6 +41,7 @@ export interface SettingsViewer {
 
 export interface ISettings {
     viewer: SettingsViewer;
+    define: SettingsDefine;
     converter: SettingsConverter;
     validator: SettingsValidator;
     other: {

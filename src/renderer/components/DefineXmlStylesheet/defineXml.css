@@ -208,7 +208,7 @@
   color: var(--color-tr-header);
 }
 
-.define-xml-stylesheet table .arm-resulttitle  th {
+.define-xml-stylesheet table .arm-resulttitle th {
   font-weight: bold;
   vertical-align: top;
   text-align: left;
@@ -216,7 +216,7 @@
   border: 1px solid var(--color-border);
   font-size: 1.3em;
   background-color: var(--color-tablerow-even);
-  color:var(--color-warning);
+  color: var(--color-warning);
 }
 
 .define-xml-stylesheet th.codedvalue {
@@ -561,3 +561,23 @@
   white-space: pre-wrap; /* CSS 2.1 */
 }
 
+.define-xml-stylesheet div.buttons {
+  padding: 5px 0 5px 20px;
+  display: inline-block;
+}
+.define-xml-stylesheet div.button {
+  padding: 5px 0 5px 0;
+}
+
+.define-xml-stylesheet button {
+  width: 100%;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  -webkit-box-shadow: 3px 3px 2px #888;
+  -moz-box-shadow: 3px 3px 2px #888;
+  box-shadow: 3px 3px 2px #888;
+  padding: 4px 16px 4px 16px;
+  display: block;
+  cursor: pointer;
+}
