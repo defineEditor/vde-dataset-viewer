@@ -179,6 +179,10 @@ const getDefineXmlContent: ElectronApi['getDefineXmlContent'] = (fileId) =>
 const closeDefineXml: ElectronApi['closeDefineXml'] = (fileId) =>
     ipcRenderer.invoke('main:closeDefineXml', fileId);
 
+const openInDefaultApplication: ElectronApi['openInDefaultApplication'] = (
+    filePath,
+) => ipcRenderer.invoke('main:openInDefaultApplication', filePath);
+
 contextBridge.exposeInMainWorld('electron', {
     openFile,
     writeToClipboard,
@@ -215,6 +219,7 @@ contextBridge.exposeInMainWorld('electron', {
     openDefineXml,
     getDefineXmlContent,
     closeDefineXml,
+    openInDefaultApplication,
     ipcRenderer: {
         sendMessage(channel: Channels, args: unknown[]) {
             ipcRenderer.send(channel, args);

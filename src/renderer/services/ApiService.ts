@@ -926,6 +926,11 @@ class ApiService {
         }
         return result;
     };
+
+    public openFileInDefaultApp = async (filePath: string): Promise<string> => {
+        const result = await window.electron.openInDefaultApplication(filePath);
+        return result;
+    };
 }
 
 export default ApiService;

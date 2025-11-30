@@ -18,14 +18,14 @@ import 'renderer/components/DefineXmlStylesheet/defineXml.css';
 
 interface StylesheetLayoutProps {
     content: DefineXmlContent;
-    onOpenDataset: (
+    onOpenFile: (
         event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
     ) => void;
 }
 
 const StylesheetLayout: React.FC<StylesheetLayoutProps> = ({
     content,
-    onOpenDataset,
+    onOpenFile,
 }) => {
     const [activeSection, setActiveSection] = useState<Section>('study');
     const contentRefs = useRef<{ [key: string]: HTMLElement | null }>({});
@@ -128,31 +128,34 @@ const StylesheetLayout: React.FC<StylesheetLayoutProps> = ({
                 </div>
 
                 <div ref={setRef('analysis')} data-section="analysis">
-                    <AnalysisResults content={content} />
+                    <AnalysisResults
+                        content={content}
+                        onOpenFile={onOpenFile}
+                    />
                 </div>
 
                 <div ref={setRef('datasets')} data-section="datasets">
-                    <Datasets content={content} onOpenDataset={onOpenDataset} />
+                    <Datasets content={content} onOpenFile={onOpenFile} />
                     {itemGroupDefs.map((itemGroup) => (
                         <DatasetDetails
                             key={itemGroup['@OID']}
                             dataset={itemGroup}
                             content={content}
-                            onOpenDataset={onOpenDataset}
+                            onOpenFile={onOpenFile}
                         />
                     ))}
                 </div>
 
                 <div ref={setRef('codelists')} data-section="codelists">
-                    <CodeLists content={content} />
+                    <CodeLists content={content} onOpenFile={onOpenFile} />
                 </div>
 
                 <div ref={setRef('methods')} data-section="methods">
-                    <Methods content={content} />
+                    <Methods content={content} onOpenFile={onOpenFile} />
                 </div>
 
                 <div ref={setRef('comments')} data-section="comments">
-                    <Comments content={content} />
+                    <Comments content={content} onOpenFile={onOpenFile} />
                 </div>
             </div>
         </div>

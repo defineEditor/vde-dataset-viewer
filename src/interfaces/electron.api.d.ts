@@ -108,4 +108,5 @@ export interface ElectronApi {
     ) => Promise<void>;
     setZoom: (zoomLevel: number) => Promise<void>;
     getZoom: () => Promise<number>;
+    openInDefaultApplication: (filePath: string) => Promise<string>;
 }

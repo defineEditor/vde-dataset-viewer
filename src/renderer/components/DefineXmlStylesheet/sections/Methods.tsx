@@ -10,9 +10,12 @@ import {
 
 interface MethodsProps {
     content: DefineXmlContent;
+    onOpenFile: (
+        event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
+    ) => void;
 }
 
-const Methods: React.FC<MethodsProps> = ({ content }) => {
+const Methods: React.FC<MethodsProps> = ({ content, onOpenFile }) => {
     const methodDefs = getMethodDefs(content);
     const metaDataVersion = getMetaDataVersion(content);
     const leafs = metaDataVersion.leafs || {};
@@ -88,6 +91,7 @@ const Methods: React.FC<MethodsProps> = ({ content }) => {
                                         {renderDocumentRefs(
                                             method.documentRefs || [],
                                             leafs,
+                                            onOpenFile,
                                         )}
                                     </td>
                                 </tr>

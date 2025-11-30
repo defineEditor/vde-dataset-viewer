@@ -5,6 +5,7 @@ import { DefineXmlContent } from 'interfaces/defineXml';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import StylesheetLayout from 'renderer/components/DefineXmlStylesheet/StylesheetLayout';
 import handleOpenDataset from 'renderer/utils/handleOpenDataset';
+import { openSnackbar } from 'renderer/redux/slices/ui';
 
 const DefineXml: React.FC = () => {
     const { apiService } = useContext(AppContext);
@@ -20,7 +21,7 @@ const DefineXml: React.FC = () => {
         (state) => state.ui.currentFileId,
     );
 
-    const handleOpenDatasetLink = (
+    const handleOpenFile = async (
         event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
     ) => {
         event.preventDefault();
@@ -38,14 +39,34 @@ const DefineXml: React.FC = () => {
         const linkRelativePath = event.currentTarget.getAttribute('href');
         const delimiter = window.electron.isWindows ? '\\' : '/';
 
-        const datasetPath = `${definePath}${delimiter}${linkRelativePath}`;
+        const filePath = `${definePath}${delimiter}${linkRelativePath}`;
 
-        handleOpenDataset(
-            datasetPath,
-            currentDatasetFileId,
-            dispath,
-            apiService,
-        );
+        // If it is a dataset, open it in the viewer
+        if (
+            filePath.toLowerCase().endsWith('.json') ||
+            filePath.toLowerCase().endsWith('.ndjson') ||
+            filePath.toLowerCase().endsWith('.dsjc') ||
+            filePath.toLowerCase().endsWith('.xpt')
+        ) {
+            handleOpenDataset(
+                filePath,
+                currentDatasetFileId,
+                dispath,
+                apiService,
+            );
+        }
+        // If it is a file, open it in the default application
+        else {
+            const result = await apiService.openFileInDefaultApp(filePath);
+            if (result !== '') {
+                dispath(
+                    openSnackbar({
+                        type: 'error',
+                        message: `Failed to open file: ${result}`,
+                    }),
+                );
+            }
+        }
     };
 
     useEffect(() => {
@@ -73,12 +94,7 @@ const DefineXml: React.FC = () => {
         );
     }
 
-    return (
-        <StylesheetLayout
-            content={content}
-            onOpenDataset={handleOpenDatasetLink}
-        />
-    );
+    return <StylesheetLayout content={content} onOpenFile={handleOpenFile} />;
 };
 
 export default DefineXml;

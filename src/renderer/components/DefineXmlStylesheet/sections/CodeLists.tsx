@@ -11,9 +11,12 @@ import { getCommentContent } from 'renderer/components/DefineXmlStylesheet/utils
 
 interface CodeListsProps {
     content: DefineXmlContent;
+    onOpenFile: (
+        event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
+    ) => void;
 }
 
-const CodeLists: React.FC<CodeListsProps> = ({ content }) => {
+const CodeLists: React.FC<CodeListsProps> = ({ content, onOpenFile }) => {
     const codeListsArray = getCodeLists(content);
     const standards = getStandards(content);
     const commentDefsArray = getCommentDefs(content);
@@ -91,6 +94,7 @@ const CodeLists: React.FC<CodeListsProps> = ({ content }) => {
                                     commentOid,
                                     commentDefs,
                                     leafs,
+                                    onOpenFile,
                                 );
                             }
 
@@ -346,6 +350,7 @@ const CodeLists: React.FC<CodeListsProps> = ({ content }) => {
                                             commentOid,
                                             commentDefs,
                                             leafs,
+                                            onOpenFile,
                                         );
                                     }
 

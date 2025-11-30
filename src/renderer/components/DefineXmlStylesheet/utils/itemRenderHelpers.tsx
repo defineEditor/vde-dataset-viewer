@@ -169,6 +169,9 @@ export function getItemAttributes(
 export function renderDocumentRefs(
     documentRefs: DocumentRef[] | undefined,
     leafs: Record<string, Leaf>,
+    onOpenFile: (
+        event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
+    ) => void,
 ): React.ReactNode {
     if (!documentRefs || documentRefs.length === 0) {
         return null;
@@ -204,6 +207,7 @@ export function renderDocumentRefs(
                                             <a
                                                 className="external"
                                                 href={`${href}#page=${page}`}
+                                                onClick={onOpenFile}
                                             >
                                                 {page}
                                             </a>
@@ -226,6 +230,7 @@ export function renderDocumentRefs(
                                     <a
                                         className="external"
                                         href={`${href}#page=${firstPage}`}
+                                        onClick={onOpenFile}
                                     >
                                         {firstPage}
                                     </a>
@@ -233,6 +238,7 @@ export function renderDocumentRefs(
                                     <a
                                         className="external"
                                         href={`${href}#page=${lastPage}`}
+                                        onClick={onOpenFile}
                                     >
                                         {lastPage}
                                     </a>
@@ -257,7 +263,8 @@ export function renderDocumentRefs(
                                         {pageIdx > 0 && ', '}
                                         <a
                                             className="external"
-                                            href={`${href}#page=${name}`}
+                                            href={`${href}#${name}`}
+                                            onClick={onOpenFile}
                                         >
                                             {name}
                                         </a>
@@ -276,7 +283,7 @@ export function renderDocumentRefs(
         // Regular document link
         return (
             <p key={`docref-${leafId}`} className="linebreakcell">
-                <a className="external" href={href}>
+                <a className="external" href={href} onClick={onOpenFile}>
                     {title}
                 </a>
                 <span className="external-link-gif" />
@@ -291,6 +298,9 @@ export function renderDocumentRefs(
 export function getOriginContent(
     itemDef: ItemDef,
     leafs: Record<string, Leaf>,
+    onOpenFile: (
+        event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
+    ) => void,
 ): React.ReactNode {
     const origins = itemDef.origins || [];
     if (origins.length === 0) return '';
@@ -318,7 +328,7 @@ export function getOriginContent(
                 {o.type !== 'Predecessor' && originDesc && (
                     <p className="linebreakcell">{originDesc}</p>
                 )}
-                {renderDocumentRefs(o.documentRefs, leafs)}
+                {renderDocumentRefs(o.documentRefs, leafs, onOpenFile)}
             </React.Fragment>
         );
     });
@@ -331,6 +341,9 @@ export function getMethodContent(
     methodOid: string | undefined,
     methodDefs: Record<string, MethodDef>,
     leafs: Record<string, Leaf>,
+    onOpenFile: (
+        event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
+    ) => void,
 ): React.ReactNode {
     if (!methodOid) return '';
 
@@ -354,7 +367,7 @@ export function getMethodContent(
                     </span>
                 )}
             </div>
-            {renderDocumentRefs(method.documentRefs || [], leafs)}
+            {renderDocumentRefs(method.documentRefs || [], leafs, onOpenFile)}
         </>
     );
 }
@@ -366,6 +379,9 @@ export function getCommentContent(
     commentOid: string | undefined,
     commentDefs: Record<string, CommentDef>,
     leafs: Record<string, Leaf>,
+    onOpenFile: (
+        event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
+    ) => void,
 ): React.ReactNode {
     if (!commentOid) return '';
 
@@ -377,7 +393,7 @@ export function getCommentContent(
     return (
         <>
             <p className="linebreakcell">{commentText}</p>
-            {renderDocumentRefs(comment.documentRefs || [], leafs)}
+            {renderDocumentRefs(comment.documentRefs || [], leafs, onOpenFile)}
         </>
     );
 }

@@ -33,7 +33,7 @@ type ItemGroupDef =
 interface DatasetDetailsProps {
     content: DefineXmlContent;
     dataset: ItemGroupDef;
-    onOpenDataset: (
+    onOpenFile: (
         event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
     ) => void;
 }
@@ -41,7 +41,7 @@ interface DatasetDetailsProps {
 const DatasetDetails: React.FC<DatasetDetailsProps> = ({
     content,
     dataset,
-    onOpenDataset,
+    onOpenFile,
 }) => {
     const { defineVersion } = content;
     const description = getTranslatedText(dataset.description);
@@ -152,7 +152,7 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
                                     <a
                                         className="external"
                                         href={archiveHref}
-                                        onClick={onOpenDataset}
+                                        onClick={onOpenFile}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                     >
@@ -237,16 +237,19 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
                             const originContent = getOriginContent(
                                 itemDef,
                                 leafs,
+                                onOpenFile,
                             );
                             const methodContent = getMethodContent(
                                 itemRef.methodOid,
                                 methodDefs,
                                 leafs,
+                                onOpenFile,
                             );
                             const commentContent = getCommentContent(
                                 itemDef.commentOid,
                                 commentDefs,
                                 leafs,
+                                onOpenFile,
                             );
 
                             const originMethodCommentContent = (
@@ -319,16 +322,19 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
                                     const vlOriginContent = getOriginContent(
                                         vlItemDef,
                                         leafs,
+                                        onOpenFile,
                                     );
                                     const vlMethodContent = getMethodContent(
                                         vlItemRef.methodOid,
                                         methodDefs,
                                         leafs,
+                                        onOpenFile,
                                     );
                                     const vlCommentContent = getCommentContent(
                                         vlItemDef.commentOid,
                                         commentDefs,
                                         leafs,
+                                        onOpenFile,
                                     );
 
                                     const vlOriginMethodCommentContent = (

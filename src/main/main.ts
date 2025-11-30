@@ -323,6 +323,33 @@ app.whenReady()
         ipcMain.handle('main:getVersion', (_event: IpcMainInvokeEvent) => {
             return app.getVersion();
         });
+        ipcMain.handle('main:openInDefaultApplication', (_event, filePath) => {
+            // If it is PDF file, open in a new window within the app
+            if (
+                filePath
+                    .replace(/(.*)(#.*$)/, '$1')
+                    .toLowerCase()
+                    .endsWith('.pdf')
+            ) {
+                const newWindow: BrowserWindow | null = new BrowserWindow({
+                    show: false,
+                    autoHideMenuBar: true,
+                });
+
+                openedWindows.add(newWindow);
+
+                newWindow.loadURL(`file://${filePath}`);
+                newWindow.on('ready-to-show', () => {
+                    if (!newWindow) {
+                        throw new Error('"newWindow" is not defined');
+                    }
+                    newWindow.maximize();
+                    newWindow.showInactive();
+                });
+                return '';
+            }
+            return shell.openPath(filePath);
+        });
         mainWindow = await createWindow(fileToOpen);
         app.on('activate', async () => {
             // On macOS it's common to re-create a window in the app when the

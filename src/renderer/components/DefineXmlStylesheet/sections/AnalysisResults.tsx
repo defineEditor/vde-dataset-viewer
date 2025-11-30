@@ -15,9 +15,15 @@ import {
 
 interface AnalysisResultsProps {
     content: DefineXmlContent;
+    onOpenFile: (
+        event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
+    ) => void;
 }
 
-const AnalysisResults: React.FC<AnalysisResultsProps> = ({ content }) => {
+const AnalysisResults: React.FC<AnalysisResultsProps> = ({
+    content,
+    onOpenFile,
+}) => {
     const analysisResults = getAnalysisResultDisplays(content);
     const metaDataVersion = getMetaDataVersion(content);
     const itemDefs = metaDataVersion.itemDefs || {};
@@ -101,6 +107,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ content }) => {
                                         {renderDocumentRefs(
                                             display.documents || [],
                                             leafs,
+                                            onOpenFile,
                                         )}{' '}
                                         <span className="arm-displaytitle">
                                             {getTranslatedText(
@@ -116,6 +123,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ content }) => {
                                         result.analysisDatasets.commentOid,
                                         commentDefs,
                                         leafs,
+                                        onOpenFile,
                                     );
                                     return (
                                         <React.Fragment key={result.oid}>
@@ -405,6 +413,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ content }) => {
                                                                 .documents ||
                                                                 [],
                                                             leafs,
+                                                            onOpenFile,
                                                         )}
                                                     </td>
                                                 </tr>
@@ -446,6 +455,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({ content }) => {
                                                                     .documents ||
                                                                     [],
                                                                 leafs,
+                                                                onOpenFile,
                                                             )}
                                                         </div>
                                                     </td>

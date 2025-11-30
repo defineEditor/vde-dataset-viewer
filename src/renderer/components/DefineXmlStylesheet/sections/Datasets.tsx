@@ -12,12 +12,12 @@ import { getCommentContent } from 'renderer/components/DefineXmlStylesheet/utils
 
 interface DatasetsProps {
     content: DefineXmlContent;
-    onOpenDataset: (
+    onOpenFile: (
         event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
     ) => void;
 }
 
-const Datasets: React.FC<DatasetsProps> = ({ content, onOpenDataset }) => {
+const Datasets: React.FC<DatasetsProps> = ({ content, onOpenFile }) => {
     const { defineVersion } = content;
     const itemGroupDefs = getItemGroupDefs(content);
     const itemDefsArray = getItemDefs(content);
@@ -101,6 +101,7 @@ const Datasets: React.FC<DatasetsProps> = ({ content, onOpenDataset }) => {
                                 commentOid,
                                 commentDefs,
                                 leafs,
+                                onOpenFile,
                             );
                             // Get standard reference if present
                             const standard = standardOid
@@ -204,7 +205,7 @@ const Datasets: React.FC<DatasetsProps> = ({ content, onOpenDataset }) => {
                                                 <a
                                                     href={archiveHref}
                                                     target="_blank"
-                                                    onClick={onOpenDataset}
+                                                    onClick={onOpenFile}
                                                     rel="noopener noreferrer"
                                                     className="external"
                                                 >

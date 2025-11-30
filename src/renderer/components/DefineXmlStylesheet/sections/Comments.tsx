@@ -1,13 +1,22 @@
 import React from 'react';
 import { DefineXmlContent } from 'interfaces/defineXml';
-import { getCommentDefs, getTranslatedText } from '../utils/defineXmlHelpers';
+import {
+    getCommentDefs,
+    getMetaDataVersion,
+} from 'renderer/components/DefineXmlStylesheet/utils/defineXmlHelpers';
+import { getCommentContent } from 'renderer/components/DefineXmlStylesheet/utils/itemRenderHelpers';
 
 interface CommentsProps {
     content: DefineXmlContent;
+    onOpenFile: (
+        event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
+    ) => void;
 }
 
-const Comments: React.FC<CommentsProps> = ({ content }) => {
+const Comments: React.FC<CommentsProps> = ({ content, onOpenFile }) => {
+    const metadataVersion = getMetaDataVersion(content);
     const commentDefs = getCommentDefs(content);
+    const leafs = metadataVersion.leafs || {};
 
     if (commentDefs.length === 0) {
         return null;
@@ -31,8 +40,11 @@ const Comments: React.FC<CommentsProps> = ({ content }) => {
                     </thead>
                     <tbody>
                         {commentDefs.map((comment, index) => {
-                            const description = getTranslatedText(
-                                comment.description,
+                            const description = getCommentContent(
+                                comment.oid,
+                                { [comment.oid]: comment },
+                                leafs,
+                                onOpenFile,
                             );
                             const rowClass =
                                 index % 2 === 0
