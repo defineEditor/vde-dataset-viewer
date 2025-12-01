@@ -109,4 +109,8 @@ export interface ElectronApi {
     setZoom: (zoomLevel: number) => Promise<void>;
     getZoom: () => Promise<number>;
     openInDefaultApplication: (filePath: string) => Promise<string>;
+    searchInPage: (searchTerm: string) => Promise<void>;
+    searchInPageNext: (searchTerm: string) => Promise<void>;
+    searchInPagePrevious: (searchTerm: string) => Promise<void>;
+    clearSearchResults: () => Promise<void>;
 }

@@ -13,6 +13,8 @@ import {
     InputAdornment,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
 import { useAppDispatch } from 'renderer/redux/hooks';
 import { openSnackbar, setDefineFileId } from 'renderer/redux/slices/ui';
@@ -23,22 +25,7 @@ const styles = {
         width: '100%',
         paddingLeft: 1,
     },
-    searchInput: {
-        color: 'white',
-        '& .MuiOutlinedInput-notchedOutline': {
-            borderColor: 'rgba(255, 255, 255, 0.5)',
-        },
-        '&:hover .MuiOutlinedInput-notchedOutline': {
-            borderColor: 'white',
-        },
-        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-            borderColor: 'white',
-        },
-        '&::placeholder': {
-            color: 'rgba(255, 255, 255, 0.7)',
-        },
-    },
-    searchIcon: { color: 'white' },
+    searchInput: {},
 };
 
 const DefineToolbar: React.FC = () => {
@@ -48,6 +35,35 @@ const DefineToolbar: React.FC = () => {
     // Search
     const [searchTerm, setSearchTerm] = useState('');
     const searchInputRef = useRef<HTMLInputElement>(null);
+
+    const handleSearchNext = useCallback(() => {
+        if (searchTerm) {
+            apiService.searchInPageNext(searchTerm);
+        }
+    }, [apiService, searchTerm]);
+
+    const handleSearchPrevious = useCallback(() => {
+        if (searchTerm) {
+            apiService.searchInPagePrevious(searchTerm);
+        }
+    }, [apiService, searchTerm]);
+
+    const isSearchBlank = searchTerm === '';
+    const handleSearchKeyDown = useCallback(
+        (event: React.KeyboardEvent) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                if (isSearchBlank) {
+                    apiService.clearSearchResults();
+                } else if (event.shiftKey) {
+                    handleSearchPrevious();
+                } else {
+                    handleSearchNext();
+                }
+            }
+        },
+        [handleSearchNext, handleSearchPrevious, isSearchBlank, apiService],
+    );
 
     const handleOpenClick = useCallback(async () => {
         const fileInfo = await apiService.openDefineXml();
@@ -83,15 +99,6 @@ const DefineToolbar: React.FC = () => {
         };
     }, []);
 
-    // On Search change, use Window search functionality
-    useEffect(() => {
-        if (searchTerm === '') {
-            apiService.clearSearchResults();
-        } else {
-            apiService.searchInPage(searchTerm);
-        }
-    }, [searchTerm]);
-
     return (
         <Stack
             sx={styles.main}
@@ -117,15 +124,40 @@ const DefineToolbar: React.FC = () => {
                 size="small"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
                 variant="outlined"
                 inputRef={searchInputRef}
                 slotProps={{
                     input: {
                         startAdornment: (
                             <InputAdornment position="start">
-                                <SearchIcon sx={styles.searchIcon} />
+                                <SearchIcon />
                             </InputAdornment>
                         ),
+                        endAdornment: searchTerm ? (
+                            <InputAdornment position="end">
+                                <Tooltip title="Previous (Shift+Enter)">
+                                    <IconButton
+                                        size="small"
+                                        onClick={handleSearchPrevious}
+                                        edge="end"
+                                        sx={{ padding: 0.25 }}
+                                    >
+                                        <KeyboardArrowUpIcon fontSize="small" />
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Next (Enter)">
+                                    <IconButton
+                                        size="small"
+                                        onClick={handleSearchNext}
+                                        edge="end"
+                                        sx={{ padding: 0.25 }}
+                                    >
+                                        <KeyboardArrowDownIcon fontSize="small" />
+                                    </IconButton>
+                                </Tooltip>
+                            </InputAdornment>
+                        ) : null,
                         sx: styles.searchInput,
                     },
                 }}

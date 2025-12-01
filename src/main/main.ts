@@ -350,6 +350,32 @@ app.whenReady()
             }
             return shell.openPath(filePath);
         });
+        ipcMain.handle('main:searchInPage', (_event, searchTerm) => {
+            if (_event.sender) {
+                _event.sender.findInPage(searchTerm);
+            }
+        });
+        ipcMain.handle('main:searchInPageNext', (_event, searchTerm) => {
+            if (_event.sender) {
+                _event.sender.findInPage(searchTerm, {
+                    forward: true,
+                    findNext: true,
+                });
+            }
+        });
+        ipcMain.handle('main:searchInPagePrevious', (_event, searchTerm) => {
+            if (_event.sender) {
+                _event.sender.findInPage(searchTerm, {
+                    forward: false,
+                    findNext: true,
+                });
+            }
+        });
+        ipcMain.handle('main:clearSearchResults', (_event) => {
+            if (_event.sender) {
+                _event.sender.stopFindInPage('clearSelection');
+            }
+        });
         mainWindow = await createWindow(fileToOpen);
         app.on('activate', async () => {
             // On macOS it's common to re-create a window in the app when the

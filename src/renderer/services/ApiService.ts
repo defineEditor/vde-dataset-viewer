@@ -931,6 +931,23 @@ class ApiService {
         const result = await window.electron.openInDefaultApplication(filePath);
         return result;
     };
+
+    // Search in page
+    public searchInPage = async (searchTerm: string): Promise<void> => {
+        await window.electron.searchInPage(searchTerm);
+    };
+
+    public searchInPageNext = async (searchTerm: string): Promise<void> => {
+        await window.electron.searchInPageNext(searchTerm);
+    };
+
+    public searchInPagePrevious = async (searchTerm: string): Promise<void> => {
+        await window.electron.searchInPagePrevious(searchTerm);
+    };
+
+    public clearSearchResults = async (): Promise<void> => {
+        await window.electron.clearSearchResults();
+    };
 }
 
 export default ApiService;

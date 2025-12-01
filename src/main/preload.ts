@@ -183,6 +183,19 @@ const openInDefaultApplication: ElectronApi['openInDefaultApplication'] = (
     filePath,
 ) => ipcRenderer.invoke('main:openInDefaultApplication', filePath);
 
+const searchInPage: ElectronApi['searchInPage'] = (searchTerm) =>
+    ipcRenderer.invoke('main:searchInPage', searchTerm);
+
+const searchInPageNext: ElectronApi['searchInPageNext'] = (searchTerm) =>
+    ipcRenderer.invoke('main:searchInPageNext', searchTerm);
+
+const searchInPagePrevious: ElectronApi['searchInPagePrevious'] = (
+    searchTerm,
+) => ipcRenderer.invoke('main:searchInPagePrevious', searchTerm);
+
+const clearSearchResults: ElectronApi['clearSearchResults'] = () =>
+    ipcRenderer.invoke('main:clearSearchResults');
+
 contextBridge.exposeInMainWorld('electron', {
     openFile,
     writeToClipboard,
@@ -220,6 +233,10 @@ contextBridge.exposeInMainWorld('electron', {
     getDefineXmlContent,
     closeDefineXml,
     openInDefaultApplication,
+    searchInPage,
+    searchInPageNext,
+    searchInPagePrevious,
+    clearSearchResults,
     ipcRenderer: {
         sendMessage(channel: Channels, args: unknown[]) {
             ipcRenderer.send(channel, args);
