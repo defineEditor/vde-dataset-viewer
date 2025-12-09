@@ -363,7 +363,7 @@ export function getMethodContent(
                 {hasFormatExpression && (
                     /* Link to method in the Methods table */
                     <span className="formalexpression-reference">
-                        <a href={`#MT.${methodOid}`}>Formal Expression</a>
+                        <a href={`#${methodOid}`}>Formal Expression</a>
                     </span>
                 )}
             </div>

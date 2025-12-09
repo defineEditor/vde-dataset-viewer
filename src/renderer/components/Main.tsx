@@ -297,7 +297,7 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
             const extension = filePath.split('.').pop();
 
             if (extension?.toLowerCase() === 'xml') {
-                return async () => {
+                const handleOpenDefine = async () => {
                     // Open it as Define-XML
                     // Define-XML file
                     const fileInfo = await apiService.openDefineXml(filePath);
@@ -311,6 +311,7 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                         }),
                     );
                 };
+                return handleOpenDefine();
             }
             // Open it as dataset
             return handleOpenDataset(
