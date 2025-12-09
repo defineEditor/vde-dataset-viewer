@@ -4,6 +4,7 @@ import {
     DefineStylesheetSection as Section,
     Define20,
     Define21,
+    SettingsDefine,
 } from 'interfaces/common';
 import {
     getMetaDataVersion,
@@ -18,6 +19,7 @@ import {
 
 interface NavigationMenuProps {
     content: DefineXmlContent;
+    settings: SettingsDefine;
     activeSection: Section;
     onNavigate: (section: Section) => void;
 }
@@ -30,6 +32,7 @@ const BULLET_EXTERNAL = '\u00A0';
 
 const NavigationMenu: React.FC<NavigationMenuProps> = ({
     content,
+    settings,
     activeSection: _activeSection,
     onNavigate,
 }) => {
@@ -508,7 +511,7 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
                 )}
 
                 {/* Comments */}
-                {commentDefs.length > 0 && (
+                {settings.stylesheetShowComments && commentDefs.length > 0 && (
                     <li className="hmenu-submenu">
                         <span
                             className="hmenu-bullet"

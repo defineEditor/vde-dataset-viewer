@@ -4,11 +4,13 @@ import {
     openDataset,
     openSnackbar,
     setDefineFileId,
+    setPathname,
 } from 'renderer/redux/slices/ui';
 import { addRecent } from 'renderer/redux/slices/data';
 import { openNewDataset } from 'renderer/utils/readData';
 import AppContext from 'renderer/utils/AppContext';
 import Follower from 'renderer/components/DragAndDrop/Follower';
+import { paths } from 'misc/constants';
 
 interface Props {
     children: React.ReactNode;
@@ -94,10 +96,15 @@ const DragAndDrop: React.FC<Props> = ({ children }) => {
                 dispatch(
                     openSnackbar({
                         type: 'info',
-                        message: `Loaded ${fileInfo.filename}`,
+                        message: `Opening ${fileInfo.filename}`,
                     }),
                 );
                 dispatch(setDefineFileId(fileInfo.fileId));
+                dispatch(
+                    setPathname({
+                        pathname: paths.DEFINEXML,
+                    }),
+                );
             } else {
                 // Unsupported file type
                 dispatch(
@@ -115,8 +122,8 @@ const DragAndDrop: React.FC<Props> = ({ children }) => {
     const handleDragOver = useCallback(
         (event: React.DragEvent) => {
             // Do not react in case there are no files being dragged
-            const files = Array.from(event.dataTransfer.files);
-            if (files.length === 0) {
+            const isFiles = event.dataTransfer.types.includes('Files');
+            if (!isFiles) {
                 return;
             }
             event.preventDefault();

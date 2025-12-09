@@ -148,6 +148,12 @@ const DatasetContainer: React.FC = () => {
         dispatch(toggleSidebar());
     };
 
+    const page = useAppSelector((state) =>
+        state.ui.control[currentFileId]
+            ? state.ui.control[currentFileId].currentPage
+            : 0,
+    );
+
     // Load initial data
     useEffect(() => {
         if (table?.fileId === currentFileId) {
@@ -166,7 +172,7 @@ const DatasetContainer: React.FC = () => {
                 newData = await getData(
                     apiService,
                     currentFileId,
-                    0,
+                    page * pageSize,
                     pageSize,
                     settings,
                     undefined,
@@ -204,6 +210,7 @@ const DatasetContainer: React.FC = () => {
     }, [
         dispatch,
         currentFileId,
+        page,
         pageSize,
         apiService,
         settings,
@@ -212,8 +219,6 @@ const DatasetContainer: React.FC = () => {
     ]);
 
     // Pagination
-    const page = useAppSelector((state) => state.ui.currentPage);
-
     const handleChangePage = useCallback(
         (_event, newPage: number) => {
             if (table === null || apiService === null) {
@@ -241,7 +246,7 @@ const DatasetContainer: React.FC = () => {
                         settings.viewer.showTypeIcons,
                     );
                     setTable(newData);
-                    dispatch(setPage(newPage));
+                    dispatch(setPage({ fileId: currentFileId, page: newPage }));
                     setIsLoading(false);
                 }
             };
@@ -266,7 +271,7 @@ const DatasetContainer: React.FC = () => {
         }
         // Reset page to 0 when filter changes
         if (page !== 0) {
-            dispatch(setPage(0));
+            dispatch(setPage({ fileId: currentFileId, page: 0 }));
         }
 
         setIsLoading(true);
@@ -329,7 +334,11 @@ const DatasetContainer: React.FC = () => {
     ]);
 
     // GoTo control
-    const goToRow = useAppSelector((state) => state.ui.control.goTo.row);
+    const goToRow = useAppSelector((state) =>
+        state.ui.control[currentFileId]
+            ? state.ui.control[currentFileId].goTo.row
+            : null,
+    );
 
     useEffect(() => {
         if (goToRow !== null) {
@@ -388,6 +397,8 @@ const DatasetContainer: React.FC = () => {
         if (!isCurrentFileInReport || currentFilter !== null) {
             return null;
         }
+        const currentFile = apiService.getOpenedFiles(currentFileId);
+        const path = currentFile[0]?.path || '';
         return getIssueAnnotations(
             reportData,
             table,
@@ -395,10 +406,13 @@ const DatasetContainer: React.FC = () => {
             filteredIssues,
             page,
             pageSize,
+            path,
         );
     }, [
         reportData,
         table,
+        apiService,
+        currentFileId,
         currentMask,
         isCurrentFileInReport,
         filteredIssues,
@@ -407,7 +421,7 @@ const DatasetContainer: React.FC = () => {
         currentFilter,
     ]);
 
-    if (table === null) {
+    if (table === null || currentFileId !== table.fileId) {
         return null;
     }
 

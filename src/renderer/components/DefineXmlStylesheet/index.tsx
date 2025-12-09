@@ -5,7 +5,32 @@ import { DefineXmlContent } from 'interfaces/defineXml';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import StylesheetLayout from 'renderer/components/DefineXmlStylesheet/StylesheetLayout';
 import handleOpenDataset from 'renderer/utils/handleOpenDataset';
-import { openSnackbar } from 'renderer/redux/slices/ui';
+import { openSnackbar, setDefineIsLoading } from 'renderer/redux/slices/ui';
+import Loading from 'renderer/components/Loading';
+
+const styles = {
+    container: {
+        height: '100%',
+        width: '100%',
+        backgroundColor: '#FFF',
+    },
+    loading: {
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        display: 'flex',
+        backgroundColor: '#FFF',
+        flexDirection: 'column',
+        transform: 'translate(-50%, -50%)',
+        zIndex: 999,
+    },
+    sponsored: {
+        marginTop: '10px',
+        fontSize: '14px',
+        color: '#888',
+        textAlign: 'center',
+    },
+};
 
 const DefineXml: React.FC = () => {
     const { apiService } = useContext(AppContext);
@@ -15,6 +40,10 @@ const DefineXml: React.FC = () => {
 
     const currentFileId = useAppSelector(
         (state) => state.ui.define.currentFileId,
+    );
+
+    const isDefineLoading = useAppSelector(
+        (state) => state.ui.define.isDefineLoading,
     );
 
     const currentDatasetFileId = useAppSelector(
@@ -78,10 +107,23 @@ const DefineXml: React.FC = () => {
             }
         };
 
-        fetchDefineContent();
-    }, [currentFileId, apiService]);
+        if (currentFileId) {
+            dispath(setDefineIsLoading(true));
+            fetchDefineContent();
+        }
+    }, [currentFileId, apiService, dispath]);
 
     if (!content) {
+        if (isDefineLoading) {
+            return (
+                <Box sx={styles.container}>
+                    <Box sx={styles.loading}>
+                        <Loading />
+                        <Box sx={styles.sponsored}>Sponsored by:</Box>
+                    </Box>
+                </Box>
+            );
+        }
         return (
             <Box
                 display="flex"

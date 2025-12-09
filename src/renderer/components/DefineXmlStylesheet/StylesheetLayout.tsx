@@ -3,6 +3,8 @@ import {
     DefineXmlContent,
     DefineStylesheetSection as Section,
 } from 'interfaces/common';
+import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
+import { setDefineScrollPosition } from 'renderer/redux/slices/ui';
 import NavigationMenu from 'renderer/components/DefineXmlStylesheet/NavigationMenu';
 import DocumentInfo from 'renderer/components/DefineXmlStylesheet/sections/DocumentInfo';
 import StudyMetadata from 'renderer/components/DefineXmlStylesheet/sections/StudyMetadata';
@@ -27,8 +29,19 @@ const StylesheetLayout: React.FC<StylesheetLayoutProps> = ({
     content,
     onOpenFile,
 }) => {
+    const dispatch = useAppDispatch();
+    const currentFileId = useAppSelector(
+        (state) => state.ui.define.currentFileId,
+    );
+    const scrollPosition = useAppSelector((state) =>
+        currentFileId ? state.ui.define.scrollPosition[currentFileId] : 0,
+    );
+    const settings = useAppSelector((state) => state.settings.define);
+
     const [activeSection, setActiveSection] = useState<Section>('study');
     const contentRefs = useRef<{ [key: string]: HTMLElement | null }>({});
+    const mainRef = useRef<HTMLDivElement>(null);
+    const scrollPosRef = useRef<number>(0);
     const itemGroupDefs = getItemGroupDefs(content);
 
     const handleNavigate = (section: Section) => {
@@ -37,6 +50,33 @@ const StylesheetLayout: React.FC<StylesheetLayoutProps> = ({
         if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+    };
+
+    // Restore scroll position
+    useEffect(() => {
+        if (mainRef.current && scrollPosition !== undefined) {
+            mainRef.current.scrollTop = scrollPosition;
+            scrollPosRef.current = scrollPosition;
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [content]);
+
+    // Save scroll position on unmount
+    useEffect(() => {
+        return () => {
+            if (currentFileId) {
+                dispatch(
+                    setDefineScrollPosition({
+                        fileId: currentFileId,
+                        position: scrollPosRef.current,
+                    }),
+                );
+            }
+        };
+    }, [currentFileId, dispatch]);
+
+    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        scrollPosRef.current = e.currentTarget.scrollTop;
     };
 
     // Intersection Observer to update active section based on scroll
@@ -100,6 +140,7 @@ const StylesheetLayout: React.FC<StylesheetLayoutProps> = ({
             >
                 <NavigationMenu
                     content={content}
+                    settings={settings}
                     activeSection={activeSection}
                     onNavigate={handleNavigate}
                 />
@@ -108,6 +149,8 @@ const StylesheetLayout: React.FC<StylesheetLayoutProps> = ({
             {/* Main Content */}
             <div
                 id="main"
+                ref={mainRef}
+                onScroll={handleScroll}
                 style={{
                     flexGrow: 1,
                     padding: '0 20px',
@@ -154,9 +197,11 @@ const StylesheetLayout: React.FC<StylesheetLayoutProps> = ({
                     <Methods content={content} onOpenFile={onOpenFile} />
                 </div>
 
-                <div ref={setRef('comments')} data-section="comments">
-                    <Comments content={content} onOpenFile={onOpenFile} />
-                </div>
+                {settings.stylesheetShowComments && (
+                    <div ref={setRef('comments')} data-section="comments">
+                        <Comments content={content} onOpenFile={onOpenFile} />
+                    </div>
+                )}
             </div>
         </div>
     );

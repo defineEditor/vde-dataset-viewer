@@ -35,10 +35,25 @@ export const uiSlice = createSlice({
             if (state.currentFileId !== fileId) {
                 // Set the opened dataset as the current dataset
                 state.currentFileId = fileId;
-                // Set the current page to 0
-                state.currentPage = 0;
-                // Reset the control.goTo object
-                state.control = initialUi.control;
+                // Initialize control for this file if it doesn't exist
+                if (!state.control[fileId]) {
+                    state.control[fileId] = {
+                        goTo: {
+                            row: null,
+                            column: null,
+                            cellSelection: false,
+                        },
+                        select: {
+                            row: null,
+                            column: null,
+                        },
+                        scrollPosition: {
+                            offsetY: 0,
+                            offsetX: 0,
+                        },
+                        currentPage: 0,
+                    };
+                }
                 // Open dataset view
                 state.pathname = paths.VIEWFILE;
             } else if (state.pathname !== paths.VIEWFILE) {
@@ -56,21 +71,14 @@ export const uiSlice = createSlice({
                     // Close dataset view
                     state.pathname = paths.SELECT;
                 }
-                // Reset the current page to 0
-                if (state.currentPage !== 0) {
-                    state.currentPage = 0;
-                }
                 // Close sidebar if it is open
                 if (state.viewer.sidebarOpen) {
                     state.viewer.sidebarOpen = false;
                 }
-
-                if (
-                    state.control.goTo.row !== null ||
-                    state.control.goTo.column !== null
-                ) {
-                    state.control = initialUi.control;
-                }
+            }
+            // Remove control state for this file
+            if (state.control[fileId]) {
+                delete state.control[fileId];
             }
             // Check if there are any settings
             if (state.dataSettings[fileId]) {
@@ -97,45 +105,56 @@ export const uiSlice = createSlice({
         setGoTo: (
             state,
             action: PayloadAction<{
+                fileId: string;
                 row?: number | null;
                 column?: string | null;
                 cellSelection?: boolean;
             }>,
         ) => {
-            const { row, column, cellSelection } = action.payload;
+            const { fileId, row, column, cellSelection } = action.payload;
+            if (!state.control[fileId]) {
+                return;
+            }
             if (row !== undefined) {
-                state.control.goTo.row = row;
+                state.control[fileId].goTo.row = row;
             }
             if (column !== undefined) {
-                state.control.goTo.column = column;
+                state.control[fileId].goTo.column = column;
             }
             if (cellSelection !== undefined) {
-                state.control.goTo.cellSelection = cellSelection;
+                state.control[fileId].goTo.cellSelection = cellSelection;
             }
             if (
                 row !== undefined &&
                 column !== undefined &&
                 cellSelection === undefined
             ) {
-                state.control.goTo.cellSelection = true;
-            } else if (!state.control.goTo.row && !state.control.goTo.column) {
+                state.control[fileId].goTo.cellSelection = true;
+            } else if (
+                !state.control[fileId].goTo.row &&
+                !state.control[fileId].goTo.column
+            ) {
                 // Reset the value once both column and cell are selected
-                state.control.goTo.cellSelection = false;
+                state.control[fileId].goTo.cellSelection = false;
             }
         },
         setSelect: (
             state,
             action: PayloadAction<{
+                fileId: string;
                 row?: number | null;
                 column?: string | null;
             }>,
         ) => {
-            const { row, column } = action.payload;
+            const { fileId, row, column } = action.payload;
+            if (!state.control[fileId]) {
+                return;
+            }
             if (row !== undefined) {
-                state.control.select.row = row;
+                state.control[fileId].select.row = row;
             }
             if (column !== undefined) {
-                state.control.select.column = column;
+                state.control[fileId].select.column = column;
             }
         },
         closeModal: (state, action: PayloadAction<{ type: ModalType }>) => {
@@ -150,11 +169,37 @@ export const uiSlice = createSlice({
             // Find the last opened modal of the given type and remove it
             state.modals = [];
         },
-        setPage: (state, action: PayloadAction<number>) => {
-            state.currentPage = action.payload;
+        setPage: (
+            state,
+            action: PayloadAction<{ fileId: string; page: number }>,
+        ) => {
+            const { fileId, page } = action.payload;
+            if (!state.control[fileId]) {
+                return;
+            }
+            state.control[fileId].currentPage = page;
+            // Reset scroll position when page changes
+            state.control[fileId].scrollPosition = {
+                offsetY: 0,
+                offsetX: 0,
+            };
         },
         setDatasetInfoTab: (state, action: PayloadAction<0 | 1>) => {
             state.viewer.datasetInfoTab = action.payload;
+        },
+        setDatasetScrollPosition: (
+            state,
+            action: PayloadAction<{
+                fileId: string;
+                offsetX: number;
+                offsetY: number;
+            }>,
+        ) => {
+            const { fileId, offsetX, offsetY } = action.payload;
+            if (!state.control[fileId]) {
+                return;
+            }
+            state.control[fileId].scrollPosition = { offsetX, offsetY };
         },
         setBottomSection: (
             state,
@@ -208,6 +253,9 @@ export const uiSlice = createSlice({
         setDefineFileId: (state, action: PayloadAction<string | null>) => {
             state.define.currentFileId = action.payload;
         },
+        setDefineIsLoading: (state, action: PayloadAction<boolean>) => {
+            state.define.isDefineLoading = action.payload;
+        },
         setDefineTab: (state, action: PayloadAction<DefineTab>) => {
             state.define.currentTab = action.payload;
         },
@@ -219,6 +267,13 @@ export const uiSlice = createSlice({
         },
         setDefineSearchTerm: (state, action: PayloadAction<string>) => {
             state.define.searchTerm = action.payload;
+        },
+        setDefineScrollPosition: (
+            state,
+            action: PayloadAction<{ fileId: string; position: number }>,
+        ) => {
+            const { fileId, position } = action.payload;
+            state.define.scrollPosition[fileId] = position;
         },
         resetDefineUi: (state) => {
             state.define = initialUi.define;
@@ -331,6 +386,7 @@ export const {
     setSelect,
     setPage,
     setDatasetInfoTab,
+    setDatasetScrollPosition,
     setBottomSection,
     setValidationModalTab,
     setFilterInputMode,
@@ -350,6 +406,8 @@ export const {
     setDefineItemGroup,
     setDefineVariable,
     setDefineSearchTerm,
+    setDefineScrollPosition,
+    setDefineIsLoading,
     resetDefineUi,
 } = uiSlice.actions;
 

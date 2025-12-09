@@ -354,6 +354,7 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
                             datasetName={currentFile?.name || ''}
                             onClose={handleClose}
                             fileId={currentFileId}
+                            path={currentFilePath || ''}
                         />
                     )}
                 </Box>

@@ -95,6 +95,7 @@ interface IssuesProps {
     filteredIssues: string[];
     setFilteredIssues: React.Dispatch<React.SetStateAction<string[]>>;
     onClose: () => void;
+    path: string;
 }
 
 const Issues: React.FC<IssuesProps> = ({
@@ -103,6 +104,7 @@ const Issues: React.FC<IssuesProps> = ({
     filteredIssues,
     setFilteredIssues,
     onClose,
+    path,
 }) => {
     const dispatch = useAppDispatch();
     const { apiService } = useContext(AppContext);
@@ -226,10 +228,19 @@ const Issues: React.FC<IssuesProps> = ({
     const reportTitle = basicReport === null ? '' : getReportTitle(basicReport);
 
     // Filter issues for the current dataset
-    const datasetIssues = report.Issue_Summary.filter(
+    let datasetIssues = report.Issue_Summary.filter(
         (issue: IssueSummaryItem) =>
             issue.dataset.toLowerCase() === datasetName.toLowerCase(),
     );
+
+    if (datasetIssues.length === 0) {
+        // CORE uses filename for dataset name, so try matching by filename from path
+        const fileName = path.split(/[\\/]/).pop()?.split('.').shift() || '';
+        datasetIssues = report.Issue_Summary.filter(
+            (issue: IssueSummaryItem) =>
+                issue.dataset.toLowerCase() === fileName.toLowerCase(),
+        );
+    }
 
     // Sort issues by number of occurrences (highest first), then by core_id
     const sortedIssues = datasetIssues.sort((a, b) => {
@@ -288,6 +299,7 @@ const Issues: React.FC<IssuesProps> = ({
         // Set goto
         dispatch(
             setGoTo({
+                fileId,
                 row: issueLocation.row,
                 column: issueLocation.columns[0],
             }),

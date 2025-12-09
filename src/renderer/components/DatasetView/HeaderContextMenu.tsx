@@ -1,6 +1,6 @@
 import React from 'react';
 import { Menu, MenuItem } from '@mui/material';
-import { useAppDispatch } from 'renderer/redux/hooks';
+import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { openModal, setSelect } from 'renderer/redux/slices/ui';
 import { modals } from 'misc/constants';
 import { IHeaderCell } from 'interfaces/common';
@@ -22,6 +22,7 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
     header,
 }) => {
     const dispatch = useAppDispatch();
+    const currentFileId = useAppSelector((state) => state.ui.currentFileId);
 
     const handleShowInfo = () => {
         dispatch(
@@ -33,7 +34,7 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
     };
 
     const handleSelect = () => {
-        dispatch(setSelect({ column: header.id }));
+        dispatch(setSelect({ fileId: currentFileId, column: header.id }));
     };
 
     return (

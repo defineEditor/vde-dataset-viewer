@@ -128,6 +128,11 @@ export interface IUiControl {
         row: number | null;
         column: string | null;
     };
+    scrollPosition: {
+        offsetY: number;
+        offsetX: number;
+    };
+    currentPage: number;
 }
 
 export interface IUiViewer {
@@ -175,21 +180,22 @@ export interface IDefineXmlFiles {
 
 export interface IUiDefine {
     currentFileId: string | null;
+    isDefineLoading: boolean;
     currentTab: DefineTab;
     selectedItemGroupOid: string | null;
     selectedVariableOid: string | null;
     searchTerm: string;
+    scrollPosition: { [fileId: string]: number };
 }
 
 export interface IUi {
     pathname: AllowedPathnames;
     currentFileId: string;
-    currentPage: number;
     zoomLevel: number;
     viewer: IUiViewer;
     modals: IUiModal[];
     snackbar: IUiSnackbar;
-    control: IUiControl;
+    control: { [fileId: string]: IUiControl };
     validation: { [validationId: string]: IUiValidation };
     dataSettings: {
         [datasetId: string]: {
