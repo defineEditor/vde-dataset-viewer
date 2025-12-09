@@ -19,6 +19,7 @@ import FileManager from 'main/managers/fileManager';
 import NetManager from 'main/managers/netManager';
 import TaskManager from 'main/managers/taskManager';
 import ReportManager from 'main/managers/reportManager';
+import DefineXmlManager from 'main/managers/defineXmlManager';
 import { MainTask, NewWindowProps } from 'interfaces/main';
 
 let mainWindow: BrowserWindow | null = null;
@@ -256,6 +257,7 @@ app.whenReady()
         const netManager = new NetManager();
         const reportManager = new ReportManager(reportsDirectory);
         const taskManager = new TaskManager({ reportsDirectory });
+        const defineXmlManager = new DefineXmlManager();
         ipcMain.handle('main:openFile', fileManager.handleFileOpen);
         ipcMain.handle('main:fetch', netManager.fetch);
         ipcMain.handle('main:closeFile', fileManager.handleFileClose);
@@ -303,6 +305,12 @@ app.whenReady()
             fileManager.openDirectoryDialog,
         );
         ipcMain.handle('main:getFilesInfo', fileManager.getFilesInfo);
+        ipcMain.handle('main:openDefineXml', defineXmlManager.openDefineXml);
+        ipcMain.handle(
+            'main:getDefineXmlContent',
+            defineXmlManager.getDefineXmlContent,
+        );
+        ipcMain.handle('main:closeDefineXml', defineXmlManager.closeDefineXml);
         ipcMain.handle(
             'main:startTask',
             (event: IpcMainInvokeEvent, task: MainTask) => {
@@ -314,6 +322,59 @@ app.whenReady()
         );
         ipcMain.handle('main:getVersion', (_event: IpcMainInvokeEvent) => {
             return app.getVersion();
+        });
+        ipcMain.handle('main:openInDefaultApplication', (_event, filePath) => {
+            // If it is PDF file, open in a new window within the app
+            if (
+                filePath
+                    .replace(/(.*)(#.*$)/, '$1')
+                    .toLowerCase()
+                    .endsWith('.pdf')
+            ) {
+                const newWindow: BrowserWindow | null = new BrowserWindow({
+                    show: false,
+                    autoHideMenuBar: true,
+                });
+
+                openedWindows.add(newWindow);
+
+                newWindow.loadURL(`file://${filePath}`);
+                newWindow.on('ready-to-show', () => {
+                    if (!newWindow) {
+                        throw new Error('"newWindow" is not defined');
+                    }
+                    newWindow.maximize();
+                    newWindow.showInactive();
+                });
+                return '';
+            }
+            return shell.openPath(filePath);
+        });
+        ipcMain.handle('main:searchInPage', (_event, searchTerm) => {
+            if (_event.sender) {
+                _event.sender.findInPage(searchTerm);
+            }
+        });
+        ipcMain.handle('main:searchInPageNext', (_event, searchTerm) => {
+            if (_event.sender) {
+                _event.sender.findInPage(searchTerm, {
+                    forward: true,
+                    findNext: true,
+                });
+            }
+        });
+        ipcMain.handle('main:searchInPagePrevious', (_event, searchTerm) => {
+            if (_event.sender) {
+                _event.sender.findInPage(searchTerm, {
+                    forward: false,
+                    findNext: true,
+                });
+            }
+        });
+        ipcMain.handle('main:clearSearchResults', (_event) => {
+            if (_event.sender) {
+                _event.sender.stopFindInPage('clearSelection');
+            }
         });
         mainWindow = await createWindow(fileToOpen);
         app.on('activate', async () => {

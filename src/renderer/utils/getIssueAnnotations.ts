@@ -11,6 +11,7 @@ const getIssueAnnotations = (
     filteredIssues: string[],
     page: number,
     pageSize: number,
+    path: string,
 ): {
     annotations: Map<string, { text: string; color: string }>;
     byRow: { row: number; ruleId: string; column: string; text: string }[];
@@ -27,11 +28,22 @@ const getIssueAnnotations = (
         text: string;
     }[] = [];
     // Select all issues, related to the current dataset;
-    const issues = report.Issue_Details.filter((detail) => {
+    let issues = report.Issue_Details.filter((detail) => {
         return (
             detail.dataset.toLowerCase() === table?.metadata.name.toLowerCase()
         );
-    }).filter((detail) => {
+    });
+
+    if (issues.length === 0) {
+        // CORE uses filename for dataset name, so try matching by filename from path
+        const fileName = path.split(/[\\/]/).pop()?.split('.').shift() || '';
+        issues = report.Issue_Details.filter((detail) => {
+            return detail.dataset.toLowerCase() === fileName.toLowerCase();
+        });
+    }
+
+    // Apply issue filtering
+    issues = issues.filter((detail) => {
         return filteredIssues.includes(detail.core_id);
     });
 

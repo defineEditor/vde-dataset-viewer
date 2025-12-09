@@ -34,3 +34,7 @@ npm-debug.log.*
 
 # Reference
 reference/
+release/app/yarn.lock
+
+# Development Plans
+plans

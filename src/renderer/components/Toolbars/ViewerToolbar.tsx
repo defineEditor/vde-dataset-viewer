@@ -99,11 +99,10 @@ const Header: React.FC = () => {
             }),
         );
         // Reset page for the new dataset
-        dispatch(setPage(0));
+        dispatch(setPage({ fileId: newDataInfo.fileId, page: 0 }));
         // Reset filter for the new dataset
         dispatch(resetFilter());
     }, [apiService, dispatch]);
-
     const handleGoToClick = useCallback(() => {
         dispatch(openModal({ type: modals.GOTO, data: {} }));
     }, [dispatch]);
@@ -188,12 +187,10 @@ const Header: React.FC = () => {
             }),
         );
         // Reset page for the new dataset
-        dispatch(setPage(0));
+        dispatch(setPage({ fileId: newDataInfo.fileId, page: 0 }));
         // Reset filter for the new dataset
         dispatch(resetFilter());
-    }, [apiService, dispatch, currentFileId, handleCloseDataset]);
-
-    // Add shortcuts for actions
+    }, [apiService, dispatch, currentFileId, handleCloseDataset]); // Add shortcuts for actions
     useEffect(() => {
         const handleViewerToolbarKeyDown = (event: KeyboardEvent) => {
             // Do use keywords if a Modal is open

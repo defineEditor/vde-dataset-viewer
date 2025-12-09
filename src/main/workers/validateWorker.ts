@@ -88,7 +88,7 @@ const getStandards = async (validatorPath: string): Promise<string[]> => {
 
     for (const line of lines) {
         if (line.trim() !== '') {
-            standards.push(line.trim());
+            standards.push(line.trim().toUpperCase());
         }
     }
 
@@ -190,14 +190,14 @@ const generateValidationCommand = (
             // Check if any paths contain __TEMP__ in the path name as a folder, replace it with the system temp directory
             if (file.startsWith('__TEMP__')) {
                 args.push(
-                    '--dataset-path',
+                    '-dp',
                     file.replace(
                         '__TEMP__',
                         path.join(tmpdir(), 'vde-convert'),
                     ),
                 );
             } else {
-                args.push('--dataset-path', `"${file}"`);
+                args.push('-dp', `"${file}"`);
             }
         });
     }
@@ -209,10 +209,20 @@ const generateValidationCommand = (
         });
     }
 
-    // Add standard and version if provided
-    if (configuration?.standard && configuration?.version) {
+    // Add standard if provided
+    if (configuration?.standard) {
         args.push('--standard', configuration.standard);
-        args.push('--version', configuration.version);
+    }
+
+    // Add version if provided
+    if (configuration?.version) {
+        // Check if version contains substandard (e.g., "1-0/SDTM")
+        if (/[/,]/.test(configuration.version)) {
+            args.push('--substandard', configuration.version.split(/[,/]/)[1]);
+            args.push('--version', configuration.version.split(/[,/]/)[0]);
+        } else {
+            args.push('--version', configuration.version);
+        }
     }
 
     // Add path to Define-XML if provided

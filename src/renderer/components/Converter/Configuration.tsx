@@ -272,6 +272,16 @@ const Converter: React.FC<{
         destinationDir,
     ]);
 
+    // Check if files are converted into themselves
+    const sameTargetFiles = files.filter(
+        (file) =>
+            destinationDir === file.folder &&
+            ((file.format === 'csv' && outputFormat === 'CSV') ||
+                (file.format === 'dsjc' && outputFormat === 'DJC1.1') ||
+                (file.format === 'json' && outputFormat === 'DJ1.1') ||
+                (file.format === 'ndjson' && outputFormat === 'DNJ1.1')),
+    );
+
     // Initialize configuration and store configuration on unmount
     useEffect(() => {
         setMetadata(converterData.configuration.metadata);
@@ -344,7 +354,15 @@ const Converter: React.FC<{
                 title="Files"
                 showOutputName
                 initialFolder={converterData.sourceDir}
+                filesWithIssues={sameTargetFiles.map((file) => file.fullPath)}
             />
+            {/* Status message */}
+            {sameTargetFiles.length > 0 && (
+                <Typography color="error" variant="caption">
+                    Error: Some files are set to be converted into themselves.
+                    Change the destination directory or output filenames.
+                </Typography>
+            )}
 
             {/* Destination Directory */}
             <Box>
@@ -375,7 +393,11 @@ const Converter: React.FC<{
                 <Button
                     variant="contained"
                     onClick={handleConvert}
-                    disabled={files.length === 0 || !destinationDir}
+                    disabled={
+                        files.length === 0 ||
+                        !destinationDir ||
+                        sameTargetFiles.length > 0
+                    }
                 >
                     Convert
                 </Button>

@@ -170,6 +170,32 @@ const setZoom: ElectronApi['setZoom'] = (zoomLevel) =>
 const getZoom: ElectronApi['getZoom'] = () =>
     ipcRenderer.invoke('main:getZoom');
 
+const openDefineXml: ElectronApi['openDefineXml'] = (filePath) =>
+    ipcRenderer.invoke('main:openDefineXml', filePath);
+
+const getDefineXmlContent: ElectronApi['getDefineXmlContent'] = (fileId) =>
+    ipcRenderer.invoke('main:getDefineXmlContent', fileId);
+
+const closeDefineXml: ElectronApi['closeDefineXml'] = (fileId) =>
+    ipcRenderer.invoke('main:closeDefineXml', fileId);
+
+const openInDefaultApplication: ElectronApi['openInDefaultApplication'] = (
+    filePath,
+) => ipcRenderer.invoke('main:openInDefaultApplication', filePath);
+
+const searchInPage: ElectronApi['searchInPage'] = (searchTerm) =>
+    ipcRenderer.invoke('main:searchInPage', searchTerm);
+
+const searchInPageNext: ElectronApi['searchInPageNext'] = (searchTerm) =>
+    ipcRenderer.invoke('main:searchInPageNext', searchTerm);
+
+const searchInPagePrevious: ElectronApi['searchInPagePrevious'] = (
+    searchTerm,
+) => ipcRenderer.invoke('main:searchInPagePrevious', searchTerm);
+
+const clearSearchResults: ElectronApi['clearSearchResults'] = () =>
+    ipcRenderer.invoke('main:clearSearchResults');
+
 contextBridge.exposeInMainWorld('electron', {
     openFile,
     writeToClipboard,
@@ -203,6 +229,14 @@ contextBridge.exposeInMainWorld('electron', {
     resizeWindow,
     setZoom,
     getZoom,
+    openDefineXml,
+    getDefineXmlContent,
+    closeDefineXml,
+    openInDefaultApplication,
+    searchInPage,
+    searchInPageNext,
+    searchInPagePrevious,
+    clearSearchResults,
     ipcRenderer: {
         sendMessage(channel: Channels, args: unknown[]) {
             ipcRenderer.send(channel, args);

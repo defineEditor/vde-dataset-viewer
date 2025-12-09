@@ -1,0 +1,583 @@
+/* Define-XML Viewer Styles - Matching define2-1.xsl output */
+
+/* Color Variables */
+:root {
+  --color-menu-body-bg: #ffffff;
+  --color-menu-body-fg: #000000;
+  --color-hmenu-text: #004a95;
+  --color-hmenu-bullet: #aaaaaa;
+  --color-caption: #696969;
+  --color-table-bg: #eeeeee;
+  --color-tr-header-back: #6699cc;
+  --color-tr-header: #ffffff;
+  --color-tablerow-odd: #ffffff;
+  --color-tablerow-even: #eeeeee;
+  --color-tr-vlm-back: #d3d3d3;
+  --color-border: #000000;
+  --color-error: #000000;
+  --color-warning: #000000;
+  --color-link: #0000ff;
+  --color-link-hover: #ff9900;
+  --color-link-visited: #551a8b;
+}
+
+/* Global Styles */
+.define-xml-stylesheet {
+  background-color: var(--color-menu-body-background);
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: 62.5%;
+  margin: 0;
+}
+
+/* Document Info */
+.define-xml-stylesheet .docinfo {
+  width: 95%;
+  text-align: right;
+  padding: 0px 5px;
+}
+
+.define-xml-stylesheet .documentinfo,
+.define-xml-stylesheet .stylesheetinfo {
+  font-size: 1.1em;
+  margin: 0;
+  padding: 0;
+}
+
+/* Container Box */
+.define-xml-stylesheet .containerbox {
+  padding: 0px;
+  margin: 10px auto;
+  border: 0px;
+  page-break-after: always;
+}
+
+.define-xml-stylesheet div.containerbox {
+  padding: 0px;
+  margin: 10px auto;
+  border: 0px;
+}
+
+/* Invisible heading (for accessibility) */
+.define-xml-stylesheet h1.invisible {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* Typography */
+.define-xml-stylesheet h1 {
+  font-size: 1.6em;
+  margin-left: 0;
+  font-weight: bolder;
+  text-align: left;
+  color: var(--color-caption);
+}
+
+.define-xml-stylesheet .study-metadata {
+  font-size: 1.6em;
+  font-weight: bold;
+  text-align: left;
+  padding: 0px;
+  margin-left: 0px;
+  margin-top: 0px;
+  margin-right: 0px;
+  margin-bottom: 0px;
+  color: var(--color-caption);
+  border: 0px;
+}
+
+.define-xml-stylesheet div.study-metadata {
+  font-size: 1.6em;
+  font-weight: bold;
+  text-align: left;
+  padding: 0px;
+  margin-left: 0px;
+  margin-top: 0px;
+  margin-right: 0px;
+  margin-bottom: 0px;
+  color: var(--color-caption);
+  border: 0px;
+}
+
+.define-xml-stylesheet .study-name {
+  font-size: 1.6em;
+  font-weight: bold;
+  text-align: left;
+  margin-left: 10px;
+  margin-top: 40px;
+  margin-right: 20px;
+  margin-bottom: 20px;
+  color: var(--color-caption);
+  border: 0px;
+}
+
+/* Navigation Menu */
+.define-xml-stylesheet .hmenu {
+  margin-left: 15px;
+  padding-left: 0px;
+}
+
+.define-xml-stylesheet .hmenu li {
+  list-style-type: none;
+  line-height: 200%;
+  padding-left: 0;
+}
+
+.define-xml-stylesheet .hmenu ul {
+  padding-left: 14px;
+  margin-left: 0;
+}
+
+.define-xml-stylesheet .hmenu-bullet {
+  float: left;
+  width: 16px;
+  color: var(--color-hmenu-bullet);
+  font-size: 1.2em;
+}
+
+.define-xml-stylesheet .tocItem {
+  color: var(--color-hmenu-text);
+  text-decoration: none;
+  margin-top: 2px;
+  font-size: 1.4em;
+}
+
+.define-xml-stylesheet a.tocItem:hover {
+  color: var(--color-link-hover);
+  text-decoration: underline;
+}
+
+.define-xml-stylesheet a.external {
+  color: var(--color-hmenu-text);
+}
+
+/* Tables */
+.define-xml-stylesheet table {
+  width: 95%;
+  border-spacing: 4px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-table-bg);
+  margin-top: 5px;
+  border-collapse: collapse;
+  padding: 5px;
+  empty-cells: show;
+}
+
+.define-xml-stylesheet table caption {
+  border: 0px;
+  left: 20px;
+  font-size: 1.4em;
+  font-weight: bolder;
+  color: var(--color-caption);
+  margin: 10px auto;
+  text-align: left;
+}
+
+.define-xml-stylesheet table caption.header {
+  font-size: 1.6em;
+  margin-left: 0;
+  font-weight: bolder;
+  text-align: center;
+  color: var(--color-caption);
+}
+
+.define-xml-stylesheet .dataset-name {
+  font-weight: bold;
+}
+
+.define-xml-stylesheet .dataset-description {
+  font-weight: normal;
+}
+
+.define-xml-stylesheet table tr.header {
+  background-color: var(--color-tr-header-back);
+  color: var(--color-tr-header);
+  font-weight: bold;
+}
+
+.define-xml-stylesheet table th {
+  font-weight: bold;
+  vertical-align: top;
+  text-align: left;
+  padding: 5px;
+  border: 1px solid var(--color-border);
+  font-size: 1.3em;
+  background-color: var(--color-tr-header-back);
+  color: var(--color-tr-header);
+}
+
+.define-xml-stylesheet table .arm-resulttitle th {
+  font-weight: bold;
+  vertical-align: top;
+  text-align: left;
+  padding: 5px;
+  border: 1px solid var(--color-border);
+  font-size: 1.3em;
+  background-color: var(--color-tablerow-even);
+  color: var(--color-warning);
+}
+
+.define-xml-stylesheet th.codedvalue {
+  width: 20%;
+}
+.define-xml-stylesheet table th.length {
+  width: 7%;
+}
+.define-xml-stylesheet table th.label {
+  width: 13%;
+}
+
+.define-xml-stylesheet table td {
+  vertical-align: top;
+  padding: 5px;
+  border: 1px solid var(--color-border);
+  font-size: 1.2em;
+  line-height: 150%;
+}
+
+.define-xml-stylesheet table td.datatype {
+  text-align: left;
+}
+
+.define-xml-stylesheet table td.role {
+  text-align: left;
+}
+.define-xml-stylesheet table td.number {
+  text-align: right;
+}
+
+.define-xml-stylesheet tr.tablerowodd {
+  background-color: var(--color-tablerow-odd);
+}
+
+.define-xml-stylesheet tr.tableroweven {
+  background-color: var(--color-tablerow-even);
+}
+
+/* Study Metadata */
+.define-xml-stylesheet dl.study-metadata {
+  width: 95%;
+  padding: 5px 0px;
+  font-size: 0.8em;
+  color: black;
+}
+
+.define-xml-stylesheet dl.study-metadata dt {
+  clear: left;
+  float: left;
+  width: 200px;
+  margin: 0;
+  padding: 5px 5px 5px 0px;
+  font-weight: bold;
+}
+
+.define-xml-stylesheet dl.study-metadata dd {
+  margin-left: 210px;
+  padding: 5px;
+  font-weight: normal;
+  min-height: 20px;
+}
+
+/* Description text */
+.define-xml-stylesheet .description {
+  margin-left: 0px;
+  color: black;
+  font-weight: normal;
+  font-size: 0.85em;
+}
+
+/* Links */
+.define-xml-stylesheet a {
+  color: var(--color-link);
+  text-decoration: underline;
+}
+
+.define-xml-stylesheet a:hover {
+  color: var(--color-link-hover);
+  text-decoration: underline;
+}
+
+.define-xml-stylesheet a:visited {
+  color: var(--color-link-visited);
+  text-decoration: underline;
+}
+
+/* Unresolved references */
+.define-xml-stylesheet .unresolved {
+  color: var(--color-error);
+}
+
+/* Line break cells */
+.define-xml-stylesheet .linebreakcell {
+  vertical-align: top;
+  margin-top: 3px;
+  margin-bottom: 3px;
+}
+
+/* Method and Expression styles */
+.define-xml-stylesheet .method-code {
+  vertical-align: top;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.define-xml-stylesheet .formalexpression-code {
+  font-family: 'Courier New', monospace, serif;
+  font-size: 1.2em;
+  line-height: 120%;
+  display: block;
+  margin: 0px;
+  padding: 5px 0 0 20px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.define-xml-stylesheet .formalexpression-reference {
+  vertical-align: super;
+  font-size: 0.8em;
+  padding-left: 5px;
+}
+
+/* CodeList styles */
+.define-xml-stylesheet .codelist-caption {
+  font-size: 1.4em;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  margin-left: 0;
+  font-weight: bolder;
+  text-align: left;
+  color: var(--color-caption);
+}
+
+.define-xml-stylesheet .codelist-item-decode {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* SubClass list */
+.define-xml-stylesheet ul.SubClass {
+  list-style-type: '- ';
+  padding-left: 5px;
+  margin: 0;
+}
+
+/* Value List Reference */
+.define-xml-stylesheet .valuelist-reference {
+  vertical-align: super;
+  font-size: 0.8em;
+  padding-left: 5px;
+  cursor: pointer;
+}
+
+/* Prefix styles */
+.define-xml-stylesheet .prefix {
+  font-weight: normal;
+}
+
+/* Extended/NCI styles */
+.define-xml-stylesheet .nci,
+.define-xml-stylesheet .extended {
+  font-style: italic;
+}
+
+/* Standard reference */
+.define-xml-stylesheet .standard-reference {
+  width: 95%;
+  font-size: 1em;
+  font-weight: bold;
+  padding: 5px;
+  color: var(--color-caption);
+  white-space: nowrap;
+}
+
+/* No data warning */
+.define-xml-stylesheet .nodata {
+  width: 95%;
+  font-size: 1em;
+  font-weight: bold;
+  padding: 5px;
+  color: var(--color-warning);
+  white-space: nowrap;
+}
+
+/* Inline codelist styles */
+.define-xml-stylesheet ul.codelist {
+  padding: 1px;
+  margin-left: 1px;
+  margin-right: 1px;
+  margin-top: 1px;
+  margin-bottom: 1px;
+}
+
+.define-xml-stylesheet .codelist li {
+  list-style-type: none;
+  line-height: 200%;
+  padding-left: 0;
+  text-indent: -4px;
+}
+
+.define-xml-stylesheet .codelist-item {
+  list-style-type: disc;
+  list-style-position: inside;
+  padding-left: 0;
+  padding-right: 0;
+  margin: 0 0 0 0;
+}
+
+.define-xml-stylesheet .linebreakcell {
+  vertical-align: top;
+  margin-top: 3px;
+  margin-bottom: 3px;
+}
+
+/* External link icon */
+.define-xml-stylesheet .external-link-gif {
+  background: url(data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAAXNSR0IArs4c6QAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9gCGhErDWL4mOoAAAB6SURBVBjTbVCxDcAgDHNRP2KDY9gYO5YbWNno1mPY6E3pAJEIYCmCOCQOPogII6wNkug4d49KiXMz1EiUEg8uLBN3Ui7FVduYmxjG3JRru+facubVuIdLEV4Dzwe8V4BYg7t4Ap+d57qUnuWICBzi116v1ggfd3bM+AEZWXFvnym8EwAAAABJRU5ErkJggg==)
+    no-repeat right center;
+  padding: 8px;
+}
+
+/* VLM (Value Level Metadata) styles */
+.define-xml-stylesheet tr.vlm {
+  display: table-row;
+}
+
+.define-xml-stylesheet .qval-indent {
+  padding-left: 15px;
+}
+
+.define-xml-stylesheet .qval-indent2 {
+  padding-left: 30px;
+}
+
+.define-xml-stylesheet .label {
+  font-weight: bold;
+}
+
+.define-xml-stylesheet .datatable {
+  font-size: 100%;
+}
+
+.define-xml-stylesheet .linktop {
+  font-size: 1.2em;
+  margin-top: 5px;
+}
+
+.define-xml-stylesheet table caption .dataset {
+  font-weight: normal;
+  float: right;
+}
+
+.define-xml-stylesheet .super {
+  vertical-align: super;
+}
+
+.define-xml-stylesheet .footnote {
+  font-size: 1.2em;
+}
+
+.define-xml-stylesheet .arm-summary {
+  width: 95%;
+  border-spacing: 5px;
+  border-width: 1px;
+  border-color: #000000;
+  border-style: solid solid none solid;
+  background-color: #eeeeee;
+  font-size: 1.2em;
+  line-height: 150%;
+  vertical-align: top;
+}
+.define-xml-stylesheet .arm-summary-resultdisplay {
+  margin: 0px 0px 0px 0px;
+  padding: 10px 10px 10px 10px;
+  border-spacing: 5px;
+  border-width: 1px;
+  border-color: #000000;
+  border-style: none none solid none;
+}
+
+.define-xml-stylesheet .arm-display-title {
+  margin-left: 5pt;
+}
+
+.define-xml-stylesheet .table.analysisresults-detail {
+  background-color: #eeeeee;
+}
+
+.define-xml-stylesheet .arm-summary-result {
+  margin-left: 20px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+.define-xml-stylesheet th span.arm-displaytitle {
+  font-weight: bold;
+}
+
+.define-xml-stylesheet .arm-resulttitle {
+  font-weight: bold;
+  background-color: var(--color-tablerow-even);
+}
+
+.define-xml-stylesheet tr.arm-analysisresult {
+  background-color: #6699cc;
+  color: #ffffff;
+  font-weight: bold;
+  border: 1px solid #000000;
+}
+
+.define-xml-stylesheet td.arm-label {
+  font-weight: bold;
+}
+
+.define-xml-stylesheet p.arm-analysisvariable {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.define-xml-stylesheet .arm-data-reference {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.define-xml-stylesheet .arm-code-context {
+  padding: 5px 0px;
+}
+
+.define-xml-stylesheet .arm-code-ref {
+  font-size: 1.2em;
+  line-height: 150%;
+  padding: 5px;
+}
+
+.define-xml-stylesheet .arm-code {
+  font-family: 'Courier New', monospace, serif;
+  font-size: 1.2em;
+  line-height: 120%;
+  display: block;
+  margin: 0px;
+  padding: 0px;
+  white-space: pre-wrap; /* CSS 2.1 */
+}
+
+.define-xml-stylesheet div.buttons {
+  padding: 5px 0 5px 20px;
+  display: inline-block;
+}
+.define-xml-stylesheet div.button {
+  padding: 5px 0 5px 0;
+}
+
+.define-xml-stylesheet button {
+  width: 100%;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  -webkit-box-shadow: 3px 3px 2px #888;
+  -moz-box-shadow: 3px 3px 2px #888;
+  box-shadow: 3px 3px 2px #888;
+  padding: 4px 16px 4px 16px;
+  display: block;
+  cursor: pointer;
+}

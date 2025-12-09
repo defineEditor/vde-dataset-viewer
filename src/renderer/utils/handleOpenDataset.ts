@@ -66,6 +66,7 @@ const handleOpenDataset = async (
         if (newWindowProps && newWindowProps.goTo) {
             dispatch(
                 setGoTo({
+                    fileId: newDataInfo.fileId,
                     column: newWindowProps.goTo.column,
                     row: newWindowProps.goTo.row,
                 }),

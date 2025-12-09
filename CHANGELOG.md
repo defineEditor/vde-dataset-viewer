@@ -1,3 +1,16 @@
+# 0.6.2
+### Core Changes
+* Render Define-XML 2.0 and 2.1 in a format similar to the stylesheet [#83](https://github.com/defineEditor/vde-dataset-viewer/issues/83)
+
+### Improvements
+* Add substandards support for validation [#79](https://github.com/defineEditor/vde-dataset-viewer/issues/79)
+* Keep scroll position, when switching between datasets [#86](https://github.com/defineEditor/vde-dataset-viewer/issues/86)
+* Add define.xml file drag and drop [#84](https://github.com/defineEditor/vde-dataset-viewer/issues/84)
+
+### Fixes
+* Open Dataset Button is now shown in some cases [#78](https://github.com/defineEditor/vde-dataset-viewer/issues/78)
+* When conversion target and destination are the same, the file is rewritten with blank  [#77](https://github.com/defineEditor/vde-dataset-viewer/issues/77)
+
 # 0.6.1
 ### Improvements
 * Open datasets in a new window from the bottom navigation [#57](https://github.com/defineEditor/vde-dataset-viewer/issues/57)

@@ -63,7 +63,13 @@ const GoTo: React.FC<IUiModal> = (props: IUiModal) => {
             const isColumnValid = columnNames.includes(colPart.toLowerCase());
 
             if (isColumnValid && isRowValid) {
-                dispatch(setGoTo({ column: colPart, row: rowNumber }));
+                dispatch(
+                    setGoTo({
+                        fileId: currentFileId,
+                        column: colPart,
+                        row: rowNumber,
+                    }),
+                );
                 dispatch(closeModal({ type }));
             } else {
                 let errorMessage = '';
@@ -80,7 +86,9 @@ const GoTo: React.FC<IUiModal> = (props: IUiModal) => {
                 // Check the line is less than the total number of rows
                 const rowNumber = Number(normalizedValue);
                 if (rowNumber <= currentMetadata.records && rowNumber > 0) {
-                    dispatch(setGoTo({ row: rowNumber }));
+                    dispatch(
+                        setGoTo({ fileId: currentFileId, row: rowNumber }),
+                    );
                     dispatch(closeModal({ type }));
                 } else {
                     setHelperText(
@@ -96,7 +104,9 @@ const GoTo: React.FC<IUiModal> = (props: IUiModal) => {
                     name.toLowerCase(),
                 );
                 if (columnNames.includes(inputValue.toLowerCase())) {
-                    dispatch(setGoTo({ column: inputValue }));
+                    dispatch(
+                        setGoTo({ fileId: currentFileId, column: inputValue }),
+                    );
                     dispatch(closeModal({ type }));
                 } else {
                     setHelperText('Column name does not exist');
@@ -109,6 +119,7 @@ const GoTo: React.FC<IUiModal> = (props: IUiModal) => {
         autoCompletecolumnNames,
         type,
         inputValue,
+        currentFileId,
     ]);
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
