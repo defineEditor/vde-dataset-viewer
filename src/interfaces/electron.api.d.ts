@@ -1,5 +1,5 @@
 import {
-    DatasetType,
+    DataType,
     DatasetJsonMetadata,
     ItemDataArray,
     BasicFilter,
@@ -14,6 +14,8 @@ import {
     ParsedValidationReport,
     ValidationReportCompare,
     NewWindowProps,
+    DefineFileInfo,
+    DefineXmlContent,
 } from 'interfaces/common';
 
 export type Channels = 'ipc-vde';
@@ -28,7 +30,7 @@ export interface ElectronApi {
         },
     ) => Promise<{
         fileId: string;
-        type: DatasetType;
+        type: DataType;
         path: string;
         lastModified: number;
     } | null>;
@@ -97,10 +99,18 @@ export interface ElectronApi {
         position?: 'top' | 'bottom' | 'left' | 'right',
         props?: NewWindowProps,
     ) => Promise<void>;
+    openDefineXml: (filePath?: string) => Promise<DefineFileInfo | null>;
+    getDefineXmlContent: (fileId: string) => Promise<DefineXmlContent | null>;
+    closeDefineXml: (fileId: string) => Promise<boolean>;
     isWindows: boolean;
     resizeWindow: (
         position: 'top' | 'bottom' | 'left' | 'right',
     ) => Promise<void>;
     setZoom: (zoomLevel: number) => Promise<void>;
     getZoom: () => Promise<number>;
+    openInDefaultApplication: (filePath: string) => Promise<string>;
+    searchInPage: (searchTerm: string) => Promise<void>;
+    searchInPageNext: (searchTerm: string) => Promise<void>;
+    searchInPagePrevious: (searchTerm: string) => Promise<void>;
+    clearSearchResults: () => Promise<void>;
 }

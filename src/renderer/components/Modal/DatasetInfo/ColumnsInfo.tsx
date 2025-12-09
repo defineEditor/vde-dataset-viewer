@@ -21,6 +21,7 @@ const ColumnsInfo: React.FC<{
     searchTerm: string;
 }> = ({ metadata, onClose, searchTerm }) => {
     const dispatch = useAppDispatch();
+    const currentFileId = useAppSelector((state) => state.ui.currentFileId);
 
     // Get width for the table
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -31,10 +32,10 @@ const ColumnsInfo: React.FC<{
 
     const handleGoToClick = useCallback(
         (column: string) => {
-            dispatch(setGoTo({ column }));
+            dispatch(setGoTo({ fileId: currentFileId, column }));
             onClose();
         },
-        [dispatch, onClose],
+        [dispatch, onClose, currentFileId],
     );
 
     const handleShowInfo = useCallback(

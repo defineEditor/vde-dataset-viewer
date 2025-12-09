@@ -9,7 +9,12 @@ import { Box } from '@mui/material';
 import { ITableData, ItemType, IMask, TableSettings } from 'interfaces/common';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
-import { openSnackbar, setGoTo, setSelect } from 'renderer/redux/slices/ui';
+import {
+    openSnackbar,
+    setDatasetScrollPosition,
+    setGoTo,
+    setSelect,
+} from 'renderer/redux/slices/ui';
 import View from 'renderer/components/DatasetView/View';
 import useTableHeight from 'renderer/components/DatasetView/useTableHeight';
 import {
@@ -193,6 +198,15 @@ const DatasetView: React.FC<DatasetViewProps> = ({
 
     const visibleColumns = table.getVisibleLeafColumns();
 
+    const scrollPositionX = useAppSelector(
+        (state) =>
+            state.ui.control[tableData.fileId]?.scrollPosition.offsetX || 0,
+    );
+    const scrollPositionY = useAppSelector(
+        (state) =>
+            state.ui.control[tableData.fileId]?.scrollPosition.offsetY || 0,
+    );
+
     // The virtualizers need to know the scrollable container element
     const tableContainerRef = useRef<HTMLDivElement>(null);
 
@@ -202,6 +216,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         getScrollElement: () => tableContainerRef.current,
         horizontal: true,
         overscan: 4,
+        initialOffset: scrollPositionX,
     });
 
     // If filter is used, we need to remeasure the columns
@@ -209,7 +224,33 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         if (data) {
             columnVirtualizer.measure();
         }
-    }, [data, columnVirtualizer]);
+    }, [data, columnVirtualizer]); // Remove columnVirtualizer from dependencies
+
+    // Add this ref to track if the scroll is restored
+    const hasRestoredScrollRef = useRef(false);
+
+    // Add effect to restore scroll position once
+    useEffect(() => {
+        if (
+            !hasRestoredScrollRef.current &&
+            tableContainerRef.current &&
+            scrollPositionX > 0 &&
+            tableHeight > 0
+        ) {
+            // Use requestAnimationFrame to ensure DOM is ready
+            requestAnimationFrame(() => {
+                if (tableContainerRef.current) {
+                    tableContainerRef.current.scrollLeft = scrollPositionX;
+                    hasRestoredScrollRef.current = true;
+                }
+            });
+        }
+    }, [scrollPositionX, tableHeight]);
+
+    // Reset the flag when fileId changes
+    useEffect(() => {
+        hasRestoredScrollRef.current = false;
+    }, [tableData.fileId]);
 
     const rowVirtualizer = useVirtualizer({
         count: rows.length,
@@ -220,6 +261,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                 element?.getBoundingClientRect().height,
         }),
         overscan: 15,
+        initialOffset: scrollPositionY,
     });
 
     const virtualColumns = columnVirtualizer.getVirtualItems();
@@ -326,6 +368,31 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         setSelecting(false);
         setStartCell(null);
     };
+
+    // Keep scrolling position when unmounting
+    const scrollPosRef = useRef<{ offsetY: number; offsetX: number }>({
+        offsetY: 0,
+        offsetX: 0,
+    });
+
+    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        scrollPosRef.current = {
+            offsetY: e.currentTarget.scrollTop,
+            offsetX: e.currentTarget.scrollLeft,
+        };
+    };
+
+    useEffect(() => {
+        return () => {
+            dispatch(
+                setDatasetScrollPosition({
+                    fileId: tableData.fileId,
+                    offsetY: scrollPosRef.current.offsetY,
+                    offsetX: scrollPosRef.current.offsetX,
+                }),
+            );
+        };
+    }, [dispatch, tableData.fileId]);
 
     const handleCopyToClipboard = useCallback(
         (withHeaders: boolean) => {
@@ -469,7 +536,11 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     }, []);
 
     // GoTo control
-    const goTo = useAppSelector((state) => state.ui.control.goTo);
+    const goTo = useAppSelector((state) =>
+        state.ui.control[tableData.fileId]
+            ? state.ui.control[tableData.fileId].goTo
+            : { row: null, column: null, cellSelection: false },
+    );
 
     useEffect(() => {
         // Scroll to the row if it is on the current page, otherwise change will be changed and scroll will not be visible
@@ -482,7 +553,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         ) {
             const row = (goTo.row - 1) % settings.pageSize;
             rowVirtualizer.scrollToIndex(row, { align: 'center' });
-            dispatch(setGoTo({ row: null }));
+            dispatch(setGoTo({ fileId: tableData.fileId, row: null }));
             // Highlight the row number
             if (!goTo.cellSelection) {
                 handleCellClick(row, 0);
@@ -506,6 +577,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         rowVirtualizer,
         dispatch,
         tableData.header,
+        tableData.fileId,
         settings.pageSize,
         currentPage,
         handleCellClick,
@@ -526,7 +598,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                     align: 'center',
                 });
             }
-            dispatch(setGoTo({ column: null }));
+            dispatch(setGoTo({ fileId: tableData.fileId, column: null }));
             // Highlight the column
             if (!goTo.cellSelection) {
                 handleColumnSelect(columnIndex);
@@ -537,6 +609,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         goTo.row,
         goTo.cellSelection,
         tableData.header,
+        tableData.fileId,
         columnVirtualizer,
         dispatch,
         handleColumnSelect,
@@ -544,7 +617,11 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     ]);
 
     // Select control
-    const select = useAppSelector((state) => state.ui.control.select);
+    const select = useAppSelector((state) =>
+        state.ui.control[tableData.fileId]
+            ? state.ui.control[tableData.fileId].select
+            : { row: null, column: null },
+    );
 
     useEffect(() => {
         if (
@@ -575,11 +652,18 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                 handleColumnSelect(columnIndex);
             }
             // Clean select control
-            dispatch(setSelect({ row: null, column: null }));
+            dispatch(
+                setSelect({
+                    fileId: tableData.fileId,
+                    row: null,
+                    column: null,
+                }),
+            );
         }
     }, [
         select,
         tableData.header,
+        tableData.fileId,
         dispatch,
         handleCellClick,
         handleColumnSelect,
@@ -609,6 +693,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                     handleMouseOver={handleMouseOver}
                     handleContextMenu={handleContextMenu}
                     handleResizeEnd={columnVirtualizer.measure}
+                    handleScroll={handleScroll}
                     isLoading={isLoading}
                     settings={updatedSettings}
                     rowVirtualizer={rowVirtualizer}

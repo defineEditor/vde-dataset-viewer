@@ -56,11 +56,13 @@ export const settings: ISettings = {
         localRulesPath: '',
         reportTemplate: '',
     },
+    define: {
+        stylesheetShowComments: false,
+    },
 };
 export const ui: IUi = {
     pathname: paths.SELECT,
     currentFileId: '',
-    currentPage: 0,
     zoomLevel: 0,
     viewer: {
         datasetInfoTab: 0,
@@ -75,17 +77,7 @@ export const ui: IUi = {
         message: null,
         props: {},
     },
-    control: {
-        goTo: {
-            row: null,
-            column: null,
-            cellSelection: false,
-        },
-        select: {
-            row: null,
-            column: null,
-        },
-    },
+    control: {},
     validation: {},
     validationPage: {
         currentTab: 'validation',
@@ -95,6 +87,15 @@ export const ui: IUi = {
         reportSummaryType: 'datasets',
     },
     dataSettings: {},
+    define: {
+        currentFileId: null,
+        isDefineLoading: false,
+        currentTab: 'overview',
+        selectedItemGroupOid: null,
+        selectedVariableOid: null,
+        searchTerm: '',
+        scrollPosition: {},
+    },
 };
 
 export const converter: ConverterData = {

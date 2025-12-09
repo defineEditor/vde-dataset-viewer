@@ -18,6 +18,7 @@ export const paths = {
     ABOUT: '/about',
     CONVERTER: '/converter',
     VALIDATOR: '/validator',
+    DEFINEXML: '/definexml',
 } as const;
 
 export const mainTaskTypes = {

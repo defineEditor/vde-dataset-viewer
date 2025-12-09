@@ -40,9 +40,11 @@ const styles = {
     container: {
         p: 3,
         backgroundColor: 'grey.300',
+        overflow: 'hidden',
     },
     controls: {
         pb: 2,
+        overflow: 'auto',
     },
     reportType: {
         width: 80,

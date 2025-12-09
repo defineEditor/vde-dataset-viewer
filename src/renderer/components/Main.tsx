@@ -8,6 +8,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import SettingsIcon from '@mui/icons-material/Settings';
 import KeyboardIcon from '@mui/icons-material/Keyboard';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
+import DescriptionIcon from '@mui/icons-material/Description';
 import {
     DashboardLayout,
     DashboardLayoutSlots,
@@ -17,11 +18,17 @@ import Api from 'renderer/components/Api';
 import AppContext from 'renderer/utils/AppContext';
 import ViewFile from 'renderer/components/ViewDataset';
 import Settings from 'renderer/components/Settings';
+import DefineXml from 'renderer/components/DefineXmlStylesheet';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
-import { setPathname, setZoomLevel } from 'renderer/redux/slices/ui';
+import {
+    setPathname,
+    setZoomLevel,
+    setDefineFileId,
+} from 'renderer/redux/slices/ui';
 import { AllowedPathnames, NewWindowProps } from 'interfaces/common';
 import ViewerToolbar from 'renderer/components/Toolbars/ViewerToolbar';
 import ReportToolbar from 'renderer/components/Toolbars/ReportToolbar';
+import DefineToolbar from 'renderer/components/Toolbars/DefineToolbar';
 import ToolbarActions from 'renderer/components/ToolbarActions';
 import Shortcuts from 'renderer/components/Shortcuts';
 import Converter from 'renderer/components/Converter';
@@ -57,6 +64,11 @@ const NAVIGATION: Navigation = [
         segment: 'select',
         title: 'Viewer',
         icon: <WysiwygIcon />,
+    },
+    {
+        segment: 'definexml',
+        title: 'Define-XML',
+        icon: <DescriptionIcon />,
     },
     {
         segment: 'api',
@@ -187,6 +199,13 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                             }),
                         );
                         break;
+                    case 'F7':
+                        dispatch(
+                            setPathname({
+                                pathname: paths.DEFINEXML,
+                            }),
+                        );
+                        break;
                     case 'F12':
                         saveStore(apiService);
                         break;
@@ -274,6 +293,27 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
             filePath: string,
             newWindowProps?: NewWindowProps,
         ) => {
+            // Get file extension
+            const extension = filePath.split('.').pop();
+
+            if (extension?.toLowerCase() === 'xml') {
+                const handleOpenDefine = async () => {
+                    // Open it as Define-XML
+                    // Define-XML file
+                    const fileInfo = await apiService.openDefineXml(filePath);
+                    if (fileInfo === null) {
+                        return;
+                    }
+                    dispatch(setDefineFileId(fileInfo.fileId));
+                    dispatch(
+                        setPathname({
+                            pathname: paths.DEFINEXML,
+                        }),
+                    );
+                };
+                return handleOpenDefine();
+            }
+            // Open it as dataset
             return handleOpenDataset(
                 filePath,
                 currentFileId,
@@ -307,6 +347,10 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
         slots.appTitle = ReportToolbar;
     }
 
+    if (pathname === paths.DEFINEXML) {
+        slots.appTitle = DefineToolbar;
+    }
+
     return (
         <AppProvider
             navigation={NAVIGATION}
@@ -320,6 +364,7 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                     {pathname === paths.VIEWFILE && isDataLoaded && (
                         <ViewFile />
                     )}
+                    {pathname === paths.DEFINEXML && <DefineXml />}
                     {pathname === paths.SETTINGS && <Settings />}
                     {pathname === paths.API && <Api />}
                     {pathname === paths.CONVERTER && <Converter />}

@@ -24,6 +24,8 @@ import {
     ValidationReportCompare,
     NewWindowProps,
     FileInfo,
+    DefineFileInfo,
+    DefineXmlContent,
 } from 'interfaces/common';
 import store from 'renderer/redux/store';
 import transformData from 'renderer/services/transformData';
@@ -48,6 +50,11 @@ class ApiService {
     } = {};
 
     private openedFilesData: { [fileId: string]: ITableRow[] } = {};
+
+    // Define-XML files
+    private openedDefines: DefineFileInfo[] = [];
+
+    private openedDefineContents: { [fileId: string]: DefineXmlContent } = {};
 
     // Open file
     public openFile = async (
@@ -859,6 +866,87 @@ class ApiService {
     public getFilesInfo = async (filePaths: string[]): Promise<FileInfo[]> => {
         const result = await window.electron.getFilesInfo(filePaths);
         return result;
+    };
+
+    public openDefineXml = async (
+        filePath?: string,
+    ): Promise<DefineFileInfo | null> => {
+        // Check if the file is already open
+        let defineFileInfo: DefineFileInfo | null = null;
+        if (filePath !== undefined) {
+            const foundDefine = this.openedDefines.find(
+                (define) => define.fullPath === filePath,
+            );
+            if (foundDefine !== undefined) {
+                defineFileInfo =
+                    this.openedDefines.find(
+                        (define) => define.fullPath === filePath,
+                    ) || null;
+            }
+        }
+
+        // If the file is already open return the info
+        if (defineFileInfo !== null) {
+            return defineFileInfo;
+        }
+
+        // Open a new Define-XML file
+        defineFileInfo = await window.electron.openDefineXml(filePath);
+        if (defineFileInfo !== null) {
+            this.openedDefines.push(defineFileInfo);
+        }
+        return defineFileInfo;
+    };
+
+    public getOpenedDefineFiles = (): DefineFileInfo[] => {
+        return this.openedDefines;
+    };
+
+    public getDefineXmlContent = async (
+        fileId: string,
+    ): Promise<DefineXmlContent | null> => {
+        // Check if the content is already loaded
+        if (this.openedDefineContents[fileId] !== undefined) {
+            return this.openedDefineContents[fileId];
+        }
+        const content = await window.electron.getDefineXmlContent(fileId);
+        if (content !== null) {
+            this.openedDefineContents[fileId] = content;
+        }
+        return content;
+    };
+
+    public closeDefineXml = async (fileId: string): Promise<boolean> => {
+        const result = await window.electron.closeDefineXml(fileId);
+        if (result) {
+            delete this.openedDefineContents[fileId];
+            this.openedDefines = this.openedDefines.filter(
+                (define) => define.fileId !== fileId,
+            );
+        }
+        return result;
+    };
+
+    public openFileInDefaultApp = async (filePath: string): Promise<string> => {
+        const result = await window.electron.openInDefaultApplication(filePath);
+        return result;
+    };
+
+    // Search in page
+    public searchInPage = async (searchTerm: string): Promise<void> => {
+        await window.electron.searchInPage(searchTerm);
+    };
+
+    public searchInPageNext = async (searchTerm: string): Promise<void> => {
+        await window.electron.searchInPageNext(searchTerm);
+    };
+
+    public searchInPagePrevious = async (searchTerm: string): Promise<void> => {
+        await window.electron.searchInPagePrevious(searchTerm);
+    };
+
+    public clearSearchResults = async (): Promise<void> => {
+        await window.electron.clearSearchResults();
     };
 }
 

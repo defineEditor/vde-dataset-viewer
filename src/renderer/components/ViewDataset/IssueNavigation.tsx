@@ -57,13 +57,13 @@ const IssueNavigation: React.FC<{
 
             throttleRef.current = setTimeout(() => {
                 if (column) {
-                    dispatch(setGoTo({ row, column }));
+                    dispatch(setGoTo({ fileId: currentFileId, row, column }));
                 } else {
-                    dispatch(setGoTo({ row }));
+                    dispatch(setGoTo({ fileId: currentFileId, row }));
                 }
             }, 300);
         },
-        [dispatch],
+        [dispatch, currentFileId],
     );
 
     const handleChange = (direction: 'next' | 'previous') => {

@@ -235,6 +235,7 @@ const DatasetViewUI: React.FC<{
     handleMouseDown: (rowIndex: number, columnIndex: number) => void;
     handleMouseOver: (rowIndex: number, columnIndex: number) => void;
     handleResizeEnd: () => void;
+    handleScroll: (event: React.UIEvent<HTMLDivElement, UIEvent>) => void;
     isLoading: boolean;
     rowVirtualizer: Virtualizer<HTMLDivElement, Element>;
     sorting: ISortingState;
@@ -262,6 +263,7 @@ const DatasetViewUI: React.FC<{
     handleMouseDown,
     handleMouseOver,
     handleResizeEnd,
+    handleScroll,
     isLoading,
     settings,
     rowVirtualizer,
@@ -276,6 +278,7 @@ const DatasetViewUI: React.FC<{
         <Paper
             ref={tableContainerRef}
             sx={containerStyle || getContainerStyle(settings)}
+            onScroll={handleScroll}
         >
             <Table sx={styles.table}>
                 <TableHead sx={styles.header}>

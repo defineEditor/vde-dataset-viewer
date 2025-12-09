@@ -6,6 +6,7 @@ import {
     ValidatorConfig,
     ValidationRunReport,
     FileInfo,
+    DefineFileInfo,
 } from 'interfaces/main';
 import { ParsedValidationReport } from 'interfaces/core.report';
 import { modals, ModalType, AllowedPathnames } from 'misc/constants';
@@ -19,6 +20,10 @@ export interface IMask {
 }
 
 export type ClipboardCopyFormat = 'tab' | 'csv' | 'json';
+
+export interface SettingsDefine {
+    stylesheetShowComments: boolean;
+}
 
 export interface SettingsViewer {
     pageSize: number;
@@ -36,6 +41,7 @@ export interface SettingsViewer {
 
 export interface ISettings {
     viewer: SettingsViewer;
+    define: SettingsDefine;
     converter: SettingsConverter;
     validator: SettingsValidator;
     other: {
@@ -122,6 +128,11 @@ export interface IUiControl {
         row: number | null;
         column: string | null;
     };
+    scrollPosition: {
+        offsetY: number;
+        offsetX: number;
+    };
+    currentPage: number;
 }
 
 export interface IUiViewer {
@@ -154,15 +165,37 @@ export interface IUiValidationPage {
     reportSummaryType: 'datasets' | 'issues';
 }
 
+export type DefineTab =
+    | 'overview'
+    | 'datasets'
+    | 'variables'
+    | 'codelists'
+    | 'methods'
+    | 'comments'
+    | 'analysis';
+
+export interface IDefineXmlFiles {
+    [fileId: string]: DefineFileInfo;
+}
+
+export interface IUiDefine {
+    currentFileId: string | null;
+    isDefineLoading: boolean;
+    currentTab: DefineTab;
+    selectedItemGroupOid: string | null;
+    selectedVariableOid: string | null;
+    searchTerm: string;
+    scrollPosition: { [fileId: string]: number };
+}
+
 export interface IUi {
     pathname: AllowedPathnames;
     currentFileId: string;
-    currentPage: number;
     zoomLevel: number;
     viewer: IUiViewer;
     modals: IUiModal[];
     snackbar: IUiSnackbar;
-    control: IUiControl;
+    control: { [fileId: string]: IUiControl };
     validation: { [validationId: string]: IUiValidation };
     dataSettings: {
         [datasetId: string]: {
@@ -172,6 +205,7 @@ export interface IUi {
         };
     };
     validationPage: IUiValidationPage;
+    define: IUiDefine;
 }
 
 export interface IRecentFile {
