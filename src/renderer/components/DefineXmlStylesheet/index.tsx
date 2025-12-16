@@ -1,11 +1,15 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { Box } from '@mui/material';
+import { Box, Button, Stack } from '@mui/material';
 import AppContext from 'renderer/utils/AppContext';
 import { DefineXmlContent } from 'interfaces/defineXml';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import StylesheetLayout from 'renderer/components/DefineXmlStylesheet/StylesheetLayout';
 import handleOpenDataset from 'renderer/utils/handleOpenDataset';
-import { openSnackbar, setDefineIsLoading } from 'renderer/redux/slices/ui';
+import {
+    openSnackbar,
+    setDefineFileId,
+    setDefineIsLoading,
+} from 'renderer/redux/slices/ui';
 import Loading from 'renderer/components/Loading';
 
 const styles = {
@@ -30,11 +34,18 @@ const styles = {
         color: '#888',
         textAlign: 'center',
     },
+    openButton: {
+        textTransform: 'none',
+        padding: 0,
+        marginRight: '4px',
+        minWidth: 'auto',
+        lineHeight: 1,
+    },
 };
 
 const DefineXml: React.FC = () => {
     const { apiService } = useContext(AppContext);
-    const dispath = useAppDispatch();
+    const dispatch = useAppDispatch();
 
     const [content, setContent] = useState<DefineXmlContent | null>(null);
 
@@ -49,6 +60,23 @@ const DefineXml: React.FC = () => {
     const currentDatasetFileId = useAppSelector(
         (state) => state.ui.currentFileId,
     );
+
+    const handleOpenDefine = async () => {
+        const fileInfo = await apiService.openDefineXml();
+
+        if (fileInfo === null) {
+            // User cancelled
+            return;
+        }
+
+        dispatch(
+            openSnackbar({
+                type: 'info',
+                message: `Loaded ${fileInfo.filename}`,
+            }),
+        );
+        dispatch(setDefineFileId(fileInfo.fileId));
+    };
 
     const handleOpenFile = async (
         event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
@@ -80,7 +108,7 @@ const DefineXml: React.FC = () => {
             handleOpenDataset(
                 filePath,
                 currentDatasetFileId,
-                dispath,
+                dispatch,
                 apiService,
             );
         }
@@ -88,7 +116,7 @@ const DefineXml: React.FC = () => {
         else {
             const result = await apiService.openFileInDefaultApp(filePath);
             if (result !== '') {
-                dispath(
+                dispatch(
                     openSnackbar({
                         type: 'error',
                         message: `Failed to open file: ${result}`,
@@ -103,15 +131,26 @@ const DefineXml: React.FC = () => {
             if (currentFileId) {
                 const defineContent =
                     await apiService.getDefineXmlContent(currentFileId);
+                if ('error' in defineContent) {
+                    dispatch(
+                        openSnackbar({
+                            type: 'error',
+                            message: `Failed to load Define-XML content: ${defineContent.error}`,
+                        }),
+                    );
+                    dispatch(setDefineFileId(null));
+                    dispatch(setDefineIsLoading(false));
+                    return;
+                }
                 setContent(defineContent);
             }
         };
 
         if (currentFileId) {
-            dispath(setDefineIsLoading(true));
+            dispatch(setDefineIsLoading(true));
             fetchDefineContent();
         }
-    }, [currentFileId, apiService, dispath]);
+    }, [currentFileId, apiService, dispatch]);
 
     if (!content) {
         if (isDefineLoading) {
@@ -131,7 +170,12 @@ const DefineXml: React.FC = () => {
                 justifyContent="center"
                 height="100%"
             >
-                Open a Define-XML file or drag and drop it here
+                <Stack direction="row" alignItems="center">
+                    <Button sx={styles.openButton} onClick={handleOpenDefine}>
+                        Open file
+                    </Button>
+                    <Box>or drag and drop it here a Define-XML</Box>
+                </Stack>
             </Box>
         );
     }
