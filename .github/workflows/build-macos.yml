@@ -55,21 +55,12 @@ jobs:
         env:
           npm_config_arch: ${{ matrix.arch }}
 
-      - name: Upload artifacts (x64)
+      - name: Upload artifacts (x64, arm64)
         if: matrix.arch == 'x64'
         uses: actions/upload-artifact@v4
         with:
-          name: mac-${{ matrix.arch }}
+          name: mac-x64-arm64
           path: |
             release/build/vde-dataset-viewer-[0-9]*.[0-9]*.[0-9]*.dmg
             release/build/vde-dataset-viewer-[0-9]*.[0-9]*.[0-9]*.dmg.blockmap
             release/build/latest-mac.yml
-
-      - name: Upload artifacts (arm64)
-        if: matrix.arch == 'arm64'
-        uses: actions/upload-artifact@v4
-        with:
-          name: mac-${{ matrix.arch }}
-          path: |
-            release/build/vde-dataset-viewer-[0-9]*.[0-9]*.[0-9]*-arm64.dmg
-            release/build/vde-dataset-viewer-[0-9]*.[0-9]*.[0-9]*-arm64.dmg.blockmap
