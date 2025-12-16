@@ -100,7 +100,9 @@ export interface ElectronApi {
         props?: NewWindowProps,
     ) => Promise<void>;
     openDefineXml: (filePath?: string) => Promise<DefineFileInfo | null>;
-    getDefineXmlContent: (fileId: string) => Promise<DefineXmlContent | null>;
+    getDefineXmlContent: (
+        fileId: string,
+    ) => Promise<DefineXmlContent | { error: string }>;
     closeDefineXml: (fileId: string) => Promise<boolean>;
     isWindows: boolean;
     resizeWindow: (

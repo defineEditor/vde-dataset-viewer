@@ -192,26 +192,35 @@ class DefineXmlManager {
     public getDefineXmlContent = async (
         _event: IpcMainInvokeEvent,
         fileId: string,
-    ): Promise<DefineXmlContent> => {
+    ): Promise<DefineXmlContent | { error: string }> => {
         const fileInfo = this.openedXmlFiles[fileId];
         if (!fileInfo) {
-            throw new Error(`Define file not found for ID: ${fileId}`);
+            return { error: `Define file not found for ID: ${fileId}` };
         }
 
-        const xmlContent = await fsPromises.readFile(fileInfo.fullPath, 'utf8');
+        try {
+            const xmlContent = await fsPromises.readFile(
+                fileInfo.fullPath,
+                'utf8',
+            );
 
-        // Parse XML content
-        const parsedXml = await parseDefineXml(
-            xmlContent,
-            fileInfo.defineVersion,
-            fileInfo.arm,
-        );
-        return {
-            defineVersion: fileInfo.defineVersion,
-            arm: fileInfo.arm,
-            type: 'xml',
-            content: parsedXml,
-        };
+            // Parse XML content
+            const parsedXml = await parseDefineXml(
+                xmlContent,
+                fileInfo.defineVersion,
+                fileInfo.arm,
+            );
+            return {
+                defineVersion: fileInfo.defineVersion,
+                arm: fileInfo.arm,
+                type: 'xml',
+                content: parsedXml,
+            };
+        } catch (error) {
+            return {
+                error: `Error reading/parsing Define-XML: ${error instanceof Error ? error.message : String(error)}`,
+            };
+        }
     };
 
     /**
