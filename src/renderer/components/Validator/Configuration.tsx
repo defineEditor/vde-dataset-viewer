@@ -90,11 +90,17 @@ const ValidatorConfiguration: React.FC<ValidatorConfigurationProps> = ({
         } = {};
         validatorData.info.standards.forEach((rawStandard) => {
             const parsedStandard = rawStandard.split(',');
-            const [name, version] = parsedStandard;
+            const [name, version, substandard] = parsedStandard;
+            const versionWithSubstandard = substandard
+                ? `${version},${substandard}`
+                : version;
             if (!standards[name]) {
-                standards[name] = { name, versions: [version] };
+                standards[name] = {
+                    name,
+                    versions: [versionWithSubstandard],
+                };
             } else {
-                standards[name].versions.push(version);
+                standards[name].versions.push(versionWithSubstandard);
             }
         });
         return standards;

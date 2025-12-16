@@ -1,3 +1,11 @@
+# 0.6.3
+### Improvements
+* Improved handling of invalid Define-XML files and adding Open File button to the Define-XML screen [#92](https://github.com/defineEditor/vde-dataset-viewer/issues/92)
+
+### Fixes
+* Fix TIG substandard selection for CORE 0.14 [#90](https://github.com/defineEditor/vde-dataset-viewer/issues/90)
+* Drag and dropping SAS7BDAT does not open the dataset  [#91](https://github.com/defineEditor/vde-dataset-viewer/issues/91)
+
 # 0.6.2
 ### Core Changes
 * Render Define-XML 2.0 and 2.1 in a format similar to the stylesheet [#83](https://github.com/defineEditor/vde-dataset-viewer/issues/83)
