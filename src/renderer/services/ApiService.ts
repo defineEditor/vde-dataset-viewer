@@ -910,12 +910,10 @@ class ApiService {
             return this.openedDefineContents[fileId];
         }
         const content = await window.electron.getDefineXmlContent(fileId);
-        if (content !== null) {
-            if ('error' in content) {
-                return content;
-            }
-            this.openedDefineContents[fileId] = content;
+        if ('error' in content) {
+            return content;
         }
+        this.openedDefineContents[fileId] = content;
         return content;
     };
 

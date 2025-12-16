@@ -139,7 +139,6 @@ const DefineXml: React.FC = () => {
                         }),
                     );
                     dispatch(setDefineFileId(null));
-                    dispatch(setDefineIsLoading(false));
                     return;
                 }
                 setContent(defineContent);
@@ -149,6 +148,9 @@ const DefineXml: React.FC = () => {
         if (currentFileId) {
             dispatch(setDefineIsLoading(true));
             fetchDefineContent();
+        } else {
+            setContent(null);
+            dispatch(setDefineIsLoading(false));
         }
     }, [currentFileId, apiService, dispatch]);
 
@@ -174,7 +176,7 @@ const DefineXml: React.FC = () => {
                     <Button sx={styles.openButton} onClick={handleOpenDefine}>
                         Open file
                     </Button>
-                    <Box>or drag and drop it here a Define-XML</Box>
+                    <Box>or drag and drop a Define-XML here</Box>
                 </Stack>
             </Box>
         );
