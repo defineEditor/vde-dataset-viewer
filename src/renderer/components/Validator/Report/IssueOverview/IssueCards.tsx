@@ -16,7 +16,7 @@ import {
     ListItem,
     ListItemText,
     Divider,
-    Grid2,
+    Grid,
     Stack,
     Tooltip,
 } from '@mui/material';
@@ -205,9 +205,9 @@ const IssueCards: React.FC<IssueCardsProps> = ({
     }, [parsedReport, showOnlyIssuesWithHighCount]);
 
     return (
-        <Grid2 container spacing={2}>
+        <Grid container spacing={2}>
             {issueGroups.map((issueGroup) => (
-                <Grid2 key={issueGroup.core_id}>
+                <Grid key={issueGroup.core_id}>
                     <Card sx={styles.card}>
                         <CardHeader
                             title={
@@ -347,9 +347,9 @@ const IssueCards: React.FC<IssueCardsProps> = ({
                             </List>
                         </Collapse>
                     </Card>
-                </Grid2>
+                </Grid>
             ))}
-        </Grid2>
+        </Grid>
     );
 };
 

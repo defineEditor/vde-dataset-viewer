@@ -16,7 +16,7 @@ import {
     ListItem,
     ListItemText,
     Divider,
-    Grid2,
+    Grid,
     Stack,
     Tooltip,
 } from '@mui/material';
@@ -153,9 +153,9 @@ const DatasetCards: React.FC<DatasetCardsProps> = ({
     }, [parsedReport, showOnlyDatasetsWithIssues]);
 
     return (
-        <Grid2 container spacing={2}>
+        <Grid container spacing={2}>
             {datasetIssues.map((datasetIssue) => (
-                <Grid2 key={datasetIssue.dataset}>
+                <Grid key={datasetIssue.dataset}>
                     <Card sx={styles.card}>
                         <CardHeader
                             title={
@@ -319,9 +319,9 @@ const DatasetCards: React.FC<DatasetCardsProps> = ({
                             </List>
                         </Collapse>
                     </Card>
-                </Grid2>
+                </Grid>
             ))}
-        </Grid2>
+        </Grid>
     );
 };
 

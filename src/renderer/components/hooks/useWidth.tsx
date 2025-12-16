@@ -1,6 +1,6 @@
 import { useState, useEffect, RefObject } from 'react';
 
-const useWidth = <T extends HTMLElement>(ref: RefObject<T> | null) => {
+const useWidth = (ref: RefObject<HTMLElement | null> | null) => {
     const [width, setWidth] = useState(0);
 
     const element = ref?.current;

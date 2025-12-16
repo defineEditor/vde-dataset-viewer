@@ -24,7 +24,7 @@ const ColumnsInfo: React.FC<{
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
 
     // Get width for the table
-    const containerRef = useRef<HTMLDivElement | null>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
     const containerWidth = useWidth(containerRef);
     const scrollbarWidth = useScrollbarWidth();
 

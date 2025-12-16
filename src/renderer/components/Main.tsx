@@ -67,12 +67,12 @@ const NAVIGATION: Navigation = [
     },
     {
         segment: 'definexml',
-        title: 'Define-XML',
+        title: 'Define',
         icon: <DescriptionIcon />,
     },
     {
         segment: 'api',
-        title: 'Connect to API',
+        title: 'API',
         icon: <CloudIcon />,
     },
     {

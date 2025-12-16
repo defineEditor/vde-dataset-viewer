@@ -223,7 +223,7 @@ const getTypeIcon = (type: string | undefined) => {
 
 const DatasetViewUI: React.FC<{
     table: ITable<ITableRow>;
-    tableContainerRef: React.RefObject<HTMLDivElement>;
+    tableContainerRef: React.RefObject<HTMLDivElement | null>;
     visibleColumns: IColumn<ITableRow, unknown>[];
     virtualPaddingLeft: number | undefined;
     virtualPaddingRight: number | undefined;
@@ -466,13 +466,11 @@ const DatasetViewUI: React.FC<{
                                             ? virtualRow.index
                                             : undefined
                                     }
-                                    ref={(node) =>
-                                        settings.dynamicRowHeight
-                                            ? rowVirtualizer.measureElement(
-                                                  node,
-                                              )
-                                            : null
-                                    }
+                                    ref={(node) => {
+                                        if (settings.dynamicRowHeight) {
+                                            rowVirtualizer.measureElement(node);
+                                        }
+                                    }}
                                     key={row.id}
                                     sx={{
                                         ...styles.tableRow,
