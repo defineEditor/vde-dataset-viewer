@@ -10,6 +10,7 @@ import {
     DatasetJsonMetadata,
     FileInfo,
     InputFileExtension,
+    ItemDataArray,
 } from 'interfaces/common';
 import openFile from 'main/openFile';
 import fs from 'fs';
@@ -252,7 +253,7 @@ class FileManager {
         filterColumns?: string[],
         filterData?: BasicFilter,
         columns?: ColumnMetadata[],
-    ) => {
+    ): Promise<ItemDataArray[] | null> => {
         if (this.openedFiles[fileId]) {
             try {
                 let filter: Filter | undefined;
@@ -262,21 +263,22 @@ class FileManager {
                     filter = undefined;
                 }
                 if (this.openedFiles[fileId] instanceof DatasetXpt) {
-                    return await this.openedFiles[fileId].getData({
+                    return (await this.openedFiles[fileId].getData({
                         start,
                         length,
+                        type: 'array',
                         filterColumns,
                         filter,
                         roundPrecision: 12,
-                    });
+                    })) as ItemDataArray[];
                 }
                 // TODO: strange TS issue, it requires filter to be undefined
-                return await this.openedFiles[fileId].getData({
+                return (await this.openedFiles[fileId].getData({
                     start,
                     length,
                     filterColumns,
                     filter: filter as undefined,
-                });
+                })) as ItemDataArray[];
             } catch (error) {
                 dialog.showErrorBox(
                     'Data Error',
