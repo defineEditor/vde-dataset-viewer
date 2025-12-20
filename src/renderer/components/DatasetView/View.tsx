@@ -248,7 +248,10 @@ const DatasetViewUI: React.FC<{
     ) => void;
     filteredColumns?: string[];
     containerStyle?: React.CSSProperties;
-    annotatedCells?: Map<string, { text: string; color: string }> | null;
+    annotatedCells?: Map<
+        string,
+        { text: string | React.ReactElement; color: string }
+    > | null;
 }> = ({
     table,
     tableContainerRef,

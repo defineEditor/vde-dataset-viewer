@@ -11,6 +11,9 @@ import {
     FileInfo,
     InputFileExtension,
     ItemDataArray,
+    DatasetDiff,
+    CompareOptions,
+    CompareSettings,
 } from 'interfaces/common';
 import openFile from 'main/openFile';
 import fs from 'fs';
@@ -18,6 +21,7 @@ import fsPromises from 'fs/promises';
 import Filter from 'js-array-filter';
 import crypto from 'crypto';
 import path from 'path';
+import { compareData, compareMetadata } from './utils/compareDatasets';
 
 const getHash = (str: string): string => {
     const timestamp = Date.now();
@@ -462,6 +466,111 @@ class FileManager {
         );
         const filesInfo = await Promise.all(filesInfoPromises);
         return filesInfo;
+    };
+
+    handleCompareDatasets = async (
+        _event: IpcMainInvokeEvent,
+        basePath: string,
+        comparePath: string,
+        options: CompareOptions,
+        settings: CompareSettings,
+    ): Promise<DatasetDiff | { error: string }> => {
+        const { encoding, bufferSize } = settings;
+        // Open base and compare files
+        const baseFileInfo = await this.handleFileOpen(_event, 'local', {
+            encoding,
+            filePath: basePath,
+        });
+        if (baseFileInfo.errorMessage) {
+            return { error: baseFileInfo.errorMessage };
+        }
+        const compareFileInfo = await this.handleFileOpen(_event, 'local', {
+            encoding,
+            filePath: comparePath,
+        });
+        if (compareFileInfo.errorMessage) {
+            return { error: compareFileInfo.errorMessage };
+        }
+
+        // Base and compare metadata;
+        const baseMeta = await this.handleGetMetadata(
+            _event,
+            baseFileInfo.fileId,
+        );
+        if (baseMeta === null) {
+            return { error: 'Failed to retrieve base file metadata' };
+        }
+        const compMeta = await this.handleGetMetadata(
+            _event,
+            compareFileInfo.fileId,
+        );
+        if (compMeta === null) {
+            return { error: 'Failed to retrieve compare file metadata' };
+        }
+        // Read and compare blocks of data
+        const dataDiff: DatasetDiff['data'] = {
+            addedRows: [],
+            deletedRows: [],
+            modifiedRows: [],
+            summary: {
+                firstDiffRow: null,
+                lastDiffRow: null,
+                totalDiffs: 0,
+                maxDiffReached: false,
+                maxColDiffReached: [],
+            },
+        };
+
+        const metadataDiff: DatasetDiff['metadata'] = compareMetadata(
+            baseMeta,
+            compMeta,
+        );
+
+        for (
+            let start = 0;
+            start < Math.min(baseMeta.records, compMeta.records);
+            start += bufferSize
+        ) {
+            // eslint-disable-next-line no-await-in-loop
+            const baseData = await this.handleGetObservations(
+                _event,
+                baseFileInfo.fileId,
+                start,
+                bufferSize,
+            );
+            if (baseData === null) {
+                return { error: 'Failed to retrieve base file data' };
+            }
+            // eslint-disable-next-line no-await-in-loop
+            const compData = await this.handleGetObservations(
+                _event,
+                compareFileInfo.fileId,
+                start,
+                bufferSize,
+            );
+            if (compData === null) {
+                return { error: 'Failed to retrieve compare file data' };
+            }
+
+            // Compare data blocks
+            const blockDiff = compareData(
+                baseData,
+                compData,
+                baseMeta,
+                compMeta,
+                dataDiff.summary,
+                start,
+                options,
+            );
+
+            dataDiff.addedRows.push(...blockDiff.addedRows);
+            dataDiff.deletedRows.push(...blockDiff.deletedRows);
+            dataDiff.modifiedRows.push(...blockDiff.modifiedRows);
+
+            dataDiff.summary = blockDiff.summary;
+        }
+
+        return { metadata: metadataDiff, data: dataDiff };
     };
 }
 

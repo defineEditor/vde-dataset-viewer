@@ -26,6 +26,9 @@ import {
     FileInfo,
     DefineFileInfo,
     DefineXmlContent,
+    CompareOptions,
+    CompareSettings,
+    DatasetDiff,
 } from 'interfaces/common';
 import store from 'renderer/redux/store';
 import transformData from 'renderer/services/transformData';
@@ -868,6 +871,7 @@ class ApiService {
         return result;
     };
 
+    // Define XML
     public openDefineXml = async (
         filePath?: string,
     ): Promise<DefineFileInfo | null> => {
@@ -948,6 +952,26 @@ class ApiService {
 
     public clearSearchResults = async (): Promise<void> => {
         await window.electron.clearSearchResults();
+    };
+
+    // Miscellaneous
+    public getPathForFile = (file: File): string => {
+        return window.electron.pathForFile(file);
+    };
+
+    public compareDatasets = async (
+        fileBase: string,
+        fileComp: string,
+        options: CompareOptions,
+        settings: CompareSettings,
+    ): Promise<DatasetDiff | { error: string }> => {
+        const result = await window.electron.compareDatasets(
+            fileBase,
+            fileComp,
+            options,
+            settings,
+        );
+        return result;
     };
 }
 

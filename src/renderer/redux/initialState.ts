@@ -6,6 +6,7 @@ import {
     IApi,
     ConverterData,
     ValidatorData,
+    CompareData,
 } from 'interfaces/common';
 import { paths } from 'misc/constants';
 
@@ -96,6 +97,13 @@ export const ui: IUi = {
         searchTerm: '',
         scrollPosition: {},
     },
+    compare: {
+        isComparing: false,
+        fileBaseId: null,
+        fileCompId: null,
+        view: 'horizontal',
+        resultTab: 'data',
+    },
 };
 
 export const converter: ConverterData = {
@@ -148,6 +156,13 @@ export const validator: ValidatorData = {
     lastReportSaveFolder: '',
 };
 
+const compare: CompareData = {
+    fileBase: null,
+    fileComp: null,
+    datasetDiff: null,
+    recentCompares: [],
+};
+
 export const data: IData = {
     loadedRecords: {},
     recentFolders: [],
@@ -171,6 +186,7 @@ export const data: IData = {
     },
     converter,
     validator,
+    compare,
 };
 
 export const api: IApi = {

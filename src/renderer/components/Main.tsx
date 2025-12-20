@@ -9,6 +9,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import KeyboardIcon from '@mui/icons-material/Keyboard';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import DescriptionIcon from '@mui/icons-material/Description';
+import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import {
     DashboardLayout,
     DashboardLayoutSlots,
@@ -29,10 +30,12 @@ import { AllowedPathnames, NewWindowProps } from 'interfaces/common';
 import ViewerToolbar from 'renderer/components/Toolbars/ViewerToolbar';
 import ReportToolbar from 'renderer/components/Toolbars/ReportToolbar';
 import DefineToolbar from 'renderer/components/Toolbars/DefineToolbar';
+import CompareToolbar from 'renderer/components/Toolbars/CompareToolbar';
 import ToolbarActions from 'renderer/components/ToolbarActions';
 import Shortcuts from 'renderer/components/Shortcuts';
 import Converter from 'renderer/components/Converter';
 import Validator from 'renderer/components/Validator';
+import Compare from 'renderer/components/Compare';
 import About from 'renderer/components/About';
 import { paths } from 'misc/constants';
 import { saveStore } from 'renderer/redux/stateUtils';
@@ -91,6 +94,11 @@ const NAVIGATION: Navigation = [
         segment: 'validator',
         title: 'Validator',
         icon: <FactCheckIcon />,
+    },
+    {
+        segment: 'compare',
+        title: 'Compare',
+        icon: <CompareArrowsIcon />,
     },
     {
         kind: 'divider',
@@ -351,6 +359,10 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
         slots.appTitle = DefineToolbar;
     }
 
+    if (pathname === paths.COMPARE) {
+        slots.appTitle = CompareToolbar;
+    }
+
     return (
         <AppProvider
             navigation={NAVIGATION}
@@ -365,6 +377,7 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                         <ViewFile />
                     )}
                     {pathname === paths.DEFINEXML && <DefineXml />}
+                    {pathname === paths.COMPARE && <Compare />}
                     {pathname === paths.SETTINGS && <Settings />}
                     {pathname === paths.API && <Api />}
                     {pathname === paths.CONVERTER && <Converter />}

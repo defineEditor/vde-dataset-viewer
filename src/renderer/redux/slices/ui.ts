@@ -11,6 +11,7 @@ import {
     DataMode,
     IUiViewer,
     DefineTab,
+    IUiCompare,
 } from 'interfaces/common';
 import { paths } from 'misc/constants';
 
@@ -370,6 +371,18 @@ export const uiSlice = createSlice({
                 state.dataSettings[id].currentIssueIndex = index;
             }
         },
+        setCompareIsComparing: (state, action: PayloadAction<boolean>) => {
+            state.compare.isComparing = action.payload;
+        },
+        setCompareResultTab: (
+            state,
+            action: PayloadAction<'metadata' | 'data'>,
+        ) => {
+            state.compare.resultTab = action.payload;
+        },
+        setCompareView: (state, action: PayloadAction<IUiCompare['view']>) => {
+            state.compare.view = action.payload;
+        },
     },
 });
 
@@ -409,6 +422,9 @@ export const {
     setDefineScrollPosition,
     setDefineIsLoading,
     resetDefineUi,
+    setCompareIsComparing,
+    setCompareResultTab,
+    setCompareView,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

@@ -57,7 +57,12 @@ interface DatasetViewProps {
     settings: TableSettings;
     currentPage?: number;
     currentMask?: IMask | null;
-    annotatedCells?: Map<string, { text: string; color: string }> | null;
+    annotatedCells?: Map<
+        string,
+        { text: string | React.ReactElement; color: string }
+    > | null;
+    containerRef?: React.RefObject<HTMLDivElement | null>;
+    onScroll?: (e: React.UIEvent<HTMLDivElement>) => void;
 }
 
 const DatasetView: React.FC<DatasetViewProps> = ({
@@ -68,6 +73,8 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     currentPage = 0,
     currentMask = null,
     annotatedCells = null,
+    containerRef = undefined,
+    onScroll = undefined,
 }) => {
     const dispatch = useAppDispatch();
     const [sorting, setSorting] = useState<ISortingState>([]);
@@ -208,7 +215,8 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     );
 
     // The virtualizers need to know the scrollable container element
-    const tableContainerRef = useRef<HTMLDivElement>(null);
+    const internalContainerRef = useRef<HTMLDivElement>(null);
+    const tableContainerRef = containerRef || internalContainerRef;
 
     const columnVirtualizer = useVirtualizer({
         count: visibleColumns.length - 1, // Exclude the first column
@@ -245,7 +253,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                 }
             });
         }
-    }, [scrollPositionX, tableHeight]);
+    }, [scrollPositionX, tableHeight, tableContainerRef]);
 
     // Reset the flag when fileId changes
     useEffect(() => {
@@ -380,6 +388,9 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             offsetY: e.currentTarget.scrollTop,
             offsetX: e.currentTarget.scrollLeft,
         };
+        if (onScroll) {
+            onScroll(e);
+        }
     };
 
     useEffect(() => {

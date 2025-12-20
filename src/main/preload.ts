@@ -4,7 +4,12 @@ import {
     IpcRendererEvent,
     webUtils,
 } from 'electron';
-import { TaskProgress, NewWindowProps } from 'interfaces/common';
+import {
+    TaskProgress,
+    NewWindowProps,
+    CompareSettings,
+    CompareOptions,
+} from 'interfaces/common';
 import { ElectronApi, Channels } from 'interfaces/electron.api';
 
 const openFile: ElectronApi['openFile'] = (mode, fileSettings) =>
@@ -196,6 +201,20 @@ const searchInPagePrevious: ElectronApi['searchInPagePrevious'] = (
 const clearSearchResults: ElectronApi['clearSearchResults'] = () =>
     ipcRenderer.invoke('main:clearSearchResults');
 
+const compareDatasets: ElectronApi['compareDatasets'] = (
+    fileBase: string,
+    fileComp: string,
+    options: CompareOptions,
+    settings: CompareSettings,
+) =>
+    ipcRenderer.invoke(
+        'main:compareDatasets',
+        fileBase,
+        fileComp,
+        options,
+        settings,
+    );
+
 contextBridge.exposeInMainWorld('electron', {
     openFile,
     writeToClipboard,
@@ -237,6 +256,7 @@ contextBridge.exposeInMainWorld('electron', {
     searchInPageNext,
     searchInPagePrevious,
     clearSearchResults,
+    compareDatasets,
     ipcRenderer: {
         sendMessage(channel: Channels, args: unknown[]) {
             ipcRenderer.send(channel, args);

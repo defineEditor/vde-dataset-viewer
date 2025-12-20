@@ -9,6 +9,7 @@ import {
     IMask,
     IUiValidationPage,
     ValidatorData,
+    DatasetDiff,
 } from 'interfaces/common';
 import deepEqual from 'renderer/utils/deepEqual';
 import getFolderName from 'renderer/utils/getFolderName';
@@ -207,6 +208,34 @@ export const dataSlice = createSlice({
         setReportLastSaveFolder: (state, action: PayloadAction<string>) => {
             state.validator.lastReportSaveFolder = action.payload;
         },
+        setCompareData: (
+            state,
+            action: PayloadAction<{
+                fileBase: string | null;
+                fileComp: string | null;
+                datasetDiff: DatasetDiff | null;
+            }>,
+        ) => {
+            state.compare.fileBase = action.payload.fileBase;
+            state.compare.fileComp = action.payload.fileComp;
+            state.compare.datasetDiff = action.payload.datasetDiff;
+        },
+        addRecentCompare: (
+            state,
+            action: PayloadAction<{ fileBase: string; fileComp: string }>,
+        ) => {
+            const { fileBase, fileComp } = action.payload;
+            // Check if already exists
+            const index = state.compare.recentCompares.findIndex(
+                (c) => c.fileBase === fileBase && c.fileComp === fileComp,
+            );
+            if (index !== -1) {
+                state.compare.recentCompares.splice(index, 1);
+            } else if (state.compare.recentCompares.length >= 20) {
+                state.compare.recentCompares.pop();
+            }
+            state.compare.recentCompares.unshift({ fileBase, fileComp });
+        },
     },
     extraReducers: (builder) => {
         builder.addCase(openDataset, (state, action) => {
@@ -281,6 +310,8 @@ export const {
     setReportFilter,
     resetReportFilter,
     setReportLastSaveFolder,
+    setCompareData,
+    addRecentCompare,
 } = dataSlice.actions;
 
 export default dataSlice.reducer;

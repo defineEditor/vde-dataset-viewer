@@ -7,6 +7,7 @@ import {
     ValidationRunReport,
     FileInfo,
     DefineFileInfo,
+    DatasetDiff,
 } from 'interfaces/main';
 import { ParsedValidationReport } from 'interfaces/core.report';
 import { modals, ModalType, AllowedPathnames } from 'misc/constants';
@@ -76,7 +77,8 @@ export interface IUiModalGeneral extends IUiModalBase {
         | typeof modals.FILTER
         | typeof modals.VARIABLEINFO
         | typeof modals.MASK
-        | typeof modals.VALIDATOR;
+        | typeof modals.VALIDATOR
+        | typeof modals.SELECTCOMPARE;
     data: {};
 }
 
@@ -188,6 +190,14 @@ export interface IUiDefine {
     scrollPosition: { [fileId: string]: number };
 }
 
+export interface IUiCompare {
+    isComparing: boolean;
+    fileBaseId: string | null;
+    fileCompId: string | null;
+    view: 'horizontal' | 'vertical';
+    resultTab: 'metadata' | 'data';
+}
+
 export interface IUi {
     pathname: AllowedPathnames;
     currentFileId: string;
@@ -206,6 +216,7 @@ export interface IUi {
     };
     validationPage: IUiValidationPage;
     define: IUiDefine;
+    compare: IUiCompare;
 }
 
 export interface IRecentFile {
@@ -236,6 +247,13 @@ export interface ValidatorData {
     selectedFiles: FileInfo[];
 }
 
+export interface CompareData {
+    fileBase: string | null;
+    fileComp: string | null;
+    datasetDiff: DatasetDiff | null;
+    recentCompares: { fileBase: string; fileComp: string }[];
+}
+
 export interface IData {
     loadedRecords: {
         [name: string]: number;
@@ -263,6 +281,7 @@ export interface IData {
     };
     converter: ConverterData;
     validator: ValidatorData;
+    compare: CompareData;
 }
 
 export interface IApiRecord {

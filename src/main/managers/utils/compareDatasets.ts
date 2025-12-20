@@ -1,77 +1,18 @@
 import {
-    Dataset,
     ItemDescription,
     ItemDataArray,
     ItemType,
-} from 'js-stream-dataset-json';
+    CompareOptions,
+    MetadataDiff,
+    DataDiff,
+    DataDiffRow,
+    DatasetMetadata,
+} from 'interfaces/common';
 
-export interface CompareOptions {
-    tolerance?: number;
-    idColumns?: string[];
-    maxDiffCount?: number;
-    maxColumnDiffCount?: number;
-}
-
-export interface MetadataDiff {
-    missingInBase: string[];
-    missingInCompare: string[];
-    attributeDiffs: {
-        [columnName: string]: {
-            [attribute: string]: {
-                base: string | number;
-                compare: string | number;
-            };
-        };
-    };
-    positionDiffs: {
-        [columnName: string]: { base: number; compare: number };
-    };
-    dsAttributeDiffs: {
-        [attribute: string]: {
-            base: string | number;
-            compare: string | number;
-        };
-    };
-}
-
-export interface DataDiffRow {
-    rowBase: number | null;
-    rowCompare: number | null;
-    diff?: {
-        [columnName: string]: [ItemDataArray[number], ItemDataArray[number]];
-    };
-}
-
-export interface DataDiff {
-    deletedRows: DataDiffRow[];
-    addedRows: DataDiffRow[];
-    modifiedRows: DataDiffRow[];
-}
-
-export interface DatasetDiff {
-    metadata: MetadataDiff;
-    data: DataDiff;
-    summary: {
-        firstDiffRow: number | null;
-        lastDiffRow: number | null;
-        totalDiffs: number;
-        maxDiffReached: boolean;
-    };
-}
-
-export function compareDatasets(
-    base: Dataset,
-    compare: Dataset,
-    options: CompareOptions = {},
-): DatasetDiff {
-    const {
-        tolerance = 1e-12,
-        idColumns,
-        maxDiffCount,
-        maxColumnDiffCount,
-    } = options;
-    const columnDiffCounts = new Map<string, number>();
-
+export const compareMetadata = (
+    base: DatasetMetadata,
+    compare: DatasetMetadata,
+): MetadataDiff => {
     // Metadata Comparison
     const metadataDiff: MetadataDiff = {
         missingInBase: [],
@@ -99,8 +40,6 @@ export function compareDatasets(
 
     const allColNames = new Set([...baseCols.keys(), ...compareCols.keys()]);
     const commonCols: string[] = [];
-    // Track columns that reached max diff count
-    const maxColDiffReached: string[] = [];
 
     for (const name of allColNames) {
         const inBase = baseCols.get(name);
@@ -148,12 +87,55 @@ export function compareDatasets(
             }
         }
     }
+    return metadataDiff;
+};
+
+export function compareData(
+    base: ItemDataArray[],
+    compare: ItemDataArray[],
+    baseMeta: DatasetMetadata,
+    compareMeta: DatasetMetadata,
+    summaryInit: DataDiff['summary'],
+    rowShift: number = 0,
+    options: CompareOptions = {},
+): DataDiff {
+    const {
+        tolerance = 1e-12,
+        idColumns,
+        maxDiffCount,
+        maxColumnDiffCount,
+    } = options;
+
+    // Column Maps
+    const baseCols = new Map(
+        baseMeta?.columns.map((c, i) => [c.name, { desc: c, index: i }]) || [],
+    );
+    const compareCols = new Map(
+        compareMeta?.columns.map((c, i) => [c.name, { desc: c, index: i }]) ||
+            [],
+    );
+
+    const allCols = [...baseCols.keys(), ...compareCols.keys()];
+    const commonCols: string[] = allCols.filter(
+        (name) => baseCols.has(name) && compareCols.has(name),
+    );
+
+    // Track columns that reached max diff count
+    const columnDiffCounts = new Map<string, number>();
+    const maxColDiffReached: string[] = [];
 
     // Data Comparison
     const dataDiff: DataDiff = {
         deletedRows: [],
         addedRows: [],
         modifiedRows: [],
+        summary: summaryInit || {
+            firstDiffRow: null,
+            lastDiffRow: null,
+            totalDiffs: 0,
+            maxDiffReached: false,
+            maxColDiffReached: [],
+        },
     };
 
     // Helper to compare values
@@ -215,42 +197,42 @@ export function compareDatasets(
 
         if (hasDiff) {
             return {
-                rowBase: baseIdx + 1,
-                rowCompare: compareIdx + 1,
+                rowBase: baseIdx + 1 + rowShift,
+                rowCompare: compareIdx + 1 + rowShift,
                 diff: diffs,
             };
         }
         return null;
     };
 
+    let maxDiffReached = false;
+    let firstDiffRow: number | null = null;
+    let lastDiffRow: number | null = null;
+
     const runLineByLine = () => {
-        const maxRows = Math.max(base.rows.length, compare.rows.length);
+        const maxRows = Math.max(base.length, compare.length);
         let diffCount = 0;
-        let maxDiffReached = false;
 
         for (let i = 0; i < maxRows || maxDiffReached; i++) {
-            if (i < base.rows.length && i < compare.rows.length) {
-                const diff = compareRow(base.rows[i], compare.rows[i], i, i);
+            let hasDiff = false;
+            if (i < base.length && i < compare.length) {
+                const diff = compareRow(base[i], compare[i], i, i);
                 if (diff) {
-                    diffCount++;
+                    hasDiff = true;
                     dataDiff.modifiedRows.push(diff);
                 }
-            } else if (i >= base.rows.length) {
-                dataDiff.addedRows.push({
-                    rowBase: null,
-                    rowCompare: i + 1,
-                });
-                diffCount++;
-            } else {
-                dataDiff.deletedRows.push({
-                    rowBase: i + 1,
-                    rowCompare: null,
-                });
-                diffCount++;
             }
-        }
-        if (maxDiffCount !== undefined && diffCount >= maxDiffCount) {
-            maxDiffReached = true;
+            if (hasDiff) {
+                diffCount++;
+                if (firstDiffRow === null) {
+                    firstDiffRow = i + rowShift;
+                }
+                lastDiffRow = i + rowShift;
+            }
+
+            if (maxDiffCount !== undefined && diffCount >= maxDiffCount) {
+                maxDiffReached = true;
+            }
         }
     };
 
@@ -277,14 +259,14 @@ export function compareDatasets(
                 string,
                 { row: ItemDataArray; index: number }
             >();
-            base.rows.forEach((row, i) => {
+            base.forEach((row, i) => {
                 const key = generateKey(row, baseCols);
                 baseMap.set(key, { row, index: i });
             });
 
             const visitedKeys = new Set<string>();
 
-            compare.rows.forEach((row, i) => {
+            compare.forEach((row, i) => {
                 const key = generateKey(row, compareCols);
                 visitedKeys.add(key);
 
@@ -299,22 +281,8 @@ export function compareDatasets(
                     if (diff) {
                         dataDiff.modifiedRows.push(diff);
                     }
-                } else {
-                    dataDiff.addedRows.push({
-                        rowBase: null,
-                        rowCompare: i + 1,
-                    });
                 }
             });
-
-            for (const [key, baseEntry] of baseMap) {
-                if (!visitedKeys.has(key)) {
-                    dataDiff.deletedRows.push({
-                        rowBase: baseEntry.index + 1,
-                        rowCompare: null,
-                    });
-                }
-            }
         } else {
             runLineByLine();
         }
@@ -322,8 +290,14 @@ export function compareDatasets(
         runLineByLine();
     }
 
-    return {
-        metadata: metadataDiff,
-        data: dataDiff,
+    // Get summary
+    dataDiff.summary = {
+        firstDiffRow,
+        lastDiffRow,
+        totalDiffs: dataDiff.deletedRows.length + dataDiff.modifiedRows.length,
+        maxDiffReached,
+        maxColDiffReached,
     };
+
+    return dataDiff;
 }

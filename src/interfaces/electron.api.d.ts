@@ -16,6 +16,9 @@ import {
     NewWindowProps,
     DefineFileInfo,
     DefineXmlContent,
+    CompareOptions,
+    CompareSettings,
+    DatasetDiff,
 } from 'interfaces/common';
 
 export type Channels = 'ipc-vde';
@@ -115,4 +118,10 @@ export interface ElectronApi {
     searchInPageNext: (searchTerm: string) => Promise<void>;
     searchInPagePrevious: (searchTerm: string) => Promise<void>;
     clearSearchResults: () => Promise<void>;
+    compareDatasets: (
+        fileBase: string,
+        fileComp: string,
+        options: CompareOptions,
+        settings: CompareSettings,
+    ) => Promise<DatasetDiff | { error: string }>;
 }

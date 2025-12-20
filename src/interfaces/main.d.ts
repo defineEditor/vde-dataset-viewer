@@ -1,5 +1,5 @@
 import { UpdateCheckResult } from 'electron-updater';
-import { DatasetMetadata } from 'interfaces/datasetJson';
+import { DatasetMetadata, ItemDataArray } from 'interfaces/datasetJson';
 import { mainTaskTypes } from 'misc/constants';
 
 export interface SettingsConverter {
@@ -231,4 +231,65 @@ export interface NewWindowProps {
         filteredIssues: string[];
         reportId: string;
     };
+}
+
+// Diff interfaces
+export interface CompareOptions {
+    tolerance?: number;
+    idColumns?: string[];
+    maxDiffCount?: number;
+    maxColumnDiffCount?: number;
+}
+
+export interface CompareSettings {
+    encoding: BufferEncoding | 'default';
+    bufferSize: number;
+}
+
+export interface MetadataDiff {
+    missingInBase: string[];
+    missingInCompare: string[];
+    attributeDiffs: {
+        [columnName: string]: {
+            [attribute: string]: {
+                base: string | number;
+                compare: string | number;
+            };
+        };
+    };
+    positionDiffs: {
+        [columnName: string]: { base: number; compare: number };
+    };
+    dsAttributeDiffs: {
+        [attribute: string]: {
+            base: string | number;
+            compare: string | number;
+        };
+    };
+}
+
+export interface DataDiffRow {
+    rowBase: number | null;
+    rowCompare: number | null;
+    diff?: {
+        [columnName: string]: [ItemDataArray[number], ItemDataArray[number]];
+    };
+}
+
+export interface DataDiff {
+    deletedRows: DataDiffRow[];
+    addedRows: DataDiffRow[];
+    modifiedRows: DataDiffRow[];
+    summary: {
+        firstDiffRow: number | null;
+        lastDiffRow: number | null;
+        totalDiffs: number;
+        maxDiffReached: boolean;
+        maxColDiffReached: string[];
+    };
+}
+
+export interface DatasetDiff {
+    metadata: MetadataDiff;
+    data: DataDiff;
 }
