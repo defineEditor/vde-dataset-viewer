@@ -383,6 +383,22 @@ export const uiSlice = createSlice({
         setCompareView: (state, action: PayloadAction<IUiCompare['view']>) => {
             state.compare.view = action.payload;
         },
+        setCompareFiles: (
+            state,
+            action: PayloadAction<
+                Partial<{
+                    fileBase: string | null;
+                    fileComp: string | null;
+                }>
+            >,
+        ) => {
+            if (action.payload.fileBase !== undefined) {
+                state.compare.fileBase = action.payload.fileBase;
+            }
+            if (action.payload.fileComp !== undefined) {
+                state.compare.fileComp = action.payload.fileComp;
+            }
+        },
     },
 });
 
@@ -423,6 +439,7 @@ export const {
     setDefineIsLoading,
     resetDefineUi,
     setCompareIsComparing,
+    setCompareFiles,
     setCompareResultTab,
     setCompareView,
 } = uiSlice.actions;

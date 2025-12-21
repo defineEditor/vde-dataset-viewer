@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useCallback } from 'react';
+import React, { useContext, useEffect, useCallback } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -17,13 +17,16 @@ import {
     Chip,
     Divider,
     InputAdornment,
+    Tooltip,
 } from '@mui/material';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
+import SwapVertIcon from '@mui/icons-material/SwapVert';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import {
     closeModal,
     openSnackbar,
     setPathname,
+    setCompareFiles,
 } from 'renderer/redux/slices/ui';
 import { addRecentCompare, setCompareData } from 'renderer/redux/slices/data';
 import { modals, paths } from 'misc/constants';
@@ -31,7 +34,7 @@ import AppContext from 'renderer/utils/AppContext';
 
 const styles = {
     dialog: {
-        minWidth: { xs: '95%', sm: '95%', md: '80%', lg: '60%', xl: '60%' },
+        minWidth: { xs: '95%', sm: '95%', md: '70%', lg: '50%', xl: '40%' },
     },
     actions: {
         m: 2,
@@ -71,8 +74,12 @@ const SelectCompare: React.FC = () => {
         (state) => state.data.compare.recentCompares,
     );
 
-    const [fileBase, setFileBase] = useState<string>('');
-    const [fileComp, setFileComp] = useState<string>('');
+    const fileBase = useAppSelector((state) => state.ui.compare.fileBase) || '';
+    const fileComp = useAppSelector((state) => state.ui.compare.fileComp) || '';
+
+    const handleSwitch = () => {
+        dispatch(setCompareFiles({ fileBase: fileComp, fileComp: fileBase }));
+    };
 
     const handleClose = useCallback(() => {
         dispatch(closeModal({ type: modals.SELECTCOMPARE }));
@@ -126,9 +133,9 @@ const SelectCompare: React.FC = () => {
         });
         if (result && result.length > 0) {
             if (type === 'base') {
-                setFileBase(result[0].fullPath);
+                dispatch(setCompareFiles({ fileBase: result[0].fullPath }));
             } else {
-                setFileComp(result[0].fullPath);
+                dispatch(setCompareFiles({ fileComp: result[0].fullPath }));
             }
         }
     };
@@ -137,8 +144,12 @@ const SelectCompare: React.FC = () => {
         fileBase: string;
         fileComp: string;
     }) => {
-        setFileBase(recent.fileBase);
-        setFileComp(recent.fileComp);
+        dispatch(
+            setCompareFiles({
+                fileBase: recent.fileBase,
+                fileComp: recent.fileComp,
+            }),
+        );
     };
 
     // Keyboard shortcuts
@@ -156,6 +167,12 @@ const SelectCompare: React.FC = () => {
                     if (recentCompares[index]) {
                         event.preventDefault();
                         const recent = recentCompares[index];
+                        dispatch(
+                            setCompareFiles({
+                                fileBase: recent.fileBase,
+                                fileComp: recent.fileComp,
+                            }),
+                        );
                         handleCompare(recent.fileBase, recent.fileComp);
                     }
                 }
@@ -186,18 +203,37 @@ const SelectCompare: React.FC = () => {
                             fullWidth
                             label="Base File"
                             value={fileBase}
-                            onChange={(e) => setFileBase(e.target.value)}
+                            onChange={(e) => {
+                                dispatch(
+                                    setCompareFiles({
+                                        fileBase: e.target.value,
+                                    }),
+                                );
+                            }}
                             slotProps={{
                                 input: {
                                     endAdornment: (
                                         <InputAdornment position="end">
-                                            <IconButton
-                                                onClick={() =>
-                                                    handleSelectFile('base')
-                                                }
-                                            >
-                                                <FolderOpenIcon />
-                                            </IconButton>
+                                            <>
+                                                <Tooltip title="Switch Base and Compare">
+                                                    <IconButton
+                                                        onClick={handleSwitch}
+                                                    >
+                                                        <SwapVertIcon />
+                                                    </IconButton>
+                                                </Tooltip>
+                                                <Tooltip title="Select Base File">
+                                                    <IconButton
+                                                        onClick={() =>
+                                                            handleSelectFile(
+                                                                'base',
+                                                            )
+                                                        }
+                                                    >
+                                                        <FolderOpenIcon />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </>
                                         </InputAdornment>
                                     ),
                                 },
@@ -209,18 +245,26 @@ const SelectCompare: React.FC = () => {
                             fullWidth
                             label="Compare File"
                             value={fileComp}
-                            onChange={(e) => setFileComp(e.target.value)}
+                            onChange={(e) => {
+                                dispatch(
+                                    setCompareFiles({
+                                        fileComp: e.target.value,
+                                    }),
+                                );
+                            }}
                             slotProps={{
                                 input: {
                                     endAdornment: (
                                         <InputAdornment position="end">
-                                            <IconButton
-                                                onClick={() =>
-                                                    handleSelectFile('comp')
-                                                }
-                                            >
-                                                <FolderOpenIcon />
-                                            </IconButton>
+                                            <Tooltip title="Select Compare File">
+                                                <IconButton
+                                                    onClick={() =>
+                                                        handleSelectFile('comp')
+                                                    }
+                                                >
+                                                    <FolderOpenIcon />
+                                                </IconButton>
+                                            </Tooltip>
                                         </InputAdornment>
                                     ),
                                 },

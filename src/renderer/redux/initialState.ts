@@ -99,8 +99,8 @@ export const ui: IUi = {
     },
     compare: {
         isComparing: false,
-        fileBaseId: null,
-        fileCompId: null,
+        fileBase: null,
+        fileComp: null,
         view: 'horizontal',
         resultTab: 'data',
     },

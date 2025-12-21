@@ -192,8 +192,8 @@ export interface IUiDefine {
 
 export interface IUiCompare {
     isComparing: boolean;
-    fileBaseId: string | null;
-    fileCompId: string | null;
+    fileBase: string | null;
+    fileComp: string | null;
     view: 'horizontal' | 'vertical';
     resultTab: 'metadata' | 'data';
 }
