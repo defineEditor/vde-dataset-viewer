@@ -376,7 +376,7 @@ export const uiSlice = createSlice({
         },
         setCompareResultTab: (
             state,
-            action: PayloadAction<'metadata' | 'data'>,
+            action: PayloadAction<'summary' | 'metadata' | 'data'>,
         ) => {
             state.compare.resultTab = action.payload;
         },

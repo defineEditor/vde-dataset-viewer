@@ -7,12 +7,16 @@ import {
     DataDiff,
     DataDiffRow,
     DatasetMetadata,
+    DatasetDiff,
 } from 'interfaces/common';
 
 export const compareMetadata = (
     base: DatasetMetadata,
     compare: DatasetMetadata,
-): MetadataDiff => {
+): {
+    metadata: MetadataDiff;
+    summary: Partial<DatasetDiff['summary']>;
+} => {
     // Metadata Comparison
     const metadataDiff: MetadataDiff = {
         missingInBase: [],
@@ -87,7 +91,18 @@ export const compareMetadata = (
             }
         }
     }
-    return metadataDiff;
+
+    const summary: Partial<DatasetDiff['summary']> = {
+        columnsWithDiffs:
+            commonCols.length - Object.keys(metadataDiff.attributeDiffs).length,
+        columnsWithoutDiffs:
+            metadataDiff.missingInBase.length +
+            metadataDiff.missingInCompare.length,
+    };
+    return {
+        metadata: metadataDiff,
+        summary,
+    };
 };
 
 export function compareData(
@@ -95,10 +110,10 @@ export function compareData(
     compare: ItemDataArray[],
     baseMeta: DatasetMetadata,
     compareMeta: DatasetMetadata,
-    summaryInit: DataDiff['summary'],
+    summaryInit: DatasetDiff['summary'],
     rowShift: number = 0,
     options: CompareOptions = {},
-): DataDiff {
+): { data: DataDiff; summary: Partial<DatasetDiff['summary']> } {
     const {
         tolerance = 1e-12,
         idColumns,
@@ -122,20 +137,20 @@ export function compareData(
 
     // Track columns that reached max diff count
     const columnDiffCounts = new Map<string, number>();
-    const maxColDiffReached: string[] = [];
+    const maxColDiffReached: string[] = summaryInit?.maxColDiffReached || [];
 
     // Data Comparison
     const dataDiff: DataDiff = {
         deletedRows: [],
         addedRows: [],
         modifiedRows: [],
-        summary: summaryInit || {
-            firstDiffRow: null,
-            lastDiffRow: null,
-            totalDiffs: 0,
-            maxDiffReached: false,
-            maxColDiffReached: [],
-        },
+    };
+    let summary: Partial<DatasetDiff['summary']> = {
+        firstDiffRow: null,
+        lastDiffRow: null,
+        totalDiffs: 0,
+        maxDiffReached: false,
+        maxColDiffReached: [],
     };
 
     // Helper to compare values
@@ -205,7 +220,7 @@ export function compareData(
         return null;
     };
 
-    let maxDiffReached = false;
+    let maxDiffReached = summaryInit?.maxDiffReached || false;
     let firstDiffRow: number | null = null;
     let lastDiffRow: number | null = null;
 
@@ -291,13 +306,31 @@ export function compareData(
     }
 
     // Get summary
-    dataDiff.summary = {
-        firstDiffRow,
-        lastDiffRow,
-        totalDiffs: dataDiff.deletedRows.length + dataDiff.modifiedRows.length,
+    const newFirstLow =
+        firstDiffRow !== null
+            ? Math.min(
+                  firstDiffRow + rowShift,
+                  summaryInit?.firstDiffRow || Infinity,
+              )
+            : summaryInit?.firstDiffRow || null;
+    const newLastLow =
+        lastDiffRow !== null
+            ? Math.max(
+                  summaryInit?.lastDiffRow || -Infinity,
+                  lastDiffRow + rowShift,
+              )
+            : summaryInit?.lastDiffRow || null;
+    const totalDiffs =
+        dataDiff.deletedRows.length + dataDiff.modifiedRows.length;
+    const newTotalDiffs = (summaryInit?.totalDiffs || 0) + totalDiffs;
+
+    summary = {
+        firstDiffRow: newFirstLow,
+        lastDiffRow: newLastLow,
+        totalDiffs: newTotalDiffs,
         maxDiffReached,
         maxColDiffReached,
     };
 
-    return dataDiff;
+    return { data: dataDiff, summary };
 }

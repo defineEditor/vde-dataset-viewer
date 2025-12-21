@@ -280,16 +280,18 @@ export interface DataDiff {
     deletedRows: DataDiffRow[];
     addedRows: DataDiffRow[];
     modifiedRows: DataDiffRow[];
+}
+
+export interface DatasetDiff {
+    metadata: MetadataDiff;
+    data: DataDiff;
     summary: {
         firstDiffRow: number | null;
         lastDiffRow: number | null;
         totalDiffs: number;
         maxDiffReached: boolean;
         maxColDiffReached: string[];
+        columnsWithDiffs: number;
+        columnsWithoutDiffs: number;
     };
-}
-
-export interface DatasetDiff {
-    metadata: MetadataDiff;
-    data: DataDiff;
 }

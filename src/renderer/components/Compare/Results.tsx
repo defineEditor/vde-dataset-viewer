@@ -10,6 +10,7 @@ import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import { setCompareResultTab } from 'renderer/redux/slices/ui';
 import Metadata from 'renderer/components/Compare/Metadata';
 import Data from 'renderer/components/Compare/Data';
+import Summary from 'renderer/components/Compare/Summary';
 
 const styles = {
     root: {
@@ -45,23 +46,27 @@ const Results: React.FC = () => {
 
     const handleTabChange = (
         _event: React.SyntheticEvent,
-        newValue: 'metadata' | 'data',
+        newValue: 'summary' | 'metadata' | 'data',
     ) => {
         dispatch(setCompareResultTab(newValue));
     };
 
     return (
         <Stack spacing={0} justifyContent="flex-start" sx={styles.root}>
-            <TabContext value={currentTab || 'metadata'}>
+            <TabContext value={currentTab || 'summary'}>
                 <TabList
                     onChange={handleTabChange}
                     sx={styles.tabs}
                     variant="fullWidth"
                 >
+                    <StyledTab label="Summary" value="summary" />
                     <StyledTab label="Metadata" value="metadata" />
                     <StyledTab label="Data" value="data" />
                 </TabList>
                 <Box style={styles.fullHeight}>
+                    <TabPanel value="summary" sx={styles.tabPanel}>
+                        <Summary />
+                    </TabPanel>
                     <TabPanel value="metadata" sx={styles.tabPanel}>
                         <Metadata />
                     </TabPanel>
