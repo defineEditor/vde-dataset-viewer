@@ -7,11 +7,11 @@ import {
     ListItem,
     ListItemText,
     Chip,
-    Divider,
     Table,
     TableBody,
     TableRow,
     TableCell,
+    Stack,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useAppSelector } from 'renderer/redux/hooks';
@@ -21,6 +21,7 @@ const styles = {
         p: 2,
         height: '100%',
         overflow: 'auto',
+        flexWrap: 'wrap',
     },
     section: {
         mb: 3,
@@ -39,7 +40,7 @@ const styles = {
         alignItems: 'center',
         gap: 1,
         color: 'success.main',
-        mb: 2,
+        my: 2,
     },
     table: {
         borderCollapse: 'separate',
@@ -47,11 +48,26 @@ const styles = {
     tableCellLabel: {
         borderBottom: 'none',
         pl: 0,
-        width: '200px',
+        width: '300px',
     },
     tableCellValue: {
         borderBottom: 'none',
         pr: 0,
+    },
+    tableCellVariableName: {
+        fontWeight: 'bold',
+        width: '150px',
+        borderBottom: 'none',
+    },
+    summary: {
+        p: 2,
+        flex: 1,
+        minWidth: '300px',
+    },
+    columnSummary: {
+        flex: 1,
+        p: 2,
+        minWidth: '300px',
     },
 };
 
@@ -102,18 +118,90 @@ const Summary: React.FC = () => {
     const sortedColumns = Object.keys(columnsStats).sort();
 
     const allEqual = isDataEqual && isMetadataEqual;
+    // In case all equal, show a simplified summary
+    const summaryNoIssuesData = [
+        {
+            label: 'Total Records Compared',
+            value: summary.totalRowsChecked,
+        },
+        {
+            label: 'Total Columns Compared',
+            value: metadata.commonCols.length,
+        },
+    ];
     let maxReachedText = '';
     if (summary && summary.maxDiffReached) {
         maxReachedText = ' * (Max limit reached)';
     }
 
+    const summaryData = [
+        {
+            label: 'Total Records Compared',
+            value: summary.totalRowsChecked,
+        },
+        {
+            label: 'Total Columns Compared',
+            value: metadata.commonCols.length,
+        },
+        {
+            label: 'Total Records Different',
+            value: summary.totalDiffs + maxReachedText,
+        },
+        {
+            label: 'First Row with Difference',
+            value:
+                summary.firstDiffRow !== null ? summary.firstDiffRow + 1 : '-',
+        },
+        {
+            label: 'Last Row with Difference',
+            value: summary.lastDiffRow !== null ? summary.lastDiffRow + 1 : '-',
+        },
+        {
+            label: 'Columns with Metadata Differences',
+            value: summary.colsWithMetadataDiffs,
+        },
+        {
+            label: 'Columns with Data Differences',
+            value: summary.colsWithDataDiffs,
+        },
+        {
+            label: 'Columns with All Data Equal',
+            value: summary.colsWithoutDiffs,
+        },
+    ];
+
     return (
-        <Box sx={styles.root}>
+        <Stack
+            sx={styles.root}
+            direction="row"
+            justifyContent="space-around"
+            alignItems="flex-start"
+            spacing={2}
+            useFlexGap
+        >
             {allEqual ? (
-                <Paper sx={{ p: 2, mb: 2 }}>
+                <Paper sx={styles.summary}>
                     <Typography variant="h6" gutterBottom>
                         Comparison Summary
                     </Typography>
+                    <Table
+                        size="small"
+                        aria-label="comparison-summary-no-diffs"
+                        sx={styles.table}
+                    >
+                        <TableBody>
+                            {summaryNoIssuesData.map((item) => (
+                                <TableRow key={item.label}>
+                                    <TableCell sx={styles.tableCellLabel}>
+                                        {item.label}
+                                    </TableCell>
+                                    <TableCell sx={styles.tableCellValue}>
+                                        {item.value}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                     <Box sx={styles.successMessage}>
                         <CheckCircleIcon />
                         <Typography>All values are equal</Typography>
@@ -121,7 +209,7 @@ const Summary: React.FC = () => {
                 </Paper>
             ) : (
                 <>
-                    <Paper sx={{ p: 2, mb: 2 }}>
+                    <Paper sx={styles.summary}>
                         <Typography variant="h6" gutterBottom>
                             Comparison Summary
                         </Typography>
@@ -131,54 +219,31 @@ const Summary: React.FC = () => {
                             sx={styles.table}
                         >
                             <TableBody>
-                                <TableRow>
-                                    <TableCell sx={styles.tableCellLabel}>
-                                        Total Records Different
-                                    </TableCell>
-                                    <TableCell sx={styles.tableCellValue}>
-                                        {summary.totalDiffs}
-                                        {maxReachedText}
-                                    </TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell sx={styles.tableCellLabel}>
-                                        First Row with Difference
-                                    </TableCell>
-                                    <TableCell sx={styles.tableCellValue}>
-                                        {summary.firstDiffRow !== null
-                                            ? summary.firstDiffRow + 1
-                                            : '-'}
-                                    </TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell sx={styles.tableCellLabel}>
-                                        Last Row with Difference
-                                    </TableCell>
-                                    <TableCell sx={styles.tableCellValue}>
-                                        {summary.lastDiffRow !== null
-                                            ? summary.lastDiffRow + 1
-                                            : '-'}
-                                    </TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell sx={styles.tableCellLabel}>
-                                        Columns with Differences
-                                    </TableCell>
-                                    <TableCell sx={styles.tableCellValue}>
-                                        {sortedColumns.length}
-                                    </TableCell>
-                                </TableRow>
+                                {summaryData.map((item) => (
+                                    <TableRow key={item.label}>
+                                        <TableCell sx={styles.tableCellLabel}>
+                                            {item.label}
+                                        </TableCell>
+                                        <TableCell sx={styles.tableCellValue}>
+                                            {item.value}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
                             </TableBody>
                         </Table>
                     </Paper>
 
-                    <Paper sx={{ p: 2 }}>
+                    <Paper sx={styles.columnSummary}>
                         <Typography variant="h6" gutterBottom>
                             Column Summary
                         </Typography>
                         {metadata.missingInBase.length === 0 &&
                         metadata.missingInCompare.length === 0 ? (
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                gutterBottom
+                            >
                                 Base and Compare have the same columns
                             </Typography>
                         ) : (
@@ -207,55 +272,84 @@ const Summary: React.FC = () => {
                         )}
                         {sortedColumns.length > 0 && (
                             <>
-                                <Typography variant="h6" gutterBottom>
-                                    Differences in Columns
+                                <Typography
+                                    variant="subtitle1"
+                                    component="span"
+                                >
+                                    Differences in{' '}
                                 </Typography>
-                                <List dense>
-                                    {sortedColumns.map((col) => (
-                                        <React.Fragment key={col}>
-                                            <ListItem sx={styles.columnItem}>
-                                                <Typography
-                                                    variant="body2"
-                                                    sx={{ fontWeight: 'bold' }}
+                                <Typography
+                                    variant="subtitle1"
+                                    color="warning"
+                                    component="span"
+                                >
+                                    Data
+                                </Typography>
+                                <Typography
+                                    variant="subtitle1"
+                                    component="span"
+                                >
+                                    /
+                                </Typography>
+                                <Typography
+                                    variant="subtitle1"
+                                    color="info"
+                                    component="span"
+                                >
+                                    Metadata
+                                </Typography>
+                                <Table
+                                    size="small"
+                                    aria-label="comparison-summary"
+                                    sx={styles.table}
+                                >
+                                    <TableBody>
+                                        {sortedColumns.map((col) => (
+                                            <TableRow key={col}>
+                                                <TableCell
+                                                    sx={
+                                                        styles.tableCellVariableName
+                                                    }
                                                 >
                                                     {col}
                                                     {summary.maxColDiffReached.includes(
                                                         col,
                                                     ) && ' *'}
-                                                </Typography>
-                                                <Box>
+                                                </TableCell>
+                                                <TableCell
+                                                    sx={styles.tableCellValue}
+                                                >
                                                     {columnsStats[col]
                                                         .dataDiffs > 0 && (
                                                         <Chip
-                                                            label={`${columnsStats[col].dataDiffs} data diffs`}
+                                                            label={`${columnsStats[col].dataDiffs}`}
                                                             size="small"
-                                                            color="error"
-                                                            variant="outlined"
+                                                            color="warning"
+                                                            variant="filled"
                                                             sx={styles.chip}
                                                         />
                                                     )}
                                                     {columnsStats[col]
                                                         .metaDiffs > 0 && (
                                                         <Chip
-                                                            label={`${columnsStats[col].metaDiffs} meta diffs`}
+                                                            label={`${columnsStats[col].metaDiffs}`}
                                                             size="small"
-                                                            color="warning"
-                                                            variant="outlined"
+                                                            color="info"
+                                                            variant="filled"
                                                             sx={styles.chip}
                                                         />
                                                     )}
-                                                </Box>
-                                            </ListItem>
-                                            <Divider component="li" />
-                                        </React.Fragment>
-                                    ))}
-                                </List>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
                             </>
                         )}
                     </Paper>
                 </>
             )}
-        </Box>
+        </Stack>
     );
 };
 

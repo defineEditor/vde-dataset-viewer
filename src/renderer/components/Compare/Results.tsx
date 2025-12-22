@@ -19,6 +19,7 @@ const styles = {
         px: 0,
         backgroundColor: 'grey.100',
         height: '100%',
+        overflow: 'hidden',
     },
     tabs: {
         width: '100%',

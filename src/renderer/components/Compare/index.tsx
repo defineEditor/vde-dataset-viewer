@@ -7,10 +7,16 @@ import Loading from 'renderer/components/Loading';
 import Results from 'renderer/components/Compare/Results';
 
 const styles = {
-    container: {
+    loadingContainer: {
         height: '100%',
         width: '100%',
         backgroundColor: '#FFF',
+    },
+    selectContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%',
     },
     loading: {
         position: 'fixed',
@@ -53,7 +59,7 @@ const Compare: React.FC = () => {
 
     if (isComparing) {
         return (
-            <Box sx={styles.container}>
+            <Box sx={styles.loadingContainer}>
                 <Box sx={styles.loading}>
                     <Loading />
                     <Box sx={styles.sponsored}>Sponsored by:</Box>
@@ -68,12 +74,7 @@ const Compare: React.FC = () => {
 
     if (!fileBase || !fileComp) {
         return (
-            <Box
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                height="100%"
-            >
+            <Box sx={styles.selectContainer}>
                 <Stack direction="row" alignItems="center">
                     <Button
                         sx={styles.selectButton}

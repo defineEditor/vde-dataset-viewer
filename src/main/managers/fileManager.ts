@@ -512,19 +512,24 @@ class FileManager {
             addedRows: [],
             deletedRows: [],
             modifiedRows: [],
-            summary: {
-                firstDiffRow: null,
-                lastDiffRow: null,
-                totalDiffs: 0,
-                maxDiffReached: false,
-                maxColDiffReached: [],
-            },
         };
 
         const metadataDiff: DatasetDiff['metadata'] = compareMetadata(
             baseMeta,
             compMeta,
         );
+
+        let summary: DatasetDiff['summary'] = {
+            firstDiffRow: null,
+            lastDiffRow: null,
+            totalDiffs: 0,
+            maxDiffReached: false,
+            maxColDiffReached: [],
+            colsWithDataDiffs: 0,
+            colsWithMetadataDiffs: 0,
+            colsWithoutDiffs: 0,
+            totalRowsChecked: 0,
+        };
 
         for (
             let start = 0;
@@ -558,19 +563,45 @@ class FileManager {
                 compData,
                 baseMeta,
                 compMeta,
-                dataDiff.summary,
+                summary,
                 start,
                 options,
             );
 
-            dataDiff.addedRows.push(...blockDiff.addedRows);
-            dataDiff.deletedRows.push(...blockDiff.deletedRows);
-            dataDiff.modifiedRows.push(...blockDiff.modifiedRows);
+            dataDiff.addedRows.push(...blockDiff.data.addedRows);
+            dataDiff.deletedRows.push(...blockDiff.data.deletedRows);
+            dataDiff.modifiedRows.push(...blockDiff.data.modifiedRows);
 
-            dataDiff.summary = blockDiff.summary;
+            summary = {
+                ...summary,
+                ...blockDiff.summary,
+                totalRowsChecked:
+                    start + Math.min(baseData.length, compData.length),
+            };
         }
 
-        return { metadata: metadataDiff, data: dataDiff };
+        // Derive additional summary info
+        const dataDiffCols = dataDiff.modifiedRows.reduce((acc, row) => {
+            if (row.diff) {
+                Object.keys(row.diff).forEach((colName) => {
+                    if (!acc.includes(colName)) {
+                        acc.push(colName);
+                    }
+                });
+            }
+            return acc;
+        }, [] as string[]);
+        summary.colsWithDataDiffs = dataDiffCols.length;
+        summary.colsWithMetadataDiffs = Object.keys(
+            metadataDiff.attributeDiffs,
+        ).length;
+        summary.colsWithoutDiffs = metadataDiff.commonCols.filter(
+            (col) =>
+                !dataDiffCols.includes(col) &&
+                !metadataDiff.attributeDiffs[col],
+        ).length;
+
+        return { metadata: metadataDiff, data: dataDiff, summary };
     };
 }
 

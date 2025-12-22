@@ -249,6 +249,7 @@ export interface CompareSettings {
 export interface MetadataDiff {
     missingInBase: string[];
     missingInCompare: string[];
+    commonCols: string[];
     attributeDiffs: {
         [columnName: string]: {
             [attribute: string]: {
@@ -282,16 +283,20 @@ export interface DataDiff {
     modifiedRows: DataDiffRow[];
 }
 
+export interface DiffSummary {
+    firstDiffRow: number | null;
+    lastDiffRow: number | null;
+    totalDiffs: number;
+    totalRowsChecked: number;
+    maxDiffReached: boolean;
+    maxColDiffReached: string[];
+    colsWithMetadataDiffs: number;
+    colsWithDataDiffs: number;
+    colsWithoutDiffs: number;
+}
+
 export interface DatasetDiff {
     metadata: MetadataDiff;
     data: DataDiff;
-    summary: {
-        firstDiffRow: number | null;
-        lastDiffRow: number | null;
-        totalDiffs: number;
-        maxDiffReached: boolean;
-        maxColDiffReached: string[];
-        columnsWithDiffs: number;
-        columnsWithoutDiffs: number;
-    };
+    summary: DiffSummary;
 }

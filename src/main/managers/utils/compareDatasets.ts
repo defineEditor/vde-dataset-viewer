@@ -13,12 +13,10 @@ import {
 export const compareMetadata = (
     base: DatasetMetadata,
     compare: DatasetMetadata,
-): {
-    metadata: MetadataDiff;
-    summary: Partial<DatasetDiff['summary']>;
-} => {
+): MetadataDiff => {
     // Metadata Comparison
     const metadataDiff: MetadataDiff = {
+        commonCols: [],
         missingInBase: [],
         missingInCompare: [],
         attributeDiffs: {},
@@ -31,6 +29,20 @@ export const compareMetadata = (
         metadataDiff.dsAttributeDiffs.label = {
             base: base.label,
             compare: compare.label,
+        };
+    }
+
+    if (base.records !== compare.records) {
+        metadataDiff.dsAttributeDiffs.records = {
+            base: base.records,
+            compare: compare.records,
+        };
+    }
+
+    if (base.name !== compare.name) {
+        metadataDiff.dsAttributeDiffs.name = {
+            base: base.name || '',
+            compare: compare.name || '',
         };
     }
 
@@ -92,17 +104,9 @@ export const compareMetadata = (
         }
     }
 
-    const summary: Partial<DatasetDiff['summary']> = {
-        columnsWithDiffs:
-            commonCols.length - Object.keys(metadataDiff.attributeDiffs).length,
-        columnsWithoutDiffs:
-            metadataDiff.missingInBase.length +
-            metadataDiff.missingInCompare.length,
-    };
-    return {
-        metadata: metadataDiff,
-        summary,
-    };
+    metadataDiff.commonCols = commonCols;
+
+    return metadataDiff;
 };
 
 export function compareData(
@@ -144,13 +148,6 @@ export function compareData(
         deletedRows: [],
         addedRows: [],
         modifiedRows: [],
-    };
-    let summary: Partial<DatasetDiff['summary']> = {
-        firstDiffRow: null,
-        lastDiffRow: null,
-        totalDiffs: 0,
-        maxDiffReached: false,
-        maxColDiffReached: [],
     };
 
     // Helper to compare values
@@ -205,6 +202,12 @@ export function compareData(
                         columnDiffCounts.set(colName, currentCount + 1);
                         if (currentCount + 1 >= maxColumnDiffCount) {
                             maxColDiffReached.push(colName);
+                            // If all columns have reached max, set maxDiffReached
+                            if (
+                                maxColDiffReached.length === commonCols.length
+                            ) {
+                                summaryInit.maxDiffReached = true;
+                            }
                         }
                     }
                 }
@@ -324,7 +327,7 @@ export function compareData(
         dataDiff.deletedRows.length + dataDiff.modifiedRows.length;
     const newTotalDiffs = (summaryInit?.totalDiffs || 0) + totalDiffs;
 
-    summary = {
+    const summary = {
         firstDiffRow: newFirstLow,
         lastDiffRow: newLastLow,
         totalDiffs: newTotalDiffs,
