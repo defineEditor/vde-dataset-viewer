@@ -23,7 +23,7 @@ import AppContext from 'renderer/utils/AppContext';
 const styles = {
     main: {
         width: '100%',
-        paddingLeft: 1,
+        paddingLeft: 2,
     },
     searchInput: {},
 };

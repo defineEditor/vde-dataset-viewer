@@ -5,30 +5,24 @@ import CloseIcon from '@mui/icons-material/Close';
 import FlipCameraAndroidIcon from '@mui/icons-material/FlipCameraAndroid';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
-import AppContext from 'renderer/utils/AppContext';
 import {
     openModal,
-    setCompareIsComparing,
+    setIsComparing,
     setCompareView,
-    openSnackbar,
-    setPathname,
+    setCompareFiles,
 } from 'renderer/redux/slices/ui';
-import { paths, modals } from 'misc/constants';
+import { modals } from 'misc/constants';
 import { setCompareData } from 'renderer/redux/slices/data';
 
 const styles = {
     main: {
         width: '100%',
-        paddingLeft: 1,
+        paddingLeft: 2,
     },
 };
 
 const CompareToolbar: React.FC = () => {
-    const { apiService } = React.useContext(AppContext);
     const dispatch = useAppDispatch();
-
-    const filePathBase = useAppSelector((state) => state.data.compare.fileBase);
-    const filePathComp = useAppSelector((state) => state.data.compare.fileComp);
 
     const handleCompare = () => {
         dispatch(openModal({ type: modals.SELECTCOMPARE, data: {} }));
@@ -43,44 +37,11 @@ const CompareToolbar: React.FC = () => {
         );
     };
 
+    const fileBase = useAppSelector((state) => state.data.compare.fileBase);
+    const fileComp = useAppSelector((state) => state.data.compare.fileComp);
     const handleRefreshCompare = () => {
-        const compare = async () => {
-            if (!filePathBase || !filePathComp) {
-                return;
-            }
-            // Reset compare diff
-            dispatch(
-                setCompareData({
-                    fileBase: filePathBase,
-                    fileComp: filePathComp,
-                    datasetDiff: null,
-                }),
-            );
-            const result = await apiService.compareDatasets(
-                filePathBase,
-                filePathComp,
-                {},
-                { encoding: 'default', bufferSize: 10000 },
-            );
-            if ('error' in result) {
-                dispatch(
-                    openSnackbar({
-                        type: 'error',
-                        message: result.error,
-                    }),
-                );
-            } else {
-                dispatch(
-                    setCompareData({
-                        fileBase: filePathBase,
-                        fileComp: filePathComp,
-                        datasetDiff: result,
-                    }),
-                );
-                dispatch(setPathname({ pathname: paths.COMPARE }));
-            }
-        };
-        compare();
+        dispatch(setCompareFiles({ fileBase, fileComp }));
+        dispatch(setIsComparing(true));
     };
 
     const handleClose = () => {
@@ -91,7 +52,6 @@ const CompareToolbar: React.FC = () => {
                 datasetDiff: null,
             }),
         );
-        dispatch(setCompareIsComparing(false));
     };
 
     return (

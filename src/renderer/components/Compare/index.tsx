@@ -1,10 +1,17 @@
-import React from 'react';
+import React, { useEffect, useContext, useState } from 'react';
 import { Box, Button, Stack } from '@mui/material';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
-import { openModal } from 'renderer/redux/slices/ui';
-import { modals } from 'misc/constants';
-import Loading from 'renderer/components/Loading';
+import {
+    openModal,
+    openSnackbar,
+    setIsComparing,
+} from 'renderer/redux/slices/ui';
+import { mainTaskTypes, modals } from 'misc/constants';
 import Results from 'renderer/components/Compare/Results';
+import AppContext from 'renderer/utils/AppContext';
+import { CompareTask, DatasetDiff, TaskProgress } from 'interfaces/common';
+import { setCompareData } from 'renderer/redux/slices/data';
+import CompareProgress from './CompareProgress';
 
 const styles = {
     loadingContainer: {
@@ -45,27 +52,125 @@ const styles = {
 
 const Compare: React.FC = () => {
     const dispatch = useAppDispatch();
+    const { apiService } = useContext(AppContext);
 
     const fileBase = useAppSelector((state) => state.data.compare.fileBase);
     const fileComp = useAppSelector((state) => state.data.compare.fileComp);
+    const fileBaseUi = useAppSelector((state) => state.ui.compare.fileBase);
+    const fileCompUi = useAppSelector((state) => state.ui.compare.fileComp);
     const isComparing = useAppSelector((state) => state.ui.compare.isComparing);
     const datasetDiff = useAppSelector(
         (state) => state.data.compare.datasetDiff,
     );
+    const [progress, setProgress] = useState<number>(0);
+    const [issues, setIssues] = useState<number>(0);
 
     const handleSelectFiles = async () => {
         dispatch(openModal({ type: modals.SELECTCOMPARE, data: {} }));
     };
 
+    useEffect(() => {
+        if (isComparing) {
+            // Check both files are selected
+            if (!fileBaseUi || !fileCompUi) {
+                dispatch(
+                    openSnackbar({
+                        message: 'Not enough files selected for compare',
+                        type: 'error',
+                    }),
+                );
+                return () => {};
+            }
+            // Initiate the compare task
+            const task: CompareTask = {
+                id: `compare-${Date.now()}`,
+                type: mainTaskTypes.COMPARE,
+                fileBase: fileBaseUi,
+                fileComp: fileCompUi,
+                options: { tolerance: 1e-12, maxDiffCount: 100 },
+                settings: { encoding: 'default', bufferSize: 10000 },
+            };
+
+            const unsubscribe = apiService.subscribeToTaskProgress(
+                (info: TaskProgress) => {
+                    if (
+                        info.type !== mainTaskTypes.COMPARE ||
+                        !info.id.startsWith(task.id)
+                    ) {
+                        return;
+                    }
+                    if (info.progress === 100) {
+                        setProgress(info.progress);
+                        setIssues(info.issues);
+                        if (info.error) {
+                            dispatch(
+                                openSnackbar({
+                                    message: info.error,
+                                    type: 'error',
+                                }),
+                            );
+                        } else if (
+                            info.result &&
+                            typeof info.result === 'object'
+                        ) {
+                            dispatch(
+                                setCompareData({
+                                    datasetDiff: info.result as DatasetDiff,
+                                    fileBase: fileBaseUi,
+                                    fileComp: fileCompUi,
+                                }),
+                            );
+                        }
+                        dispatch(setIsComparing(false));
+                    } else {
+                        setProgress(info.progress);
+                        setIssues(info.issues);
+                    }
+                },
+            );
+
+            const runTask = async () => {
+                const result = await apiService.startTask(task);
+                if (typeof result === 'object' && 'error' in result) {
+                    dispatch(
+                        openSnackbar({
+                            message: result.error,
+                            type: 'error',
+                        }),
+                    );
+                    dispatch(
+                        setCompareData({
+                            datasetDiff: null,
+                            fileBase: '',
+                            fileComp: '',
+                        }),
+                    );
+                } else if (result === false) {
+                    dispatch(
+                        openSnackbar({
+                            message: 'Error while initiation compare',
+                            type: 'error',
+                        }),
+                    );
+                }
+            };
+
+            runTask();
+
+            return () => {
+                try {
+                    unsubscribe();
+                } catch (e) {
+                    apiService.cleanTaskProgressListeners();
+                }
+            };
+        }
+        setProgress(0);
+        return () => {};
+    }, [apiService, isComparing, dispatch, fileBaseUi, fileCompUi]);
+
     if (isComparing) {
-        return (
-            <Box sx={styles.loadingContainer}>
-                <Box sx={styles.loading}>
-                    <Loading />
-                    <Box sx={styles.sponsored}>Sponsored by:</Box>
-                </Box>
-            </Box>
-        );
+        return <CompareProgress progress={progress} issues={issues} />;
     }
 
     if (datasetDiff) {

@@ -15,7 +15,7 @@ import { modals } from 'misc/constants';
 const styles = {
     main: {
         width: '100%',
-        paddingLeft: 1,
+        paddingLeft: 2,
     },
     reportName: {
         color: 'grey.600',

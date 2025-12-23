@@ -72,9 +72,9 @@ const styles = {
 };
 
 const Summary: React.FC = () => {
-    const datasetDiff = useAppSelector(
-        (state) => state.data.compare.datasetDiff,
-    );
+    const compareData = useAppSelector((state) => state.data.compare);
+
+    const { datasetDiff, fileBase, fileComp } = compareData;
 
     const columnsStats = useMemo(() => {
         if (!datasetDiff) return {};
@@ -120,6 +120,8 @@ const Summary: React.FC = () => {
     const allEqual = isDataEqual && isMetadataEqual;
     // In case all equal, show a simplified summary
     const summaryNoIssuesData = [
+        { label: 'Base File', value: fileBase },
+        { label: 'Compare File', value: fileComp },
         {
             label: 'Total Records Compared',
             value: summary.totalRowsChecked,
@@ -135,14 +137,7 @@ const Summary: React.FC = () => {
     }
 
     const summaryData = [
-        {
-            label: 'Total Records Compared',
-            value: summary.totalRowsChecked,
-        },
-        {
-            label: 'Total Columns Compared',
-            value: metadata.commonCols.length,
-        },
+        ...summaryNoIssuesData,
         {
             label: 'Total Records Different',
             value: summary.totalDiffs + maxReachedText,

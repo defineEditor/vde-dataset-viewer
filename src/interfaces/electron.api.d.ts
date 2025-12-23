@@ -16,9 +16,6 @@ import {
     NewWindowProps,
     DefineFileInfo,
     DefineXmlContent,
-    CompareOptions,
-    CompareSettings,
-    DatasetDiff,
 } from 'interfaces/common';
 
 export type Channels = 'ipc-vde';
@@ -74,7 +71,7 @@ export interface ElectronApi {
     downloadUpdate: () => Promise<boolean>;
     writeToClipboard: (text: string) => Promise<boolean>;
     startTask: (task: MainTask) => Promise<boolean | { error: string }>;
-    onTaskProgress: (callback: (info: TaskProgress) => void) => void;
+    onTaskProgress: (callback: (info: TaskProgress) => void) => () => void;
     cleanTaskProgressListeners: () => void;
     openFileDialog: (options: {
         multiple?: boolean;
@@ -118,10 +115,4 @@ export interface ElectronApi {
     searchInPageNext: (searchTerm: string) => Promise<void>;
     searchInPagePrevious: (searchTerm: string) => Promise<void>;
     clearSearchResults: () => Promise<void>;
-    compareDatasets: (
-        fileBase: string,
-        fileComp: string,
-        options: CompareOptions,
-        settings: CompareSettings,
-    ) => Promise<DatasetDiff | { error: string }>;
 }

@@ -71,25 +71,25 @@ const Execution: React.FC<{
     }, [isComplete]);
 
     useEffect(() => {
-        apiService.cleanTaskProgressListeners();
-
-        apiService.subscribeToTaskProgress((info: TaskProgress) => {
-            if (
-                info.type !== mainTaskTypes.CONVERT ||
-                !info.id.startsWith(task.id)
-            ) {
-                return;
-            }
-            const match = info.id.match(/.*-(\d+)$/);
-            if (match) {
-                const fileIndex = parseInt(match[1], 10);
-                setProgress((prev) => {
-                    const newProgress = [...prev];
-                    newProgress[fileIndex] = info.progress;
-                    return newProgress;
-                });
-            }
-        });
+        const unsubscribe = apiService.subscribeToTaskProgress(
+            (info: TaskProgress) => {
+                if (
+                    info.type !== mainTaskTypes.CONVERT ||
+                    !info.id.startsWith(task.id)
+                ) {
+                    return;
+                }
+                const match = info.id.match(/.*-(\d+)$/);
+                if (match) {
+                    const fileIndex = parseInt(match[1], 10);
+                    setProgress((prev) => {
+                        const newProgress = [...prev];
+                        newProgress[fileIndex] = info.progress;
+                        return newProgress;
+                    });
+                }
+            },
+        );
 
         const runTask = async () => {
             const result = await apiService.startTask(task);
@@ -114,7 +114,11 @@ const Execution: React.FC<{
         runTask();
 
         return () => {
-            apiService.cleanTaskProgressListeners();
+            try {
+                unsubscribe();
+            } catch (e) {
+                apiService.cleanTaskProgressListeners();
+            }
         };
     }, [apiService, task, dispatch]);
 

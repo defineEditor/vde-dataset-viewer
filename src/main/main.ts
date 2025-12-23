@@ -20,12 +20,7 @@ import NetManager from 'main/managers/netManager';
 import TaskManager from 'main/managers/taskManager';
 import ReportManager from 'main/managers/reportManager';
 import DefineXmlManager from 'main/managers/defineXmlManager';
-import {
-    CompareOptions,
-    CompareSettings,
-    MainTask,
-    NewWindowProps,
-} from 'interfaces/main';
+import { MainTask, NewWindowProps } from 'interfaces/main';
 
 let mainWindow: BrowserWindow | null = null;
 let fileToOpen: string | null = null;
@@ -381,24 +376,6 @@ app.whenReady()
                 _event.sender.stopFindInPage('clearSelection');
             }
         });
-        ipcMain.handle(
-            'main:compareDatasets',
-            (
-                event,
-                fileBase: string,
-                fileComp: string,
-                options: CompareOptions,
-                settings: CompareSettings,
-            ) => {
-                return fileManager.handleCompareDatasets(
-                    event,
-                    fileBase,
-                    fileComp,
-                    options,
-                    settings,
-                );
-            },
-        );
         mainWindow = await createWindow(fileToOpen);
         app.on('activate', async () => {
             // On macOS it's common to re-create a window in the app when the

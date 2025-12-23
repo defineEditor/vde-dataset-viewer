@@ -1,23 +1,23 @@
 import React, { useEffect, useState, useContext, useRef, useMemo } from 'react';
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Box, CircularProgress, Typography, Stack } from '@mui/material';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import DatasetView from 'renderer/components/DatasetView';
 import AppContext from 'renderer/utils/AppContext';
 import { ITableData } from 'interfaces/common';
 import { getData } from 'renderer/utils/readData';
 import { diffChars } from 'diff';
-import { openSnackbar } from 'renderer/redux/slices/ui';
+import { openSnackbar, setComparePage } from 'renderer/redux/slices/ui';
+import BottomToolbar from 'renderer/components/Compare/BottomToolbar';
 
 const styles = {
     container: {
         height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
         overflow: 'hidden',
+        flex: '1 1 auto',
     },
     splitView: {
         display: 'flex',
-        flex: 1,
+        flex: '1 1 auto',
         overflow: 'hidden',
     },
     horizontal: {
@@ -46,11 +46,21 @@ const styles = {
     },
 };
 
+const emptyArray = [];
+
 const Data: React.FC = () => {
     const { apiService } = useContext(AppContext);
+    const pageSize = useAppSelector((state) => state.settings.viewer.pageSize);
+    const page = useAppSelector(
+        (state) => state.ui.compare.currentComparePage || 0,
+    );
     const dispatch = useAppDispatch();
     const fileBase = useAppSelector((state) => state.data.compare.fileBase);
     const fileComp = useAppSelector((state) => state.data.compare.fileComp);
+    const datasetDiff = useAppSelector(
+        (state) => state.data.compare.datasetDiff,
+    );
+    const commonCols = datasetDiff?.metadata.commonCols || emptyArray;
     const view = useAppSelector((state) => state.ui.compare.view);
     const settings = useAppSelector((state) => state.settings);
 
@@ -71,8 +81,23 @@ const Data: React.FC = () => {
             }
         };
 
+    // Map column IDs to indices for quick lookup
+    const colIndices = useMemo(() => {
+        const map = new Map<string, number>();
+        if (baseData?.header) {
+            baseData.header.forEach((col, index) => {
+                map.set(col.id, index);
+            });
+        }
+        return map;
+    }, [baseData?.header]);
+
+    const handleChangePage = (_event, newPage: number) => {
+        dispatch(setComparePage(newPage));
+    };
+
     const { baseAnnotations, compAnnotations } = useMemo(() => {
-        if (!baseData || !compData) {
+        if (colIndices.size === 0 || !datasetDiff) {
             return { baseAnnotations: null, compAnnotations: null };
         }
 
@@ -81,7 +106,6 @@ const Data: React.FC = () => {
             {
                 text: string | React.ReactElement;
                 color: string;
-                showInCell?: boolean;
             }
         >();
         const compMap = new Map<
@@ -89,40 +113,24 @@ const Data: React.FC = () => {
             {
                 text: string | React.ReactElement;
                 color: string;
-                showInCell?: boolean;
             }
         >();
 
-        // Map column IDs to indices for quick lookup
-        const baseColIndices = new Map<string, number>();
-        baseData.header.forEach((col, index) =>
-            baseColIndices.set(col.id, index),
-        );
-
-        const compColIndices = new Map<string, number>();
-        compData.header.forEach((col, index) =>
-            compColIndices.set(col.id, index),
-        );
-
-        // Iterate through rows
-        // Assuming rows are aligned by index for now
-        const rowCount = Math.min(baseData.data.length, compData.data.length);
-
-        for (let i = 0; i < rowCount; i++) {
-            const baseRow = baseData.data[i];
-            const compRow = compData.data[i];
-
-            // Iterate through base columns and compare with corresponding comp columns
-            baseData.header.forEach((col) => {
-                const baseColIndex = baseColIndices.get(col.id);
-                const compColIndex = compColIndices.get(col.id);
-
-                if (baseColIndex !== undefined && compColIndex !== undefined) {
-                    const baseVal = String(baseRow[col.id] ?? '');
-                    const compVal = String(compRow[col.id] ?? '');
-
-                    if (baseVal !== compVal) {
-                        const diffParts = diffChars(baseVal, compVal);
+        datasetDiff?.data.modifiedRows.forEach((diffRow) => {
+            const { rowBase, rowCompare, diff } = diffRow;
+            if (diff) {
+                Object.keys(diff).forEach((colId) => {
+                    const baseColIndex = colIndices.get(colId);
+                    const compColIndex = colIndices.get(colId);
+                    if (
+                        baseColIndex !== undefined &&
+                        compColIndex !== undefined
+                    ) {
+                        const [baseVal, compVal] = diff[colId];
+                        const diffParts = diffChars(
+                            String(baseVal),
+                            String(compVal),
+                        );
                         const diffElement = (
                             <span>
                                 {diffParts.map((part) => {
@@ -142,25 +150,23 @@ const Data: React.FC = () => {
 
                         // Add annotation to base
                         // Note: DatasetView uses 1-based index for columns (0 is row number)
-                        baseMap.set(`${i}#${baseColIndex + 1}`, {
+                        baseMap.set(`${rowBase}#${baseColIndex + 1}`, {
                             text: diffElement,
-                            color: 'transparent', // Color is handled by diffElement
-                            showInCell: true,
+                            color: '',
                         });
 
                         // Add annotation to comp
-                        compMap.set(`${i}#${compColIndex + 1}`, {
+                        compMap.set(`${rowCompare}#${compColIndex + 1}`, {
                             text: diffElement,
-                            color: 'transparent',
-                            showInCell: true,
+                            color: '',
                         });
                     }
-                }
-            });
-        }
+                });
+            }
+        });
 
         return { baseAnnotations: baseMap, compAnnotations: compMap };
-    }, [baseData, compData]);
+    }, [datasetDiff, colIndices]);
 
     useEffect(() => {
         const loadData = async () => {
@@ -176,9 +182,10 @@ const Data: React.FC = () => {
                 const newBaseData = await getData(
                     apiService,
                     fileBaseInfo.fileId,
-                    0,
-                    1000,
+                    page * pageSize,
+                    pageSize,
                     settings,
+                    commonCols,
                 );
                 setBaseData(newBaseData);
 
@@ -190,9 +197,10 @@ const Data: React.FC = () => {
                 const newCompData = await getData(
                     apiService,
                     fileCompInfo.fileId,
-                    0,
-                    1000,
+                    page * pageSize,
+                    pageSize,
                     settings,
+                    commonCols,
                 );
                 setCompData(newCompData);
             } catch (error) {
@@ -208,7 +216,16 @@ const Data: React.FC = () => {
         };
 
         loadData();
-    }, [fileBase, fileComp, apiService, settings, dispatch]);
+    }, [
+        fileBase,
+        fileComp,
+        apiService,
+        settings,
+        dispatch,
+        commonCols,
+        page,
+        pageSize,
+    ]);
 
     if (loading) {
         return (
@@ -227,7 +244,7 @@ const Data: React.FC = () => {
     }
 
     return (
-        <Box sx={styles.container}>
+        <Stack sx={styles.container}>
             <Box
                 sx={{
                     ...styles.splitView,
@@ -261,7 +278,18 @@ const Data: React.FC = () => {
                     />
                 </Box>
             </Box>
-        </Box>
+            <BottomToolbar
+                totalRecords={Math.min(
+                    baseData.metadata.records,
+                    compData.metadata.records,
+                )}
+                page={page}
+                pageSize={pageSize}
+                records={baseData.metadata.records}
+                onPageChange={handleChangePage}
+                issuesByRow={null}
+            />
+        </Stack>
     );
 };
 

@@ -4,12 +4,7 @@ import {
     IpcRendererEvent,
     webUtils,
 } from 'electron';
-import {
-    TaskProgress,
-    NewWindowProps,
-    CompareSettings,
-    CompareOptions,
-} from 'interfaces/common';
+import { TaskProgress, NewWindowProps } from 'interfaces/common';
 import { ElectronApi, Channels } from 'interfaces/electron.api';
 
 const openFile: ElectronApi['openFile'] = (mode, fileSettings) =>
@@ -144,12 +139,12 @@ const startTask: ElectronApi['startTask'] = (task) =>
     ipcRenderer.invoke('main:startTask', task);
 
 const onTaskProgress: ElectronApi['onTaskProgress'] = (callback) => {
-    ipcRenderer.on(
-        'renderer:taskProgress',
-        async (_event: IpcRendererEvent, info: TaskProgress) => {
-            callback(info);
-        },
-    );
+    const subscription = (_event: IpcRendererEvent, info: TaskProgress) =>
+        callback(info);
+    ipcRenderer.on('renderer:taskProgress', subscription);
+    return () => {
+        ipcRenderer.removeListener('renderer:taskProgress', subscription);
+    };
 };
 
 const cleanTaskProgressListeners: ElectronApi['cleanTaskProgressListeners'] =
@@ -201,20 +196,6 @@ const searchInPagePrevious: ElectronApi['searchInPagePrevious'] = (
 const clearSearchResults: ElectronApi['clearSearchResults'] = () =>
     ipcRenderer.invoke('main:clearSearchResults');
 
-const compareDatasets: ElectronApi['compareDatasets'] = (
-    fileBase: string,
-    fileComp: string,
-    options: CompareOptions,
-    settings: CompareSettings,
-) =>
-    ipcRenderer.invoke(
-        'main:compareDatasets',
-        fileBase,
-        fileComp,
-        options,
-        settings,
-    );
-
 contextBridge.exposeInMainWorld('electron', {
     openFile,
     writeToClipboard,
@@ -256,7 +237,6 @@ contextBridge.exposeInMainWorld('electron', {
     searchInPageNext,
     searchInPagePrevious,
     clearSearchResults,
-    compareDatasets,
     ipcRenderer: {
         sendMessage(channel: Channels, args: unknown[]) {
             ipcRenderer.send(channel, args);

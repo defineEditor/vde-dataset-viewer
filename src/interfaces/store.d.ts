@@ -196,6 +196,7 @@ export interface IUiCompare {
     fileComp: string | null;
     view: 'horizontal' | 'vertical';
     resultTab: 'summary' | 'metadata' | 'data';
+    currentComparePage: number;
 }
 
 export interface IUi {

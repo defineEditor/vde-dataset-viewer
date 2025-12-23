@@ -72,7 +72,7 @@ const getData = async (
     filterColumns?: string[],
     filterData?: BasicFilter,
 ): Promise<ITableData | null> => {
-    const metadata = await apiService.getMetadata(fileId);
+    let metadata = await apiService.getMetadata(fileId);
     if (metadata === null || Object.keys(metadata).length === 0) {
         return null;
     }
@@ -85,6 +85,18 @@ const getData = async (
         filterColumns,
         filterData,
     )) as ITableRow[];
+
+    if (filterColumns && filterColumns.length > 0) {
+        // Filter metadata columns to include only those in filterColumns
+        metadata = {
+            ...metadata,
+            columns: metadata.columns.filter((col) =>
+                filterColumns
+                    .map((fCol) => fCol.toLowerCase())
+                    .includes(col.name.toLowerCase()),
+            ),
+        };
+    }
 
     const newHeader = getHeader(metadata, settings);
 

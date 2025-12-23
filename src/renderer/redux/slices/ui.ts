@@ -371,7 +371,7 @@ export const uiSlice = createSlice({
                 state.dataSettings[id].currentIssueIndex = index;
             }
         },
-        setCompareIsComparing: (state, action: PayloadAction<boolean>) => {
+        setIsComparing: (state, action: PayloadAction<boolean>) => {
             state.compare.isComparing = action.payload;
         },
         setCompareResultTab: (
@@ -382,6 +382,9 @@ export const uiSlice = createSlice({
         },
         setCompareView: (state, action: PayloadAction<IUiCompare['view']>) => {
             state.compare.view = action.payload;
+        },
+        setComparePage: (state, action: PayloadAction<number>) => {
+            state.compare.currentComparePage = action.payload;
         },
         setCompareFiles: (
             state,
@@ -438,10 +441,11 @@ export const {
     setDefineScrollPosition,
     setDefineIsLoading,
     resetDefineUi,
-    setCompareIsComparing,
+    setIsComparing,
     setCompareFiles,
     setCompareResultTab,
     setCompareView,
+    setComparePage,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

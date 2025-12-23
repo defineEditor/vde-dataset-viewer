@@ -28,7 +28,7 @@ import estimateWidth from 'renderer/utils/estimateWidth';
 import deepEqual from 'renderer/utils/deepEqual';
 import DatasetSidebar from 'renderer/components/DatasetView/Sidebar';
 import getIssueAnnotations from 'renderer/utils/getIssueAnnotations';
-import BottomToolbar from './BottomToolbar';
+import BottomToolbar from 'renderer/components/ViewDataset/BottomToolbar';
 
 const styles = {
     main: {

@@ -26,9 +26,6 @@ import {
     FileInfo,
     DefineFileInfo,
     DefineXmlContent,
-    CompareOptions,
-    CompareSettings,
-    DatasetDiff,
 } from 'interfaces/common';
 import store from 'renderer/redux/store';
 import transformData from 'renderer/services/transformData';
@@ -298,9 +295,20 @@ class ApiService {
         }
 
         // Get metadata
-        const metadata = await this.getMetadata(fileId);
+        let metadata = await this.getMetadata(fileId);
         if (metadata === null) {
             return [];
+        }
+
+        if (filterColumns !== undefined) {
+            metadata = {
+                ...metadata,
+                columns: metadata.columns.filter((col) =>
+                    filterColumns
+                        .map((fCol) => fCol.toLowerCase())
+                        .includes(col.name.toLowerCase()),
+                ),
+            };
         }
 
         let result: ItemDataArray[] | null;
@@ -764,8 +772,8 @@ class ApiService {
 
     public subscribeToTaskProgress = (
         callback: (info: TaskProgress) => void,
-    ) => {
-        window.electron.onTaskProgress(callback);
+    ): (() => void) => {
+        return window.electron.onTaskProgress(callback);
     };
 
     public cleanTaskProgressListeners = () => {
@@ -957,21 +965,6 @@ class ApiService {
     // Miscellaneous
     public getPathForFile = (file: File): string => {
         return window.electron.pathForFile(file);
-    };
-
-    public compareDatasets = async (
-        fileBase: string,
-        fileComp: string,
-        options: CompareOptions,
-        settings: CompareSettings,
-    ): Promise<DatasetDiff | { error: string }> => {
-        const result = await window.electron.compareDatasets(
-            fileBase,
-            fileComp,
-            options,
-            settings,
-        );
-        return result;
     };
 }
 

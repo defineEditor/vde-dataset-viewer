@@ -26,6 +26,7 @@ export const paths = {
 export const mainTaskTypes = {
     CONVERT: 'convert',
     VALIDATE: 'validate',
+    COMPARE: 'compare',
 } as const;
 
 export type ModalType = (typeof modals)[keyof typeof modals];

@@ -1,16 +1,21 @@
 import {
-    ItemDescription,
+    CompareProcessTask,
+    DatasetDiff,
+    DatasetJsonMetadata,
     ItemDataArray,
+    ItemDescription,
     ItemType,
     CompareOptions,
     MetadataDiff,
     DataDiff,
     DataDiffRow,
     DatasetMetadata,
-    DatasetDiff,
 } from 'interfaces/common';
+import DatasetJson from 'js-stream-dataset-json';
+import DatasetSas7bdat from 'js-stream-sas7bdat';
+import DatasetXpt from 'xport-js';
 
-export const compareMetadata = (
+const compareMetadata = (
     base: DatasetMetadata,
     compare: DatasetMetadata,
 ): MetadataDiff => {
@@ -109,7 +114,7 @@ export const compareMetadata = (
     return metadataDiff;
 };
 
-export function compareData(
+const compareData = (
     base: ItemDataArray[],
     compare: ItemDataArray[],
     baseMeta: DatasetMetadata,
@@ -117,7 +122,7 @@ export function compareData(
     summaryInit: DatasetDiff['summary'],
     rowShift: number = 0,
     options: CompareOptions = {},
-): { data: DataDiff; summary: Partial<DatasetDiff['summary']> } {
+): { data: DataDiff; summary: Partial<DatasetDiff['summary']> } => {
     const {
         tolerance = 1e-12,
         idColumns,
@@ -231,7 +236,7 @@ export function compareData(
         const maxRows = Math.max(base.length, compare.length);
         let diffCount = 0;
 
-        for (let i = 0; i < maxRows || maxDiffReached; i++) {
+        for (let i = 0; i < maxRows && !maxDiffReached; i++) {
             let hasDiff = false;
             if (i < base.length && i < compare.length) {
                 const diff = compareRow(base[i], compare[i], i, i);
@@ -336,4 +341,194 @@ export function compareData(
     };
 
     return { data: dataDiff, summary };
-}
+};
+
+const openFile = (filePath: string, encoding: BufferEncoding | 'default') => {
+    const extension = filePath.split('.').pop()?.toLowerCase();
+    let data: DatasetJson | DatasetXpt | DatasetSas7bdat;
+    try {
+        if (extension === 'xpt') {
+            data = new DatasetXpt(filePath);
+        } else if (extension === 'sas7bdat') {
+            data = new DatasetSas7bdat(filePath);
+        } else {
+            const updatedEncoding: BufferEncoding =
+                encoding === 'default' ? 'utf8' : encoding;
+            data = new DatasetJson(filePath, {
+                encoding: updatedEncoding,
+            });
+        }
+        return data;
+    } catch (error) {
+        throw new Error(
+            `An error occurred while opening the file ${filePath}: ${(error as Error).message}`,
+        );
+    }
+};
+
+const getMetadata = async (
+    file: DatasetJson | DatasetXpt | DatasetSas7bdat,
+): Promise<DatasetJsonMetadata> => {
+    if (file instanceof DatasetXpt) {
+        return file.getMetadata('dataset-json1.1');
+    }
+    return file.getMetadata();
+};
+
+const getData = async (
+    file: DatasetJson | DatasetXpt | DatasetSas7bdat,
+    start: number,
+    length: number,
+): Promise<ItemDataArray[]> => {
+    if (file instanceof DatasetXpt) {
+        return (await file.getData({
+            start,
+            length,
+            type: 'array',
+            roundPrecision: 12,
+        })) as ItemDataArray[];
+    }
+    return (await file.getData({
+        start,
+        length,
+        filter: undefined,
+    })) as ItemDataArray[];
+};
+
+process.parentPort.once(
+    'message',
+    async (messageData: { data: CompareProcessTask }) => {
+        const { data } = messageData;
+        const { id, fileBase, fileComp, options, settings } = data;
+
+        const sendMessage = (
+            progress: number,
+            issues: number,
+            result?: DatasetDiff,
+            error?: string,
+        ) => {
+            process.parentPort.postMessage({
+                id,
+                progress,
+                issues,
+                result,
+                error,
+            });
+        };
+
+        try {
+            const { encoding, bufferSize } = settings;
+            const baseFile = openFile(fileBase, encoding);
+            const compFile = openFile(fileComp, encoding);
+
+            const baseMeta = await getMetadata(baseFile);
+            const compMeta = await getMetadata(compFile);
+
+            const dataDiff: DatasetDiff['data'] = {
+                addedRows: [],
+                deletedRows: [],
+                modifiedRows: [],
+            };
+
+            const metadataDiff: DatasetDiff['metadata'] = compareMetadata(
+                baseMeta,
+                compMeta,
+            );
+            sendMessage(1, 0);
+
+            let summary: DatasetDiff['summary'] = {
+                firstDiffRow: null,
+                lastDiffRow: null,
+                totalDiffs: 0,
+                maxDiffReached: false,
+                maxColDiffReached: [],
+                colsWithDataDiffs: 0,
+                colsWithMetadataDiffs: 0,
+                colsWithoutDiffs: 0,
+                totalRowsChecked: 0,
+            };
+
+            const totalRecords = Math.min(baseMeta.records, compMeta.records);
+            let maxDiffCountReached = false;
+
+            for (
+                let start = 0;
+                start < totalRecords && !maxDiffCountReached;
+                start += bufferSize
+            ) {
+                // eslint-disable-next-line no-await-in-loop
+                const baseData = await getData(baseFile, start, bufferSize);
+                // eslint-disable-next-line no-await-in-loop
+                const compData = await getData(compFile, start, bufferSize);
+
+                const blockDiff = compareData(
+                    baseData,
+                    compData,
+                    baseMeta,
+                    compMeta,
+                    summary,
+                    start,
+                    options,
+                );
+
+                dataDiff.addedRows.push(...blockDiff.data.addedRows);
+                dataDiff.deletedRows.push(...blockDiff.data.deletedRows);
+                dataDiff.modifiedRows.push(...blockDiff.data.modifiedRows);
+
+                summary = {
+                    ...summary,
+                    ...blockDiff.summary,
+                    totalRowsChecked: blockDiff.summary.maxColDiffReached
+                        ? (blockDiff.summary.lastDiffRow || 0) + 1
+                        : start + Math.min(baseData.length, compData.length),
+                };
+
+                maxDiffCountReached = blockDiff.summary.maxDiffReached || false;
+
+                // Send progress
+                const progress =
+                    totalRecords > 0
+                        ? Math.round(
+                              (summary.totalRowsChecked / totalRecords) * 100,
+                          )
+                        : 0;
+                if (progress < 100) {
+                    sendMessage(progress, summary.totalDiffs);
+                } else {
+                    // If 100%, will send final message later
+                    sendMessage(99, summary.totalDiffs);
+                }
+            }
+
+            // Derive additional summary info
+            const dataDiffCols = dataDiff.modifiedRows.reduce((acc, row) => {
+                if (row.diff) {
+                    Object.keys(row.diff).forEach((colName) => {
+                        if (!acc.includes(colName)) {
+                            acc.push(colName);
+                        }
+                    });
+                }
+                return acc;
+            }, [] as string[]);
+            summary.colsWithDataDiffs = dataDiffCols.length;
+            summary.colsWithMetadataDiffs = Object.keys(
+                metadataDiff.attributeDiffs,
+            ).length;
+            summary.colsWithoutDiffs = metadataDiff.commonCols.filter(
+                (col) =>
+                    !dataDiffCols.includes(col) &&
+                    !metadataDiff.attributeDiffs[col],
+            ).length;
+
+            sendMessage(100, summary.totalDiffs, {
+                metadata: metadataDiff,
+                data: dataDiff,
+                summary,
+            });
+        } catch (error) {
+            sendMessage(0, 0, undefined, (error as Error).message);
+        }
+        process.exit();
+    },
+);

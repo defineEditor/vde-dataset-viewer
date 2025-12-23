@@ -24,11 +24,10 @@ import SwapVertIcon from '@mui/icons-material/SwapVert';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import {
     closeModal,
-    openSnackbar,
     setPathname,
     setCompareFiles,
+    setIsComparing,
 } from 'renderer/redux/slices/ui';
-import { addRecentCompare, setCompareData } from 'renderer/redux/slices/data';
 import { modals, paths } from 'misc/constants';
 import AppContext from 'renderer/utils/AppContext';
 
@@ -85,47 +84,11 @@ const SelectCompare: React.FC = () => {
         dispatch(closeModal({ type: modals.SELECTCOMPARE }));
     }, [dispatch]);
 
-    const handleCompare = useCallback(
-        (filePathBase: string, filePathComp: string) => {
-            const compare = async () => {
-                const result = await apiService.compareDatasets(
-                    filePathBase,
-                    filePathComp,
-                    {},
-                    { encoding: 'default', bufferSize: 10000 },
-                );
-                if ('error' in result) {
-                    dispatch(
-                        openSnackbar({
-                            type: 'error',
-                            message: result.error,
-                        }),
-                    );
-                } else {
-                    dispatch(
-                        setCompareData({
-                            fileBase: filePathBase,
-                            fileComp: filePathComp,
-                            datasetDiff: result,
-                        }),
-                    );
-                    dispatch(
-                        addRecentCompare({
-                            fileBase: filePathBase,
-                            fileComp: filePathComp,
-                        }),
-                    );
-                    dispatch(setPathname({ pathname: paths.COMPARE }));
-                    handleClose();
-                }
-            };
-            if (filePathBase && filePathComp) {
-                // Initialte compare
-                compare();
-            }
-        },
-        [dispatch, handleClose, apiService],
-    );
+    const handleCompare = useCallback(() => {
+        dispatch(setPathname({ pathname: paths.COMPARE }));
+        dispatch(setIsComparing(true));
+        handleClose();
+    }, [dispatch, handleClose]);
 
     const handleSelectFile = async (type: 'base' | 'comp') => {
         const result = await apiService.openFileDialog({
@@ -173,7 +136,7 @@ const SelectCompare: React.FC = () => {
                                 fileComp: recent.fileComp,
                             }),
                         );
-                        handleCompare(recent.fileBase, recent.fileComp);
+                        handleCompare();
                     }
                 }
             }
@@ -366,7 +329,7 @@ const SelectCompare: React.FC = () => {
                     Cancel
                 </Button>
                 <Button
-                    onClick={() => handleCompare(fileBase, fileComp)}
+                    onClick={() => handleCompare()}
                     color="primary"
                     variant="contained"
                     disabled={!fileBase || !fileComp}

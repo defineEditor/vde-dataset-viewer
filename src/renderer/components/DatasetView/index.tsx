@@ -27,6 +27,9 @@ import {
     VisibilityState,
 } from '@tanstack/react-table';
 
+const emptySelect = { row: null, column: null };
+const emptyGoTo = { row: null, column: null, cellSelection: false };
+
 declare module '@tanstack/table-core' {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     interface ColumnMeta<TData extends RowData, TValue> {
@@ -550,7 +553,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     const goTo = useAppSelector((state) =>
         state.ui.control[tableData.fileId]
             ? state.ui.control[tableData.fileId].goTo
-            : { row: null, column: null, cellSelection: false },
+            : emptyGoTo,
     );
 
     useEffect(() => {
@@ -631,7 +634,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     const select = useAppSelector((state) =>
         state.ui.control[tableData.fileId]
             ? state.ui.control[tableData.fileId].select
-            : { row: null, column: null },
+            : emptySelect,
     );
 
     useEffect(() => {

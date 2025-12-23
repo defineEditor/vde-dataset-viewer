@@ -80,7 +80,9 @@ const Metadata: React.FC = () => {
                 attribute,
                 base: String(diff.base),
                 compare: String(diff.compare),
-                diff: renderDiff(String(diff.base), String(diff.compare)),
+                diff: ['label', 'name'].includes(attribute)
+                    ? renderDiff(String(diff.base), String(diff.compare))
+                    : null,
             }),
         );
     }, [datasetDiff]);
@@ -98,7 +100,7 @@ const Metadata: React.FC = () => {
             attribute: string;
             base: string;
             compare: string;
-            diff: React.ReactElement;
+            diff: React.ReactElement | null;
         }[] = [];
 
         Object.entries(datasetDiff.metadata.attributeDiffs).forEach(
@@ -109,10 +111,14 @@ const Metadata: React.FC = () => {
                         attribute,
                         base: String(diff.base),
                         compare: String(diff.compare),
-                        diff: renderDiff(
-                            String(diff.base),
-                            String(diff.compare),
-                        ),
+                        diff: ['label', 'name', 'displayFormat'].includes(
+                            attribute,
+                        )
+                            ? renderDiff(
+                                  String(diff.base),
+                                  String(diff.compare),
+                              )
+                            : null,
                     });
                 });
             },

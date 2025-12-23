@@ -63,6 +63,76 @@ export interface ConvertedFileInfo extends FileInfo {
     outputName: string;
 }
 
+// Diff interfaces
+export interface CompareOptions {
+    tolerance?: number;
+    idColumns?: string[];
+    maxDiffCount?: number;
+    maxColumnDiffCount?: number;
+}
+
+export interface CompareSettings {
+    encoding: BufferEncoding | 'default';
+    bufferSize: number;
+}
+
+export interface MetadataDiff {
+    missingInBase: string[];
+    missingInCompare: string[];
+    commonCols: string[];
+    attributeDiffs: {
+        [columnName: string]: {
+            [attribute: string]: {
+                base: string | number;
+                compare: string | number;
+            };
+        };
+    };
+    positionDiffs: {
+        [columnName: string]: { base: number; compare: number };
+    };
+    dsAttributeDiffs: {
+        [attribute: string]: {
+            base: string | number;
+            compare: string | number;
+        };
+    };
+}
+
+export interface DataDiffRow {
+    rowBase: number | null;
+    rowCompare: number | null;
+    diff?: {
+        [columnName: string]: [ItemDataArray[number], ItemDataArray[number]];
+    };
+}
+
+export interface DataDiff {
+    deletedRows: DataDiffRow[];
+    addedRows: DataDiffRow[];
+    modifiedRows: DataDiffRow[];
+}
+
+export interface DiffSummary {
+    firstDiffRow: number | null;
+    lastDiffRow: number | null;
+    totalDiffs: number;
+    totalRowsChecked: number;
+    maxDiffReached: boolean;
+    maxColDiffReached: string[];
+    colsWithMetadataDiffs: number;
+    colsWithDataDiffs: number;
+    colsWithoutDiffs: number;
+}
+
+export interface DatasetDiff {
+    metadata: MetadataDiff;
+    data: DataDiff;
+    summary: DiffSummary;
+}
+
+// Task interfaces
+
 export interface ConvertTaskOptions extends SettingsConverter {
     prettyPrint: boolean;
     inEncoding:
@@ -117,6 +187,15 @@ export interface ValidatorConfig {
     excludedRules: string[];
 }
 
+export interface CompareTask {
+    id: string;
+    type: typeof mainTaskTypes.COMPARE;
+    fileBase: string;
+    fileComp: string;
+    options: CompareOptions;
+    settings: CompareSettings;
+}
+
 export interface ValidateTask {
     id: string;
     type: typeof mainTaskTypes.VALIDATE;
@@ -148,9 +227,22 @@ export interface ValidatorProcessTask {
     outputDir?: string;
 }
 
-export type MainProcessTask = ConverterProcessTask | ValidatorProcessTask;
+export interface CompareProcessTask {
+    type: CompareTask['type'];
+    id: string;
+    webContentsId: string;
+    fileBase: string;
+    fileComp: string;
+    options: CompareOptions;
+    settings: CompareSettings;
+}
 
-export type MainTask = ConvertTask | ValidateTask;
+export type MainProcessTask =
+    | ConverterProcessTask
+    | ValidatorProcessTask
+    | CompareProcessTask;
+
+export type MainTask = ConvertTask | ValidateTask | CompareTask;
 
 export { UpdateCheckResult };
 
@@ -220,7 +312,19 @@ export interface ValidatorTaskProgress {
     logFileName?: string | null;
 }
 
-export type TaskProgress = ValidatorTaskProgress | ConverterTaskProgress;
+export interface CompareTaskProgress {
+    type: typeof mainTaskTypes.COMPARE;
+    id: string;
+    progress: number;
+    issues: number;
+    result?: DatasetDiff;
+    error?: string;
+}
+
+export type TaskProgress =
+    | ValidatorTaskProgress
+    | ConverterTaskProgress
+    | CompareTaskProgress;
 
 export interface NewWindowProps {
     goTo?: {
@@ -231,72 +335,4 @@ export interface NewWindowProps {
         filteredIssues: string[];
         reportId: string;
     };
-}
-
-// Diff interfaces
-export interface CompareOptions {
-    tolerance?: number;
-    idColumns?: string[];
-    maxDiffCount?: number;
-    maxColumnDiffCount?: number;
-}
-
-export interface CompareSettings {
-    encoding: BufferEncoding | 'default';
-    bufferSize: number;
-}
-
-export interface MetadataDiff {
-    missingInBase: string[];
-    missingInCompare: string[];
-    commonCols: string[];
-    attributeDiffs: {
-        [columnName: string]: {
-            [attribute: string]: {
-                base: string | number;
-                compare: string | number;
-            };
-        };
-    };
-    positionDiffs: {
-        [columnName: string]: { base: number; compare: number };
-    };
-    dsAttributeDiffs: {
-        [attribute: string]: {
-            base: string | number;
-            compare: string | number;
-        };
-    };
-}
-
-export interface DataDiffRow {
-    rowBase: number | null;
-    rowCompare: number | null;
-    diff?: {
-        [columnName: string]: [ItemDataArray[number], ItemDataArray[number]];
-    };
-}
-
-export interface DataDiff {
-    deletedRows: DataDiffRow[];
-    addedRows: DataDiffRow[];
-    modifiedRows: DataDiffRow[];
-}
-
-export interface DiffSummary {
-    firstDiffRow: number | null;
-    lastDiffRow: number | null;
-    totalDiffs: number;
-    totalRowsChecked: number;
-    maxDiffReached: boolean;
-    maxColDiffReached: string[];
-    colsWithMetadataDiffs: number;
-    colsWithDataDiffs: number;
-    colsWithoutDiffs: number;
-}
-
-export interface DatasetDiff {
-    metadata: MetadataDiff;
-    data: DataDiff;
-    summary: DiffSummary;
 }

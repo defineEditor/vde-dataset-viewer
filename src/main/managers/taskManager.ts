@@ -4,6 +4,7 @@ import fs from 'fs';
 import {
     ConvertTask,
     ValidateTask,
+    CompareTask,
     MainTask,
     MainProcessTask,
 } from 'interfaces/common';
@@ -68,6 +69,8 @@ class TaskManager {
                 ...processTask,
                 outputDir: this.reportsDirectory,
             });
+        } else if (type === mainTaskTypes.COMPARE) {
+            process.postMessage(processTask);
         }
 
         return new Promise((resolve) => {
@@ -101,6 +104,15 @@ class TaskManager {
                         fullPath: progressResult.fullPath,
                         fileName: progressResult.fileName,
                     });
+                } else if (type === mainTaskTypes.COMPARE) {
+                    webContents.send('renderer:taskProgress', {
+                        type: mainTaskTypes.COMPARE,
+                        id: progressResult.id,
+                        progress: progressResult.progress,
+                        issues: progressResult.issues,
+                        result: progressResult.result,
+                        error: progressResult.error,
+                    });
                 }
             });
 
@@ -130,6 +142,12 @@ class TaskManager {
         if (task.type === mainTaskTypes.VALIDATE) {
             this.maxThreads = task.options?.poolSize || 1;
             const result = await this.handleValidateTask(task);
+            this.taskWebContents.delete(task.id);
+            return result;
+        }
+        if (task.type === mainTaskTypes.COMPARE) {
+            this.maxThreads = 1;
+            const result = await this.handleCompareTask(task);
             this.taskWebContents.delete(task.id);
             return result;
         }
@@ -197,6 +215,42 @@ class TaskManager {
                 options: task.options,
                 configuration: task.configuration,
                 validationDetails: task.validationDetails,
+            });
+
+            await this.processQueue();
+
+            // Wait till all tasks are completed
+            await new Promise<void>((resolve) => {
+                const checkTasks = () => {
+                    if (!this.hasPendingTasks()) {
+                        resolve();
+                    } else {
+                        setTimeout(checkTasks, 500);
+                    }
+                };
+                checkTasks();
+            });
+            return true;
+        } catch (error) {
+            if (error instanceof Error) {
+                return { error: error.message };
+            }
+            return false;
+        }
+    }
+
+    public async handleCompareTask(
+        task: CompareTask,
+    ): Promise<boolean | { error: string }> {
+        try {
+            this.taskQueue.push({
+                type: task.type,
+                id: task.id,
+                webContentsId: task.id,
+                fileBase: task.fileBase,
+                fileComp: task.fileComp,
+                options: task.options,
+                settings: task.settings,
             });
 
             await this.processQueue();
