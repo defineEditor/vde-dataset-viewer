@@ -402,6 +402,19 @@ export const uiSlice = createSlice({
                 state.compare.fileComp = action.payload.fileComp;
             }
         },
+        setNewCompare: (
+            state,
+            action: PayloadAction<{
+                fileBase: string;
+                fileComp: string;
+            }>,
+        ) => {
+            state.compare.fileBase = action.payload.fileBase;
+            state.compare.fileComp = action.payload.fileComp;
+            state.compare.currentComparePage = 0;
+            state.compare.currentDiffIndex = 0;
+            state.compare.isComparing = true;
+        },
     },
 });
 
@@ -446,6 +459,7 @@ export const {
     setCompareResultTab,
     setCompareView,
     setComparePage,
+    setNewCompare,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

@@ -197,6 +197,7 @@ export interface IUiCompare {
     view: 'horizontal' | 'vertical';
     resultTab: 'summary' | 'metadata' | 'data';
     currentComparePage: number;
+    currentDiffIndex: number;
 }
 
 export interface IUi {

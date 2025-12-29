@@ -6,14 +6,18 @@ import React, {
     useRef,
 } from 'react';
 import { Box } from '@mui/material';
-import { ITableData, ItemType, IMask, TableSettings } from 'interfaces/common';
+import {
+    ITableData,
+    ItemType,
+    IMask,
+    TableSettings,
+    IUiControl,
+} from 'interfaces/common';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import {
     openSnackbar,
     setDatasetScrollPosition,
-    setGoTo,
-    setSelect,
 } from 'renderer/redux/slices/ui';
 import View from 'renderer/components/DatasetView/View';
 import useTableHeight from 'renderer/components/DatasetView/useTableHeight';
@@ -66,6 +70,10 @@ interface DatasetViewProps {
     > | null;
     containerRef?: React.RefObject<HTMLDivElement | null>;
     onScroll?: (e: React.UIEvent<HTMLDivElement>) => void;
+    goTo?: IUiControl['goTo'];
+    onSetGoTo?: (goTo: Partial<IUiControl['goTo']>) => void;
+    select?: IUiControl['select'];
+    onSetSelect?: (select: Partial<IUiControl['select']>) => void;
 }
 
 const DatasetView: React.FC<DatasetViewProps> = ({
@@ -78,6 +86,10 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     annotatedCells = null,
     containerRef = undefined,
     onScroll = undefined,
+    goTo = emptyGoTo,
+    onSetGoTo = () => {},
+    select = emptySelect,
+    onSetSelect = () => {},
 }) => {
     const dispatch = useAppDispatch();
     const [sorting, setSorting] = useState<ISortingState>([]);
@@ -549,13 +561,6 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         };
     }, []);
 
-    // GoTo control
-    const goTo = useAppSelector((state) =>
-        state.ui.control[tableData.fileId]
-            ? state.ui.control[tableData.fileId].goTo
-            : emptyGoTo,
-    );
-
     useEffect(() => {
         // Scroll to the row if it is on the current page, otherwise change will be changed and scroll will not be visible
         if (
@@ -567,7 +572,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         ) {
             const row = (goTo.row - 1) % settings.pageSize;
             rowVirtualizer.scrollToIndex(row, { align: 'center' });
-            dispatch(setGoTo({ fileId: tableData.fileId, row: null }));
+            onSetGoTo({ row: null });
             // Highlight the row number
             if (!goTo.cellSelection) {
                 handleCellClick(row, 0);
@@ -597,6 +602,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         handleCellClick,
         isLoading,
         tableHeight,
+        onSetGoTo,
     ]);
 
     useEffect(() => {
@@ -612,7 +618,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                     align: 'center',
                 });
             }
-            dispatch(setGoTo({ fileId: tableData.fileId, column: null }));
+            onSetGoTo({ column: null });
             // Highlight the column
             if (!goTo.cellSelection) {
                 handleColumnSelect(columnIndex);
@@ -628,15 +634,10 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         dispatch,
         handleColumnSelect,
         tableHeight,
+        onSetGoTo,
     ]);
 
     // Select control
-    const select = useAppSelector((state) =>
-        state.ui.control[tableData.fileId]
-            ? state.ui.control[tableData.fileId].select
-            : emptySelect,
-    );
-
     useEffect(() => {
         if (
             select.row !== null ||
@@ -666,13 +667,10 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                 handleColumnSelect(columnIndex);
             }
             // Clean select control
-            dispatch(
-                setSelect({
-                    fileId: tableData.fileId,
-                    row: null,
-                    column: null,
-                }),
-            );
+            onSetSelect({
+                row: null,
+                column: null,
+            });
         }
     }, [
         select,
@@ -683,6 +681,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         handleColumnSelect,
         settings.pageSize,
         tableHeight,
+        onSetSelect,
     ]);
 
     const updatedSettings = { ...settings, height: tableHeight };

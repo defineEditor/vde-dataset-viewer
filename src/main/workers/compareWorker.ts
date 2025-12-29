@@ -220,8 +220,8 @@ const compareData = (
 
         if (hasDiff) {
             return {
-                rowBase: baseIdx + 1 + rowShift,
-                rowCompare: compareIdx + 1 + rowShift,
+                rowBase: baseIdx + rowShift,
+                rowCompare: compareIdx + rowShift,
                 diff: diffs,
             };
         }

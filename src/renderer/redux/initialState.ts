@@ -103,6 +103,8 @@ export const ui: IUi = {
         fileComp: null,
         view: 'horizontal',
         resultTab: 'data',
+        currentComparePage: 0,
+        currentDiffIndex: 0,
     },
 };
 

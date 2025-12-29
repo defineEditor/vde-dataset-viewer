@@ -1,7 +1,7 @@
 import React from 'react';
 import { TablePagination, Stack, Box } from '@mui/material';
-import { useAppDispatch } from 'renderer/redux/hooks';
-import IssueNavigation from 'renderer/components/ViewDataset/IssueNavigation';
+import DiffNavigation from 'renderer/components/Compare/DiffNavigation';
+import { IUiControl } from 'interfaces/common';
 
 const styles = {
     container: {
@@ -36,6 +36,7 @@ const styles = {
     pagination: {
         display: 'flex',
         justifyContent: 'flex-end',
+        flex: '0 0 auto',
     },
     iconButton: {
         color: 'grey.600',
@@ -53,9 +54,17 @@ interface BottomToolbarProps {
         _event: React.MouseEvent<HTMLButtonElement> | null,
         newPage: number,
     ) => void;
-    issuesByRow:
-        | { row: number; ruleId: string; column: string; text: string }[]
-        | null;
+    diffs: Map<
+        number,
+        {
+            column?: {
+                baseValue: string;
+                compValue: string;
+                diff: React.ReactElement;
+            };
+        }
+    >;
+    onSetGoTo: (goTo: Partial<IUiControl['goTo']>) => void;
     disablePagination?: boolean;
 }
 
@@ -65,28 +74,22 @@ const BottomToolbar: React.FC<BottomToolbarProps> = ({
     pageSize,
     records,
     onPageChange,
-    issuesByRow,
+    diffs,
+    onSetGoTo,
     disablePagination = false,
 }) => {
-    const dispatch = useAppDispatch();
-
     return (
         <Box sx={styles.container}>
             <Stack
                 direction="row"
-                alignItems="space-between"
+                alignItems="center"
+                justifyContent="space-between"
                 spacing={1}
                 sx={styles.mainStack}
             >
-                <Stack
-                    direction="row"
-                    sx={styles.leftSection}
-                    justifyContent="flex-start"
-                    alignItems="flex-start"
-                    spacing={1}
-                >
-                    <IssueNavigation issuesByRow={issuesByRow} />
-                </Stack>
+                <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                    <DiffNavigation diffs={diffs} onSetGoTo={onSetGoTo} />
+                </Box>
 
                 {/* Pagination */}
                 {pageSize < records && (

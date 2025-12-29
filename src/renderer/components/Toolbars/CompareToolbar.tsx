@@ -7,9 +7,8 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import {
     openModal,
-    setIsComparing,
     setCompareView,
-    setCompareFiles,
+    setNewCompare,
 } from 'renderer/redux/slices/ui';
 import { modals } from 'misc/constants';
 import { setCompareData } from 'renderer/redux/slices/data';
@@ -40,8 +39,10 @@ const CompareToolbar: React.FC = () => {
     const fileBase = useAppSelector((state) => state.data.compare.fileBase);
     const fileComp = useAppSelector((state) => state.data.compare.fileComp);
     const handleRefreshCompare = () => {
-        dispatch(setCompareFiles({ fileBase, fileComp }));
-        dispatch(setIsComparing(true));
+        if (!fileBase || !fileComp) {
+            return;
+        }
+        dispatch(setNewCompare({ fileBase, fileComp }));
     };
 
     const handleClose = () => {

@@ -3,34 +3,38 @@ import { Box, CircularProgress, Typography, Stack } from '@mui/material';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import DatasetView from 'renderer/components/DatasetView';
 import AppContext from 'renderer/utils/AppContext';
-import { ITableData } from 'interfaces/common';
+import { ITableData, ItemDataArray, IUiControl } from 'interfaces/common';
 import { getData } from 'renderer/utils/readData';
 import { diffChars } from 'diff';
 import { openSnackbar, setComparePage } from 'renderer/redux/slices/ui';
 import BottomToolbar from 'renderer/components/Compare/BottomToolbar';
 
 const styles = {
-    container: {
+    containerVertical: {
+        overflow: 'hidden',
+        height: 'calc(100%)',
+    },
+    containerHorizontal: {
+        overflow: 'hidden',
         height: '100%',
-        overflow: 'hidden',
-        flex: '1 1 auto',
     },
-    splitView: {
-        display: 'flex',
-        flex: '1 1 auto',
-        overflow: 'hidden',
+    splitViewHorizontal: {
+        height: '100%',
     },
-    horizontal: {
-        flexDirection: 'row',
+    splitViewVertical: {
+        height: 'calc(100% - 52px)',
     },
-    vertical: {
-        flexDirection: 'column',
-    },
-    pane: {
+    paneHorizontal: {
         flex: 1,
-        overflow: 'hidden',
         position: 'relative',
         border: '1px solid #e0e0e0',
+        width: '50%',
+    },
+    paneVertical: {
+        flex: 1,
+        position: 'relative',
+        border: '1px solid #e0e0e0',
+        height: '50%',
     },
     loading: {
         display: 'flex',
@@ -39,10 +43,11 @@ const styles = {
         height: '100%',
     },
     header: {
-        p: 1,
-        backgroundColor: 'grey.100',
-        borderBottom: '1px solid #e0e0e0',
-        fontWeight: 'bold',
+        mx: 1,
+        overflow: 'hidden',
+        width: '100%',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
     },
 };
 
@@ -63,6 +68,11 @@ const Data: React.FC = () => {
     const commonCols = datasetDiff?.metadata.commonCols || emptyArray;
     const view = useAppSelector((state) => state.ui.compare.view);
     const settings = useAppSelector((state) => state.settings);
+    const viewerSettings = {
+        ...settings.viewer,
+        denseHeader: true,
+        disableSorting: true,
+    };
 
     const [baseData, setBaseData] = useState<ITableData | null>(null);
     const [compData, setCompData] = useState<ITableData | null>(null);
@@ -92,11 +102,21 @@ const Data: React.FC = () => {
         return map;
     }, [baseData?.header]);
 
+    const [goTo, setGoTo] = useState<{
+        row: number | null;
+        column: string | null;
+        cellSelection: boolean;
+    }>({ row: null, column: null, cellSelection: false });
+
+    const handleSetGoTo = (newGoTo: Partial<IUiControl['goTo']>) => {
+        setGoTo((prevGoTo) => ({ ...prevGoTo, ...newGoTo }));
+    };
+
     const handleChangePage = (_event, newPage: number) => {
         dispatch(setComparePage(newPage));
     };
 
-    const { baseAnnotations, compAnnotations } = useMemo(() => {
+    const { baseAnnotations, compAnnotations, baseDiffs } = useMemo(() => {
         if (colIndices.size === 0 || !datasetDiff) {
             return { baseAnnotations: null, compAnnotations: null };
         }
@@ -116,9 +136,26 @@ const Data: React.FC = () => {
             }
         >();
 
+        const baseDiffsMap = new Map<
+            number,
+            {
+                [colId: string]: {
+                    baseVal: ItemDataArray[number];
+                    compVal: ItemDataArray[number];
+                    diff: React.ReactElement;
+                };
+            }
+        >();
+
         datasetDiff?.data.modifiedRows.forEach((diffRow) => {
             const { rowBase, rowCompare, diff } = diffRow;
             if (diff) {
+                // Add annotation for row
+                baseMap.set(`${rowBase}`, {
+                    text: `${Object.keys(diff).length} diffs`,
+                    color: '',
+                });
+                const baseDiffsRow = {};
                 Object.keys(diff).forEach((colId) => {
                     const baseColIndex = colIndices.get(colId);
                     const compColIndex = colIndices.get(colId);
@@ -160,12 +197,26 @@ const Data: React.FC = () => {
                             text: diffElement,
                             color: '',
                         });
+
+                        // Add item to baseDiffs
+                        baseDiffsRow[colId] = {
+                            baseVal,
+                            compVal,
+                            diff: diffElement,
+                        };
                     }
                 });
+                if (rowBase !== null) {
+                    baseDiffsMap.set(rowBase, baseDiffsRow);
+                }
             }
         });
 
-        return { baseAnnotations: baseMap, compAnnotations: compMap };
+        return {
+            baseAnnotations: baseMap,
+            compAnnotations: compMap,
+            baseDiffs: baseDiffsMap,
+        };
     }, [datasetDiff, colIndices]);
 
     useEffect(() => {
@@ -178,6 +229,9 @@ const Data: React.FC = () => {
                 const fileBaseInfo = await apiService.openFile(
                     'local',
                     fileBase,
+                    undefined,
+                    undefined,
+                    'compare',
                 );
                 const newBaseData = await getData(
                     apiService,
@@ -193,6 +247,9 @@ const Data: React.FC = () => {
                 const fileCompInfo = await apiService.openFile(
                     'local',
                     fileComp,
+                    undefined,
+                    undefined,
+                    'compare',
                 );
                 const newCompData = await getData(
                     apiService,
@@ -244,40 +301,60 @@ const Data: React.FC = () => {
     }
 
     return (
-        <Stack sx={styles.container}>
-            <Box
-                sx={{
-                    ...styles.splitView,
-                    ...(view === 'horizontal'
-                        ? styles.horizontal
-                        : styles.vertical),
-                }}
+        <Stack
+            sx={
+                view === 'horizontal'
+                    ? styles.containerHorizontal
+                    : styles.containerVertical
+            }
+        >
+            <Stack
+                sx={
+                    view === 'horizontal'
+                        ? styles.splitViewHorizontal
+                        : styles.splitViewVertical
+                }
+                direction={view === 'horizontal' ? 'row' : 'column'}
             >
-                <Box sx={styles.pane}>
-                    <Box sx={styles.header}>Base: {fileBase}</Box>
+                <Box
+                    sx={
+                        view === 'horizontal'
+                            ? styles.paneHorizontal
+                            : styles.paneVertical
+                    }
+                >
                     <DatasetView
                         tableData={baseData}
                         isLoading={false}
+                        key={`base-${view}`}
                         handleContextMenu={() => {}}
-                        settings={settings.viewer}
+                        settings={viewerSettings}
                         containerRef={baseRef}
                         onScroll={handleScroll('base')}
+                        goTo={goTo}
+                        onSetGoTo={handleSetGoTo}
                         annotatedCells={baseAnnotations}
                     />
                 </Box>
-                <Box sx={styles.pane}>
-                    <Box sx={styles.header}>Compare: {fileComp}</Box>
+                <Box
+                    sx={
+                        view === 'horizontal'
+                            ? styles.paneHorizontal
+                            : styles.paneVertical
+                    }
+                >
                     <DatasetView
                         tableData={compData}
                         isLoading={false}
+                        key={`comp-${view}`}
                         handleContextMenu={() => {}}
-                        settings={settings.viewer}
+                        settings={viewerSettings}
                         containerRef={compRef}
                         onScroll={handleScroll('comp')}
                         annotatedCells={compAnnotations}
                     />
                 </Box>
-            </Box>
+            </Stack>
             <BottomToolbar
                 totalRecords={Math.min(
                     baseData.metadata.records,
@@ -287,7 +364,8 @@ const Data: React.FC = () => {
                 pageSize={pageSize}
                 records={baseData.metadata.records}
                 onPageChange={handleChangePage}
-                issuesByRow={null}
+                diffs={baseDiffs || new Map()}
+                onSetGoTo={handleSetGoTo}
             />
         </Stack>
     );

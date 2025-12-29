@@ -67,4 +67,6 @@ export interface TableSettings extends SettingsViewer {
     showLabel?: boolean;
     height?: number;
     width?: number;
+    denseHeader?: boolean;
+    disableSorting?: boolean;
 }

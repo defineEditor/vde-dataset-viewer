@@ -12,6 +12,7 @@ import {
     ITableData,
     IMask,
     ParsedValidationReport,
+    IUiControl,
 } from 'interfaces/common';
 import DatasetView from 'renderer/components/DatasetView';
 import ContextMenu from 'renderer/components/DatasetView/ContextMenu';
@@ -22,6 +23,8 @@ import {
     setPage,
     closeDataset,
     toggleSidebar,
+    setGoTo,
+    setSelect,
 } from 'renderer/redux/slices/ui';
 import { getData } from 'renderer/utils/readData';
 import estimateWidth from 'renderer/utils/estimateWidth';
@@ -334,11 +337,11 @@ const DatasetContainer: React.FC = () => {
     ]);
 
     // GoTo control
-    const goToRow = useAppSelector((state) =>
-        state.ui.control[currentFileId]
-            ? state.ui.control[currentFileId].goTo.row
-            : null,
+    const goTo = useAppSelector(
+        (state) => state.ui.control[currentFileId].goTo,
     );
+
+    const goToRow = goTo?.row || null;
 
     useEffect(() => {
         if (goToRow !== null) {
@@ -349,8 +352,20 @@ const DatasetContainer: React.FC = () => {
         }
     }, [goToRow, page, pageSize, handleChangePage]);
 
-    // Report issues
+    const handleSetGoTo = (newGoTo: Partial<IUiControl['goTo']>) => {
+        dispatch(setGoTo({ fileId: currentFileId, ...newGoTo }));
+    };
 
+    // Select control
+    const select = useAppSelector(
+        (state) => state.ui.control[currentFileId].select,
+    );
+
+    const handleSetSelect = (newSelect: Partial<IUiControl['select']>) => {
+        dispatch(setSelect({ fileId: currentFileId, ...newSelect }));
+    };
+
+    // Report issues
     const showIssues = useAppSelector(
         (state) => state.ui.dataSettings[currentFileId]?.showIssues,
     );
@@ -438,6 +453,10 @@ const DatasetContainer: React.FC = () => {
                         currentPage={page}
                         currentMask={currentMask}
                         annotatedCells={issueAnnotations?.annotations || null}
+                        goTo={goTo}
+                        onSetGoTo={handleSetGoTo}
+                        select={select}
+                        onSetSelect={handleSetSelect}
                     />
                     <ContextMenu
                         open={contextMenu.open}

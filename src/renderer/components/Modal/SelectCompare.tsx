@@ -26,7 +26,7 @@ import {
     closeModal,
     setPathname,
     setCompareFiles,
-    setIsComparing,
+    setNewCompare,
 } from 'renderer/redux/slices/ui';
 import { modals, paths } from 'misc/constants';
 import AppContext from 'renderer/utils/AppContext';
@@ -84,11 +84,16 @@ const SelectCompare: React.FC = () => {
         dispatch(closeModal({ type: modals.SELECTCOMPARE }));
     }, [dispatch]);
 
-    const handleCompare = useCallback(() => {
-        dispatch(setPathname({ pathname: paths.COMPARE }));
-        dispatch(setIsComparing(true));
-        handleClose();
-    }, [dispatch, handleClose]);
+    const handleCompare = useCallback(
+        (newFileBase: string, newFileComp: string) => {
+            dispatch(setPathname({ pathname: paths.COMPARE }));
+            dispatch(
+                setNewCompare({ fileBase: newFileBase, fileComp: newFileComp }),
+            );
+            handleClose();
+        },
+        [dispatch, handleClose],
+    );
 
     const handleSelectFile = async (type: 'base' | 'comp') => {
         const result = await apiService.openFileDialog({
@@ -130,13 +135,7 @@ const SelectCompare: React.FC = () => {
                     if (recentCompares[index]) {
                         event.preventDefault();
                         const recent = recentCompares[index];
-                        dispatch(
-                            setCompareFiles({
-                                fileBase: recent.fileBase,
-                                fileComp: recent.fileComp,
-                            }),
-                        );
-                        handleCompare();
+                        handleCompare(recent.fileBase, recent.fileComp);
                     }
                 }
             }
@@ -329,7 +328,7 @@ const SelectCompare: React.FC = () => {
                     Cancel
                 </Button>
                 <Button
-                    onClick={() => handleCompare()}
+                    onClick={() => handleCompare(fileBase, fileComp)}
                     color="primary"
                     variant="contained"
                     disabled={!fileBase || !fileComp}

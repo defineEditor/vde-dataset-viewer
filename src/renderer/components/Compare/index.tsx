@@ -1,4 +1,4 @@
-import React, { useEffect, useContext, useState } from 'react';
+import React, { useEffect, useContext, useState, useCallback } from 'react';
 import { Box, Button, Stack } from '@mui/material';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import {
@@ -69,8 +69,26 @@ const Compare: React.FC = () => {
         dispatch(openModal({ type: modals.SELECTCOMPARE, data: {} }));
     };
 
+    const closeCompareFiles = useCallback(() => {
+        const openedCompareFiles = apiService
+            .getOpenedFiles()
+            .filter((file) => file.viewType === 'compare');
+        openedCompareFiles.forEach((file) => {
+            apiService.close(file.fileId);
+        });
+    }, [apiService]);
+
+    useEffect(() => {
+        // When compare is closed, close the corresponding compare files
+        if (!fileBase && !fileComp) {
+            closeCompareFiles();
+        }
+    }, [fileBase, fileComp, closeCompareFiles]);
+
     useEffect(() => {
         if (isComparing) {
+            // Close other compare files first
+            closeCompareFiles();
             // Check both files are selected
             if (!fileBaseUi || !fileCompUi) {
                 dispatch(
@@ -167,7 +185,14 @@ const Compare: React.FC = () => {
         }
         setProgress(0);
         return () => {};
-    }, [apiService, isComparing, dispatch, fileBaseUi, fileCompUi]);
+    }, [
+        apiService,
+        isComparing,
+        dispatch,
+        fileBaseUi,
+        fileCompUi,
+        closeCompareFiles,
+    ]);
 
     if (isComparing) {
         return <CompareProgress progress={progress} issues={issues} />;

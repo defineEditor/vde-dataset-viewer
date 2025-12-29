@@ -66,6 +66,7 @@ class ApiService {
             study: IApiStudy;
             dataset: IApiStudyDataset;
         },
+        viewType: 'data' | 'compare' = 'data',
     ): Promise<IOpenFileWithMetadata> => {
         let fileData: IOpenFile;
         // Check if the file is already open
@@ -78,6 +79,7 @@ class ApiService {
                         type: file.type,
                         path: file.path,
                         lastModified: file.lastModified || 0,
+                        viewType,
                     };
                 }
             });
@@ -104,11 +106,12 @@ class ApiService {
                     metadata: {} as DatasetJsonMetadata,
                     errorMessage: 'API info not provided reading metadata',
                     lastModified: 0,
+                    viewType,
                 };
             }
-            fileData = await this.openFileRemote(apiInfo);
+            fileData = await this.openFileRemote(apiInfo, viewType);
         } else {
-            fileData = await this.openFileLocal(filePath, folderPath);
+            fileData = await this.openFileLocal(filePath, folderPath, viewType);
         }
 
         if (fileData.errorMessage) {
@@ -138,6 +141,7 @@ class ApiService {
                 mode,
                 name: fileData.path,
                 lastModified: fileData.lastModified,
+                viewType,
             };
         } else {
             this.openedFiles.push({
@@ -147,6 +151,7 @@ class ApiService {
                 mode,
                 name: fileData.path,
                 lastModified: fileData.lastModified,
+                viewType,
             });
         }
 
@@ -167,6 +172,7 @@ class ApiService {
     private openFileLocal = async (
         filePath?: string,
         folderPath?: string,
+        viewType: 'data' | 'compare' = 'data',
     ): Promise<IOpenFile> => {
         // Read encoding from state
         const encoding = store.getState().settings.other.inEncoding;
@@ -182,16 +188,20 @@ class ApiService {
                 path: '',
                 errorMessage: 'Failed to open the file',
                 lastModified: 0,
+                viewType,
             };
         }
-        return response;
+        return { ...response, viewType };
     };
 
-    private openFileRemote = async (apiInfo: {
-        api: IApiRecord;
-        study: IApiStudy;
-        dataset: IApiStudyDataset;
-    }): Promise<IOpenFile> => {
+    private openFileRemote = async (
+        apiInfo: {
+            api: IApiRecord;
+            study: IApiStudy;
+            dataset: IApiStudyDataset;
+        },
+        viewType: 'data' | 'compare' = 'data',
+    ): Promise<IOpenFile> => {
         // At this stage it is already know that the dataset exists
         let lastModified = 0;
         if (apiInfo.dataset.datasetJSONCreationDateTime) {
@@ -204,6 +214,7 @@ class ApiService {
             type: 'json',
             path: `${apiInfo.api.address}${apiInfo.dataset.href}`,
             lastModified,
+            viewType,
         };
         return result;
     };
@@ -592,6 +603,7 @@ class ApiService {
                     type: file.type,
                     path: file.path,
                     lastModified: file.lastModified || 0,
+                    viewType: file.viewType,
                 };
             });
     };
