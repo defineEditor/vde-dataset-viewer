@@ -117,7 +117,22 @@ const Compare: React.FC = () => {
                     ) {
                         return;
                     }
-                    if (info.progress === 100) {
+                    if (info.error) {
+                        dispatch(
+                            openSnackbar({
+                                message: info.error,
+                                type: 'error',
+                            }),
+                        );
+                        dispatch(
+                            setCompareData({
+                                datasetDiff: null,
+                                fileBase: '',
+                                fileComp: '',
+                            }),
+                        );
+                        dispatch(setIsComparing(false));
+                    } else if (info.progress === 100) {
                         setProgress(info.progress);
                         setIssues(info.issues);
                         if (info.error) {

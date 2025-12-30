@@ -23,26 +23,53 @@ import DefineXmlManager from 'main/managers/defineXmlManager';
 import { MainTask, NewWindowProps } from 'interfaces/main';
 
 let mainWindow: BrowserWindow | null = null;
-let fileToOpen: string | null = null;
 const openedWindows = new Set<BrowserWindow>();
 
-// Get file path from command line arguments
-function getFilePathFromArgs(args: string[]): string | null {
-    // Skip the first arg on packaged apps (it's the app path)
+// Parse command line arguments
+function parseArgs(args: string[]): {
+    filePath: string | null;
+    compareFiles: { path1: string; path2: string } | null;
+} {
     const startIdx = app.isPackaged ? 1 : 2;
+    let filePath: string | null = null;
+    let compareFiles: { path1: string; path2: string } | null = null;
 
-    for (let i = startIdx; i < args.length; i++) {
-        const arg = args[i];
-        // Check if this arg is a file path that exists
-        if (arg && !arg.startsWith('-')) {
-            return arg;
+    // Check for --compare
+    const compareIndex = args.indexOf('--compare');
+    if (compareIndex !== -1 && args.length > compareIndex + 2) {
+        // Skip parameter arguments
+        console.log(`Parameters:${args}`);
+        for (
+            let i = compareIndex + 1;
+            i < args.length && compareFiles === null;
+            i++
+        ) {
+            // Skip parameter arguments
+            console.log(`Index:${i} Length:${args.length}`);
+            console.log(`Parameter:${args[i]}`);
+            if (!args[i].startsWith('-') && args[i + 1]) {
+                compareFiles = {
+                    path1: args[i],
+                    path2: args[i + 1],
+                };
+            }
+        }
+    } else if (args.length > startIdx) {
+        for (let i = startIdx; i < args.length && filePath === null; i++) {
+            // Skip parameter arguments
+            if (!args[i].startsWith('-')) {
+                filePath = args[i];
+            }
         }
     }
-    return null;
+
+    return { filePath, compareFiles };
 }
 
 // Store command line arguments for later use
-fileToOpen = getFilePathFromArgs(process.argv);
+const args = parseArgs(process.argv);
+let fileToOpen = args.filePath;
+const { compareFiles } = args;
 
 // Handle file opening from "Open With" on start
 const gotTheLock = app.requestSingleInstanceLock();
@@ -62,9 +89,16 @@ if (!gotTheLock) {
             mainWindow.focus();
 
             // Check for file paths in command line arguments
-            const filePath = getFilePathFromArgs(commandLine);
-            if (filePath) {
-                mainWindow.webContents.send('renderer:openFile', filePath);
+            const newArgs = parseArgs(commandLine);
+            if (newArgs.compareFiles) {
+                mainWindow.webContents.send('renderer:openFile', undefined, {
+                    compare: newArgs.compareFiles,
+                });
+            } else if (newArgs.filePath) {
+                mainWindow.webContents.send(
+                    'renderer:openFile',
+                    newArgs.filePath,
+                );
             }
         }
     });
@@ -159,6 +193,10 @@ const createWindow = async (
         // Open file if one was provided
         if (filePath) {
             newWindow.webContents.send('renderer:openFile', filePath, props);
+        } else if (props && props.compare) {
+            newWindow.webContents.send('renderer:openFile', undefined, {
+                compare: props.compare,
+            });
         }
     });
 
@@ -376,12 +414,20 @@ app.whenReady()
                 _event.sender.stopFindInPage('clearSelection');
             }
         });
-        mainWindow = await createWindow(fileToOpen);
+        mainWindow = await createWindow(
+            fileToOpen,
+            undefined,
+            compareFiles ? { compare: compareFiles } : undefined,
+        );
         app.on('activate', async () => {
             // On macOS it's common to re-create a window in the app when the
             // dock icon is clicked and there are no other windows open.
             if (mainWindow === null) {
-                mainWindow = await createWindow(fileToOpen);
+                mainWindow = await createWindow(
+                    fileToOpen,
+                    undefined,
+                    compareFiles ? { compare: compareFiles } : undefined,
+                );
             }
         });
     })

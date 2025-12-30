@@ -53,7 +53,7 @@ const ProgressContainer: React.FC<{
         <Grow in={progress > 0} timeout={500} unmountOnExit>
             <Paper sx={styles.progressContainer}>
                 <>
-                    <Typography variant="subtitle1">Conversion</Typography>
+                    <Typography variant="subtitle1">Compare</Typography>
                     <LinearProgress
                         variant="determinate"
                         value={progress}

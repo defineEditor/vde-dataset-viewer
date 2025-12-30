@@ -478,7 +478,7 @@ process.parentPort.once(
                 summary = {
                     ...summary,
                     ...blockDiff.summary,
-                    totalRowsChecked: blockDiff.summary.maxColDiffReached
+                    totalRowsChecked: blockDiff.summary.maxDiffReached
                         ? (blockDiff.summary.lastDiffRow || 0) + 1
                         : start + Math.min(baseData.length, compData.length),
                 };
@@ -493,7 +493,7 @@ process.parentPort.once(
                           )
                         : 0;
                 if (progress < 100) {
-                    sendMessage(progress, summary.totalDiffs);
+                    sendMessage(Math.max(progress, 1), summary.totalDiffs);
                 } else {
                     // If 100%, will send final message later
                     sendMessage(99, summary.totalDiffs);

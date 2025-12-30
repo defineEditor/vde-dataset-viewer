@@ -21,7 +21,17 @@
         "no-restricted-syntax": ["off", "ForOfStatement"],
         "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
         "@typescript-eslint/no-explicit-any": "warn",
-        "react/require-default-props": ["error", { "functions": "defaultArguments"}]
+        "react/require-default-props": ["error", { "functions": "defaultArguments"}],
+        "prefer-destructuring": ["error", {
+            "VariableDeclarator": {
+                "array": false,
+                "object": true
+            },
+            "AssignmentExpression": {
+                "array": false,
+                "object": true
+            }
+        }]
     },
     "parserOptions": {
         "ecmaVersion": 2022,

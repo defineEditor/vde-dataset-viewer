@@ -335,4 +335,8 @@ export interface NewWindowProps {
         filteredIssues: string[];
         reportId: string;
     };
+    compare?: {
+        path1: string;
+        path2: string;
+    };
 }

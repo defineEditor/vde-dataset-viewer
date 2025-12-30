@@ -25,6 +25,7 @@ import {
     setPathname,
     setZoomLevel,
     setDefineFileId,
+    setNewCompare,
 } from 'renderer/redux/slices/ui';
 import { AllowedPathnames, NewWindowProps } from 'interfaces/common';
 import ViewerToolbar from 'renderer/components/Toolbars/ViewerToolbar';
@@ -301,6 +302,23 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
             filePath: string,
             newWindowProps?: NewWindowProps,
         ) => {
+            if (newWindowProps?.compare) {
+                const { path1, path2 } = newWindowProps.compare;
+                const handleOpenCompare = async (
+                    fileBase: string,
+                    fileComp: string,
+                ) => {
+                    dispatch(
+                        setNewCompare({
+                            fileBase,
+                            fileComp,
+                        }),
+                    );
+                    dispatch(setPathname({ pathname: paths.COMPARE }));
+                };
+                return handleOpenCompare(path1, path2);
+            }
+
             // Get file extension
             const extension = filePath.split('.').pop();
 
