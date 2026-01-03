@@ -56,6 +56,9 @@ const emptyArray = [];
 const Data: React.FC = () => {
     const { apiService } = useContext(AppContext);
     const pageSize = useAppSelector((state) => state.settings.viewer.pageSize);
+    const reorderCompareColumns = useAppSelector(
+        (state) => state.settings.compare.reorderCompareColumns,
+    );
     const currentCompareId = useAppSelector(
         (state) => state.ui.compare.currentCompareId,
     );
@@ -104,7 +107,7 @@ const Data: React.FC = () => {
         };
 
     // Map column IDs to indices for quick lookup
-    const colIndices = useMemo(() => {
+    const colIndicesBase = useMemo(() => {
         const map = new Map<string, number>();
         if (baseData?.header) {
             baseData.header.forEach((col, index) => {
@@ -113,6 +116,16 @@ const Data: React.FC = () => {
         }
         return map;
     }, [baseData?.header]);
+
+    const colIndicesComp = useMemo(() => {
+        const map = new Map<string, number>();
+        if (compData?.header) {
+            compData.header.forEach((col, index) => {
+                map.set(col.id, index);
+            });
+        }
+        return map;
+    }, [compData?.header]);
 
     const [goTo, setGoTo] = useState<{
         row: number | null;
@@ -143,7 +156,7 @@ const Data: React.FC = () => {
     };
 
     const { baseAnnotations, compAnnotations, baseDiffs } = useMemo(() => {
-        if (colIndices.size === 0 || !datasetDiff) {
+        if (colIndicesBase.size === 0 || !datasetDiff) {
             return { baseAnnotations: null, compAnnotations: null };
         }
 
@@ -183,8 +196,8 @@ const Data: React.FC = () => {
                 });
                 const baseDiffsRow = {};
                 Object.keys(diff).forEach((colId) => {
-                    const baseColIndex = colIndices.get(colId);
-                    const compColIndex = colIndices.get(colId);
+                    const baseColIndex = colIndicesBase.get(colId);
+                    const compColIndex = colIndicesComp.get(colId);
                     if (
                         baseColIndex !== undefined &&
                         compColIndex !== undefined
@@ -260,7 +273,7 @@ const Data: React.FC = () => {
             compAnnotations: compMap,
             baseDiffs: baseDiffsMap,
         };
-    }, [datasetDiff, colIndices]);
+    }, [datasetDiff, colIndicesBase, colIndicesComp]);
 
     useEffect(() => {
         const loadData = async () => {
@@ -303,6 +316,17 @@ const Data: React.FC = () => {
                     currentFilter,
                     true,
                 );
+                // Reorder columns to match baseData order
+                if (reorderCompareColumns && newBaseData && newCompData) {
+                    const baseColOrder = newBaseData.header.map((col) =>
+                        col.id.toLowerCase(),
+                    );
+                    newCompData.header.sort(
+                        (a, b) =>
+                            baseColOrder.indexOf(a.id.toLowerCase()) -
+                            baseColOrder.indexOf(b.id.toLowerCase()),
+                    );
+                }
                 setCompData(newCompData);
             } catch (error) {
                 dispatch(
@@ -328,6 +352,7 @@ const Data: React.FC = () => {
         pageSize,
         currentCompareId,
         currentFilter,
+        reorderCompareColumns,
     ]);
 
     if (loading) {

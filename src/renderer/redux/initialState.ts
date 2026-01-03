@@ -60,6 +60,15 @@ export const settings: ISettings = {
     define: {
         stylesheetShowComments: false,
     },
+    compare: {
+        tolerance: 10e-12,
+        idColumns: [],
+        maxDiffCount: 100,
+        maxColumnDiffCount: 50,
+        ignorePattern: '',
+        ignoreColumnCase: true,
+        reorderCompareColumns: true,
+    },
 };
 export const ui: IUi = {
     pathname: paths.SELECT,

@@ -5,7 +5,7 @@ import {
     ItemDataArray,
     ItemDescription,
     ItemType,
-    CompareOptions,
+    CompareSettings,
     MetadataDiff,
     DataDiff,
     DataDiffRow,
@@ -21,7 +21,9 @@ import DatasetXpt from 'xport-js';
 const compareMetadata = (
     base: DatasetMetadata,
     compare: DatasetMetadata,
+    options: CompareSettings = {},
 ): MetadataDiff => {
+    const { ignoreColumnCase, ignorePattern } = options;
     // Metadata Comparison
     const metadataDiff: MetadataDiff = {
         commonCols: [],
@@ -56,18 +58,49 @@ const compareMetadata = (
 
     // Column Analysis
     const baseCols = new Map(
-        base.columns.map((c, i) => [c.name, { desc: c, index: i }]),
+        base.columns
+            .filter((column) => {
+                if (!ignorePattern) return true;
+                return !new RegExp(`/${ignorePattern}/`, 'i').test(column.name);
+            })
+            .map((c, i) => [c.name, { desc: c, index: i }]),
     );
     const compareCols = new Map(
-        compare.columns.map((c, i) => [c.name, { desc: c, index: i }]),
+        compare.columns
+            .filter((column) => {
+                if (!ignorePattern) return true;
+                return !new RegExp(`/${ignorePattern}/`, 'i').test(column.name);
+            })
+            .map((c, i) => [c.name, { desc: c, index: i }]),
     );
 
     const allColNames = new Set([...baseCols.keys(), ...compareCols.keys()]);
     const commonCols: string[] = [];
 
     for (const name of allColNames) {
-        const inBase = baseCols.get(name);
-        const inCompare = compareCols.get(name);
+        let inBase = baseCols.get(name);
+        let inCompare = compareCols.get(name);
+        if (ignoreColumnCase && (!inBase || !inCompare)) {
+            // Find matching column names ignoring case
+            const baseKey = Array.from(baseCols.keys()).find(
+                (colName) => colName.toLowerCase() === name.toLowerCase(),
+            );
+            const compareKey = Array.from(compareCols.keys()).find(
+                (colName) => colName.toLowerCase() === name.toLowerCase(),
+            );
+            if (baseKey) {
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                inBase = baseCols.get(baseKey)!;
+            } else {
+                inBase = undefined;
+            }
+            if (compareKey) {
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                inCompare = compareCols.get(compareKey)!;
+            } else {
+                inCompare = undefined;
+            }
+        }
 
         if (!inBase && inCompare) {
             metadataDiff.missingInBase.push(name);
@@ -124,28 +157,54 @@ const compareData = (
     compareMeta: DatasetMetadata,
     summaryInit: DatasetDiff['summary'],
     rowShift: number = 0,
-    options: CompareOptions = {},
+    options: CompareSettings = {},
 ): { data: DataDiff; summary: Partial<DatasetDiff['summary']> } => {
     const {
         tolerance = 1e-12,
         idColumns,
         maxDiffCount,
         maxColumnDiffCount,
+        ignoreColumnCase,
+        ignorePattern,
     } = options;
 
     // Column Maps
     const baseCols = new Map(
-        baseMeta?.columns.map((c, i) => [c.name, { desc: c, index: i }]) || [],
+        baseMeta?.columns
+            .filter(
+                (column) =>
+                    !ignorePattern ||
+                    !new RegExp(`/${ignorePattern}/`, 'i').test(column.name),
+            )
+            .map((c, i) => [c.name, { desc: c, index: i }]) || [],
     );
     const compareCols = new Map(
-        compareMeta?.columns.map((c, i) => [c.name, { desc: c, index: i }]) ||
-            [],
+        compareMeta?.columns
+            .filter(
+                (column) =>
+                    !ignorePattern ||
+                    !new RegExp(`/${ignorePattern}/`, 'i').test(column.name),
+            )
+            .map((c, i) => [c.name, { desc: c, index: i }]) || [],
     );
 
     const allCols = [...baseCols.keys(), ...compareCols.keys()];
-    const commonCols: string[] = allCols.filter(
-        (name) => baseCols.has(name) && compareCols.has(name),
-    );
+    const commonCols: string[] = allCols.filter((name) => {
+        if (!ignoreColumnCase) {
+            return baseCols.has(name) && compareCols.has(name);
+        }
+        // In case case insensitive comparison is needed
+        const baseColNames = Array.from(baseCols.keys()).map((n) =>
+            n.toLowerCase(),
+        );
+        const compareColNames = Array.from(compareCols.keys()).map((n) =>
+            n.toLowerCase(),
+        );
+        return (
+            baseColNames.includes(name.toLowerCase()) &&
+            compareColNames.includes(name.toLowerCase())
+        );
+    });
 
     // Track columns that reached max diff count
     const columnDiffCounts = new Map<string, number>();
@@ -411,7 +470,8 @@ process.parentPort.once(
     'message',
     async (messageData: { data: CompareProcessTask }) => {
         const { data } = messageData;
-        const { id, fileBase, fileComp, options, settings, filterData } = data;
+        const { id, fileBase, fileComp, options, fileSettings, filterData } =
+            data;
 
         const sendMessage = (
             progress: number,
@@ -429,7 +489,7 @@ process.parentPort.once(
         };
 
         try {
-            const { encoding, bufferSize } = settings;
+            const { encoding, bufferSize } = fileSettings;
             const baseFile = openFile(fileBase, encoding);
             const compFile = openFile(fileComp, encoding);
 

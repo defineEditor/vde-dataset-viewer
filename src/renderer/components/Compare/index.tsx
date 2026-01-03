@@ -66,6 +66,8 @@ const Compare: React.FC = () => {
             state.data.filterData.currentFilter[currentCompareId] || null,
     );
 
+    const settings = useAppSelector((state) => state.settings.compare);
+
     const fileBase = useAppSelector(
         (state) => state.data.compare.data[currentCompareId]?.fileBase,
     );
@@ -129,8 +131,8 @@ const Compare: React.FC = () => {
                 type: mainTaskTypes.COMPARE,
                 fileBase: fileBaseUi,
                 fileComp: fileCompUi,
-                options: { tolerance: 1e-12, maxDiffCount: 100 },
-                settings: { encoding: 'default', bufferSize: 10000 },
+                options: settings,
+                fileSettings: { encoding: 'default', bufferSize: 10000 },
                 filterData: currentFilter,
             };
             // Initiate info for this compare
@@ -232,6 +234,7 @@ const Compare: React.FC = () => {
         fileCompUi,
         closeCompareFiles,
         currentFilter,
+        settings,
     ]);
 
     if (isComparing) {

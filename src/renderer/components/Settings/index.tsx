@@ -27,6 +27,7 @@ import { ISettings } from 'interfaces/common';
 import { Viewer } from 'renderer/components/Settings/Viewer';
 import { Converter } from 'renderer/components/Settings/Converter';
 import { Validator } from 'renderer/components/Settings/Validator';
+import { Compare } from 'renderer/components/Settings/Compare';
 import { Other } from 'renderer/components/Settings/Other';
 
 const Settings: React.FC = () => {

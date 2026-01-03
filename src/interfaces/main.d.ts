@@ -65,14 +65,17 @@ export interface ConvertedFileInfo extends FileInfo {
 }
 
 // Diff interfaces
-export interface CompareOptions {
+export interface CompareSettings {
     tolerance?: number;
     idColumns?: string[];
     maxDiffCount?: number;
     maxColumnDiffCount?: number;
+    ignorePattern?: string;
+    ignoreColumnCase?: boolean;
+    reorderCompareColumns?: boolean;
 }
 
-export interface CompareSettings {
+export interface CompareFileSettings {
     encoding: BufferEncoding | 'default';
     bufferSize: number;
 }
@@ -194,8 +197,8 @@ export interface CompareTask {
     fileBase: string;
     fileComp: string;
     filterData: BasicFilter | null;
-    options: CompareOptions;
-    settings: CompareSettings;
+    options: CompareSettings;
+    fileSettings: CompareFileSettings;
 }
 
 export interface ValidateTask {
@@ -236,8 +239,8 @@ export interface CompareProcessTask {
     fileBase: string;
     fileComp: string;
     filterData: BasicFilter | null;
-    options: CompareOptions;
-    settings: CompareSettings;
+    options: CompareSettings;
+    fileSettings: CompareFileSettings;
 }
 
 export type MainProcessTask =

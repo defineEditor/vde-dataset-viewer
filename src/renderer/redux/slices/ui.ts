@@ -476,6 +476,10 @@ export const uiSlice = createSlice({
                 state.compare.fileBase = null;
                 state.compare.fileComp = null;
             }
+            // If it was somehow started, reset startCompare
+            if (state.compare.startCompare === true) {
+                state.compare.startCompare = false;
+            }
         },
     },
 });

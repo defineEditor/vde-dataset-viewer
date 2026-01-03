@@ -251,7 +251,7 @@ class TaskManager {
                 fileComp: task.fileComp,
                 filterData: task.filterData,
                 options: task.options,
-                settings: task.settings,
+                fileSettings: task.fileSettings,
             });
 
             await this.processQueue();

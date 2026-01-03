@@ -8,6 +8,7 @@ import {
     FileInfo,
     DefineFileInfo,
     DatasetDiff,
+    CompareSettings,
 } from 'interfaces/main';
 import { ParsedValidationReport } from 'interfaces/core.report';
 import { modals, ModalType, AllowedPathnames } from 'misc/constants';
@@ -59,6 +60,7 @@ export interface ISettings {
         dragoverAnimation: boolean;
         disableUiAnimation: boolean;
     };
+    compare: CompareSettings;
 }
 
 export interface IUiModalBase {
