@@ -1,5 +1,6 @@
 import { UpdateCheckResult } from 'electron-updater';
 import { DatasetMetadata, ItemDataArray } from 'interfaces/datasetJson';
+import { BasicFilter } from 'js-array-filter';
 import { mainTaskTypes } from 'misc/constants';
 
 export interface SettingsConverter {
@@ -192,6 +193,7 @@ export interface CompareTask {
     type: typeof mainTaskTypes.COMPARE;
     fileBase: string;
     fileComp: string;
+    filterData: BasicFilter | null;
     options: CompareOptions;
     settings: CompareSettings;
 }
@@ -233,6 +235,7 @@ export interface CompareProcessTask {
     webContentsId: string;
     fileBase: string;
     fileComp: string;
+    filterData: BasicFilter | null;
     options: CompareOptions;
     settings: CompareSettings;
 }

@@ -42,14 +42,16 @@ const Header: React.FC = () => {
     const validatorVersion = useAppSelector(
         (state) => state.data.validator.info.version,
     );
+
+    const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+
     const isFilterEnabled = useAppSelector(
-        (state) => state.data.filterData.currentFilter !== null,
+        (state) =>
+            state.data.filterData.currentFilter[currentFileId] !== undefined,
     );
     const isMaskEnabled = useAppSelector(
         (state) => state.data.maskData.currentMask !== null,
     );
-
-    const currentFileId = useAppSelector((state) => state.ui.currentFileId);
 
     const isModalOpen = useAppSelector((state) => state.ui.modals?.length > 0);
 
@@ -100,8 +102,6 @@ const Header: React.FC = () => {
         );
         // Reset page for the new dataset
         dispatch(setPage({ fileId: newDataInfo.fileId, page: 0 }));
-        // Reset filter for the new dataset
-        dispatch(resetFilter());
     }, [apiService, dispatch]);
     const handleGoToClick = useCallback(() => {
         dispatch(openModal({ type: modals.GOTO, data: {} }));
@@ -114,8 +114,8 @@ const Header: React.FC = () => {
     }, [dispatch]);
 
     const handleFilterReset = useCallback(() => {
-        dispatch(resetFilter());
-    }, [dispatch]);
+        dispatch(resetFilter({ fileId: currentFileId }));
+    }, [dispatch, currentFileId]);
 
     const handleDataSetInfoClick = useCallback(() => {
         dispatch(openModal({ type: modals.DATASETINFO, data: {} }));
@@ -188,8 +188,6 @@ const Header: React.FC = () => {
         );
         // Reset page for the new dataset
         dispatch(setPage({ fileId: newDataInfo.fileId, page: 0 }));
-        // Reset filter for the new dataset
-        dispatch(resetFilter());
     }, [apiService, dispatch, currentFileId, handleCloseDataset]); // Add shortcuts for actions
     useEffect(() => {
         const handleViewerToolbarKeyDown = (event: KeyboardEvent) => {

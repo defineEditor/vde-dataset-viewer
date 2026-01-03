@@ -5,13 +5,16 @@ import {
     openModal,
     openSnackbar,
     setIsComparing,
+    closeCompare,
+    setNewCompareInfo,
 } from 'renderer/redux/slices/ui';
 import { mainTaskTypes, modals } from 'misc/constants';
 import Results from 'renderer/components/Compare/Results';
 import AppContext from 'renderer/utils/AppContext';
 import { CompareTask, DatasetDiff, TaskProgress } from 'interfaces/common';
-import { setCompareData } from 'renderer/redux/slices/data';
-import CompareProgress from './CompareProgress';
+import { addRecentCompare, setCompareData } from 'renderer/redux/slices/data';
+import CompareProgress from 'renderer/components/Compare/CompareProgress';
+import { getSimpleHash } from 'renderer/utils/getHash';
 
 const styles = {
     loadingContainer: {
@@ -54,13 +57,31 @@ const Compare: React.FC = () => {
     const dispatch = useAppDispatch();
     const { apiService } = useContext(AppContext);
 
-    const fileBase = useAppSelector((state) => state.data.compare.fileBase);
-    const fileComp = useAppSelector((state) => state.data.compare.fileComp);
+    const currentCompareId = useAppSelector(
+        (state) => state.ui.compare.currentCompareId,
+    );
+
+    const currentFilter = useAppSelector(
+        (state) =>
+            state.data.filterData.currentFilter[currentCompareId] || null,
+    );
+
+    const fileBase = useAppSelector(
+        (state) => state.data.compare.data[currentCompareId]?.fileBase,
+    );
+    const fileComp = useAppSelector(
+        (state) => state.data.compare.data[currentCompareId]?.fileComp,
+    );
     const fileBaseUi = useAppSelector((state) => state.ui.compare.fileBase);
     const fileCompUi = useAppSelector((state) => state.ui.compare.fileComp);
-    const isComparing = useAppSelector((state) => state.ui.compare.isComparing);
+    const isComparing = useAppSelector(
+        (state) => state.ui.compare.info[currentCompareId]?.isComparing,
+    );
+    const startCompare = useAppSelector(
+        (state) => state.ui.compare.startCompare,
+    );
     const datasetDiff = useAppSelector(
-        (state) => state.data.compare.datasetDiff,
+        (state) => state.data.compare.data[currentCompareId]?.datasetDiff,
     );
     const [progress, setProgress] = useState<number>(0);
     const [issues, setIssues] = useState<number>(0);
@@ -72,7 +93,7 @@ const Compare: React.FC = () => {
     const closeCompareFiles = useCallback(() => {
         const openedCompareFiles = apiService
             .getOpenedFiles()
-            .filter((file) => file.viewType === 'compare');
+            .filter((file) => file.compareId !== undefined);
         openedCompareFiles.forEach((file) => {
             apiService.close(file.fileId);
         });
@@ -86,7 +107,7 @@ const Compare: React.FC = () => {
     }, [fileBase, fileComp, closeCompareFiles]);
 
     useEffect(() => {
-        if (isComparing) {
+        if (startCompare) {
             // Close other compare files first
             closeCompareFiles();
             // Check both files are selected
@@ -100,14 +121,27 @@ const Compare: React.FC = () => {
                 return () => {};
             }
             // Initiate the compare task
+            const fileNameBase = fileBaseUi.split(/\/|\\/).pop() || fileBaseUi;
+            const fileNameComp = fileCompUi.split(/\/|\\/).pop() || fileCompUi;
+            const compareId = `compare-${fileNameBase}-${fileNameComp}-${getSimpleHash(fileBaseUi)}-${getSimpleHash(fileCompUi)}`;
             const task: CompareTask = {
-                id: `compare-${Date.now()}`,
+                id: compareId,
                 type: mainTaskTypes.COMPARE,
                 fileBase: fileBaseUi,
                 fileComp: fileCompUi,
                 options: { tolerance: 1e-12, maxDiffCount: 100 },
                 settings: { encoding: 'default', bufferSize: 10000 },
+                filterData: currentFilter,
             };
+            // Initiate info for this compare
+            dispatch(setNewCompareInfo({ compareId }));
+            // Add to recent compares
+            dispatch(
+                addRecentCompare({
+                    fileBase: fileBaseUi,
+                    fileComp: fileCompUi,
+                }),
+            );
 
             const unsubscribe = apiService.subscribeToTaskProgress(
                 (info: TaskProgress) => {
@@ -124,14 +158,7 @@ const Compare: React.FC = () => {
                                 type: 'error',
                             }),
                         );
-                        dispatch(
-                            setCompareData({
-                                datasetDiff: null,
-                                fileBase: '',
-                                fileComp: '',
-                            }),
-                        );
-                        dispatch(setIsComparing(false));
+                        dispatch(closeCompare({ compareId }));
                     } else if (info.progress === 100) {
                         setProgress(info.progress);
                         setIssues(info.issues);
@@ -148,13 +175,16 @@ const Compare: React.FC = () => {
                         ) {
                             dispatch(
                                 setCompareData({
+                                    compareId,
                                     datasetDiff: info.result as DatasetDiff,
                                     fileBase: fileBaseUi,
                                     fileComp: fileCompUi,
                                 }),
                             );
                         }
-                        dispatch(setIsComparing(false));
+                        dispatch(
+                            setIsComparing({ compareId, isComparing: false }),
+                        );
                     } else {
                         setProgress(info.progress);
                         setIssues(info.issues);
@@ -171,13 +201,7 @@ const Compare: React.FC = () => {
                             type: 'error',
                         }),
                     );
-                    dispatch(
-                        setCompareData({
-                            datasetDiff: null,
-                            fileBase: '',
-                            fileComp: '',
-                        }),
-                    );
+                    dispatch(closeCompare({ compareId }));
                 } else if (result === false) {
                     dispatch(
                         openSnackbar({
@@ -202,11 +226,12 @@ const Compare: React.FC = () => {
         return () => {};
     }, [
         apiService,
-        isComparing,
+        startCompare,
         dispatch,
         fileBaseUi,
         fileCompUi,
         closeCompareFiles,
+        currentFilter,
     ]);
 
     if (isComparing) {

@@ -72,8 +72,12 @@ const styles = {
 };
 
 const Summary: React.FC = () => {
-    const compareData = useAppSelector((state) => state.data.compare);
-
+    const currentCompareId = useAppSelector(
+        (state) => state.ui.compare.currentCompareId,
+    );
+    const compareData =
+        useAppSelector((state) => state.data.compare.data[currentCompareId]) ||
+        {};
     const { datasetDiff, fileBase, fileComp } = compareData;
 
     const columnsStats = useMemo(() => {

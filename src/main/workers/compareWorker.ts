@@ -10,7 +10,10 @@ import {
     DataDiff,
     DataDiffRow,
     DatasetMetadata,
+    BasicFilter,
+    ColumnMetadata,
 } from 'interfaces/common';
+import Filter from 'js-array-filter';
 import DatasetJson from 'js-stream-dataset-json';
 import DatasetSas7bdat from 'js-stream-sas7bdat';
 import DatasetXpt from 'xport-js';
@@ -379,19 +382,28 @@ const getData = async (
     file: DatasetJson | DatasetXpt | DatasetSas7bdat,
     start: number,
     length: number,
+    columns: ColumnMetadata[],
+    filterData: BasicFilter | null,
 ): Promise<ItemDataArray[]> => {
+    let filter: Filter | undefined;
+    if (filterData !== null && columns !== undefined) {
+        filter = new Filter('dataset-json1.1', columns, filterData);
+    } else {
+        filter = undefined;
+    }
     if (file instanceof DatasetXpt) {
         return (await file.getData({
             start,
             length,
             type: 'array',
             roundPrecision: 12,
+            filter,
         })) as ItemDataArray[];
     }
     return (await file.getData({
         start,
         length,
-        filter: undefined,
+        filter,
     })) as ItemDataArray[];
 };
 
@@ -399,7 +411,7 @@ process.parentPort.once(
     'message',
     async (messageData: { data: CompareProcessTask }) => {
         const { data } = messageData;
-        const { id, fileBase, fileComp, options, settings } = data;
+        const { id, fileBase, fileComp, options, settings, filterData } = data;
 
         const sendMessage = (
             progress: number,
@@ -457,9 +469,21 @@ process.parentPort.once(
                 start += bufferSize
             ) {
                 // eslint-disable-next-line no-await-in-loop
-                const baseData = await getData(baseFile, start, bufferSize);
+                const baseData = await getData(
+                    baseFile,
+                    start,
+                    bufferSize,
+                    baseMeta.columns,
+                    filterData,
+                );
                 // eslint-disable-next-line no-await-in-loop
-                const compData = await getData(compFile, start, bufferSize);
+                const compData = await getData(
+                    compFile,
+                    start,
+                    bufferSize,
+                    compMeta.columns,
+                    filterData,
+                );
 
                 const blockDiff = compareData(
                     baseData,

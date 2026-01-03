@@ -249,6 +249,7 @@ class TaskManager {
                 webContentsId: task.id,
                 fileBase: task.fileBase,
                 fileComp: task.fileComp,
+                filterData: task.filterData,
                 options: task.options,
                 settings: task.settings,
             });

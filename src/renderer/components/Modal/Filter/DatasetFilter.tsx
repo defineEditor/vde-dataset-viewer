@@ -10,11 +10,11 @@ const DatasetFilter: React.FC<IUiModalFilter> = ({
 }: IUiModalFilter) => {
     const { apiService } = useContext(AppContext);
 
-    const currentBasicFilter = useAppSelector(
-        (state) => state.data.filterData.currentFilter,
-    );
-
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+
+    const currentBasicFilter = useAppSelector(
+        (state) => state.data.filterData.currentFilter[currentFileId] || null,
+    );
 
     const data = apiService.getOpenedFileData(currentFileId);
 
@@ -44,6 +44,7 @@ const DatasetFilter: React.FC<IUiModalFilter> = ({
 
     return (
         <FilterBody
+            fileId={currentFileId}
             type={type}
             filterType={filterType}
             currentBasicFilter={currentBasicFilter}

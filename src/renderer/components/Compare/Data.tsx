@@ -56,14 +56,26 @@ const emptyArray = [];
 const Data: React.FC = () => {
     const { apiService } = useContext(AppContext);
     const pageSize = useAppSelector((state) => state.settings.viewer.pageSize);
+    const currentCompareId = useAppSelector(
+        (state) => state.ui.compare.currentCompareId,
+    );
+    const currentFilter = useAppSelector(
+        (state) =>
+            state.data.filterData.currentFilter[currentCompareId] || undefined,
+    );
     const page = useAppSelector(
-        (state) => state.ui.compare.currentComparePage || 0,
+        (state) =>
+            state.ui.compare.info[currentCompareId]?.currentComparePage || 0,
     );
     const dispatch = useAppDispatch();
-    const fileBase = useAppSelector((state) => state.data.compare.fileBase);
-    const fileComp = useAppSelector((state) => state.data.compare.fileComp);
+    const fileBase = useAppSelector(
+        (state) => state.data.compare.data[currentCompareId]?.fileBase,
+    );
+    const fileComp = useAppSelector(
+        (state) => state.data.compare.data[currentCompareId]?.fileComp,
+    );
     const datasetDiff = useAppSelector(
-        (state) => state.data.compare.datasetDiff,
+        (state) => state.data.compare.data[currentCompareId]?.datasetDiff,
     );
     const commonCols = datasetDiff?.metadata.commonCols || emptyArray;
     const view = useAppSelector((state) => state.ui.compare.view);
@@ -108,12 +120,26 @@ const Data: React.FC = () => {
         cellSelection: boolean;
     }>({ row: null, column: null, cellSelection: false });
 
+    // Set goTo to the first difference when diffs are available
+    useEffect(() => {
+        if (datasetDiff && datasetDiff.data.modifiedRows.length > 0) {
+            const firstDiffRow = datasetDiff.data.modifiedRows[0];
+            setGoTo({
+                row: (firstDiffRow.rowBase || 0) + 1,
+                column: Object.keys(firstDiffRow.diff || {})[0] || null,
+                cellSelection: true,
+            });
+        }
+    }, [datasetDiff]);
+
     const handleSetGoTo = (newGoTo: Partial<IUiControl['goTo']>) => {
         setGoTo((prevGoTo) => ({ ...prevGoTo, ...newGoTo }));
     };
 
     const handleChangePage = (_event, newPage: number) => {
-        dispatch(setComparePage(newPage));
+        dispatch(
+            setComparePage({ compareId: currentCompareId, page: newPage }),
+        );
     };
 
     const { baseAnnotations, compAnnotations, baseDiffs } = useMemo(() => {
@@ -185,16 +211,33 @@ const Data: React.FC = () => {
                             </span>
                         );
 
+                        const diffElementBase = (
+                            <Stack spacing={0} sx={{ flexWrap: 'wrap' }}>
+                                <Typography variant="caption">
+                                    {`Compare: ${String(compVal)}`}
+                                </Typography>
+                                {diffElement}
+                            </Stack>
+                        );
+                        const diffElementComp = (
+                            <Stack spacing={0} sx={{ flexWrap: 'wrap' }}>
+                                <Typography variant="caption">
+                                    {`Base: ${String(baseVal)}`}
+                                </Typography>
+                                {diffElement}
+                            </Stack>
+                        );
+
                         // Add annotation to base
                         // Note: DatasetView uses 1-based index for columns (0 is row number)
                         baseMap.set(`${rowBase}#${baseColIndex + 1}`, {
-                            text: diffElement,
+                            text: diffElementBase,
                             color: '',
                         });
 
                         // Add annotation to comp
                         compMap.set(`${rowCompare}#${compColIndex + 1}`, {
-                            text: diffElement,
+                            text: diffElementComp,
                             color: '',
                         });
 
@@ -226,13 +269,12 @@ const Data: React.FC = () => {
             setLoading(true);
             try {
                 // Load base file
-                const fileBaseInfo = await apiService.openFile(
-                    'local',
-                    fileBase,
-                    undefined,
-                    undefined,
-                    'compare',
-                );
+                const fileBaseInfo = await apiService.openFile({
+                    mode: 'local',
+                    filePath: fileBase,
+                    compareId: currentCompareId,
+                    filterColumns: commonCols,
+                });
                 const newBaseData = await getData(
                     apiService,
                     fileBaseInfo.fileId,
@@ -240,17 +282,17 @@ const Data: React.FC = () => {
                     pageSize,
                     settings,
                     commonCols,
+                    currentFilter,
                 );
                 setBaseData(newBaseData);
 
                 // Load compare file
-                const fileCompInfo = await apiService.openFile(
-                    'local',
-                    fileComp,
-                    undefined,
-                    undefined,
-                    'compare',
-                );
+                const fileCompInfo = await apiService.openFile({
+                    mode: 'local',
+                    filePath: fileComp,
+                    compareId: currentCompareId,
+                    filterColumns: commonCols,
+                });
                 const newCompData = await getData(
                     apiService,
                     fileCompInfo.fileId,
@@ -258,6 +300,8 @@ const Data: React.FC = () => {
                     pageSize,
                     settings,
                     commonCols,
+                    currentFilter,
+                    true,
                 );
                 setCompData(newCompData);
             } catch (error) {
@@ -282,6 +326,8 @@ const Data: React.FC = () => {
         commonCols,
         page,
         pageSize,
+        currentCompareId,
+        currentFilter,
     ]);
 
     if (loading) {

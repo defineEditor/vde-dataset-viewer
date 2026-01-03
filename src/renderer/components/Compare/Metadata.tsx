@@ -45,9 +45,13 @@ const styles = {
 };
 
 const Metadata: React.FC = () => {
-    const datasetDiff = useAppSelector(
-        (state) => state.data.compare.datasetDiff,
+    const currentCompareId = useAppSelector(
+        (state) => state.ui.compare.currentCompareId,
     );
+    const datasetDiff =
+        useAppSelector(
+            (state) => state.data.compare.data[currentCompareId]?.datasetDiff,
+        ) || null;
 
     const renderDiff = (base: string, compare: string) => {
         const diffParts = diffChars(String(base), String(compare));

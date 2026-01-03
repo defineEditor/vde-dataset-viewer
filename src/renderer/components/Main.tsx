@@ -25,7 +25,7 @@ import {
     setPathname,
     setZoomLevel,
     setDefineFileId,
-    setNewCompare,
+    initialCompare,
 } from 'renderer/redux/slices/ui';
 import { AllowedPathnames, NewWindowProps } from 'interfaces/common';
 import ViewerToolbar from 'renderer/components/Toolbars/ViewerToolbar';
@@ -309,7 +309,7 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                     fileComp: string,
                 ) => {
                     dispatch(
-                        setNewCompare({
+                        initialCompare({
                             fileBase,
                             fileComp,
                         }),

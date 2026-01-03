@@ -20,9 +20,7 @@ const SelectDataset = () => {
     const [openedFiles, setOpenedFiles] = useState(
         apiService
             .getOpenedFiles()
-            .filter(
-                (file) => file.mode === 'local' && file.viewType === 'data',
-            ),
+            .filter((file) => file.mode === 'local' && !file.compareId),
     );
 
     const handleOpenLocal = useCallback(

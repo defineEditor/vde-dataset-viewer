@@ -33,9 +33,7 @@ const DatasetNavigation: React.FC = () => {
     const [openedFiles, setOpenedFiles] = useState(
         apiService
             .getOpenedFiles()
-            .filter(
-                (file) => file.mode === 'local' && file.viewType === 'data',
-            ),
+            .filter((file) => file.mode === 'local' && !file.compareId),
     );
 
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
@@ -49,9 +47,7 @@ const DatasetNavigation: React.FC = () => {
         // If the number of opened files changes, update the state
         const newOpenedFiles = apiService
             .getOpenedFiles()
-            .filter(
-                (file) => file.mode === 'local' && file.viewType === 'data',
-            );
+            .filter((file) => file.mode === 'local' && !file.compareId);
 
         // Show only files with loaded records
         const openedFilesWithRecords = newOpenedFiles.filter((file) =>

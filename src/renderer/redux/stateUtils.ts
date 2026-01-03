@@ -46,7 +46,7 @@ export const dehydrateState = (state: IStore): IStore => {
     // Reset opened files
     newData.loadedRecords = data.loadedRecords;
     // Remove filter if it was applied
-    newData.filterData = { ...newData.filterData, currentFilter: null };
+    newData.filterData = { ...newData.filterData, currentFilter: {} };
     // Remove validation filter and current report
     newData.validator = {
         ...newData.validator,
@@ -57,6 +57,11 @@ export const dehydrateState = (state: IStore): IStore => {
             ...state.data.validator.configuration,
             defineXmlPath: '',
         },
+    };
+    // Remove all comparison data
+    newData.compare = {
+        ...newData.compare,
+        data: {},
     };
     // Keep zoom level between sessions
     const newUi: IUi = {

@@ -82,7 +82,7 @@ const DatasetContainer: React.FC = () => {
     const [totalRecords, setTotalRecords] = useState(0);
 
     const currentFilter = useAppSelector(
-        (state) => state.data.filterData.currentFilter,
+        (state) => state.data.filterData.currentFilter[currentFileId] || null,
     );
 
     const [contextMenu, setContextMenu] = useState<{

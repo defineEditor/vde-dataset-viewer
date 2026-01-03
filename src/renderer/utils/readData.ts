@@ -71,8 +71,9 @@ const getData = async (
     settings: ISettings,
     filterColumns?: string[],
     filterData?: BasicFilter,
+    keepOpenedData: boolean = false,
 ): Promise<ITableData | null> => {
-    let metadata = await apiService.getMetadata(fileId);
+    let metadata = await apiService.getMetadata(fileId, filterColumns);
     if (metadata === null || Object.keys(metadata).length === 0) {
         return null;
     }
@@ -84,6 +85,7 @@ const getData = async (
         settings,
         filterColumns,
         filterData,
+        keepOpenedData,
     )) as ITableRow[];
 
     if (filterColumns && filterColumns.length > 0) {
@@ -116,7 +118,7 @@ const openNewDataset = async (
     filePath?: string,
     folderPath?: string,
 ): Promise<IOpenFileWithMetadata> => {
-    const result = await apiService.openFile(mode, filePath, folderPath);
+    const result = await apiService.openFile({ mode, filePath, folderPath });
     const { fileId, type, path, errorMessage, lastModified } = result;
     if (errorMessage) {
         // There was an error reading the file or the operation was cancelled

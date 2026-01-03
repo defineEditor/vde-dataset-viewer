@@ -98,13 +98,13 @@ export const ui: IUi = {
         scrollPosition: {},
     },
     compare: {
-        isComparing: false,
+        currentCompareId: '',
+        startCompare: false,
         fileBase: null,
         fileComp: null,
         view: 'horizontal',
         resultTab: 'data',
-        currentComparePage: 0,
-        currentDiffIndex: 0,
+        info: {},
     },
 };
 
@@ -159,9 +159,7 @@ export const validator: ValidatorData = {
 };
 
 const compare: CompareData = {
-    fileBase: null,
-    fileComp: null,
-    datasetDiff: null,
+    data: {},
     recentCompares: [],
 };
 
@@ -169,9 +167,8 @@ export const data: IData = {
     loadedRecords: {},
     recentFolders: [],
     recentFiles: [],
-    openDatasets: {},
     filterData: {
-        currentFilter: null,
+        currentFilter: {},
         recentFilters: [],
         lastOptions: { caseInsensitive: true },
         lastType: 'manual',

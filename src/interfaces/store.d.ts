@@ -101,7 +101,7 @@ export interface IUiModalVariableInfo extends IUiModalBase {
 
 export interface IUiModalFilter extends IUiModalBase {
     type: typeof modals.FILTER;
-    filterType: 'dataset' | 'report';
+    filterType: 'dataset' | 'report' | 'compare';
 }
 
 export type IUiModal =
@@ -191,13 +191,21 @@ export interface IUiDefine {
 }
 
 export interface IUiCompare {
-    isComparing: boolean;
+    currentCompareId: string;
+    startCompare: boolean;
     fileBase: string | null;
     fileComp: string | null;
     view: 'horizontal' | 'vertical';
     resultTab: 'summary' | 'metadata' | 'data';
-    currentComparePage: number;
-    currentDiffIndex: number;
+    info: {
+        [compareId: string]: {
+            isComparing: boolean;
+            fileBase: string;
+            fileComp: string;
+            currentComparePage: number;
+            currentDiffIndex: number;
+        };
+    };
 }
 
 export interface IUi {
@@ -250,9 +258,13 @@ export interface ValidatorData {
 }
 
 export interface CompareData {
-    fileBase: string | null;
-    fileComp: string | null;
-    datasetDiff: DatasetDiff | null;
+    data: {
+        [compareId: string]: {
+            fileBase: string | null;
+            fileComp: string | null;
+            datasetDiff: DatasetDiff | null;
+        };
+    };
     recentCompares: { fileBase: string; fileComp: string }[];
 }
 
@@ -262,13 +274,8 @@ export interface IData {
     };
     recentFolders: string[];
     recentFiles: IRecentFile[];
-    openDatasets: {
-        [name: string]: {
-            filter: BasicFilter | null;
-        };
-    };
     filterData: {
-        currentFilter: BasicFilter | null;
+        currentFilter: { [fileId: string]: BasicFilter };
         recentFilters: {
             filter: BasicFilter;
             datasetName: string;

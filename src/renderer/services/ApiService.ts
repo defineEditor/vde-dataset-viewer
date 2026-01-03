@@ -57,17 +57,25 @@ class ApiService {
     private openedDefineContents: { [fileId: string]: DefineXmlContent } = {};
 
     // Open file
-    public openFile = async (
-        mode: 'local' | 'remote',
-        filePath?: string,
-        folderPath?: string,
+    public openFile = async ({
+        mode,
+        filePath,
+        folderPath,
+        apiInfo,
+        compareId,
+        filterColumns,
+    }: {
+        mode: 'local' | 'remote';
+        filePath?: string;
+        folderPath?: string;
         apiInfo?: {
             api: IApiRecord;
             study: IApiStudy;
             dataset: IApiStudyDataset;
-        },
-        viewType: 'data' | 'compare' = 'data',
-    ): Promise<IOpenFileWithMetadata> => {
+        };
+        compareId?: string;
+        filterColumns?: string[];
+    }): Promise<IOpenFileWithMetadata> => {
         let fileData: IOpenFile;
         // Check if the file is already open
         if (filePath !== undefined) {
@@ -79,13 +87,16 @@ class ApiService {
                         type: file.type,
                         path: file.path,
                         lastModified: file.lastModified || 0,
-                        viewType,
+                        compareId,
                     };
                 }
             });
             if (foundFileData !== undefined) {
                 // Get metadata
-                const metadata = await this.getMetadata(foundFileData.fileId);
+                const metadata = await this.getMetadata(
+                    foundFileData.fileId,
+                    filterColumns,
+                );
                 if (metadata === null) {
                     // Error reading metadata
                     return {
@@ -106,12 +117,16 @@ class ApiService {
                     metadata: {} as DatasetJsonMetadata,
                     errorMessage: 'API info not provided reading metadata',
                     lastModified: 0,
-                    viewType,
+                    compareId,
                 };
             }
-            fileData = await this.openFileRemote(apiInfo, viewType);
+            fileData = await this.openFileRemote(apiInfo, compareId);
         } else {
-            fileData = await this.openFileLocal(filePath, folderPath, viewType);
+            fileData = await this.openFileLocal(
+                filePath,
+                folderPath,
+                compareId,
+            );
         }
 
         if (fileData.errorMessage) {
@@ -141,7 +156,7 @@ class ApiService {
                 mode,
                 name: fileData.path,
                 lastModified: fileData.lastModified,
-                viewType,
+                compareId,
             };
         } else {
             this.openedFiles.push({
@@ -151,12 +166,12 @@ class ApiService {
                 mode,
                 name: fileData.path,
                 lastModified: fileData.lastModified,
-                viewType,
+                compareId,
             });
         }
 
         // Get metadata
-        const metadata = await this.getMetadata(fileData.fileId);
+        const metadata = await this.getMetadata(fileData.fileId, filterColumns);
         if (metadata === null) {
             // Error reading metadata
             return {
@@ -172,7 +187,7 @@ class ApiService {
     private openFileLocal = async (
         filePath?: string,
         folderPath?: string,
-        viewType: 'data' | 'compare' = 'data',
+        compareId?: string,
     ): Promise<IOpenFile> => {
         // Read encoding from state
         const encoding = store.getState().settings.other.inEncoding;
@@ -188,10 +203,10 @@ class ApiService {
                 path: '',
                 errorMessage: 'Failed to open the file',
                 lastModified: 0,
-                viewType,
+                compareId,
             };
         }
-        return { ...response, viewType };
+        return { ...response, compareId };
     };
 
     private openFileRemote = async (
@@ -200,7 +215,7 @@ class ApiService {
             study: IApiStudy;
             dataset: IApiStudyDataset;
         },
-        viewType: 'data' | 'compare' = 'data',
+        compareId?: string,
     ): Promise<IOpenFile> => {
         // At this stage it is already know that the dataset exists
         let lastModified = 0;
@@ -214,7 +229,7 @@ class ApiService {
             type: 'json',
             path: `${apiInfo.api.address}${apiInfo.dataset.href}`,
             lastModified,
-            viewType,
+            compareId,
         };
         return result;
     };
@@ -222,6 +237,7 @@ class ApiService {
     // Get dataset metadata
     public getMetadata = async (
         fileId: string,
+        filterColumns?: string[],
     ): Promise<DatasetJsonMetadata | null> => {
         const file = this.openedFiles.find(
             (fileItem) => fileItem.fileId === fileId,
@@ -243,6 +259,18 @@ class ApiService {
         }
         if (metadata === null) {
             return null;
+        }
+
+        // If filterColumns is specified filter metadata columns
+        if (filterColumns !== undefined && filterColumns.length > 0) {
+            metadata = {
+                ...metadata,
+                columns: metadata.columns.filter((col) =>
+                    filterColumns
+                        .map((fCol) => fCol.toLowerCase())
+                        .includes(col.name.toLowerCase()),
+                ),
+            };
         }
 
         // Save metadata
@@ -295,6 +323,7 @@ class ApiService {
         settings: ISettings,
         filterColumns?: string[],
         filterData?: BasicFilter,
+        keepOpenedData: boolean = false,
     ): Promise<ITableRow[]> => {
         const file = this.openedFiles.find(
             (fileItem) => fileItem.fileId === fileId,
@@ -354,8 +383,10 @@ class ApiService {
             start,
         );
 
-        // TODO: small datasets can be kept without resettings
-        this.openedFilesData = {};
+        // TODO: small datasets can be kept without resettings by default
+        if (!keepOpenedData) {
+            this.openedFilesData = {};
+        }
         this.openedFilesData[fileId] = transformedData;
 
         store.dispatch(
@@ -603,7 +634,7 @@ class ApiService {
                     type: file.type,
                     path: file.path,
                     lastModified: file.lastModified || 0,
-                    viewType: file.viewType,
+                    compareId: file.compareId,
                 };
             });
     };

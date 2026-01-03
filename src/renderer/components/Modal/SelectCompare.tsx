@@ -26,7 +26,7 @@ import {
     closeModal,
     setPathname,
     setCompareFiles,
-    setNewCompare,
+    initialCompare,
 } from 'renderer/redux/slices/ui';
 import { modals, paths } from 'misc/constants';
 import AppContext from 'renderer/utils/AppContext';
@@ -88,7 +88,10 @@ const SelectCompare: React.FC = () => {
         (newFileBase: string, newFileComp: string) => {
             dispatch(setPathname({ pathname: paths.COMPARE }));
             dispatch(
-                setNewCompare({ fileBase: newFileBase, fileComp: newFileComp }),
+                initialCompare({
+                    fileBase: newFileBase,
+                    fileComp: newFileComp,
+                }),
             );
             handleClose();
         },
@@ -296,7 +299,9 @@ const SelectCompare: React.FC = () => {
                         </Typography>
                         <List>
                             {recentCompares.slice(0, 5).map((recent, index) => (
-                                <>
+                                <React.Fragment
+                                    key={recent.fileBase + recent.fileComp}
+                                >
                                     <ListItem
                                         onClick={() =>
                                             handleSelectRecent(recent)
@@ -317,7 +322,7 @@ const SelectCompare: React.FC = () => {
                                         />
                                     </ListItem>
                                     <Divider />
-                                </>
+                                </React.Fragment>
                             ))}
                         </List>
                     </>

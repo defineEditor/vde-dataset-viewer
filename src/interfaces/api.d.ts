@@ -17,7 +17,6 @@ export {
 
 export type DataType = 'json' | 'xpt' | 'sas7bdat';
 export type DataMode = 'local' | 'remote';
-export type ViewType = 'data' | 'compare';
 
 export interface ApiOpenedFile {
     fileId: string;
@@ -26,7 +25,7 @@ export interface ApiOpenedFile {
     path: string;
     type: DataType;
     lastModified?: number;
-    viewType: ViewType;
+    compareId?: string;
 }
 
 export interface ApiOpenedFileWithMetadata extends ApiOpenedFile {
@@ -41,9 +40,9 @@ export interface IOpenFile {
     type: DataType;
     path: string;
     lastModified: number;
-    viewType: 'data' | 'compare';
     datasetNames?: string[];
     errorMessage?: string;
+    compareId?: string;
 }
 
 export interface IOpenFileWithMetadata extends IOpenFile {

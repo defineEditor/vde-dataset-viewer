@@ -1,33 +1,46 @@
 import React from 'react';
-import { IconButton, Stack, Tooltip } from '@mui/material';
+import { IconButton, Stack, Tooltip, Box } from '@mui/material';
 import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import CloseIcon from '@mui/icons-material/Close';
+import FilterIcon from '@mui/icons-material/FilterAlt';
 import FlipCameraAndroidIcon from '@mui/icons-material/FlipCameraAndroid';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import {
     openModal,
+    closeCompare,
     setCompareView,
-    setNewCompare,
+    initialCompare,
 } from 'renderer/redux/slices/ui';
 import { modals } from 'misc/constants';
-import { setCompareData } from 'renderer/redux/slices/data';
 
 const styles = {
     main: {
         width: '100%',
         paddingLeft: 2,
     },
+    box: {
+        display: 'flex',
+        alignItems: 'center',
+    },
 };
 
 const CompareToolbar: React.FC = () => {
     const dispatch = useAppDispatch();
+    const resultTab = useAppSelector((state) => state.ui.compare.resultTab);
+    const currentCompareId = useAppSelector(
+        (state) => state.ui.compare.currentCompareId,
+    );
+    const currentView = useAppSelector((state) => state.ui.compare.view);
+    const isFilterEnabled = useAppSelector(
+        (state) =>
+            state.data.filterData.currentFilter[currentCompareId] !== undefined,
+    );
 
     const handleCompare = () => {
         dispatch(openModal({ type: modals.SELECTCOMPARE, data: {} }));
     };
 
-    const currentView = useAppSelector((state) => state.ui.compare.view);
     const handleToggleView = () => {
         dispatch(
             setCompareView(
@@ -36,22 +49,26 @@ const CompareToolbar: React.FC = () => {
         );
     };
 
-    const fileBase = useAppSelector((state) => state.data.compare.fileBase);
-    const fileComp = useAppSelector((state) => state.data.compare.fileComp);
+    const fileBase = useAppSelector(
+        (state) => state.data.compare.data[currentCompareId]?.fileBase,
+    );
+    const fileComp = useAppSelector(
+        (state) => state.data.compare.data[currentCompareId]?.fileComp,
+    );
     const handleRefreshCompare = () => {
         if (!fileBase || !fileComp) {
             return;
         }
-        dispatch(setNewCompare({ fileBase, fileComp }));
+        dispatch(initialCompare({ fileBase, fileComp }));
     };
 
     const handleClose = () => {
+        dispatch(closeCompare({ compareId: currentCompareId }));
+    };
+
+    const handleFilterClick = () => {
         dispatch(
-            setCompareData({
-                fileBase: null,
-                fileComp: null,
-                datasetDiff: null,
-            }),
+            openModal({ type: modals.FILTER, filterType: 'compare', data: {} }),
         );
     };
 
@@ -66,6 +83,30 @@ const CompareToolbar: React.FC = () => {
                 <IconButton onClick={handleToggleView} size="small">
                     <FlipCameraAndroidIcon sx={{ color: 'grey.600' }} />
                 </IconButton>
+            </Tooltip>
+            <Tooltip
+                title="Filter Compare (active in Data tab)"
+                enterDelay={1000}
+            >
+                <Box sx={styles.box}>
+                    <IconButton
+                        onClick={handleFilterClick}
+                        id="filterData"
+                        size="small"
+                        disabled={resultTab !== 'data'}
+                    >
+                        <FilterIcon
+                            sx={{
+                                color:
+                                    resultTab === 'data'
+                                        ? isFilterEnabled
+                                            ? 'primary.main'
+                                            : 'grey.600'
+                                        : 'grey.400',
+                            }}
+                        />
+                    </IconButton>
+                </Box>
             </Tooltip>
             <Tooltip title="Refresh Compare" enterDelay={1000}>
                 <IconButton onClick={handleRefreshCompare} size="small">

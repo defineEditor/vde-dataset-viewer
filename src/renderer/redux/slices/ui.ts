@@ -371,8 +371,21 @@ export const uiSlice = createSlice({
                 state.dataSettings[id].currentIssueIndex = index;
             }
         },
-        setIsComparing: (state, action: PayloadAction<boolean>) => {
-            state.compare.isComparing = action.payload;
+        setIsComparing: (
+            state,
+            action: PayloadAction<{ compareId: string; isComparing: boolean }>,
+        ) => {
+            if (state.compare.info[action.payload.compareId]) {
+                state.compare.info[action.payload.compareId].isComparing =
+                    action.payload.isComparing;
+                // If compare has finished reset startCompare
+                if (
+                    action.payload.isComparing === false &&
+                    state.compare.startCompare === true
+                ) {
+                    state.compare.startCompare = false;
+                }
+            }
         },
         setCompareResultTab: (
             state,
@@ -383,8 +396,12 @@ export const uiSlice = createSlice({
         setCompareView: (state, action: PayloadAction<IUiCompare['view']>) => {
             state.compare.view = action.payload;
         },
-        setComparePage: (state, action: PayloadAction<number>) => {
-            state.compare.currentComparePage = action.payload;
+        setComparePage: (
+            state,
+            action: PayloadAction<{ compareId: string; page: number }>,
+        ) => {
+            state.compare.info[action.payload.compareId].currentComparePage =
+                action.payload.page;
         },
         setCompareFiles: (
             state,
@@ -402,18 +419,63 @@ export const uiSlice = createSlice({
                 state.compare.fileComp = action.payload.fileComp;
             }
         },
-        setNewCompare: (
+        setNewCompareInfo: (
+            state,
+            action: PayloadAction<{ compareId: string }>,
+        ) => {
+            state.compare.currentCompareId = action.payload.compareId;
+            const fileBase = state.compare.fileBase || '';
+            const fileComp = state.compare.fileComp || '';
+            // If there is a compare for the same files, remove it from the info
+            Object.entries(state.compare.info).forEach(([compareId, info]) => {
+                if (info.fileBase === fileBase && info.fileComp === fileComp) {
+                    delete state.compare.info[compareId];
+                }
+            });
+            // Initialize compare info
+            state.compare.info[action.payload.compareId] = {
+                currentComparePage: 0,
+                currentDiffIndex: 0,
+                fileBase,
+                fileComp,
+                isComparing: true,
+            };
+        },
+        initialCompare: (
             state,
             action: PayloadAction<{
                 fileBase: string;
                 fileComp: string;
             }>,
         ) => {
+            state.compare.startCompare = true;
             state.compare.fileBase = action.payload.fileBase;
             state.compare.fileComp = action.payload.fileComp;
-            state.compare.currentComparePage = 0;
-            state.compare.currentDiffIndex = 0;
-            state.compare.isComparing = true;
+        },
+        restartCompare: (
+            state,
+            action: PayloadAction<{ compareId: string }>,
+        ) => {
+            const { compareId } = action.payload;
+            if (state.compare.info[compareId]) {
+                state.compare.info[compareId].isComparing = true;
+                state.compare.info[compareId].currentComparePage = 0;
+                state.compare.info[compareId].currentDiffIndex = 0;
+            }
+            state.compare.startCompare = true;
+        },
+        closeCompare: (state, action: PayloadAction<{ compareId: string }>) => {
+            const { compareId } = action.payload;
+            // Remove compare info
+            if (state.compare.info[compareId]) {
+                delete state.compare.info[compareId];
+            }
+            // Reset current compare ID if it matches the removed one
+            if (state.compare.currentCompareId === compareId) {
+                state.compare.currentCompareId = '';
+                state.compare.fileBase = null;
+                state.compare.fileComp = null;
+            }
         },
     },
 });
@@ -459,7 +521,10 @@ export const {
     setCompareResultTab,
     setCompareView,
     setComparePage,
-    setNewCompare,
+    initialCompare,
+    restartCompare,
+    setNewCompareInfo,
+    closeCompare,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;
