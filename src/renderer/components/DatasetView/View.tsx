@@ -153,7 +153,7 @@ const styles = {
         border: '1px solid #ffe082;',
     },
     highlightedAnnotatedCell: {
-        backgroundColor: '#ffe08290',
+        backgroundColor: '#ffca28',
         border: '1px solid #ffca2890',
     },
     headerRowNumberCell: {

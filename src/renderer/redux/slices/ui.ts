@@ -393,6 +393,9 @@ export const uiSlice = createSlice({
         ) => {
             state.compare.resultTab = action.payload;
         },
+        setShowAllDifferences: (state, action: PayloadAction<boolean>) => {
+            state.compare.showAllDifferences = action.payload;
+        },
         setCompareView: (state, action: PayloadAction<IUiCompare['view']>) => {
             state.compare.view = action.payload;
         },
@@ -523,6 +526,7 @@ export const {
     setIsComparing,
     setCompareFiles,
     setCompareResultTab,
+    setShowAllDifferences,
     setCompareView,
     setComparePage,
     initialCompare,

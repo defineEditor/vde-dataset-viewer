@@ -113,6 +113,7 @@ export const ui: IUi = {
         fileComp: null,
         view: 'horizontal',
         resultTab: 'data',
+        showAllDifferences: false,
         info: {},
     },
 };

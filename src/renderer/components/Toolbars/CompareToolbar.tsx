@@ -5,12 +5,14 @@ import CloseIcon from '@mui/icons-material/Close';
 import FilterIcon from '@mui/icons-material/FilterAlt';
 import FlipCameraAndroidIcon from '@mui/icons-material/FlipCameraAndroid';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import ListAltIcon from '@mui/icons-material/ListAlt';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import {
     openModal,
     closeCompare,
     setCompareView,
     initialCompare,
+    setShowAllDifferences,
 } from 'renderer/redux/slices/ui';
 import { modals } from 'misc/constants';
 
@@ -72,6 +74,10 @@ const CompareToolbar: React.FC = () => {
         );
     };
 
+    const handleListAllClick = () => {
+        dispatch(setShowAllDifferences(true));
+    };
+
     return (
         <Stack direction="row" spacing={1} sx={styles.main}>
             <Tooltip title="Select files to compare" enterDelay={1000}>
@@ -83,6 +89,28 @@ const CompareToolbar: React.FC = () => {
                 <IconButton onClick={handleToggleView} size="small">
                     <FlipCameraAndroidIcon sx={{ color: 'grey.600' }} />
                 </IconButton>
+            </Tooltip>
+            <Tooltip
+                title="List All Differences (active in Data tab)"
+                enterDelay={1000}
+            >
+                <Box sx={styles.box}>
+                    <IconButton
+                        onClick={handleListAllClick}
+                        id="listAllDifferences"
+                        size="small"
+                        disabled={resultTab !== 'data'}
+                    >
+                        <ListAltIcon
+                            sx={{
+                                color:
+                                    resultTab === 'data'
+                                        ? 'grey.600'
+                                        : 'grey.400',
+                            }}
+                        />
+                    </IconButton>
+                </Box>
             </Tooltip>
             <Tooltip
                 title="Filter Compare (active in Data tab)"

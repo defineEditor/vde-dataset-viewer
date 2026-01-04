@@ -516,7 +516,7 @@ const FilterBody: React.FC<FilterBodyProps> = ({
         <Dialog
             open
             onClose={handleClose}
-            PaperProps={{ sx: { ...styles.dialog } }}
+            slotProps={{ paper: { sx: { ...styles.dialog } } }}
         >
             <DialogTitle sx={styles.title}>Filter Data</DialogTitle>
             <DialogContent>

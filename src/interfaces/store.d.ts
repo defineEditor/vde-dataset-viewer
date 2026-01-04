@@ -199,6 +199,7 @@ export interface IUiCompare {
     fileComp: string | null;
     view: 'horizontal' | 'vertical';
     resultTab: 'summary' | 'metadata' | 'data';
+    showAllDifferences: boolean;
     info: {
         [compareId: string]: {
             isComparing: boolean;

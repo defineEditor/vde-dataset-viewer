@@ -9,6 +9,7 @@ import { diffChars } from 'diff';
 import { openSnackbar, setComparePage } from 'renderer/redux/slices/ui';
 import BottomToolbar from 'renderer/components/Compare/BottomToolbar';
 import ApiService from 'renderer/services/ApiService';
+import AllDifferencesModal from 'renderer/components/Compare/AllDifferencesModal';
 
 const styles = {
     containerVertical: {
@@ -474,6 +475,10 @@ const Data: React.FC = () => {
                 onPageChange={handleChangePage}
                 diffs={baseDiffs || new Map()}
                 onSetGoTo={handleSetGoTo}
+            />
+            <AllDifferencesModal
+                datasetDiff={datasetDiff}
+                handleSetGoTo={handleSetGoTo}
             />
         </Stack>
     );
