@@ -440,8 +440,13 @@ const FilterBody: React.FC<FilterBodyProps> = ({
     );
 
     const handleReloadData = () => {
-        if (['dataset', 'compare'].includes(filterType)) {
+        if (filterType === 'dataset') {
             dispatch(resetFilter({ fileId }));
+        } else if (filterType === 'compare') {
+            // For compare it is difficult to reset the filter, so close it for now
+            dispatch(resetFilter({ fileId }));
+            dispatch(restartCompare({ compareId: fileId }));
+            handleClose();
         } else if (filterType === 'report') {
             dispatch(resetReportFilter());
         }

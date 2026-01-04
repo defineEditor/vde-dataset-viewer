@@ -158,7 +158,7 @@ const IssueNavigation: React.FC<{
     }
 
     const currentIssue = diffsByRow[currentIssueIndex];
-    if (totalIssues === 0) {
+    if (totalIssues === 0 || !currentIssue) {
         return null;
     }
 

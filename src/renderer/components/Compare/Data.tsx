@@ -8,6 +8,7 @@ import { getData } from 'renderer/utils/readData';
 import { diffChars } from 'diff';
 import { openSnackbar, setComparePage } from 'renderer/redux/slices/ui';
 import BottomToolbar from 'renderer/components/Compare/BottomToolbar';
+import ApiService from 'renderer/services/ApiService';
 
 const styles = {
     containerVertical: {
@@ -52,6 +53,15 @@ const styles = {
 };
 
 const emptyArray = [];
+
+const closeCompareFiles = (compareId: string, apiService: ApiService) => {
+    const openedCompareFiles = apiService
+        .getOpenedFiles()
+        .filter((file) => file.compareId === compareId);
+    openedCompareFiles.forEach((file) => {
+        apiService.close(file.fileId);
+    });
+};
 
 const Data: React.FC = () => {
     const { apiService } = useContext(AppContext);
@@ -297,6 +307,8 @@ const Data: React.FC = () => {
 
             setLoading(true);
             try {
+                // Close any previously opened compare files
+                closeCompareFiles(currentCompareId, apiService);
                 // Load base file
                 const fileBaseInfo = await apiService.openFile({
                     mode: 'local',

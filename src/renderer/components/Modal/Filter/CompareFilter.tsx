@@ -34,7 +34,11 @@ const CompareFilter: React.FC<IUiModalFilter> = ({
     );
     const loadedRecords = (loadedRecords1 || 0) + (loadedRecords2 || 0);
 
-    if (compareFileIds.length === 0) {
+    if (
+        compareFileIds.length === 0 ||
+        loadedRecords1 === undefined ||
+        loadedRecords2 === undefined
+    ) {
         return null;
     }
 
