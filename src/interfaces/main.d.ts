@@ -66,13 +66,13 @@ export interface ConvertedFileInfo extends FileInfo {
 
 // Diff interfaces
 export interface CompareSettings {
-    tolerance?: number;
-    idColumns?: string[];
-    maxDiffCount?: number;
-    maxColumnDiffCount?: number;
-    ignorePattern?: string;
-    ignoreColumnCase?: boolean;
-    reorderCompareColumns?: boolean;
+    tolerance: number;
+    idColumns: string[];
+    maxDiffCount: number;
+    maxColumnDiffCount: number;
+    ignorePattern: string;
+    ignoreColumnCase: boolean;
+    reorderCompareColumns: boolean;
 }
 
 export interface CompareFileSettings {
@@ -121,6 +121,8 @@ export interface DiffSummary {
     firstDiffRow: number | null;
     lastDiffRow: number | null;
     totalDiffs: number;
+    baseRows: number;
+    compareRows: number;
     totalRowsChecked: number;
     maxDiffReached: boolean;
     maxColDiffReached: string[];

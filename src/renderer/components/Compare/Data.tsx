@@ -56,6 +56,9 @@ const emptyArray = [];
 const Data: React.FC = () => {
     const { apiService } = useContext(AppContext);
     const pageSize = useAppSelector((state) => state.settings.viewer.pageSize);
+    const ignoreColumnCase = useAppSelector(
+        (state) => state.settings.compare.ignoreColumnCase,
+    );
     const reorderCompareColumns = useAppSelector(
         (state) => state.settings.compare.reorderCompareColumns,
     );
@@ -137,6 +140,7 @@ const Data: React.FC = () => {
     useEffect(() => {
         if (datasetDiff && datasetDiff.data.modifiedRows.length > 0) {
             const firstDiffRow = datasetDiff.data.modifiedRows[0];
+            // Column name here is base column name, so it will work correctly as navigation is handled by base dataset
             setGoTo({
                 row: (firstDiffRow.rowBase || 0) + 1,
                 column: Object.keys(firstDiffRow.diff || {})[0] || null,
@@ -197,7 +201,19 @@ const Data: React.FC = () => {
                 const baseDiffsRow = {};
                 Object.keys(diff).forEach((colId) => {
                     const baseColIndex = colIndicesBase.get(colId);
-                    const compColIndex = colIndicesComp.get(colId);
+                    let compColIndex = colIndicesComp.get(colId);
+                    if (ignoreColumnCase && compColIndex === undefined) {
+                        // ColId is using base column names, so for the compare we need to get the corresponding index
+                        // Try to find case-insensitive match
+                        for (const [compColId, index] of colIndicesComp) {
+                            if (
+                                compColId.toLowerCase() === colId.toLowerCase()
+                            ) {
+                                compColIndex = index;
+                                break;
+                            }
+                        }
+                    }
                     if (
                         baseColIndex !== undefined &&
                         compColIndex !== undefined
@@ -273,11 +289,11 @@ const Data: React.FC = () => {
             compAnnotations: compMap,
             baseDiffs: baseDiffsMap,
         };
-    }, [datasetDiff, colIndicesBase, colIndicesComp]);
+    }, [datasetDiff, colIndicesBase, colIndicesComp, ignoreColumnCase]);
 
     useEffect(() => {
         const loadData = async () => {
-            if (!fileBase || !fileComp) return;
+            if (!fileBase || !fileComp || commonCols.length === 0) return;
 
             setLoading(true);
             try {
@@ -364,6 +380,15 @@ const Data: React.FC = () => {
     }
 
     if (!baseData || !compData) {
+        if (commonCols.length === 0) {
+            return (
+                <Box sx={styles.loading}>
+                    <Typography>
+                        No common columns to compare in the datasets.
+                    </Typography>
+                </Box>
+            );
+        }
         return (
             <Box sx={styles.loading}>
                 <Typography>No data available</Typography>

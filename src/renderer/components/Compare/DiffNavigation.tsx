@@ -1,6 +1,6 @@
 import React, { useRef, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
-import { Stack, IconButton, Typography, Box } from '@mui/material';
+import { Stack, IconButton, Typography, Box, Button } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { setCurrentIssueIndex } from 'renderer/redux/slices/ui';
@@ -21,18 +21,6 @@ const styles = {
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
     },
-    columnId: {
-        fontWeight: 'bold',
-        whiteSpace: 'nowrap',
-    },
-    diffElement: {
-        textOverflow: 'ellipsis',
-        whiteSpace: 'pre-wrap',
-        minWidth: 0,
-        display: '-webkit-box',
-        WebkitLineClamp: 1,
-        WebkitBoxOrient: 'vertical',
-    },
     iconButton: {
         ml: 0,
         height: 24,
@@ -51,6 +39,10 @@ const styles = {
         whiteSpace: 'nowrap',
         flex: 1,
         minWidth: 0,
+    },
+    moreCols: {
+        alignSelf: 'center',
+        color: 'text.secondary',
     },
 };
 
@@ -90,16 +82,29 @@ const IssueNavigation: React.FC<{
             column: Object.keys(value)[0],
             diff: (
                 <Stack direction="row" spacing={1}>
-                    {Object.keys(value).map((colId) => (
-                        <React.Fragment key={colId}>
-                            <Typography variant="body2" sx={styles.columnId}>
-                                {colId}
-                            </Typography>
-                            <Typography variant="body2" sx={styles.diffElement}>
-                                {value[colId]?.diff}
-                            </Typography>
-                        </React.Fragment>
-                    ))}
+                    {Object.keys(value)
+                        .slice(0, 8)
+                        .map((colId) => (
+                            <React.Fragment key={colId}>
+                                <Button
+                                    variant="text"
+                                    onClick={() =>
+                                        onSetGoTo({
+                                            row: Number(key) + 1,
+                                            column: colId,
+                                            cellSelection: true,
+                                        })
+                                    }
+                                >
+                                    {colId}
+                                </Button>
+                            </React.Fragment>
+                        ))}
+                    {Object.keys(value).length > 8 && (
+                        <Typography variant="body2" sx={styles.moreCols}>
+                            +{Object.keys(value).length - 8} more
+                        </Typography>
+                    )}
                 </Stack>
             ),
         });

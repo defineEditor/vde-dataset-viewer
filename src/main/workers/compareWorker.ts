@@ -21,7 +21,7 @@ import DatasetXpt from 'xport-js';
 const compareMetadata = (
     base: DatasetMetadata,
     compare: DatasetMetadata,
-    options: CompareSettings = {},
+    options: CompareSettings,
 ): MetadataDiff => {
     const { ignoreColumnCase, ignorePattern } = options;
     // Metadata Comparison
@@ -74,7 +74,23 @@ const compareMetadata = (
             .map((c, i) => [c.name, { desc: c, index: i }]),
     );
 
-    const allColNames = new Set([...baseCols.keys(), ...compareCols.keys()]);
+    const allColNames = [...baseCols.keys(), ...compareCols.keys()].filter(
+        (name, index, array) => index === array.indexOf(name),
+    );
+    if (ignoreColumnCase) {
+        // Remove duplicates when ignoring case
+        const duplicateNames: string[] = [];
+        const lowerCaseNames = allColNames.map((name) => name.toLowerCase());
+        lowerCaseNames.forEach((key, index) => {
+            if (lowerCaseNames.indexOf(key) !== index) {
+                duplicateNames.push(allColNames[index]);
+            }
+        });
+        duplicateNames.sort().reverse();
+        duplicateNames.forEach((key) =>
+            allColNames.splice(allColNames.indexOf(key), 1),
+        );
+    }
     const commonCols: string[] = [];
 
     for (const name of allColNames) {
@@ -156,8 +172,8 @@ const compareData = (
     baseMeta: DatasetMetadata,
     compareMeta: DatasetMetadata,
     summaryInit: DatasetDiff['summary'],
+    options: CompareSettings,
     rowShift: number = 0,
-    options: CompareSettings = {},
 ): { data: DataDiff; summary: Partial<DatasetDiff['summary']> } => {
     const {
         tolerance = 1e-12,
@@ -176,7 +192,12 @@ const compareData = (
                     !ignorePattern ||
                     !new RegExp(`/${ignorePattern}/`, 'i').test(column.name),
             )
-            .map((c, i) => [c.name, { desc: c, index: i }]) || [],
+            .map((c, i) => {
+                if (ignoreColumnCase) {
+                    return [c.name.toLowerCase(), { desc: c, index: i }];
+                }
+                return [c.name, { desc: c, index: i }];
+            }) || [],
     );
     const compareCols = new Map(
         compareMeta?.columns
@@ -185,25 +206,20 @@ const compareData = (
                     !ignorePattern ||
                     !new RegExp(`/${ignorePattern}/`, 'i').test(column.name),
             )
-            .map((c, i) => [c.name, { desc: c, index: i }]) || [],
+            .map((c, i) => {
+                if (ignoreColumnCase) {
+                    return [c.name.toLowerCase(), { desc: c, index: i }];
+                }
+                return [c.name, { desc: c, index: i }];
+            }) || [],
     );
 
-    const allCols = [...baseCols.keys(), ...compareCols.keys()];
+    const allCols = [...baseCols.keys(), ...compareCols.keys()].filter(
+        (name, index, array) => index === array.indexOf(name),
+    );
+
     const commonCols: string[] = allCols.filter((name) => {
-        if (!ignoreColumnCase) {
-            return baseCols.has(name) && compareCols.has(name);
-        }
-        // In case case insensitive comparison is needed
-        const baseColNames = Array.from(baseCols.keys()).map((n) =>
-            n.toLowerCase(),
-        );
-        const compareColNames = Array.from(compareCols.keys()).map((n) =>
-            n.toLowerCase(),
-        );
-        return (
-            baseColNames.includes(name.toLowerCase()) &&
-            compareColNames.includes(name.toLowerCase())
-        );
+        return baseCols.has(name) && compareCols.has(name);
     });
 
     // Track columns that reached max diff count
@@ -253,15 +269,17 @@ const compareData = (
         commonCols
             .filter((colName) => !maxColDiffReached.includes(colName))
             .forEach((colName) => {
-                const baseColIdx = baseCols.get(colName)!.index;
+                const baseCol = baseCols.get(colName);
+                const baseColIdx = baseCol!.index;
+                const type = baseCol!.desc.dataType;
+                const baseName = baseCol!.desc.name;
                 const compareColIdx = compareCols.get(colName)!.index;
-                const type = baseCols.get(colName)!.desc.dataType;
 
                 const val1 = baseRow[baseColIdx];
                 const val2 = compRow[compareColIdx];
 
                 if (!areValuesEqual(val1, val2, type)) {
-                    diffs[colName] = [val1, val2];
+                    diffs[baseName] = [val1, val2];
                     hasDiff = true;
 
                     if (maxColumnDiffCount !== undefined) {
@@ -505,6 +523,7 @@ process.parentPort.once(
             const metadataDiff: DatasetDiff['metadata'] = compareMetadata(
                 baseMeta,
                 compMeta,
+                options,
             );
             sendMessage(1, 0);
 
@@ -512,6 +531,8 @@ process.parentPort.once(
                 firstDiffRow: null,
                 lastDiffRow: null,
                 totalDiffs: 0,
+                baseRows: baseMeta.records,
+                compareRows: compMeta.records,
                 maxDiffReached: false,
                 maxColDiffReached: [],
                 colsWithDataDiffs: 0,
@@ -551,8 +572,8 @@ process.parentPort.once(
                     baseMeta,
                     compMeta,
                     summary,
-                    start,
                     options,
+                    start,
                 );
 
                 dataDiff.addedRows.push(...blockDiff.data.addedRows);

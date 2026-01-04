@@ -168,7 +168,9 @@ const Metadata: React.FC = () => {
                 ) : (
                     <Box sx={styles.successMessage}>
                         <CheckCircleIcon />
-                        <Typography>Dataset attributes are equal.</Typography>
+                        <Typography>
+                            All dataset attributes are equal.
+                        </Typography>
                     </Box>
                 )}
             </Box>
@@ -208,7 +210,9 @@ const Metadata: React.FC = () => {
                 ) : (
                     <Box sx={styles.successMessage}>
                         <CheckCircleIcon />
-                        <Typography>Column attributes are equal.</Typography>
+                        <Typography>
+                            All column attributes are equal.
+                        </Typography>
                     </Box>
                 )}
             </Box>

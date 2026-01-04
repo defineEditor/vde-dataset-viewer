@@ -12,6 +12,7 @@ import {
     TableRow,
     TableCell,
     Stack,
+    Tooltip,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useAppSelector } from 'renderer/redux/hooks';
@@ -49,8 +50,11 @@ const styles = {
         borderBottom: 'none',
         pl: 0,
         width: '300px',
+        fontWeight: '500',
+        color: 'grey.800',
     },
     tableCellValue: {
+        whiteSpace: 'wrap',
         borderBottom: 'none',
         pr: 0,
     },
@@ -63,6 +67,7 @@ const styles = {
         p: 2,
         flex: 1,
         minWidth: '300px',
+        overflow: 'hidden',
     },
     columnSummary: {
         flex: 1,
@@ -75,10 +80,14 @@ const Summary: React.FC = () => {
     const currentCompareId = useAppSelector(
         (state) => state.ui.compare.currentCompareId,
     );
-    const compareData =
-        useAppSelector((state) => state.data.compare.data[currentCompareId]) ||
-        {};
-    const { datasetDiff, fileBase, fileComp } = compareData;
+    const compareData = useAppSelector(
+        (state) => state.data.compare.data[currentCompareId],
+    );
+
+    const ignoreColumnCase = useAppSelector(
+        (state) => state.settings.compare.ignoreColumnCase,
+    );
+    const { datasetDiff, fileBase, fileComp } = compareData || {};
 
     const columnsStats = useMemo(() => {
         if (!datasetDiff) return {};
@@ -126,6 +135,8 @@ const Summary: React.FC = () => {
     const summaryNoIssuesData = [
         { label: 'Base File', value: fileBase },
         { label: 'Compare File', value: fileComp },
+        { label: 'Base Rows', value: summary.baseRows },
+        { label: 'Compare Rows', value: summary.compareRows },
         {
             label: 'Total Records Compared',
             value: summary.totalRowsChecked,
@@ -195,7 +206,9 @@ const Summary: React.FC = () => {
                                         {item.label}
                                     </TableCell>
                                     <TableCell sx={styles.tableCellValue}>
-                                        {item.value}
+                                        <Tooltip title={item.value || ''}>
+                                            <span>{item.value}</span>
+                                        </Tooltip>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -203,7 +216,7 @@ const Summary: React.FC = () => {
                     </Table>
                     <Box sx={styles.successMessage}>
                         <CheckCircleIcon />
-                        <Typography>All values are equal</Typography>
+                        <Typography>Datasets are equal</Typography>
                     </Box>
                 </Paper>
             ) : (
@@ -224,7 +237,9 @@ const Summary: React.FC = () => {
                                             {item.label}
                                         </TableCell>
                                         <TableCell sx={styles.tableCellValue}>
-                                            {item.value}
+                                            <Tooltip title={item.value || ''}>
+                                                <span>{item.value}</span>
+                                            </Tooltip>
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -237,7 +252,8 @@ const Summary: React.FC = () => {
                             Column Summary
                         </Typography>
                         {metadata.missingInBase.length === 0 &&
-                        metadata.missingInCompare.length === 0 ? (
+                        metadata.missingInCompare.length === 0 &&
+                        Object.keys(metadata.positionDiffs).length === 0 ? (
                             <Typography
                                 variant="body2"
                                 color="text.secondary"
@@ -267,6 +283,24 @@ const Summary: React.FC = () => {
                                         />
                                     </ListItem>
                                 )}
+                                {metadata.missingInBase.length === 0 &&
+                                    metadata.missingInCompare.length === 0 &&
+                                    Object.keys(metadata.positionDiffs).length >
+                                        0 && (
+                                        <ListItem>
+                                            <ListItemText
+                                                primary="Columns with Position Differences"
+                                                secondary={Object.keys(
+                                                    metadata.positionDiffs,
+                                                )
+                                                    .map(
+                                                        (col) =>
+                                                            `${col} (Base: ${metadata.positionDiffs[col].base}, Compare: ${metadata.positionDiffs[col].compare})`,
+                                                    )
+                                                    .join(', ')}
+                                            />
+                                        </ListItem>
+                                    )}
                             </List>
                         )}
                         {sortedColumns.length > 0 && (
@@ -312,7 +346,9 @@ const Summary: React.FC = () => {
                                                 >
                                                     {col}
                                                     {summary.maxColDiffReached.includes(
-                                                        col,
+                                                        ignoreColumnCase
+                                                            ? col.toLowerCase()
+                                                            : col,
                                                     ) && ' *'}
                                                 </TableCell>
                                                 <TableCell
