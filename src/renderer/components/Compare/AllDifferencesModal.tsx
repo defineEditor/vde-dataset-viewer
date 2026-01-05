@@ -1,4 +1,11 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, {
+    useState,
+    useRef,
+    useEffect,
+    useCallback,
+    useContext,
+} from 'react';
+import { diffChars } from 'diff';
 import {
     Dialog,
     DialogTitle,
@@ -23,7 +30,7 @@ import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { openSnackbar, setShowAllDifferences } from 'renderer/redux/slices/ui';
 import { DatasetDiff } from 'interfaces/main';
 import { IUiControl } from 'interfaces/common';
-import { diffChars } from 'diff';
+import AppContext from 'renderer/utils/AppContext';
 
 const styles = {
     dialog: {
@@ -80,6 +87,7 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
 }) => {
     const dispatch = useAppDispatch();
     const open = useAppSelector((state) => state.ui.compare.showAllDifferences);
+    const { apiService } = useContext(AppContext);
 
     const handleClose = useCallback(() => {
         dispatch(setShowAllDifferences(false));
@@ -139,7 +147,7 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
             if (rowDiff && rowDiff.diff && rowDiff.diff[column]) {
                 const [baseVal, compVal] = rowDiff.diff[column];
                 const diffText = `Row: ${row}\tColumn: ${column}\tBase: ${baseVal}\tCompare: ${compVal}`;
-                navigator.clipboard.writeText(diffText);
+                apiService.writeToClipboard(diffText);
                 dispatch(
                     openSnackbar({
                         message: `Copied to clipboard ${column}:${row} difference`,
@@ -163,7 +171,7 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
                         diffText += `Row: ${row}\tColumn: ${colName}\tBase: ${baseVal}\tCompare: ${compVal}\n`;
                     },
                 );
-                navigator.clipboard.writeText(diffText.trim());
+                apiService.writeToClipboard(diffText);
                 dispatch(
                     openSnackbar({
                         message: `Copied to clipboard ${row} difference`,
@@ -176,17 +184,17 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
         }
 
         // If no specific row/column, copy all differences
-        let allDiffsText = '';
+        let diffsText = '';
         datasetDiff.data.modifiedRows.forEach((rowDiff) => {
             if (rowDiff.diff) {
                 Object.entries(rowDiff.diff).forEach(
                     ([colName, [baseVal, compVal]]) => {
-                        allDiffsText += `Row: ${rowDiff.rowBase}\tColumn: ${colName}\tBase: ${baseVal}\tCompare: ${compVal}\n`;
+                        diffsText += `Row: ${rowDiff.rowBase}\tColumn: ${colName}\tBase: ${baseVal}\tCompare: ${compVal}\n`;
                     },
                 );
             }
         });
-        navigator.clipboard.writeText(allDiffsText.trim());
+        apiService.writeToClipboard(diffsText.trim());
         dispatch(
             openSnackbar({
                 message: 'Copied to clipboard all differences',
