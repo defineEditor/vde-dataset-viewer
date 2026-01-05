@@ -17,9 +17,10 @@ import {
     InputAdornment,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import SearchIcon from '@mui/icons-material/Search';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
-import { setShowAllDifferences } from 'renderer/redux/slices/ui';
+import { openSnackbar, setShowAllDifferences } from 'renderer/redux/slices/ui';
 import { DatasetDiff } from 'interfaces/main';
 import { IUiControl } from 'interfaces/common';
 import { diffChars } from 'diff';
@@ -62,6 +63,9 @@ const styles = {
     searchIcon: { color: 'white' },
     rowDiffHeader: {
         backgroundColor: '#f5f5f5',
+    },
+    rowIcon: {
+        ml: 1,
     },
 };
 
@@ -126,6 +130,72 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
         },
     );
 
+    const handleCopy = (row?: number, column?: string) => {
+        // If row and column are provided, copy that specific cell's diff
+        if (row !== undefined && column !== undefined) {
+            const rowDiff = datasetDiff.data.modifiedRows.find(
+                (r) => r.rowBase === row,
+            );
+            if (rowDiff && rowDiff.diff && rowDiff.diff[column]) {
+                const [baseVal, compVal] = rowDiff.diff[column];
+                const diffText = `Row: ${row}\tColumn: ${column}\tBase: ${baseVal}\tCompare: ${compVal}`;
+                navigator.clipboard.writeText(diffText);
+                dispatch(
+                    openSnackbar({
+                        message: `Copied to clipboard ${column}:${row} difference`,
+                        type: 'success',
+                        props: { duration: 1000 },
+                    }),
+                );
+                return;
+            }
+        }
+
+        // If row is specified, copy all diffs for that row
+        if (row !== undefined) {
+            const rowDiff = datasetDiff.data.modifiedRows.find(
+                (r) => r.rowBase === row,
+            );
+            if (rowDiff && rowDiff.diff) {
+                let diffText = '';
+                Object.entries(rowDiff.diff).forEach(
+                    ([colName, [baseVal, compVal]]) => {
+                        diffText += `Row: ${row}\tColumn: ${colName}\tBase: ${baseVal}\tCompare: ${compVal}\n`;
+                    },
+                );
+                navigator.clipboard.writeText(diffText.trim());
+                dispatch(
+                    openSnackbar({
+                        message: `Copied to clipboard ${row} difference`,
+                        type: 'success',
+                        props: { duration: 1000 },
+                    }),
+                );
+                return;
+            }
+        }
+
+        // If no specific row/column, copy all differences
+        let allDiffsText = '';
+        datasetDiff.data.modifiedRows.forEach((rowDiff) => {
+            if (rowDiff.diff) {
+                Object.entries(rowDiff.diff).forEach(
+                    ([colName, [baseVal, compVal]]) => {
+                        allDiffsText += `Row: ${rowDiff.rowBase}\tColumn: ${colName}\tBase: ${baseVal}\tCompare: ${compVal}\n`;
+                    },
+                );
+            }
+        });
+        navigator.clipboard.writeText(allDiffsText.trim());
+        dispatch(
+            openSnackbar({
+                message: 'Copied to clipboard all differences',
+                type: 'success',
+                props: { duration: 1000 },
+            }),
+        );
+    };
+
     return (
         <Dialog
             open={open}
@@ -160,6 +230,13 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
                                 },
                             }}
                         />
+                        <IconButton
+                            size="small"
+                            onClick={() => handleCopy()}
+                            sx={styles.rowIcon}
+                        >
+                            <ContentCopyIcon fontSize="small" />
+                        </IconButton>
                         <IconButton onClick={handleClose}>
                             <CloseIcon />
                         </IconButton>
@@ -175,6 +252,7 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
                                 <TableCell>Base Value</TableCell>
                                 <TableCell>Compare Value</TableCell>
                                 <TableCell>Diff</TableCell>
+                                <TableCell>Actions</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -182,11 +260,23 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
                                 <React.Fragment key={rowDiff.rowBase}>
                                     <TableRow sx={styles.rowDiffHeader}>
                                         <TableCell
-                                            colSpan={4}
+                                            colSpan={5}
                                             sx={styles.rowHeader}
                                         >
                                             <Typography variant="subtitle2">
                                                 Row {rowDiff.rowBase}
+                                                <IconButton
+                                                    size="small"
+                                                    onClick={() =>
+                                                        handleCopy(
+                                                            rowDiff.rowBase ||
+                                                                0,
+                                                        )
+                                                    }
+                                                    sx={styles.rowIcon}
+                                                >
+                                                    <ContentCopyIcon fontSize="small" />
+                                                </IconButton>
                                             </Typography>
                                         </TableCell>
                                     </TableRow>
@@ -257,6 +347,20 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
                                                                     },
                                                                 )}
                                                             </span>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <IconButton
+                                                                size="small"
+                                                                onClick={() =>
+                                                                    handleCopy(
+                                                                        rowDiff.rowBase ||
+                                                                            0,
+                                                                        colName,
+                                                                    )
+                                                                }
+                                                            >
+                                                                <ContentCopyIcon fontSize="small" />
+                                                            </IconButton>
                                                         </TableCell>
                                                     </TableRow>
                                                 );

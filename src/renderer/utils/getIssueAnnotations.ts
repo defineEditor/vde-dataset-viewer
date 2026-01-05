@@ -9,8 +9,6 @@ const getIssueAnnotations = (
     table: ITableData | null,
     currentMask: IMask | null,
     filteredIssues: string[],
-    page: number,
-    pageSize: number,
     path: string,
 ): {
     annotations: Map<string, { text: string; color: string }>;
@@ -87,8 +85,6 @@ const getIssueAnnotations = (
                 variableFound = true;
             }
             const colIndex = variableIndices.get(variable);
-            // Recalculate row index based on pagination
-            rowIndex -= page * pageSize;
             // Check if there is already an annotation present
             const existingAnnotation = issueAnnotations.get(
                 `${rowIndex}#${colIndex}`,

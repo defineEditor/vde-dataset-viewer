@@ -419,8 +419,6 @@ const DatasetContainer: React.FC = () => {
             table,
             currentMask,
             filteredIssues,
-            page,
-            pageSize,
             path,
         );
     }, [
@@ -431,8 +429,6 @@ const DatasetContainer: React.FC = () => {
         currentMask,
         isCurrentFileInReport,
         filteredIssues,
-        page,
-        pageSize,
         currentFilter,
     ]);
 

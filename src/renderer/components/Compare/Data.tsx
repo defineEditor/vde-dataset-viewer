@@ -1,4 +1,11 @@
-import React, { useEffect, useState, useContext, useRef, useMemo } from 'react';
+import React, {
+    useEffect,
+    useState,
+    useContext,
+    useRef,
+    useMemo,
+    useCallback,
+} from 'react';
 import { Box, CircularProgress, Typography, Stack } from '@mui/material';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import DatasetView from 'renderer/components/DatasetView';
@@ -147,22 +154,45 @@ const Data: React.FC = () => {
         cellSelection: boolean;
     }>({ row: null, column: null, cellSelection: false });
 
+    const handleSetGoTo = useCallback(
+        (newGoTo: Partial<IUiControl['goTo']>) => {
+            // Detect if page change is needed
+            if (
+                newGoTo.row !== null &&
+                newGoTo.row !== undefined &&
+                (newGoTo.row > pageSize * (page + 1) ||
+                    newGoTo.row <= pageSize * page)
+            ) {
+                const newPage = newGoTo.row
+                    ? Math.floor((newGoTo.row - 1) / pageSize)
+                    : 0;
+                dispatch(
+                    setComparePage({
+                        compareId: currentCompareId,
+                        page: newPage,
+                    }),
+                );
+            }
+            setGoTo((prevGoTo) => ({
+                ...prevGoTo,
+                ...newGoTo,
+            }));
+        },
+        [pageSize, page, dispatch, currentCompareId],
+    );
+
     // Set goTo to the first difference when diffs are available
     useEffect(() => {
         if (datasetDiff && datasetDiff.data.modifiedRows.length > 0) {
             const firstDiffRow = datasetDiff.data.modifiedRows[0];
             // Column name here is base column name, so it will work correctly as navigation is handled by base dataset
-            setGoTo({
+            handleSetGoTo({
                 row: (firstDiffRow.rowBase || 0) + 1,
                 column: Object.keys(firstDiffRow.diff || {})[0] || null,
                 cellSelection: true,
             });
         }
-    }, [datasetDiff]);
-
-    const handleSetGoTo = (newGoTo: Partial<IUiControl['goTo']>) => {
-        setGoTo((prevGoTo) => ({ ...prevGoTo, ...newGoTo }));
-    };
+    }, [datasetDiff, handleSetGoTo]);
 
     const handleChangePage = (_event, newPage: number) => {
         dispatch(
@@ -302,10 +332,13 @@ const Data: React.FC = () => {
         };
     }, [datasetDiff, colIndicesBase, colIndicesComp, ignoreColumnCase]);
 
+    const currentlyLoading = useRef(false);
+
     useEffect(() => {
         const loadData = async () => {
             if (!fileBase || !fileComp || commonCols.length === 0) return;
 
+            currentlyLoading.current = true;
             setLoading(true);
             try {
                 // Close any previously opened compare files
@@ -365,11 +398,23 @@ const Data: React.FC = () => {
                     }),
                 );
             } finally {
+                currentlyLoading.current = false;
                 setLoading(false);
             }
         };
 
-        loadData();
+        if (!currentlyLoading.current) {
+            loadData();
+            return () => {};
+        }
+        // If a load is already in progress, add a loop to wait and retry
+        const interval = setInterval(() => {
+            if (!currentlyLoading.current) {
+                loadData();
+                clearInterval(interval);
+            }
+        }, 500);
+        return () => clearInterval(interval);
     }, [
         fileBase,
         fileComp,
@@ -442,6 +487,7 @@ const Data: React.FC = () => {
                         onScroll={handleScroll('base')}
                         goTo={goTo}
                         onSetGoTo={handleSetGoTo}
+                        currentPage={page}
                         annotatedCells={baseAnnotations}
                     />
                 </Box>
@@ -461,6 +507,7 @@ const Data: React.FC = () => {
                         containerRef={compRef}
                         onScroll={handleScroll('comp')}
                         annotatedCells={compAnnotations}
+                        currentPage={page}
                     />
                 </Box>
             </Stack>

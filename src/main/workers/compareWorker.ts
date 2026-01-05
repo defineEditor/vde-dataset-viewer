@@ -282,7 +282,7 @@ const compareData = (
                     diffs[baseName] = [val1, val2];
                     hasDiff = true;
 
-                    if (maxColumnDiffCount !== undefined) {
+                    if (maxColumnDiffCount > 0) {
                         const currentCount = columnDiffCounts.get(colName) || 0;
                         columnDiffCounts.set(colName, currentCount + 1);
                         if (currentCount + 1 >= maxColumnDiffCount) {
@@ -333,7 +333,7 @@ const compareData = (
                 lastDiffRow = i + rowShift;
             }
 
-            if (maxDiffCount !== undefined && diffCount >= maxDiffCount) {
+            if (maxDiffCount > 0 && diffCount >= maxDiffCount) {
                 maxDiffReached = true;
             }
         }

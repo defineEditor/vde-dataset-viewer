@@ -300,6 +300,30 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             (virtualColumns[virtualColumns.length - 1]?.end ?? 0);
     }
 
+    // Filter annotated cells to only include visible rows
+    const filteredAnnotatedCells = useMemo(() => {
+        if (!annotatedCells) {
+            return null;
+        }
+        const newMap = new Map<
+            string,
+            { text: string | React.ReactElement; color: string }
+        >();
+        annotatedCells.forEach((value, key) => {
+            const [rowIndexStr] = key.split('#');
+            const rowIndex = parseInt(rowIndexStr, 10);
+            if (
+                rowIndex >= currentPage * settings.pageSize &&
+                rowIndex < (currentPage + 1) * settings.pageSize
+            ) {
+                const newRowIndex = rowIndex - currentPage * settings.pageSize;
+                const newKey = key.replace(rowIndexStr, newRowIndex.toString());
+                newMap.set(newKey, value);
+            }
+        });
+        return newMap;
+    }, [annotatedCells, currentPage, settings.pageSize]);
+
     const [highlightedCells, setHighlightedCells] = useState<
         { row: number; column: number }[]
     >([]);
@@ -700,7 +724,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                     virtualRows={virtualRows}
                     rows={rows}
                     highlightedCells={highlightedCells}
-                    annotatedCells={annotatedCells}
+                    annotatedCells={filteredAnnotatedCells}
                     handleCellClick={handleCellClick}
                     handleMouseDown={handleMouseDown}
                     handleMouseOver={handleMouseOver}
