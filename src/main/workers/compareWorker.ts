@@ -68,7 +68,7 @@ const transformData = (
                     newRow[idx] = null;
                 } else {
                     // Convert to SAS datetime (days since 1960-01-01)
-                    const sasDatetime = Math.round(jsTime / 1000) - 315619200;
+                    const sasDatetime = Math.round(jsTime / 1000) + 315619200;
                     newRow[idx] = sasDatetime;
                 }
             }
