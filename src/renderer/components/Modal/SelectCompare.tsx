@@ -26,7 +26,7 @@ import {
     closeModal,
     setPathname,
     setCompareFiles,
-    initialCompare,
+    initializeCompare,
 } from 'renderer/redux/slices/ui';
 import { modals, paths } from 'misc/constants';
 import AppContext from 'renderer/utils/AppContext';
@@ -88,7 +88,7 @@ const SelectCompare: React.FC = () => {
         (newFileBase: string, newFileComp: string) => {
             dispatch(setPathname({ pathname: paths.COMPARE }));
             dispatch(
-                initialCompare({
+                initializeCompare({
                     fileBase: newFileBase,
                     fileComp: newFileComp,
                 }),

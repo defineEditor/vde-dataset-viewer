@@ -10,13 +10,23 @@ import { Box, CircularProgress, Typography, Stack } from '@mui/material';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
 import DatasetView from 'renderer/components/DatasetView';
 import AppContext from 'renderer/utils/AppContext';
-import { ITableData, ItemDataArray, IUiControl } from 'interfaces/common';
+import {
+    DatasetDiff,
+    ITableData,
+    ItemDataArray,
+    IUiControl,
+} from 'interfaces/common';
 import { getData } from 'renderer/utils/readData';
 import { diffChars } from 'diff';
-import { openSnackbar, setComparePage } from 'renderer/redux/slices/ui';
+import {
+    openSnackbar,
+    setCompareFileIds,
+    setComparePage,
+} from 'renderer/redux/slices/ui';
 import BottomToolbar from 'renderer/components/Compare/BottomToolbar';
 import ApiService from 'renderer/services/ApiService';
-import AllDifferencesModal from 'renderer/components/Compare/AllDifferencesModal';
+import DifferencesModal from 'renderer/components/Compare/DifferencesModal';
+import { clearLoadedRecords } from 'renderer/redux/slices/data';
 
 const styles = {
     containerVertical: {
@@ -66,13 +76,17 @@ const closeCompareFiles = (compareId: string, apiService: ApiService) => {
     const openedCompareFiles = apiService
         .getOpenedFiles()
         .filter((file) => file.compareId === compareId);
+    const fileIds = openedCompareFiles.map((file) => file.fileId);
     openedCompareFiles.forEach((file) => {
         apiService.close(file.fileId);
     });
+    return fileIds;
 };
 
 const Data: React.FC = () => {
     const { apiService } = useContext(AppContext);
+    const dispatch = useAppDispatch();
+
     const pageSize = useAppSelector((state) => state.settings.viewer.pageSize);
     const ignoreColumnCase = useAppSelector(
         (state) => state.settings.compare.ignoreColumnCase,
@@ -91,7 +105,6 @@ const Data: React.FC = () => {
         (state) =>
             state.ui.compare.info[currentCompareId]?.currentComparePage || 0,
     );
-    const dispatch = useAppDispatch();
     const fileBase = useAppSelector(
         (state) => state.data.compare.data[currentCompareId]?.fileBase,
     );
@@ -110,8 +123,10 @@ const Data: React.FC = () => {
         disableSorting: true,
     };
 
-    const [baseData, setBaseData] = useState<ITableData | null>(null);
-    const [compData, setCompData] = useState<ITableData | null>(null);
+    const [data, setData] = useState<{
+        base: ITableData | null;
+        comp: ITableData | null;
+    }>({ base: null, comp: null });
     const [loading, setLoading] = useState(false);
 
     const baseRef = useRef<HTMLDivElement>(null);
@@ -130,23 +145,23 @@ const Data: React.FC = () => {
     // Map column IDs to indices for quick lookup
     const colIndicesBase = useMemo(() => {
         const map = new Map<string, number>();
-        if (baseData?.header) {
-            baseData.header.forEach((col, index) => {
+        if (data.base?.header) {
+            data.base.header.forEach((col, index) => {
                 map.set(col.id, index);
             });
         }
         return map;
-    }, [baseData?.header]);
+    }, [data.base?.header]);
 
     const colIndicesComp = useMemo(() => {
         const map = new Map<string, number>();
-        if (compData?.header) {
-            compData.header.forEach((col, index) => {
+        if (data.comp?.header) {
+            data.comp.header.forEach((col, index) => {
                 map.set(col.id, index);
             });
         }
         return map;
-    }, [compData?.header]);
+    }, [data.comp?.header]);
 
     const [goTo, setGoTo] = useState<{
         row: number | null;
@@ -181,10 +196,28 @@ const Data: React.FC = () => {
         [pageSize, page, dispatch, currentCompareId],
     );
 
+    // Keep track of the last datasetDiff to avoid resetting goTo on unrelated updates
+    const lastDatasetDiffRef = useRef<DatasetDiff | null>(null);
     // Set goTo to the first difference when diffs are available
     useEffect(() => {
-        if (datasetDiff && datasetDiff.data.modifiedRows.length > 0) {
+        if (
+            datasetDiff &&
+            datasetDiff !== lastDatasetDiffRef.current &&
+            datasetDiff.data.modifiedRows.length > 0
+        ) {
             const firstDiffRow = datasetDiff.data.modifiedRows[0];
+            if (Math.floor((firstDiffRow.rowBase || 0) / pageSize) !== page) {
+                const newPage = Math.floor(
+                    (firstDiffRow.rowBase || 0) / pageSize,
+                );
+                dispatch(
+                    setComparePage({
+                        compareId: currentCompareId,
+                        page: newPage,
+                    }),
+                );
+            }
+            lastDatasetDiffRef.current = datasetDiff;
             // Column name here is base column name, so it will work correctly as navigation is handled by base dataset
             handleSetGoTo({
                 row: (firstDiffRow.rowBase || 0) + 1,
@@ -192,7 +225,14 @@ const Data: React.FC = () => {
                 cellSelection: true,
             });
         }
-    }, [datasetDiff, handleSetGoTo]);
+    }, [
+        datasetDiff,
+        handleSetGoTo,
+        page,
+        pageSize,
+        dispatch,
+        currentCompareId,
+    ]);
 
     const handleChangePage = (_event, newPage: number) => {
         dispatch(
@@ -342,7 +382,13 @@ const Data: React.FC = () => {
             setLoading(true);
             try {
                 // Close any previously opened compare files
-                closeCompareFiles(currentCompareId, apiService);
+                const closedFileIds = closeCompareFiles(
+                    currentCompareId,
+                    apiService,
+                );
+                if (closedFileIds.length > 0) {
+                    dispatch(clearLoadedRecords({ fileIds: closedFileIds }));
+                }
                 // Load base file
                 const fileBaseInfo = await apiService.openFile({
                     mode: 'local',
@@ -359,7 +405,6 @@ const Data: React.FC = () => {
                     commonCols,
                     currentFilter,
                 );
-                setBaseData(newBaseData);
 
                 // Load compare file
                 const fileCompInfo = await apiService.openFile({
@@ -378,7 +423,7 @@ const Data: React.FC = () => {
                     currentFilter,
                     true,
                 );
-                // Reorder columns to match baseData order
+                // Reorder columns to match data.base order
                 if (reorderCompareColumns && newBaseData && newCompData) {
                     const baseColOrder = newBaseData.header.map((col) =>
                         col.id.toLowerCase(),
@@ -389,7 +434,14 @@ const Data: React.FC = () => {
                             baseColOrder.indexOf(b.id.toLowerCase()),
                     );
                 }
-                setCompData(newCompData);
+                setData({ base: newBaseData, comp: newCompData });
+                dispatch(
+                    setCompareFileIds({
+                        compareId: currentCompareId,
+                        fileBaseId: fileBaseInfo.fileId,
+                        fileCompId: fileCompInfo.fileId,
+                    }),
+                );
             } catch (error) {
                 dispatch(
                     openSnackbar({
@@ -437,7 +489,7 @@ const Data: React.FC = () => {
         );
     }
 
-    if (!baseData || !compData) {
+    if (!data.base || !data.comp) {
         if (commonCols.length === 0) {
             return (
                 <Box sx={styles.loading}>
@@ -478,7 +530,7 @@ const Data: React.FC = () => {
                     }
                 >
                     <DatasetView
-                        tableData={baseData}
+                        tableData={data.base}
                         isLoading={false}
                         key={`base-${view}`}
                         handleContextMenu={() => {}}
@@ -499,7 +551,7 @@ const Data: React.FC = () => {
                     }
                 >
                     <DatasetView
-                        tableData={compData}
+                        tableData={data.comp}
                         isLoading={false}
                         key={`comp-${view}`}
                         handleContextMenu={() => {}}
@@ -513,17 +565,17 @@ const Data: React.FC = () => {
             </Stack>
             <BottomToolbar
                 totalRecords={Math.min(
-                    baseData.metadata.records,
-                    compData.metadata.records,
+                    data.base.metadata.records,
+                    data.comp.metadata.records,
                 )}
                 page={page}
                 pageSize={pageSize}
-                records={baseData.metadata.records}
+                records={data.base.metadata.records}
                 onPageChange={handleChangePage}
                 diffs={baseDiffs || new Map()}
                 onSetGoTo={handleSetGoTo}
             />
-            <AllDifferencesModal
+            <DifferencesModal
                 datasetDiff={datasetDiff}
                 handleSetGoTo={handleSetGoTo}
             />

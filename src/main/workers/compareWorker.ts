@@ -18,10 +18,116 @@ import DatasetJson from 'js-stream-dataset-json';
 import DatasetSas7bdat from 'js-stream-sas7bdat';
 import DatasetXpt from 'xport-js';
 
+const transformData = (
+    data: ItemDataArray[],
+    metadata: DatasetJsonMetadata,
+): ItemDataArray[] => {
+    // Replace character null values with missing value
+    const newData = data.map((row) => {
+        const newRow = [...row];
+        row.forEach((val, idx) => {
+            if (
+                val === null &&
+                ['string', 'datetime', 'date', 'time'].includes(
+                    metadata.columns[idx].dataType,
+                )
+            ) {
+                newRow[idx] = '';
+            }
+        });
+        return newRow;
+    });
+    // Find all datetime columns with integer target data type
+    const datetimeIdxs: number[] = [];
+    const dateIdxs: number[] = [];
+    const timeIdxs: number[] = [];
+    const decimalIdxs: number[] = [];
+    metadata.columns.forEach((column, index) => {
+        if (column.targetDataType === 'integer') {
+            if (column.dataType === 'datetime') {
+                datetimeIdxs.push(index);
+            } else if (column.dataType === 'date') {
+                dateIdxs.push(index);
+            } else if (column.dataType === 'time') {
+                timeIdxs.push(index);
+            }
+        } else if (column.dataType === 'decimal') {
+            decimalIdxs.push(index);
+        }
+    });
+
+    // Transform data
+    return newData.map((row) => {
+        const newRow = [...row];
+        datetimeIdxs.forEach((idx) => {
+            const val = row[idx];
+            if (val !== null && val !== '' && typeof val === 'string') {
+                const jsDate = new Date(val);
+                const jsTime = jsDate.getTime();
+                if (Number.isNaN(jsTime)) {
+                    newRow[idx] = null;
+                } else {
+                    // Convert to SAS datetime (days since 1960-01-01)
+                    const sasDatetime = Math.round(jsTime / 1000) - 315619200;
+                    newRow[idx] = sasDatetime;
+                }
+            }
+        });
+        dateIdxs.forEach((idx) => {
+            const val = row[idx];
+            if (val !== null && val !== '' && typeof val === 'string') {
+                const jsDate = new Date(val);
+                const jsTime = jsDate.getTime();
+                if (Number.isNaN(jsTime)) {
+                    newRow[idx] = null;
+                } else {
+                    // Convert to SAS date (days since 1960-01-01)
+                    const sasDate = Math.floor(jsTime / 86400000) + 3653;
+                    newRow[idx] = sasDate;
+                }
+            }
+        });
+        timeIdxs.forEach((idx) => {
+            const val = row[idx];
+            if (val !== null && val !== '' && typeof val === 'string') {
+                const timeComponents = val.split(':').map(Number);
+                if (
+                    timeComponents.length === 3 &&
+                    timeComponents.every((comp) => !Number.isNaN(comp))
+                ) {
+                    const sasTime =
+                        timeComponents[0] * 3600 +
+                        timeComponents[1] * 60 +
+                        timeComponents[2];
+                    newRow[idx] = sasTime;
+                } else {
+                    newRow[idx] = null;
+                }
+            }
+        });
+        decimalIdxs.forEach((idx) => {
+            const val = row[idx];
+            if (val !== null && val !== '' && typeof val === 'string') {
+                const numVal = Number(val);
+                if (Number.isNaN(numVal)) {
+                    newRow[idx] = null;
+                } else {
+                    newRow[idx] = numVal;
+                }
+            }
+        });
+        return newRow;
+    });
+};
+
 const compareMetadata = (
     base: DatasetMetadata,
     compare: DatasetMetadata,
     options: CompareSettings,
+    dataTypes?: {
+        baseType: 'sas' | 'json';
+        compType: 'sas' | 'json';
+    },
 ): MetadataDiff => {
     const { ignoreColumnCase, ignorePattern } = options;
     // Metadata Comparison
@@ -146,8 +252,62 @@ const compareMetadata = (
                 'displayFormat',
             ];
 
+            const differentDataTypes = dataTypes
+                ? dataTypes.baseType !== dataTypes.compType
+                : false;
+
+            if (!differentDataTypes) {
+                attrs.push('targetDataType');
+            }
+
+            let jsonDataType: string | null = null;
+            let sasDataType: string | null = null;
+            if (differentDataTypes) {
+                jsonDataType =
+                    dataTypes?.baseType === 'json'
+                        ? inBase.desc.dataType
+                        : inCompare.desc.dataType;
+                sasDataType =
+                    dataTypes?.baseType === 'sas'
+                        ? inBase.desc.dataType
+                        : inCompare.desc.dataType;
+            }
             for (const attr of attrs) {
-                if (inBase.desc[attr] !== inCompare.desc[attr]) {
+                // When comparing different data types (SAS vs JSON),
+                // SAS data type is always double for numbers
+                // Length is no defined for JSON numeric types and for decimal it has a different meaning
+                if (
+                    inBase.desc[attr] !== inCompare.desc[attr] &&
+                    !(
+                        attr === 'dataType' &&
+                        sasDataType === 'double' &&
+                        jsonDataType !== null &&
+                        [
+                            'integer',
+                            'float',
+                            'double',
+                            'decimal',
+                            'date',
+                            'datetime',
+                            'time',
+                        ].includes(jsonDataType)
+                    ) &&
+                    !(
+                        differentDataTypes &&
+                        attr === 'length' &&
+                        sasDataType === 'double' &&
+                        jsonDataType !== null &&
+                        [
+                            'integer',
+                            'float',
+                            'double',
+                            'decimal',
+                            'date',
+                            'datetime',
+                            'time',
+                        ].includes(jsonDataType)
+                    )
+                ) {
                     attrDiffs[attr as string] = {
                         base: inBase.desc[attr] || '',
                         compare: inCompare.desc[attr] || '',
@@ -511,6 +671,19 @@ process.parentPort.once(
             const baseFile = openFile(fileBase, encoding);
             const compFile = openFile(fileComp, encoding);
 
+            // If XPT/SAS7BDAT is compared to JSON:
+            // 1 - Convert datetime variable to their integer representation
+            // 2 - null and missing values are treated as equal
+            const baseExtension = fileBase.split('.').pop()?.toLowerCase();
+            const compExtension = fileComp.split('.').pop()?.toLowerCase();
+            const baseType = ['xpt', 'sas7bdat'].includes(baseExtension || '')
+                ? 'sas'
+                : 'json';
+            const compType = ['xpt', 'sas7bdat'].includes(compExtension || '')
+                ? 'sas'
+                : 'json';
+            const differentTypes = baseType !== compType;
+
             const baseMeta = await getMetadata(baseFile);
             const compMeta = await getMetadata(compFile);
 
@@ -524,6 +697,7 @@ process.parentPort.once(
                 baseMeta,
                 compMeta,
                 options,
+                differentTypes ? { baseType, compType } : undefined,
             );
             sendMessage(1, 0);
 
@@ -550,7 +724,7 @@ process.parentPort.once(
                 start += bufferSize
             ) {
                 // eslint-disable-next-line no-await-in-loop
-                const baseData = await getData(
+                let baseData = await getData(
                     baseFile,
                     start,
                     bufferSize,
@@ -558,13 +732,22 @@ process.parentPort.once(
                     filterData,
                 );
                 // eslint-disable-next-line no-await-in-loop
-                const compData = await getData(
+                let compData = await getData(
                     compFile,
                     start,
                     bufferSize,
                     compMeta.columns,
                     filterData,
                 );
+
+                if (differentTypes) {
+                    if (baseType === 'json') {
+                        baseData = transformData(baseData, baseMeta);
+                    }
+                    if (compType === 'json') {
+                        compData = transformData(compData, compMeta);
+                    }
+                }
 
                 const blockDiff = compareData(
                     baseData,

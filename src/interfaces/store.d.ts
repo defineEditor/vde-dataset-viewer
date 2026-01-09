@@ -205,6 +205,8 @@ export interface IUiCompare {
             isComparing: boolean;
             fileBase: string;
             fileComp: string;
+            fileBaseId?: string;
+            fileCompId?: string;
             currentComparePage: number;
             currentDiffIndex: number;
         };

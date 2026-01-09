@@ -406,6 +406,21 @@ export const uiSlice = createSlice({
             state.compare.info[action.payload.compareId].currentComparePage =
                 action.payload.page;
         },
+        setCompareFileIds: (
+            state,
+            action: PayloadAction<{
+                compareId: string;
+                fileBaseId: string;
+                fileCompId: string;
+            }>,
+        ) => {
+            if (state.compare.info[action.payload.compareId]) {
+                state.compare.info[action.payload.compareId].fileBaseId =
+                    action.payload.fileBaseId;
+                state.compare.info[action.payload.compareId].fileCompId =
+                    action.payload.fileCompId;
+            }
+        },
         setCompareFiles: (
             state,
             action: PayloadAction<
@@ -444,7 +459,7 @@ export const uiSlice = createSlice({
                 isComparing: true,
             };
         },
-        initialCompare: (
+        initializeCompare: (
             state,
             action: PayloadAction<{
                 fileBase: string;
@@ -529,9 +544,10 @@ export const {
     setShowAllDifferences,
     setCompareView,
     setComparePage,
-    initialCompare,
+    initializeCompare,
     restartCompare,
     setNewCompareInfo,
+    setCompareFileIds,
     closeCompare,
 } = uiSlice.actions;
 

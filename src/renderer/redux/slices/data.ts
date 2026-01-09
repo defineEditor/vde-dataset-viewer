@@ -108,6 +108,16 @@ export const dataSlice = createSlice({
         ) => {
             state.loadedRecords[action.payload.fileId] = action.payload.records;
         },
+        clearLoadedRecords: (
+            state,
+            action: PayloadAction<{ fileIds: string[] }>,
+        ) => {
+            action.payload.fileIds.forEach((fileId) => {
+                if (state.loadedRecords[fileId]) {
+                    delete state.loadedRecords[fileId];
+                }
+            });
+        },
         setConverterData: (state, action: PayloadAction<ConverterData>) => {
             state.converter = action.payload;
         },
@@ -306,6 +316,7 @@ export const {
     setFilter,
     resetFilter,
     setLoadedRecords,
+    clearLoadedRecords,
     setConverterData,
     selectMask,
     saveMask,

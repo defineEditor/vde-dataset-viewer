@@ -11,10 +11,11 @@ import {
     openModal,
     closeCompare,
     setCompareView,
-    initialCompare,
     setShowAllDifferences,
+    restartCompare,
 } from 'renderer/redux/slices/ui';
 import { modals } from 'misc/constants';
+import { clearLoadedRecords } from 'renderer/redux/slices/data';
 
 const styles = {
     main: {
@@ -32,6 +33,9 @@ const CompareToolbar: React.FC = () => {
     const resultTab = useAppSelector((state) => state.ui.compare.resultTab);
     const currentCompareId = useAppSelector(
         (state) => state.ui.compare.currentCompareId,
+    );
+    const currentCompareInfo = useAppSelector(
+        (state) => state.ui.compare.info[currentCompareId],
     );
     const currentView = useAppSelector((state) => state.ui.compare.view);
     const isFilterEnabled = useAppSelector(
@@ -51,20 +55,35 @@ const CompareToolbar: React.FC = () => {
         );
     };
 
-    const fileBase = useAppSelector(
-        (state) => state.data.compare.data[currentCompareId]?.fileBase,
-    );
-    const fileComp = useAppSelector(
-        (state) => state.data.compare.data[currentCompareId]?.fileComp,
-    );
     const handleRefreshCompare = () => {
-        if (!fileBase || !fileComp) {
-            return;
+        // Close loaded records for the files which are open
+        if (
+            currentCompareInfo &&
+            currentCompareInfo.fileBaseId &&
+            currentCompareInfo.fileCompId
+        ) {
+            const fileIds = [
+                currentCompareInfo.fileBaseId,
+                currentCompareInfo.fileCompId,
+            ];
+            dispatch(clearLoadedRecords({ fileIds }));
         }
-        dispatch(initialCompare({ fileBase, fileComp }));
+        dispatch(restartCompare({ compareId: currentCompareId }));
     };
 
     const handleClose = () => {
+        // Close loaded records for the files which are open
+        if (
+            currentCompareInfo &&
+            currentCompareInfo.fileBaseId &&
+            currentCompareInfo.fileCompId
+        ) {
+            const fileIds = [
+                currentCompareInfo.fileBaseId,
+                currentCompareInfo.fileCompId,
+            ];
+            dispatch(clearLoadedRecords({ fileIds }));
+        }
         dispatch(closeCompare({ compareId: currentCompareId }));
     };
 

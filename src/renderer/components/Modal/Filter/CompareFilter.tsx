@@ -1,14 +1,16 @@
 import React, { useContext } from 'react';
-import { useAppSelector } from 'renderer/redux/hooks';
+import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import AppContext from 'renderer/utils/AppContext';
 import { IUiModalFilter, ITableRow } from 'interfaces/common';
 import FilterBody from 'renderer/components/Modal/Filter/FilterBody';
+import { closeModal } from 'renderer/redux/slices/ui';
 
 const CompareFilter: React.FC<IUiModalFilter> = ({
     type,
     filterType,
 }: IUiModalFilter) => {
     const { apiService } = useContext(AppContext);
+    const dispatch = useAppDispatch();
 
     const currentCompareId = useAppSelector(
         (state) => state.ui.compare.currentCompareId,
@@ -26,6 +28,10 @@ const CompareFilter: React.FC<IUiModalFilter> = ({
         .map((file) => file.fileId);
 
     // Update unique values when filter is loaded or data is updated
+    // const loadedRecordsObj = useAppSelector(
+    //     (state) => state.data.loadedRecords,
+    // );
+    // console.log(loadedRecordsObj);
     const loadedRecords1 = useAppSelector(
         (state) => state.data.loadedRecords[compareFileIds[0]],
     );
@@ -39,6 +45,8 @@ const CompareFilter: React.FC<IUiModalFilter> = ({
         loadedRecords1 === undefined ||
         loadedRecords2 === undefined
     ) {
+        // Records were not loaded yet, so we have to close it
+        dispatch(closeModal({ type }));
         return null;
     }
 
