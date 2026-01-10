@@ -21,7 +21,7 @@ const styles = {
     root: {
         p: 2,
         height: '100%',
-        overflow: 'auto',
+        overflow: 'hidden',
         flexWrap: 'wrap',
     },
     section: {
@@ -72,7 +72,10 @@ const styles = {
     columnSummary: {
         flex: 1,
         p: 2,
+        maxHeight: '100%',
         minWidth: '300px',
+        overflow: 'auto',
+        paddingBottom: '32px',
     },
 };
 

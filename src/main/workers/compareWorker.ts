@@ -28,9 +28,7 @@ const transformData = (
         row.forEach((val, idx) => {
             if (
                 val === null &&
-                ['string', 'datetime', 'date', 'time'].includes(
-                    metadata.columns[idx].dataType,
-                )
+                ['string'].includes(metadata.columns[idx].dataType)
             ) {
                 newRow[idx] = '';
             }
@@ -167,7 +165,7 @@ const compareMetadata = (
         base.columns
             .filter((column) => {
                 if (!ignorePattern) return true;
-                return !new RegExp(`/${ignorePattern}/`, 'i').test(column.name);
+                return !new RegExp(`${ignorePattern}`, 'i').test(column.name);
             })
             .map((c, i) => [c.name, { desc: c, index: i }]),
     );
@@ -175,7 +173,7 @@ const compareMetadata = (
         compare.columns
             .filter((column) => {
                 if (!ignorePattern) return true;
-                return !new RegExp(`/${ignorePattern}/`, 'i').test(column.name);
+                return !new RegExp(`${ignorePattern}`, 'i').test(column.name);
             })
             .map((c, i) => [c.name, { desc: c, index: i }]),
     );
@@ -347,31 +345,41 @@ const compareData = (
     // Column Maps
     const baseCols = new Map(
         baseMeta?.columns
-            .filter(
-                (column) =>
-                    !ignorePattern ||
-                    !new RegExp(`/${ignorePattern}/`, 'i').test(column.name),
-            )
-            .map((c, i) => {
+            .map((c, i): [string, { desc: ItemDescription; index: number }] => {
                 if (ignoreColumnCase) {
                     return [c.name.toLowerCase(), { desc: c, index: i }];
                 }
                 return [c.name, { desc: c, index: i }];
-            }) || [],
+            })
+            .filter(
+                (
+                    columnObj: [
+                        string,
+                        { desc: ItemDescription; index: number },
+                    ],
+                ) =>
+                    !ignorePattern ||
+                    !new RegExp(`${ignorePattern}`, 'i').test(columnObj[0]),
+            ) || [],
     );
     const compareCols = new Map(
         compareMeta?.columns
-            .filter(
-                (column) =>
-                    !ignorePattern ||
-                    !new RegExp(`/${ignorePattern}/`, 'i').test(column.name),
-            )
-            .map((c, i) => {
+            .map((c, i): [string, { desc: ItemDescription; index: number }] => {
                 if (ignoreColumnCase) {
                     return [c.name.toLowerCase(), { desc: c, index: i }];
                 }
                 return [c.name, { desc: c, index: i }];
-            }) || [],
+            })
+            .filter(
+                (
+                    columnObj: [
+                        string,
+                        { desc: ItemDescription; index: number },
+                    ],
+                ) =>
+                    !ignorePattern ||
+                    !new RegExp(`${ignorePattern}`, 'i').test(columnObj[0]),
+            ) || [],
     );
 
     const allCols = [...baseCols.keys(), ...compareCols.keys()].filter(
