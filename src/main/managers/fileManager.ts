@@ -19,11 +19,10 @@ import Filter from 'js-array-filter';
 import crypto from 'crypto';
 import path from 'path';
 
-const getHash = (str: string): string => {
-    const timestamp = Date.now();
+const getHash = (str: string, lastModified: number): string => {
     const hash = crypto
         .createHash('md5')
-        .update(`${str}${timestamp}`)
+        .update(`${str}${lastModified}`)
         .digest('hex');
     return hash;
 };
@@ -37,7 +36,7 @@ class FileManager {
         this.openedFiles = {};
     }
 
-    public getFileId = (pathToFile: string): string => {
+    public getFileId = (pathToFile: string, lastModified: number): string => {
         // Check if the file is already opened
         const foundFileIds = Object.keys(this.openedFiles).filter((fileId) => {
             const file = this.openedFiles[fileId];
@@ -61,7 +60,7 @@ class FileManager {
         let hash: string;
         do {
             const filename = path.parse(pathToFile).name;
-            hash = `${filename}_${getHash(path.normalize(pathToFile))}`;
+            hash = `${filename}_${getHash(path.normalize(pathToFile), lastModified)}`;
         } while (allIds.includes(hash));
         return hash;
     };
@@ -128,7 +127,22 @@ class FileManager {
             };
         }
 
-        const fileId = this.getFileId(newFile.path);
+        // Get last modified time
+        let lastModified = 0;
+        try {
+            const stats = fs.statSync(newFile.path);
+            lastModified = stats.mtime.getTime();
+        } catch (error) {
+            return {
+                fileId: '',
+                type: 'json',
+                path: '',
+                errorMessage: `An error occurred while opening the file ${newFile.path}: ${(error as Error).message}`,
+                lastModified: 0,
+            };
+        }
+
+        const fileId = this.getFileId(newFile.path, lastModified);
         const extension = newFile.path.split('.').pop()?.toLowerCase();
         switch (extension) {
             case 'json':
@@ -179,21 +193,6 @@ class FileManager {
         }
         this.openedFiles[fileId] = data;
 
-        // Get last modified time
-        let lastModified = 0;
-        try {
-            const stats = fs.statSync(newFile.path);
-            lastModified = stats.mtime.getTime();
-        } catch (error) {
-            return {
-                fileId: '',
-                type: 'json',
-                path: '',
-                errorMessage: `An error occurred while opening the file ${newFile.path}: ${(error as Error).message}`,
-                lastModified: 0,
-            };
-        }
-
         return { fileId, type, path: newFile.path, lastModified };
     };
 
@@ -221,7 +220,7 @@ class FileManager {
     public handleGetMetadata = async (
         _event: IpcMainInvokeEvent,
         fileId: string,
-    ) => {
+    ): Promise<DatasetJsonMetadata | null> => {
         if (this.openedFiles[fileId]) {
             try {
                 let metadata: DatasetJsonMetadata;

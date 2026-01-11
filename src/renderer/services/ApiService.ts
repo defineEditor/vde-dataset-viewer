@@ -174,6 +174,10 @@ class ApiService {
         const metadata = await this.getMetadata(fileData.fileId, filterColumns);
         if (metadata === null) {
             // Error reading metadata
+            // Remove the file from opened files
+            this.openedFiles = this.openedFiles.filter(
+                (file) => file.fileId !== fileData.fileId,
+            );
             return {
                 ...fileData,
                 metadata: {} as DatasetJsonMetadata,
@@ -352,23 +356,27 @@ class ApiService {
         }
 
         let result: ItemDataArray[] | null;
-        if (file.mode === 'remote') {
-            result = await this.getObservationsRemote(
-                fileId,
-                start,
-                length,
-                filterData,
-                metadata.columns,
-            );
-        } else {
-            result = await this.getObservationsLocal(
-                fileId,
-                start,
-                length,
-                filterColumns,
-                filterData,
-                metadata.columns,
-            );
+        try {
+            if (file.mode === 'remote') {
+                result = await this.getObservationsRemote(
+                    fileId,
+                    start,
+                    length,
+                    filterData,
+                    metadata.columns,
+                );
+            } else {
+                result = await this.getObservationsLocal(
+                    fileId,
+                    start,
+                    length,
+                    filterColumns,
+                    filterData,
+                    metadata.columns,
+                );
+            }
+        } catch (error) {
+            result = null;
         }
 
         if (result === null) {

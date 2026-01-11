@@ -16,6 +16,7 @@ import {
 } from 'renderer/redux/slices/ui';
 import { modals } from 'misc/constants';
 import { clearLoadedRecords } from 'renderer/redux/slices/data';
+import store from 'renderer/redux/store';
 
 const styles = {
     main: {
@@ -34,9 +35,7 @@ const CompareToolbar: React.FC = () => {
     const currentCompareId = useAppSelector(
         (state) => state.ui.compare.currentCompareId,
     );
-    const currentCompareInfo = useAppSelector(
-        (state) => state.ui.compare.info[currentCompareId],
-    );
+
     const currentView = useAppSelector((state) => state.ui.compare.view);
     const isFilterEnabled = useAppSelector(
         (state) =>
@@ -57,15 +56,12 @@ const CompareToolbar: React.FC = () => {
 
     const handleRefreshCompare = () => {
         // Close loaded records for the files which are open
-        if (
-            currentCompareInfo &&
-            currentCompareInfo.fileBaseId &&
-            currentCompareInfo.fileCompId
-        ) {
-            const fileIds = [
-                currentCompareInfo.fileBaseId,
-                currentCompareInfo.fileCompId,
-            ];
+        // Using store.getState() to avoid an issue I could not resolve when use useAppSelector
+        const state = store.getState();
+        const fileBaseId = state.ui.compare.info[currentCompareId]?.fileBaseId;
+        const fileCompId = state.ui.compare.info[currentCompareId]?.fileCompId;
+        if (fileBaseId && fileCompId) {
+            const fileIds = [fileBaseId, fileCompId];
             dispatch(clearLoadedRecords({ fileIds }));
         }
         dispatch(restartCompare({ compareId: currentCompareId }));
@@ -73,15 +69,12 @@ const CompareToolbar: React.FC = () => {
 
     const handleClose = () => {
         // Close loaded records for the files which are open
-        if (
-            currentCompareInfo &&
-            currentCompareInfo.fileBaseId &&
-            currentCompareInfo.fileCompId
-        ) {
-            const fileIds = [
-                currentCompareInfo.fileBaseId,
-                currentCompareInfo.fileCompId,
-            ];
+        // Using store.getState() to avoid an issue I could not resolve when use useAppSelector
+        const state = store.getState();
+        const fileBaseId = state.ui.compare.info[currentCompareId]?.fileBaseId;
+        const fileCompId = state.ui.compare.info[currentCompareId]?.fileCompId;
+        if (fileBaseId && fileCompId) {
+            const fileIds = [fileBaseId, fileCompId];
             dispatch(clearLoadedRecords({ fileIds }));
         }
         dispatch(closeCompare({ compareId: currentCompareId }));

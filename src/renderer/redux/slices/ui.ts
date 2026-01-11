@@ -415,10 +415,20 @@ export const uiSlice = createSlice({
             }>,
         ) => {
             if (state.compare.info[action.payload.compareId]) {
-                state.compare.info[action.payload.compareId].fileBaseId =
-                    action.payload.fileBaseId;
-                state.compare.info[action.payload.compareId].fileCompId =
-                    action.payload.fileCompId;
+                const currentFileBaseId =
+                    state.compare.info[action.payload.compareId].fileBaseId;
+                const currentFileCompId =
+                    state.compare.info[action.payload.compareId].fileCompId;
+                // If file IDs are changing, reset compare page and diff index
+                if (
+                    currentFileBaseId !== action.payload.fileBaseId ||
+                    currentFileCompId !== action.payload.fileCompId
+                ) {
+                    state.compare.info[action.payload.compareId].fileBaseId =
+                        action.payload.fileBaseId;
+                    state.compare.info[action.payload.compareId].fileCompId =
+                        action.payload.fileCompId;
+                }
             }
         },
         setCompareFiles: (
@@ -481,6 +491,9 @@ export const uiSlice = createSlice({
                 state.compare.info[compareId].currentDiffIndex = 0;
             }
             state.compare.startCompare = true;
+        },
+        stopCompare: (state) => {
+            state.compare.startCompare = false;
         },
         closeCompare: (state, action: PayloadAction<{ compareId: string }>) => {
             const { compareId } = action.payload;
@@ -546,6 +559,7 @@ export const {
     setComparePage,
     initializeCompare,
     restartCompare,
+    stopCompare,
     setNewCompareInfo,
     setCompareFileIds,
     closeCompare,

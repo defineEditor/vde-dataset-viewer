@@ -7,6 +7,7 @@ import {
     setIsComparing,
     closeCompare,
     setNewCompareInfo,
+    stopCompare,
 } from 'renderer/redux/slices/ui';
 import { mainTaskTypes, modals } from 'misc/constants';
 import Results from 'renderer/components/Compare/Results';
@@ -120,6 +121,7 @@ const Compare: React.FC = () => {
                         type: 'error',
                     }),
                 );
+                dispatch(stopCompare());
                 return () => {};
             }
             // Initiate the compare task

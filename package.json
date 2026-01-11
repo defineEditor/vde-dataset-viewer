@@ -106,7 +106,7 @@
         "electron-log": "^4.4.8",
         "electron-updater": "^6.1.4",
         "js-array-filter": "^0.1.6",
-        "js-stream-dataset-json": "^0.7.1",
+        "js-stream-dataset-json": "^0.7.3",
         "parse-define-xml": "^0.1.7",
         "react": "^19.2.3",
         "react-dom": "^19.2.3",
