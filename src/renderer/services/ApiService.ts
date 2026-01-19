@@ -339,20 +339,9 @@ class ApiService {
         }
 
         // Get metadata
-        let metadata = await this.getMetadata(fileId);
+        const metadata = await this.getMetadata(fileId);
         if (metadata === null) {
             return [];
-        }
-
-        if (filterColumns !== undefined) {
-            metadata = {
-                ...metadata,
-                columns: metadata.columns.filter((col) =>
-                    filterColumns
-                        .map((fCol) => fCol.toLowerCase())
-                        .includes(col.name.toLowerCase()),
-                ),
-            };
         }
 
         let result: ItemDataArray[] | null;
@@ -383,10 +372,22 @@ class ApiService {
             return [];
         }
 
+        let metadataFiltered = metadata;
+        if (filterColumns !== undefined) {
+            metadataFiltered = {
+                ...metadata,
+                columns: metadata.columns.filter((col) =>
+                    filterColumns
+                        .map((fCol) => fCol.toLowerCase())
+                        .includes(col.name.toLowerCase()),
+                ),
+            };
+        }
+
         // Transform data
         const transformedData = transformData(
             result,
-            metadata,
+            metadataFiltered,
             settings,
             start,
         );
@@ -818,6 +819,11 @@ class ApiService {
     // Tasks
     public startTask = async (task: MainTask) => {
         const result = await window.electron.startTask(task);
+        return result;
+    };
+
+    public stopTask = async (id: string) => {
+        const result = window.electron.stopTask(id);
         return result;
     };
 

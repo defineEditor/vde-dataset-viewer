@@ -358,6 +358,15 @@ app.whenReady()
                 return taskManager.handleTask(task, event.sender);
             },
         );
+        ipcMain.handle(
+            'main:stopTask',
+            (event: IpcMainInvokeEvent, id: string) => {
+                if (!event.sender) {
+                    return false;
+                }
+                return taskManager.stopTask(id);
+            },
+        );
         ipcMain.handle('main:getVersion', (_event: IpcMainInvokeEvent) => {
             return app.getVersion();
         });

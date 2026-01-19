@@ -13,11 +13,16 @@ import {
     InputAdornment,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
 import { useAppDispatch } from 'renderer/redux/hooks';
-import { openSnackbar, setDefineFileId } from 'renderer/redux/slices/ui';
+import {
+    openSnackbar,
+    setDefineFileId,
+    resetDefineUi,
+} from 'renderer/redux/slices/ui';
 import AppContext from 'renderer/utils/AppContext';
 
 const styles = {
@@ -81,6 +86,10 @@ const DefineToolbar: React.FC = () => {
         );
         dispatch(setDefineFileId(fileInfo.fileId));
     }, [apiService, dispatch]);
+
+    const handleClose = () => {
+        dispatch(resetDefineUi());
+    };
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -162,6 +171,11 @@ const DefineToolbar: React.FC = () => {
                     },
                 }}
             />
+            <Tooltip title="Close define" enterDelay={1000}>
+                <IconButton onClick={handleClose} size="small">
+                    <CloseIcon sx={{ color: 'grey.600' }} />
+                </IconButton>
+            </Tooltip>
         </Stack>
     );
 };

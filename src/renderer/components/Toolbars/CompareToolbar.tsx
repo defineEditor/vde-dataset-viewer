@@ -6,6 +6,7 @@ import FilterIcon from '@mui/icons-material/FilterAlt';
 import FlipCameraAndroidIcon from '@mui/icons-material/FlipCameraAndroid';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ListAltIcon from '@mui/icons-material/ListAlt';
+import AppContext from 'renderer/utils/AppContext';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import {
     openModal,
@@ -31,6 +32,7 @@ const styles = {
 
 const CompareToolbar: React.FC = () => {
     const dispatch = useAppDispatch();
+    const { apiService } = React.useContext(AppContext);
     const resultTab = useAppSelector((state) => state.ui.compare.resultTab);
     const currentCompareId = useAppSelector(
         (state) => state.ui.compare.currentCompareId,
@@ -73,9 +75,14 @@ const CompareToolbar: React.FC = () => {
         const state = store.getState();
         const fileBaseId = state.ui.compare.info[currentCompareId]?.fileBaseId;
         const fileCompId = state.ui.compare.info[currentCompareId]?.fileCompId;
+        const isComparing =
+            state.ui.compare.info[currentCompareId]?.isComparing;
         if (fileBaseId && fileCompId) {
             const fileIds = [fileBaseId, fileCompId];
             dispatch(clearLoadedRecords({ fileIds }));
+        }
+        if (isComparing) {
+            apiService.stopTask(currentCompareId);
         }
         dispatch(closeCompare({ compareId: currentCompareId }));
     };

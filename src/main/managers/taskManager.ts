@@ -330,6 +330,28 @@ class TaskManager {
         });
     }
 
+    public stopTask(id: string): boolean {
+        let isCovertTask = false;
+        this.taskQueue = this.taskQueue.filter((task) => {
+            if (task.type === mainTaskTypes.CONVERT) {
+                isCovertTask = true;
+                return !task.id.startsWith(`${id}-`);
+            }
+            return task.id !== id;
+        });
+        let killStatus = false;
+        Array.from(this.processes.keys()).forEach((processId) => {
+            if (
+                processId === id ||
+                (isCovertTask && processId.startsWith(`${id}-`))
+            ) {
+                const process = this.processes.get(processId);
+                killStatus = process?.kill() || false;
+            }
+        });
+        return killStatus;
+    }
+
     public cleanup(): void {
         this.taskQueue = [];
         Array.from(this.processes.values()).forEach((process) => {

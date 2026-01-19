@@ -71,6 +71,7 @@ export interface ElectronApi {
     downloadUpdate: () => Promise<boolean>;
     writeToClipboard: (text: string) => Promise<boolean>;
     startTask: (task: MainTask) => Promise<boolean | { error: string }>;
+    stopTask: (id: string) => Promise<boolean>;
     onTaskProgress: (callback: (info: TaskProgress) => void) => () => void;
     cleanTaskProgressListeners: () => void;
     openFileDialog: (options: {
