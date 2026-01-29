@@ -255,18 +255,26 @@ class FileManager {
     ): Promise<ItemDataArray[] | null> => {
         if (this.openedFiles[fileId]) {
             try {
-                let filter: Filter | undefined;
-                if (this.openedFiles[fileId] instanceof DatasetXpt) {
-                    // For XPT we use full metadata for filter
-                    if (filterData !== undefined && columns !== undefined) {
+                let filter: Filter | BasicFilter | undefined;
+                if (filterData !== undefined && columns !== undefined) {
+                    if (
+                        filterColumns !== undefined &&
+                        filterColumns.length > 0
+                    ) {
+                        // In case of filter columns, the filter will be created inside the read library
+                        filter = filterData;
+                    } else {
                         filter = new Filter(
                             'dataset-json1.1',
                             columns,
                             filterData,
                         );
-                    } else {
-                        filter = undefined;
                     }
+                } else {
+                    filter = undefined;
+                }
+                if (this.openedFiles[fileId] instanceof DatasetXpt) {
+                    // For XPT we use full metadata for filter
                     return (await this.openedFiles[fileId].getData({
                         start,
                         length,
@@ -275,21 +283,6 @@ class FileManager {
                         filter,
                         roundPrecision: 12,
                     })) as ItemDataArray[];
-                }
-                // For other formats we need to filter the metadata if filterColumns is specified
-                if (filterData !== undefined) {
-                    const filteredColumns = columns?.filter((col) =>
-                        filterColumns
-                            ?.map((fCol) => fCol.toLowerCase())
-                            ?.includes(col.name.toLowerCase()),
-                    );
-                    filter = new Filter(
-                        'dataset-json1.1',
-                        filteredColumns || [],
-                        filterData,
-                    );
-                } else {
-                    filter = undefined;
                 }
                 // TODO: strange TS issue, it requires filter to be undefined
                 return (await this.openedFiles[fileId].getData({

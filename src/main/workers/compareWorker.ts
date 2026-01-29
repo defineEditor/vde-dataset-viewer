@@ -628,6 +628,7 @@ const getData = async (
     start: number,
     length: number,
     columns: ColumnMetadata[],
+    options: CompareSettings,
     filterData: BasicFilter | null,
 ): Promise<ItemDataArray[]> => {
     let filter: Filter | undefined;
@@ -641,7 +642,10 @@ const getData = async (
             start,
             length,
             type: 'array',
-            roundPrecision: 12,
+            roundPrecision: Math.max(
+                12,
+                Math.abs(Math.log10(Math.min(options.tolerance, 10e-1))),
+            ),
             filter,
         })) as ItemDataArray[];
     }
@@ -737,6 +741,7 @@ process.parentPort.once(
                     start,
                     bufferSize,
                     baseMeta.columns,
+                    options,
                     filterData,
                 );
                 // eslint-disable-next-line no-await-in-loop
@@ -745,6 +750,7 @@ process.parentPort.once(
                     start,
                     bufferSize,
                     compMeta.columns,
+                    options,
                     filterData,
                 );
 
