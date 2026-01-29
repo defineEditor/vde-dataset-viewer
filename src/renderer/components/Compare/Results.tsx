@@ -45,6 +45,33 @@ const Results: React.FC = () => {
     const dispatch = useAppDispatch();
     const currentTab = useAppSelector((state) => state.ui.compare.resultTab);
 
+    const currentCompareId = useAppSelector(
+        (state) => state.ui.compare.currentCompareId,
+    );
+
+    const datasetDiff = useAppSelector(
+        (state) => state.data.compare.data[currentCompareId]?.datasetDiff,
+    );
+
+    const noDataDiff =
+        datasetDiff !== null &&
+        datasetDiff.data.addedRows.length === 0 &&
+        datasetDiff.data.deletedRows.length === 0 &&
+        datasetDiff.data.modifiedRows.length === 0;
+
+    const noMetadataDiff =
+        datasetDiff !== null &&
+        Object.keys(datasetDiff.metadata.attributeDiffs || {}).length === 0 &&
+        Object.keys(datasetDiff.metadata.dsAttributeDiffs || {}).length === 0;
+
+    const noDiff =
+        datasetDiff !== null &&
+        noDataDiff &&
+        noMetadataDiff &&
+        datasetDiff.metadata.missingInBase.length === 0 &&
+        datasetDiff.metadata.missingInCompare.length === 0 &&
+        Object.keys(datasetDiff.metadata.positionDiffs || {}).length === 0;
+
     const handleTabChange = (
         _event: React.SyntheticEvent,
         newValue: 'summary' | 'metadata' | 'data',
@@ -60,9 +87,27 @@ const Results: React.FC = () => {
                     sx={styles.tabs}
                     variant="fullWidth"
                 >
-                    <StyledTab label="Summary" value="summary" />
-                    <StyledTab label="Metadata" value="metadata" />
-                    <StyledTab label="Data" value="data" />
+                    <StyledTab
+                        label="Summary"
+                        value="summary"
+                        sx={{
+                            color: noDiff ? 'success.main' : undefined,
+                        }}
+                    />
+                    <StyledTab
+                        label="Metadata"
+                        value="metadata"
+                        sx={{
+                            color: noMetadataDiff ? 'success.main' : undefined,
+                        }}
+                    />
+                    <StyledTab
+                        label="Data"
+                        value="data"
+                        sx={{
+                            color: noDataDiff ? 'success.main' : undefined,
+                        }}
+                    />
                 </TabList>
                 <Box style={styles.fullHeight}>
                     <TabPanel value="summary" sx={styles.tabPanel}>

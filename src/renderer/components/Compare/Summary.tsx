@@ -129,6 +129,7 @@ const Summary: React.FC = () => {
         metadata.missingInBase.length === 0 &&
         metadata.missingInCompare.length === 0 &&
         Object.keys(metadata.attributeDiffs).length === 0 &&
+        Object.keys(metadata.positionDiffs).length === 0 &&
         Object.keys(metadata.dsAttributeDiffs).length === 0;
 
     const sortedColumns = Object.keys(columnsStats).sort();

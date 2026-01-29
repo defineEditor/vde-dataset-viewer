@@ -42,6 +42,12 @@ const styles = {
         color: 'success.main',
         mb: 2,
     },
+    noDiff: {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100%',
+    },
 };
 
 const Metadata: React.FC = () => {
@@ -132,6 +138,17 @@ const Metadata: React.FC = () => {
     }, [datasetDiff]);
 
     if (!datasetDiff) return null;
+
+    if (
+        Object.keys(datasetDiff.metadata.attributeDiffs || {}).length === 0 &&
+        Object.keys(datasetDiff.metadata.dsAttributeDiffs || {}).length === 0
+    ) {
+        return (
+            <Box sx={styles.noDiff}>
+                <Typography>No differences found</Typography>
+            </Box>
+        );
+    }
 
     return (
         <Box sx={styles.container}>
