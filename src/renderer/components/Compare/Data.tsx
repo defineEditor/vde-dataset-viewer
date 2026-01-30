@@ -123,6 +123,12 @@ const Data: React.FC = () => {
         disableSorting: true,
     };
 
+    const noDataDifferences =
+        datasetDiff !== null &&
+        datasetDiff.data.modifiedRows.length === 0 &&
+        datasetDiff.data.addedRows.length === 0 &&
+        datasetDiff.data.deletedRows.length === 0;
+
     const [data, setData] = useState<{
         base: ITableData | null;
         comp: ITableData | null;
@@ -413,13 +419,23 @@ const Data: React.FC = () => {
                     compareId: currentCompareId,
                     filterColumns: commonCols,
                 });
+                // Order commonCols as in compare dataset
+                const commonColsComp = commonCols.slice().sort((a, b) => {
+                    const indexA = fileCompInfo.metadata.columns
+                        .map((col) => col.name.toLowerCase())
+                        .indexOf(a.toLowerCase());
+                    const indexB = fileCompInfo.metadata.columns
+                        .map((col) => col.name.toLowerCase())
+                        .indexOf(b.toLowerCase());
+                    return indexA - indexB;
+                });
                 const newCompData = await getData(
                     apiService,
                     fileCompInfo.fileId,
                     page * pageSize,
                     pageSize,
                     settings,
-                    commonCols,
+                    commonColsComp,
                     currentFilter,
                     true,
                 );
@@ -455,7 +471,7 @@ const Data: React.FC = () => {
             }
         };
 
-        if (!currentlyLoading.current) {
+        if (!currentlyLoading.current && !noDataDifferences) {
             loadData();
             return () => {};
         }
@@ -479,6 +495,7 @@ const Data: React.FC = () => {
         currentCompareId,
         currentFilter,
         reorderCompareColumns,
+        noDataDifferences,
     ]);
 
     if (loading) {
@@ -506,18 +523,18 @@ const Data: React.FC = () => {
         );
     }
 
-    // if (
-    //     datasetDiff !== null &&
-    //     datasetDiff.data.modifiedRows.length === 0 &&
-    //     datasetDiff.data.addedRows.length === 0 &&
-    //     datasetDiff.data.deletedRows.length === 0
-    // ) {
-    //     return (
-    //         <Box sx={styles.loading}>
-    //             <Typography>No differences found</Typography>
-    //         </Box>
-    //     );
-    // }
+    if (
+        datasetDiff !== null &&
+        datasetDiff.data.modifiedRows.length === 0 &&
+        datasetDiff.data.addedRows.length === 0 &&
+        datasetDiff.data.deletedRows.length === 0
+    ) {
+        return (
+            <Box sx={styles.loading}>
+                <Typography>No differences found</Typography>
+            </Box>
+        );
+    }
 
     return (
         <Stack

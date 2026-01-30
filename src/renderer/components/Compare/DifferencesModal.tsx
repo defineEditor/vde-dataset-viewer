@@ -32,7 +32,11 @@ import SearchIcon from '@mui/icons-material/Search';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import ViewColumnIcon from '@mui/icons-material/ViewColumn';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
-import { openSnackbar, setShowAllDifferences } from 'renderer/redux/slices/ui';
+import {
+    openSnackbar,
+    setShowAllDifferences,
+    setCurrentIssueIndex,
+} from 'renderer/redux/slices/ui';
 import { DatasetDiff } from 'interfaces/main';
 import { IUiControl } from 'interfaces/common';
 import AppContext from 'renderer/utils/AppContext';
@@ -110,8 +114,13 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
     handleSetGoTo,
 }) => {
     const dispatch = useAppDispatch();
-    const open = useAppSelector((state) => state.ui.compare.showAllDifferences);
     const { apiService } = useContext(AppContext);
+
+    const open = useAppSelector((state) => state.ui.compare.showAllDifferences);
+
+    const currentCompareId = useAppSelector(
+        (state) => state.ui.compare.currentCompareId,
+    );
 
     const handleClose = useCallback(() => {
         dispatch(setShowAllDifferences(false));
@@ -140,11 +149,6 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
         };
     }, [handleClose]);
 
-    const handleGoTo = (row: number, column: string) => {
-        handleSetGoTo({ row, column, cellSelection: true });
-        handleClose();
-    };
-
     const [viewMode, setViewMode] = useState<'row' | 'column'>('row');
 
     const allDifferences = useMemo(() => {
@@ -169,6 +173,24 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
         });
         return diffs;
     }, [datasetDiff]);
+
+    const handleGoTo = (row: number, column: string) => {
+        // Find index of this difference
+        const diffRows = new Set();
+        allDifferences.forEach((diff) => {
+            diffRows.add(diff.row);
+        });
+        // Get position of the row in the unique diff rows
+        const newIndex = Array.from(diffRows).indexOf(row - 1);
+        dispatch(
+            setCurrentIssueIndex({
+                id: currentCompareId,
+                index: newIndex,
+            }),
+        );
+        handleSetGoTo({ row, column, cellSelection: true });
+        handleClose();
+    };
 
     const filteredDifferences = useMemo(() => {
         if (!searchTerm.trim()) return allDifferences;

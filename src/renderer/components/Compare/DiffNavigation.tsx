@@ -62,10 +62,12 @@ const IssueNavigation: React.FC<{
     const dispatch = useAppDispatch();
     const throttleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+    const currentCompareId = useAppSelector(
+        (state) => state.ui.compare.currentCompareId,
+    );
 
     const currentIssueIndex = useAppSelector((state) => {
-        const dataSettings = state.ui.dataSettings[currentFileId];
+        const dataSettings = state.ui.dataSettings[currentCompareId];
         return dataSettings?.currentIssueIndex || 0;
     });
 
@@ -147,7 +149,7 @@ const IssueNavigation: React.FC<{
 
         dispatch(
             setCurrentIssueIndex({
-                id: currentFileId,
+                id: currentCompareId,
                 index: newIndex,
             }),
         );
