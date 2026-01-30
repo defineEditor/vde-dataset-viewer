@@ -106,13 +106,13 @@
         "electron-log": "^4.4.8",
         "electron-updater": "^6.1.9",
         "js-array-filter": "^0.1.6",
-        "js-stream-dataset-json": "^0.7.5",
+        "js-stream-dataset-json": "^0.8.0",
         "parse-define-xml": "^0.1.7",
         "react": "^19.2.3",
         "react-dom": "^19.2.3",
         "react-redux": "^9.2.0",
         "redux": "^5.0.1",
-        "xport-js": "^0.3.5"
+        "xport-js": "^0.4.0"
     },
     "devDependencies": {
         "@electron/rebuild": "^3.3.1",

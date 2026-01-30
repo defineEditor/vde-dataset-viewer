@@ -331,7 +331,8 @@ const compareData = (
     compareMeta: DatasetMetadata,
     summaryInit: DatasetDiff['summary'],
     options: CompareSettings,
-    rowShift: number = 0,
+    rowShiftBase: number = 0,
+    rowShiftCompare: number = 0,
 ): { data: DataDiff; summary: Partial<DatasetDiff['summary']> } => {
     const {
         tolerance = 1e-12,
@@ -468,8 +469,8 @@ const compareData = (
 
         if (hasDiff) {
             return {
-                rowBase: baseIdx + rowShift,
-                rowCompare: compareIdx + rowShift,
+                rowBase: baseIdx + rowShiftBase,
+                rowCompare: compareIdx + rowShiftCompare,
                 diff: diffs,
             };
         }
@@ -496,9 +497,9 @@ const compareData = (
             if (hasDiff) {
                 diffCount++;
                 if (firstDiffRow === null) {
-                    firstDiffRow = i + rowShift;
+                    firstDiffRow = i + rowShiftBase;
                 }
-                lastDiffRow = i + rowShift;
+                lastDiffRow = i + rowShiftBase;
             }
 
             if (maxDiffCount > 0 && diffCount >= maxDiffCount) {
@@ -565,7 +566,7 @@ const compareData = (
     const newFirstLow =
         firstDiffRow !== null
             ? Math.min(
-                  firstDiffRow + rowShift,
+                  firstDiffRow + rowShiftBase,
                   summaryInit?.firstDiffRow || Infinity,
               )
             : summaryInit?.firstDiffRow || null;
@@ -573,7 +574,7 @@ const compareData = (
         lastDiffRow !== null
             ? Math.max(
                   summaryInit?.lastDiffRow || -Infinity,
-                  lastDiffRow + rowShift,
+                  lastDiffRow + rowShiftBase,
               )
             : summaryInit?.lastDiffRow || null;
     const totalDiffs =
@@ -630,7 +631,7 @@ const getData = async (
     columns: ColumnMetadata[],
     options: CompareSettings,
     filterData: BasicFilter | null,
-): Promise<ItemDataArray[]> => {
+): Promise<{ data: ItemDataArray[]; lastRow: number; endReached: boolean }> => {
     let filter: Filter | undefined;
     if (filterData !== null && columns !== undefined) {
         filter = new Filter('dataset-json1.1', columns, filterData);
@@ -647,13 +648,13 @@ const getData = async (
                 Math.abs(Math.log10(Math.min(options.tolerance, 10e-1))),
             ),
             filter,
-        })) as ItemDataArray[];
+        })) as { data: ItemDataArray[]; lastRow: number; endReached: boolean };
     }
     return (await file.getData({
         start,
         length,
         filter,
-    })) as ItemDataArray[];
+    })) as { data: ItemDataArray[]; lastRow: number; endReached: boolean };
 };
 
 process.parentPort.once(
@@ -729,37 +730,43 @@ process.parentPort.once(
 
             const totalRecords = Math.min(baseMeta.records, compMeta.records);
             let maxDiffCountReached = false;
+            const endReached = false;
 
-            for (
-                let start = 0;
-                start < totalRecords && !maxDiffCountReached;
-                start += bufferSize
+            // In case of filter we need to track start positions separately
+            let startBase = 0;
+            let startComp = 0;
+            while (
+                Math.max(startBase, startComp) < totalRecords &&
+                !maxDiffCountReached &&
+                !endReached
             ) {
                 // eslint-disable-next-line no-await-in-loop
-                let baseData = await getData(
+                const baseDataFull = await getData(
                     baseFile,
-                    start,
+                    startBase,
                     bufferSize,
                     baseMeta.columns,
                     options,
                     filterData,
                 );
                 // eslint-disable-next-line no-await-in-loop
-                let compData = await getData(
+                const compDataFull = await getData(
                     compFile,
-                    start,
+                    startComp,
                     bufferSize,
                     compMeta.columns,
                     options,
                     filterData,
                 );
 
+                let baseData = baseDataFull.data;
+                let compData = compDataFull.data;
                 if (differentTypes) {
                     if (baseType === 'json') {
-                        baseData = transformData(baseData, baseMeta);
+                        baseData = transformData(baseDataFull.data, baseMeta);
                     }
                     if (compType === 'json') {
-                        compData = transformData(compData, compMeta);
+                        compData = transformData(compDataFull.data, compMeta);
                     }
                 }
 
@@ -770,7 +777,8 @@ process.parentPort.once(
                     compMeta,
                     summary,
                     options,
-                    start,
+                    startBase,
+                    startComp,
                 );
 
                 dataDiff.addedRows.push(...blockDiff.data.addedRows);
@@ -782,7 +790,8 @@ process.parentPort.once(
                     ...blockDiff.summary,
                     totalRowsChecked: blockDiff.summary.maxDiffReached
                         ? (blockDiff.summary.lastDiffRow || 0) + 1
-                        : start + Math.min(baseData.length, compData.length),
+                        : startBase +
+                          Math.min(baseData.length, compData.length),
                 };
 
                 maxDiffCountReached = blockDiff.summary.maxDiffReached || false;
@@ -794,11 +803,20 @@ process.parentPort.once(
                               (summary.totalRowsChecked / totalRecords) * 100,
                           )
                         : 0;
-                if (progress < 100) {
+                if (progress < 100 && !endReached && !maxDiffCountReached) {
                     sendMessage(Math.max(progress, 1), summary.totalDiffs);
                 } else {
                     // If 100%, will send final message later
                     sendMessage(99, summary.totalDiffs);
+                }
+
+                // If filter is applied, we need to adjust the start positions based on the last retrieved rows
+                if (filterData !== null) {
+                    startBase = baseDataFull.lastRow + 1;
+                    startComp = compDataFull.lastRow + 1;
+                } else {
+                    startBase += bufferSize;
+                    startComp += bufferSize;
                 }
             }
 

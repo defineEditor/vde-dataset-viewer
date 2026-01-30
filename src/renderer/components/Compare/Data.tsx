@@ -506,18 +506,18 @@ const Data: React.FC = () => {
         );
     }
 
-    if (
-        datasetDiff !== null &&
-        datasetDiff.data.modifiedRows.length === 0 &&
-        datasetDiff.data.addedRows.length === 0 &&
-        datasetDiff.data.deletedRows.length === 0
-    ) {
-        return (
-            <Box sx={styles.loading}>
-                <Typography>No differences found</Typography>
-            </Box>
-        );
-    }
+    // if (
+    //     datasetDiff !== null &&
+    //     datasetDiff.data.modifiedRows.length === 0 &&
+    //     datasetDiff.data.addedRows.length === 0 &&
+    //     datasetDiff.data.deletedRows.length === 0
+    // ) {
+    //     return (
+    //         <Box sx={styles.loading}>
+    //             <Typography>No differences found</Typography>
+    //         </Box>
+    //     );
+    // }
 
     return (
         <Stack

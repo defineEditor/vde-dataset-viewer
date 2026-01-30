@@ -275,22 +275,23 @@ class FileManager {
                 }
                 if (this.openedFiles[fileId] instanceof DatasetXpt) {
                     // For XPT we use full metadata for filter
-                    return (await this.openedFiles[fileId].getData({
+                    const result = await this.openedFiles[fileId].getData({
                         start,
                         length,
                         type: 'array',
                         filterColumns,
                         filter,
                         roundPrecision: 12,
-                    })) as ItemDataArray[];
+                    });
+                    return result.data as ItemDataArray[];
                 }
-                // TODO: strange TS issue, it requires filter to be undefined
-                return (await this.openedFiles[fileId].getData({
+                const result = await this.openedFiles[fileId].getData({
                     start,
                     length,
                     filterColumns,
-                    filter: filter as undefined,
-                })) as ItemDataArray[];
+                    filter,
+                });
+                return result.data as ItemDataArray[];
             } catch (error) {
                 dialog.showErrorBox(
                     'Data Error',

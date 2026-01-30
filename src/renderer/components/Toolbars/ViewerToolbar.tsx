@@ -188,10 +188,12 @@ const Header: React.FC = () => {
         );
         // Reset page for the new dataset
         dispatch(setPage({ fileId: newDataInfo.fileId, page: 0 }));
-    }, [apiService, dispatch, currentFileId, handleCloseDataset]); // Add shortcuts for actions
+    }, [apiService, dispatch, currentFileId, handleCloseDataset]);
+
+    // Add shortcuts for actions
     useEffect(() => {
         const handleViewerToolbarKeyDown = (event: KeyboardEvent) => {
-            // Do use keywords if a Modal is open
+            // Do use shortcuts if a Modal is open
             if (event.ctrlKey && !isModalOpen) {
                 event.preventDefault();
                 event.stopPropagation();

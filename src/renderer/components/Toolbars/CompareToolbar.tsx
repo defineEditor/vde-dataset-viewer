@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { IconButton, Stack, Tooltip, Box } from '@mui/material';
 import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import CloseIcon from '@mui/icons-material/Close';
@@ -15,8 +15,8 @@ import {
     setShowAllDifferences,
     restartCompare,
 } from 'renderer/redux/slices/ui';
-import { modals } from 'misc/constants';
 import { clearLoadedRecords } from 'renderer/redux/slices/data';
+import { modals } from 'misc/constants';
 import store from 'renderer/redux/store';
 
 const styles = {
@@ -43,20 +43,21 @@ const CompareToolbar: React.FC = () => {
         (state) =>
             state.data.filterData.currentFilter[currentCompareId] !== undefined,
     );
+    const isModalOpen = useAppSelector((state) => state.ui.modals?.length > 0);
 
-    const handleCompare = () => {
+    const handleCompare = useCallback(() => {
         dispatch(openModal({ type: modals.SELECTCOMPARE, data: {} }));
-    };
+    }, [dispatch]);
 
-    const handleToggleView = () => {
+    const handleToggleView = useCallback(() => {
         dispatch(
             setCompareView(
                 currentView === 'horizontal' ? 'vertical' : 'horizontal',
             ),
         );
-    };
+    }, [dispatch, currentView]);
 
-    const handleRefreshCompare = () => {
+    const handleRefreshCompare = useCallback(() => {
         // Close loaded records for the files which are open
         // Using store.getState() to avoid an issue I could not resolve when use useAppSelector
         const state = store.getState();
@@ -67,7 +68,7 @@ const CompareToolbar: React.FC = () => {
             dispatch(clearLoadedRecords({ fileIds }));
         }
         dispatch(restartCompare({ compareId: currentCompareId }));
-    };
+    }, [dispatch, currentCompareId]);
 
     const handleClose = () => {
         // Close loaded records for the files which are open
@@ -87,15 +88,64 @@ const CompareToolbar: React.FC = () => {
         dispatch(closeCompare({ compareId: currentCompareId }));
     };
 
-    const handleFilterClick = () => {
+    const handleFilterClick = useCallback(() => {
         dispatch(
             openModal({ type: modals.FILTER, filterType: 'compare', data: {} }),
         );
-    };
+    }, [dispatch]);
 
-    const handleListAllClick = () => {
+    const handleListAllClick = useCallback(() => {
         dispatch(setShowAllDifferences(true));
-    };
+    }, [dispatch]);
+
+    // Add shortcuts for actions
+    useEffect(() => {
+        const handleViewerToolbarKeyDown = (event: KeyboardEvent) => {
+            // Do use shortcuts if a Modal is open
+            if (event.ctrlKey && !isModalOpen) {
+                event.preventDefault();
+                event.stopPropagation();
+                switch (event.key) {
+                    case 's':
+                        handleCompare();
+                        break;
+                    case 't':
+                        if (resultTab === 'data') {
+                            handleToggleView();
+                        }
+                        break;
+                    case 'f':
+                        if (resultTab === 'data') {
+                            handleFilterClick();
+                        }
+                        break;
+                    case 'i':
+                        if (resultTab === 'data') {
+                            handleListAllClick();
+                        }
+                        break;
+                    case 'r':
+                        handleRefreshCompare();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        };
+        window.addEventListener('keydown', handleViewerToolbarKeyDown);
+
+        return () => {
+            window.removeEventListener('keydown', handleViewerToolbarKeyDown);
+        };
+    }, [
+        handleCompare,
+        handleToggleView,
+        handleFilterClick,
+        handleListAllClick,
+        handleRefreshCompare,
+        isModalOpen,
+        resultTab,
+    ]);
 
     return (
         <Stack direction="row" spacing={1} sx={styles.main}>
@@ -105,9 +155,22 @@ const CompareToolbar: React.FC = () => {
                 </IconButton>
             </Tooltip>
             <Tooltip title="Toggle horizontal/vertical view" enterDelay={1000}>
-                <IconButton onClick={handleToggleView} size="small">
-                    <FlipCameraAndroidIcon sx={{ color: 'grey.600' }} />
-                </IconButton>
+                <Box sx={styles.box}>
+                    <IconButton
+                        onClick={handleToggleView}
+                        size="small"
+                        disabled={resultTab !== 'data'}
+                    >
+                        <FlipCameraAndroidIcon
+                            sx={{
+                                color:
+                                    resultTab === 'data'
+                                        ? 'grey.600'
+                                        : 'grey.400',
+                            }}
+                        />
+                    </IconButton>
+                </Box>
             </Tooltip>
             <Tooltip
                 title="List All Differences (active in Data tab)"

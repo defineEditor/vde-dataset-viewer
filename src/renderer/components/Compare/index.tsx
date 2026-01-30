@@ -155,6 +155,7 @@ const Compare: React.FC = () => {
                     ) {
                         return;
                     }
+                    console.log(info.progress);
                     if (info.error) {
                         dispatch(
                             openSnackbar({
