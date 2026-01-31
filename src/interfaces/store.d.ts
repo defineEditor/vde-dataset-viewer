@@ -208,7 +208,6 @@ export interface IUiCompare {
             fileBaseId?: string;
             fileCompId?: string;
             currentComparePage: number;
-            currentDiffIndex: number;
         };
     };
 }

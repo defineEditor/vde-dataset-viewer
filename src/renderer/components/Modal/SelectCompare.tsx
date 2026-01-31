@@ -27,6 +27,7 @@ import {
     setPathname,
     setCompareFiles,
     initializeCompare,
+    closeCompare,
 } from 'renderer/redux/slices/ui';
 import { modals, paths } from 'misc/constants';
 import AppContext from 'renderer/utils/AppContext';
@@ -75,6 +76,9 @@ const SelectCompare: React.FC = () => {
 
     const fileBase = useAppSelector((state) => state.ui.compare.fileBase) || '';
     const fileComp = useAppSelector((state) => state.ui.compare.fileComp) || '';
+    const currentCompareId = useAppSelector(
+        (state) => state.ui.compare.currentCompareId,
+    );
 
     const handleSwitch = () => {
         dispatch(setCompareFiles({ fileBase: fileComp, fileComp: fileBase }));
@@ -86,6 +90,10 @@ const SelectCompare: React.FC = () => {
 
     const handleCompare = useCallback(
         (newFileBase: string, newFileComp: string) => {
+            // If there is an open compare, close it first
+            if (currentCompareId) {
+                dispatch(closeCompare({ compareId: currentCompareId }));
+            }
             dispatch(setPathname({ pathname: paths.COMPARE }));
             dispatch(
                 initializeCompare({
@@ -95,7 +103,7 @@ const SelectCompare: React.FC = () => {
             );
             handleClose();
         },
-        [dispatch, handleClose],
+        [dispatch, handleClose, currentCompareId],
     );
 
     const handleSelectFile = async (type: 'base' | 'comp') => {

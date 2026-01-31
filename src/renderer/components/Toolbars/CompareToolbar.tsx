@@ -58,6 +58,9 @@ const CompareToolbar: React.FC = () => {
     }, [dispatch, currentView]);
 
     const handleRefreshCompare = useCallback(() => {
+        if (!currentCompareId) {
+            return;
+        }
         // Close loaded records for the files which are open
         // Using store.getState() to avoid an issue I could not resolve when use useAppSelector
         const state = store.getState();
@@ -71,6 +74,9 @@ const CompareToolbar: React.FC = () => {
     }, [dispatch, currentCompareId]);
 
     const handleClose = () => {
+        if (!currentCompareId) {
+            return;
+        }
         // Close loaded records for the files which are open
         // Using store.getState() to avoid an issue I could not resolve when use useAppSelector
         const state = store.getState();
@@ -89,14 +95,20 @@ const CompareToolbar: React.FC = () => {
     };
 
     const handleFilterClick = useCallback(() => {
+        if (!currentCompareId) {
+            return;
+        }
         dispatch(
             openModal({ type: modals.FILTER, filterType: 'compare', data: {} }),
         );
-    }, [dispatch]);
+    }, [dispatch, currentCompareId]);
 
     const handleListAllClick = useCallback(() => {
+        if (!currentCompareId) {
+            return;
+        }
         dispatch(setShowAllDifferences(true));
-    }, [dispatch]);
+    }, [dispatch, currentCompareId]);
 
     // Add shortcuts for actions
     useEffect(() => {
@@ -159,12 +171,12 @@ const CompareToolbar: React.FC = () => {
                     <IconButton
                         onClick={handleToggleView}
                         size="small"
-                        disabled={resultTab !== 'data'}
+                        disabled={resultTab !== 'data' || !currentCompareId}
                     >
                         <FlipCameraAndroidIcon
                             sx={{
                                 color:
-                                    resultTab === 'data'
+                                    resultTab === 'data' && currentCompareId
                                         ? 'grey.600'
                                         : 'grey.400',
                             }}
@@ -181,12 +193,12 @@ const CompareToolbar: React.FC = () => {
                         onClick={handleListAllClick}
                         id="listAllDifferences"
                         size="small"
-                        disabled={resultTab !== 'data'}
+                        disabled={resultTab !== 'data' || !currentCompareId}
                     >
                         <ListAltIcon
                             sx={{
                                 color:
-                                    resultTab === 'data'
+                                    resultTab === 'data' && currentCompareId
                                         ? 'grey.600'
                                         : 'grey.400',
                             }}
@@ -203,12 +215,12 @@ const CompareToolbar: React.FC = () => {
                         onClick={handleFilterClick}
                         id="filterData"
                         size="small"
-                        disabled={resultTab !== 'data'}
+                        disabled={resultTab !== 'data' || !currentCompareId}
                     >
                         <FilterIcon
                             sx={{
                                 color:
-                                    resultTab === 'data'
+                                    resultTab === 'data' && currentCompareId
                                         ? isFilterEnabled
                                             ? 'primary.main'
                                             : 'grey.600'
@@ -219,14 +231,38 @@ const CompareToolbar: React.FC = () => {
                 </Box>
             </Tooltip>
             <Tooltip title="Refresh Compare" enterDelay={1000}>
-                <IconButton onClick={handleRefreshCompare} size="small">
-                    <RefreshIcon sx={{ color: 'grey.600' }} />
-                </IconButton>
+                <Box sx={styles.box}>
+                    <IconButton
+                        onClick={handleRefreshCompare}
+                        size="small"
+                        disabled={!currentCompareId}
+                    >
+                        <RefreshIcon
+                            sx={{
+                                color: currentCompareId
+                                    ? 'grey.600'
+                                    : 'grey.400',
+                            }}
+                        />
+                    </IconButton>
+                </Box>
             </Tooltip>
             <Tooltip title="Close comparison" enterDelay={1000}>
-                <IconButton onClick={handleClose} size="small">
-                    <CloseIcon sx={{ color: 'grey.600' }} />
-                </IconButton>
+                <Box sx={styles.box}>
+                    <IconButton
+                        onClick={handleClose}
+                        size="small"
+                        disabled={!currentCompareId}
+                    >
+                        <CloseIcon
+                            sx={{
+                                color: currentCompareId
+                                    ? 'grey.600'
+                                    : 'grey.400',
+                            }}
+                        />
+                    </IconButton>
+                </Box>
             </Tooltip>
         </Stack>
     );

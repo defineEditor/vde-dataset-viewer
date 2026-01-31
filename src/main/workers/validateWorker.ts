@@ -1,7 +1,6 @@
 import {
     ValidatorProcessTask,
     ValidateSubTask,
-    ValidatorTaskProgress,
     ValidationRunReport,
     IssueSummaryItem,
 } from 'interfaces/common';
@@ -490,9 +489,7 @@ export async function getIssueSummary(filePath: string): Promise<{
 
 process.parentPort.once(
     'message',
-    async (messageData: {
-        data: ValidatorProcessTask;
-    }): Promise<ValidatorTaskProgress> => {
+    async (messageData: { data: ValidatorProcessTask }) => {
         const { data } = messageData;
         const { id, options } = data;
         // Use id as the task type since it aligns with ValidateSubTask values
@@ -512,7 +509,10 @@ process.parentPort.once(
                 )}`,
                 progress: 100,
             });
-            process.exit(1);
+            // Allow time for the message to be sent before exiting
+            setTimeout(() => {
+                process.exit(1);
+            }, 1000);
         }
         const { validatorPath } = options;
         const processId = `${id}`;
@@ -531,7 +531,10 @@ process.parentPort.once(
                 error: `Validator executable not found at path: ${validatorPath}`,
                 progress: 100,
             });
-            process.exit(1);
+            // Allow time for the message to be sent before exiting
+            setTimeout(() => {
+                process.exit(1);
+            }, 1000);
         }
 
         if (!isExecutable(validatorPath)) {
@@ -540,7 +543,10 @@ process.parentPort.once(
                 error: `File at ${validatorPath} is not executable. Please check permissions.`,
                 progress: 100,
             });
-            process.exit(1);
+            // Allow time for the message to be sent before exiting
+            setTimeout(() => {
+                process.exit(1);
+            }, 1000);
         }
 
         // Get folder of the validator executable
@@ -701,9 +707,15 @@ process.parentPort.once(
                     progress: 100,
                 });
             }
-            process.exit(1);
+            // Allow time for the message to be sent before exiting
+            setTimeout(() => {
+                process.exit(1);
+            }, 1000);
         }
 
-        process.exit(0);
+        // Allow time for the message to be sent before exiting
+        setTimeout(() => {
+            process.exit(0);
+        }, 1000);
     },
 );

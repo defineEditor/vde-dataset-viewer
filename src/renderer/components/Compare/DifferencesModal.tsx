@@ -310,7 +310,10 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
         );
     };
 
-    if (!datasetDiff) return null;
+    if (!datasetDiff) {
+        dispatch(setShowAllDifferences(false));
+        return null;
+    }
 
     return (
         <Dialog

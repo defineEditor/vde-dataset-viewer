@@ -463,7 +463,6 @@ export const uiSlice = createSlice({
             // Initialize compare info
             state.compare.info[action.payload.compareId] = {
                 currentComparePage: 0,
-                currentDiffIndex: 0,
                 fileBase,
                 fileComp,
                 isComparing: true,
@@ -479,6 +478,8 @@ export const uiSlice = createSlice({
             state.compare.startCompare = true;
             state.compare.fileBase = action.payload.fileBase;
             state.compare.fileComp = action.payload.fileComp;
+            // Reset current compare ID
+            state.compare.currentCompareId = '';
         },
         restartCompare: (
             state,
@@ -488,7 +489,10 @@ export const uiSlice = createSlice({
             if (state.compare.info[compareId]) {
                 state.compare.info[compareId].isComparing = true;
                 state.compare.info[compareId].currentComparePage = 0;
-                state.compare.info[compareId].currentDiffIndex = 0;
+            }
+            // Reset issue index
+            if (state.dataSettings[compareId]) {
+                state.dataSettings[compareId].currentIssueIndex = 0;
             }
             state.compare.startCompare = true;
         },

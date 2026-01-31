@@ -28,10 +28,6 @@ const CompareFilter: React.FC<IUiModalFilter> = ({
         .map((file) => file.fileId);
 
     // Update unique values when filter is loaded or data is updated
-    // const loadedRecordsObj = useAppSelector(
-    //     (state) => state.data.loadedRecords,
-    // );
-    // console.log(loadedRecordsObj);
     const loadedRecords1 = useAppSelector(
         (state) => state.data.loadedRecords[compareFileIds[0]],
     );

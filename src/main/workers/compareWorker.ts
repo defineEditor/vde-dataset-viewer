@@ -849,6 +849,9 @@ process.parentPort.once(
         } catch (error) {
             sendMessage(0, 0, undefined, (error as Error).message);
         }
-        process.exit();
+        // Exit the process after a short delay to ensure all messages are sent
+        setTimeout(() => {
+            process.exit();
+        }, 1000);
     },
 );

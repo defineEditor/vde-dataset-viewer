@@ -532,6 +532,10 @@ const Data: React.FC = () => {
         return (
             <Box sx={styles.loading}>
                 <Typography>No differences found</Typography>
+                <DifferencesModal
+                    datasetDiff={datasetDiff}
+                    handleSetGoTo={handleSetGoTo}
+                />
             </Box>
         );
     }

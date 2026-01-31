@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
+import Box from '@mui/material/Box';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -80,6 +81,10 @@ const styles = {
     filtersList: {
         maxHeight: 320,
         overflow: 'auto',
+    },
+    box: {
+        display: 'flex',
+        alignItems: 'center',
     },
 };
 
@@ -629,24 +634,26 @@ const FilterBody: React.FC<FilterBodyProps> = ({
                                                     }}
                                                 />
                                                 <Tooltip title="Edit filter">
-                                                    <IconButton
-                                                        edge="end"
-                                                        aria-label="edit"
-                                                        disabled={
-                                                            /* For interactive mode, cannot edit invalid filter */
-                                                            !filterItem.isValid &&
-                                                            inputType ===
-                                                                'interactive'
-                                                        }
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleSelectFilter(
-                                                                filterItem.filter,
-                                                            );
-                                                        }}
-                                                    >
-                                                        <EditIcon />
-                                                    </IconButton>
+                                                    <Box sx={styles.box}>
+                                                        <IconButton
+                                                            edge="end"
+                                                            aria-label="edit"
+                                                            disabled={
+                                                                /* For interactive mode, cannot edit invalid filter */
+                                                                !filterItem.isValid &&
+                                                                inputType ===
+                                                                    'interactive'
+                                                            }
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleSelectFilter(
+                                                                    filterItem.filter,
+                                                                );
+                                                            }}
+                                                        >
+                                                            <EditIcon />
+                                                        </IconButton>
+                                                    </Box>
                                                 </Tooltip>
                                             </ListItem>
                                             {index <

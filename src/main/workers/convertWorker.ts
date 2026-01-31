@@ -760,6 +760,9 @@ process.parentPort.once(
         } else if (file.format === 'sas7bdat') {
             await convertSas7bdat(file, options, sendMessage);
         }
-        process.exit();
+        // Exit the process after a short delay to ensure all messages are sent
+        setTimeout(() => {
+            process.exit();
+        }, 1000);
     },
 );
