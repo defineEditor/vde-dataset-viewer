@@ -36,7 +36,11 @@ class FileManager {
         this.openedFiles = {};
     }
 
-    public getFileId = (pathToFile: string, lastModified: number): string => {
+    public getFileId = (
+        pathToFile: string,
+        lastModified: number,
+        fileIdPrefix?: string,
+    ): string => {
         // Check if the file is already opened
         const foundFileIds = Object.keys(this.openedFiles).filter((fileId) => {
             const file = this.openedFiles[fileId];
@@ -61,6 +65,9 @@ class FileManager {
         do {
             const filename = path.parse(pathToFile).name;
             hash = `${filename}_${getHash(path.normalize(pathToFile), lastModified)}`;
+            if (fileIdPrefix) {
+                hash = `${fileIdPrefix}_${hash}`;
+            }
         } while (allIds.includes(hash));
         return hash;
     };
@@ -72,9 +79,10 @@ class FileManager {
             encoding: BufferEncoding | 'default';
             filePath?: string;
             folderPath?: string;
+            fileIdPrefix?: string;
         },
     ): Promise<IOpenFile> => {
-        const { encoding, filePath, folderPath } = fileSettings;
+        const { encoding, filePath, folderPath, fileIdPrefix } = fileSettings;
 
         if (folderPath) {
             // Check if specified folder exists;
@@ -142,7 +150,7 @@ class FileManager {
             };
         }
 
-        const fileId = this.getFileId(newFile.path, lastModified);
+        const fileId = this.getFileId(newFile.path, lastModified, fileIdPrefix);
         const extension = newFile.path.split('.').pop()?.toLowerCase();
         switch (extension) {
             case 'json':

@@ -64,7 +64,7 @@ const ProgressContainer: React.FC<{
                             ? 'Complete'
                             : progress === 0
                               ? 'Pending'
-                              : `Comparing (${Math.round(progress)}%) - Issues found: ${issues}`}
+                              : `Comparing (${Math.round(progress)}%) - Differences found: ${issues}`}
                     </Typography>
                 </>
             </Paper>

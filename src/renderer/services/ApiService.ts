@@ -81,7 +81,7 @@ class ApiService {
         if (filePath !== undefined) {
             let foundFileData: IOpenFile | undefined;
             this.openedFiles.forEach((file) => {
-                if (file.path === filePath) {
+                if (file.path === filePath && file.compareId === compareId) {
                     foundFileData = {
                         fileId: file.fileId,
                         type: file.type,
@@ -199,6 +199,7 @@ class ApiService {
             encoding,
             filePath,
             folderPath,
+            fileIdPrefix: compareId,
         });
         if (response === null) {
             return {

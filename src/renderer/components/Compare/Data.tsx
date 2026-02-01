@@ -8,15 +8,13 @@ import React, {
 } from 'react';
 import { Box, CircularProgress, Typography, Stack } from '@mui/material';
 import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
-import DatasetView from 'renderer/components/DatasetView';
-import ContextMenu from 'renderer/components/DatasetView/ContextMenu';
+import CompareDataContainer from 'renderer/components/Compare/CompareDataContainer';
 import AppContext from 'renderer/utils/AppContext';
 import {
     DatasetDiff,
     ITableData,
     ItemDataArray,
     IUiControl,
-    IHeaderCell,
 } from 'interfaces/common';
 import { getData } from 'renderer/utils/readData';
 import { diffChars } from 'diff';
@@ -62,13 +60,6 @@ const styles = {
         justifyContent: 'center',
         alignItems: 'center',
         height: '100%',
-    },
-    header: {
-        mx: 1,
-        overflow: 'hidden',
-        width: '100%',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
     },
 };
 
@@ -130,6 +121,8 @@ const Data: React.FC = () => {
         datasetDiff.data.modifiedRows.length === 0 &&
         datasetDiff.data.addedRows.length === 0 &&
         datasetDiff.data.deletedRows.length === 0;
+
+    const totalRowsChecked = datasetDiff?.summary.totalRowsChecked || 0;
 
     const [data, setData] = useState<{
         base: ITableData | null;
@@ -397,6 +390,11 @@ const Data: React.FC = () => {
                 if (closedFileIds.length > 0) {
                     dispatch(clearLoadedRecords({ fileIds: closedFileIds }));
                 }
+                // For filtered data we need to use pageMaps, as they correctly indicate where a page starts
+                const pageMaps = datasetDiff?.pageMaps || {
+                    base: [],
+                    comp: [],
+                };
                 // Load base file
                 const fileBaseInfo = await apiService.openFile({
                     mode: 'local',
@@ -407,7 +405,7 @@ const Data: React.FC = () => {
                 const newBaseData = await getData(
                     apiService,
                     fileBaseInfo.fileId,
-                    page * pageSize,
+                    pageMaps.base[page] || page * pageSize,
                     pageSize,
                     settings,
                     commonCols,
@@ -434,7 +432,7 @@ const Data: React.FC = () => {
                 const newCompData = await getData(
                     apiService,
                     fileCompInfo.fileId,
-                    page * pageSize,
+                    pageMaps.comp[page] || page * pageSize,
                     pageSize,
                     settings,
                     commonColsComp,
@@ -498,45 +496,8 @@ const Data: React.FC = () => {
         currentFilter,
         reorderCompareColumns,
         noDataDifferences,
+        datasetDiff?.pageMaps,
     ]);
-
-    const [contextMenu, setContextMenu] = useState<{
-        position: { top: number; left: number };
-        value: string | number | boolean | null;
-        header: IHeaderCell;
-        open: boolean;
-        isHeader: boolean;
-    }>({
-        position: { top: 0, left: 0 },
-        value: null,
-        header: { id: '', label: '' },
-        open: false,
-        isHeader: false,
-    });
-
-    const handleContextMenu = useCallback(
-        (event: React.MouseEvent, rowIndex: number, columnIndex: number) => {
-            event.preventDefault();
-            if (columnIndex === 0 || !data.base) return; // Ignore row number column
-
-            const rows = data.base.data;
-            const header = data.base.header[columnIndex - 1];
-            const value = rowIndex === -1 ? '' : rows[rowIndex][header.id];
-
-            setContextMenu({
-                position: { top: event.clientY, left: event.clientX },
-                value,
-                header,
-                open: true,
-                isHeader: rowIndex === -1,
-            });
-        },
-        [data.base],
-    );
-
-    const handleCloseContextMenu = () => {
-        setContextMenu((prev) => ({ ...prev, open: false }));
-    };
 
     if (loading) {
         return (
@@ -603,11 +564,10 @@ const Data: React.FC = () => {
                             : styles.paneVertical
                     }
                 >
-                    <DatasetView
+                    <CompareDataContainer
                         tableData={data.base}
                         isLoading={false}
                         key={`base-${view}`}
-                        handleContextMenu={handleContextMenu}
                         settings={viewerSettings}
                         containerRef={baseRef}
                         onScroll={handleScroll('base')}
@@ -615,16 +575,6 @@ const Data: React.FC = () => {
                         onSetGoTo={handleSetGoTo}
                         currentPage={page}
                         annotatedCells={baseAnnotations}
-                    />
-                    <ContextMenu
-                        open={contextMenu.open}
-                        anchorPosition={contextMenu.position}
-                        onClose={handleCloseContextMenu}
-                        value={contextMenu.value}
-                        metadata={data.base.metadata}
-                        header={contextMenu.header}
-                        isHeader={contextMenu.isHeader}
-                        isCompare
                     />
                 </Box>
                 <Box
@@ -634,11 +584,10 @@ const Data: React.FC = () => {
                             : styles.paneVertical
                     }
                 >
-                    <DatasetView
+                    <CompareDataContainer
                         tableData={data.comp}
                         isLoading={false}
                         key={`comp-${view}`}
-                        handleContextMenu={() => {}}
                         settings={viewerSettings}
                         containerRef={compRef}
                         onScroll={handleScroll('comp')}
@@ -648,10 +597,7 @@ const Data: React.FC = () => {
                 </Box>
             </Stack>
             <BottomToolbar
-                totalRecords={Math.min(
-                    data.base.metadata.records,
-                    data.comp.metadata.records,
-                )}
+                totalRecords={totalRowsChecked}
                 page={page}
                 pageSize={pageSize}
                 records={data.base.metadata.records}

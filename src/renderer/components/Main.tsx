@@ -51,8 +51,9 @@ const styles = {
         width: 32,
         height: 32,
         marginTop: '3px',
+        ml: 3,
         fontSize: 16,
-        fontWeight: 500,
+        fontWeight: 700,
         color: '#1976d2',
         background:
             'radial-gradient(circle farthest-corner at right,#eeeeee,#c4c4c4)',

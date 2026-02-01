@@ -135,6 +135,10 @@ export interface DatasetDiff {
     metadata: MetadataDiff;
     data: DataDiff;
     summary: DiffSummary;
+    pageMaps: {
+        base: number[];
+        comp: number[];
+    };
 }
 
 // Task interfaces
@@ -326,6 +330,10 @@ export interface CompareTaskProgress {
     progress: number;
     issues: number;
     result?: DatasetDiff;
+    pageMaps?: {
+        base: number[];
+        comp: number[];
+    };
     error?: string;
 }
 

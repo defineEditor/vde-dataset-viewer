@@ -565,17 +565,11 @@ const compareData = (
     // Get summary
     const newFirstLow =
         firstDiffRow !== null
-            ? Math.min(
-                  firstDiffRow + rowShiftBase,
-                  summaryInit?.firstDiffRow || Infinity,
-              )
+            ? Math.min(firstDiffRow, summaryInit?.firstDiffRow || Infinity)
             : summaryInit?.firstDiffRow || null;
     const newLastLow =
         lastDiffRow !== null
-            ? Math.max(
-                  summaryInit?.lastDiffRow || -Infinity,
-                  lastDiffRow + rowShiftBase,
-              )
+            ? Math.max(summaryInit?.lastDiffRow || -Infinity, lastDiffRow)
             : summaryInit?.lastDiffRow || null;
     const totalDiffs =
         dataDiff.deletedRows.length + dataDiff.modifiedRows.length;
@@ -730,11 +724,19 @@ process.parentPort.once(
 
             const totalRecords = Math.min(baseMeta.records, compMeta.records);
             let maxDiffCountReached = false;
-            const endReached = false;
+            let endReached = false;
 
             // In case of filter we need to track start positions separately
             let startBase = 0;
             let startComp = 0;
+            let baseRecords = 0;
+            let compRecords = 0;
+            // Track page maps for filtered data
+            // It is needed to quickly navigate to specific rows when filter is applied
+            const pageMaps = {
+                base: [0],
+                comp: [0],
+            };
             while (
                 Math.max(startBase, startComp) < totalRecords &&
                 !maxDiffCountReached &&
@@ -777,8 +779,8 @@ process.parentPort.once(
                     compMeta,
                     summary,
                     options,
-                    startBase,
-                    startComp,
+                    baseRecords,
+                    compRecords,
                 );
 
                 dataDiff.addedRows.push(...blockDiff.data.addedRows);
@@ -790,9 +792,12 @@ process.parentPort.once(
                     ...blockDiff.summary,
                     totalRowsChecked: blockDiff.summary.maxDiffReached
                         ? (blockDiff.summary.lastDiffRow || 0) + 1
-                        : startBase +
+                        : baseRecords +
                           Math.min(baseData.length, compData.length),
                 };
+
+                baseRecords += baseData.length;
+                compRecords += compData.length;
 
                 maxDiffCountReached = blockDiff.summary.maxDiffReached || false;
 
@@ -817,6 +822,14 @@ process.parentPort.once(
                 } else {
                     startBase += bufferSize;
                     startComp += bufferSize;
+                }
+                // Check if end is reached
+                if (baseDataFull.endReached || compDataFull.endReached) {
+                    endReached = true;
+                } else {
+                    // Update page maps
+                    pageMaps.base.push(baseDataFull.lastRow + 1);
+                    pageMaps.comp.push(compDataFull.lastRow + 1);
                 }
             }
 
@@ -845,6 +858,7 @@ process.parentPort.once(
                 metadata: metadataDiff,
                 data: dataDiff,
                 summary,
+                pageMaps,
             });
         } catch (error) {
             sendMessage(0, 0, undefined, (error as Error).message);

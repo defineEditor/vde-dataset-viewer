@@ -93,7 +93,9 @@ const SelectDataset = () => {
         );
         apiService.close(fileId);
         setOpenedFiles(
-            apiService.getOpenedFiles().filter((file) => file.mode === 'local'),
+            apiService
+                .getOpenedFiles()
+                .filter((file) => file.mode === 'local' && !file.compareId),
         );
     };
 

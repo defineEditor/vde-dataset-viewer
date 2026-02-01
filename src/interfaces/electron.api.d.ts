@@ -27,6 +27,7 @@ export interface ElectronApi {
             encoding: BufferEncoding | 'default';
             filePath?: string;
             folderPath?: string;
+            fileIdPrefix?: string;
         },
     ) => Promise<{
         fileId: string;
