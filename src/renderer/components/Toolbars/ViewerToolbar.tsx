@@ -5,6 +5,7 @@ import ShortcutIcon from '@mui/icons-material/Shortcut';
 import InfoIcon from '@mui/icons-material/Info';
 import FilterIcon from '@mui/icons-material/FilterAlt';
 import NextPlanOutlinedIcon from '@mui/icons-material/NextPlan';
+import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -15,6 +16,7 @@ import {
     setPage,
     openSnackbar,
     toggleSidebar,
+    setCompareFiles,
 } from 'renderer/redux/slices/ui';
 import { resetFilter, addRecent } from 'renderer/redux/slices/data';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
@@ -125,6 +127,28 @@ const Header: React.FC = () => {
         dispatch(openModal({ type: modals.MASK, data: {} }));
     }, [dispatch]);
 
+    const handleCompareClick = useCallback(() => {
+        const allOpenFiles = apiService.getOpenedFiles();
+        // Check if there is a file to the left of the current dataset
+        let currentFilePath: string | undefined;
+        let previousFilePath: string | undefined;
+        allOpenFiles.some((file) => {
+            if (file.fileId === currentFileId) {
+                currentFilePath = file.path;
+                return true;
+            }
+            previousFilePath = file.path;
+            return false;
+        });
+        dispatch(
+            setCompareFiles({
+                fileBase: currentFilePath,
+                fileComp: previousFilePath,
+            }),
+        );
+        dispatch(openModal({ type: modals.SELECTCOMPARE, data: {} }));
+    }, [dispatch, apiService, currentFileId]);
+
     const handleToggleSidebar = useCallback(() => {
         dispatch(toggleSidebar());
     }, [dispatch]);
@@ -220,6 +244,9 @@ const Header: React.FC = () => {
                     case 'e':
                         handleMaskClick();
                         break;
+                    case 's':
+                        handleCompareClick();
+                        break;
                     case '`':
                         handleToggleSidebar();
                         break;
@@ -243,6 +270,7 @@ const Header: React.FC = () => {
         handleToggleSidebar,
         handleMaskClick,
         handleReloadClick,
+        handleCompareClick,
         isModalOpen,
     ]);
 
@@ -326,6 +354,19 @@ const Header: React.FC = () => {
                     <VisibilityIcon
                         sx={{
                             color: isMaskEnabled ? 'primary.main' : 'grey.600',
+                        }}
+                    />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Compare" enterDelay={1000}>
+                <IconButton
+                    onClick={handleCompareClick}
+                    id="filterData"
+                    size="small"
+                >
+                    <CompareArrowsIcon
+                        sx={{
+                            color: 'grey.600',
                         }}
                     />
                 </IconButton>

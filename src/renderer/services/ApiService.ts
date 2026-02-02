@@ -140,7 +140,8 @@ class ApiService {
 
         // Check if the file is already open
         const fileIndex = this.openedFiles.findIndex(
-            (file) => file.path === fileData.path,
+            (file) =>
+                file.path === fileData.path && file.compareId === compareId,
         );
         if (fileIndex !== -1) {
             // Check that fileId is the same (it must be)

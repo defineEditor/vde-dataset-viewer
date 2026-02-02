@@ -48,10 +48,16 @@ class FileManager {
                 file instanceof DatasetJson ||
                 file instanceof DatasetSas7bdat
             ) {
-                return file.filePath === pathToFile;
+                return (
+                    file.filePath === pathToFile &&
+                    fileId.startsWith(fileIdPrefix || '')
+                );
             }
             if (file instanceof DatasetXpt) {
-                return file.pathToFile === pathToFile;
+                return (
+                    file.pathToFile === pathToFile &&
+                    fileId.startsWith(fileIdPrefix || '')
+                );
             }
             return false;
         });

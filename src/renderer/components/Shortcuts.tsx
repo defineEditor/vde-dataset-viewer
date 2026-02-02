@@ -61,6 +61,7 @@ const shortcuts = {
         'Ctrl + F': 'Filter data',
         'Ctrl + Alt + F': 'Reset Filter',
         'Ctrl + E': 'Column Visibility',
+        'Ctrl + S': 'Select files to compare',
         'Ctrl + I': 'Dataset Information',
         'Ctrl + C': 'Copy selected cells',
         'Ctrl + Alt + C': 'Copy selected cells with headers',

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useCallback } from 'react';
+import React, { useContext, useEffect, useCallback, useState } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -74,14 +74,28 @@ const SelectCompare: React.FC = () => {
         (state) => state.data.compare.recentCompares,
     );
 
-    const fileBase = useAppSelector((state) => state.ui.compare.fileBase) || '';
-    const fileComp = useAppSelector((state) => state.ui.compare.fileComp) || '';
+    const fileBaseState =
+        useAppSelector((state) => state.ui.compare.fileBase) || '';
+    const fileCompState =
+        useAppSelector((state) => state.ui.compare.fileComp) || '';
     const currentCompareId = useAppSelector(
         (state) => state.ui.compare.currentCompareId,
     );
 
+    const [fileComp, setFileComp] = useState<string>(fileCompState);
+    const [fileBase, setFileBase] = useState<string>(fileBaseState);
+
+    const handleUpdateFileBase = (event) => {
+        setFileBase(event.target.value);
+    };
+
+    const handleUpdateFileComp = (event) => {
+        setFileComp(event.target.value);
+    };
+
     const handleSwitch = () => {
-        dispatch(setCompareFiles({ fileBase: fileComp, fileComp: fileBase }));
+        setFileBase(fileComp);
+        setFileComp(fileBase);
     };
 
     const handleClose = useCallback(() => {
@@ -94,6 +108,12 @@ const SelectCompare: React.FC = () => {
             if (currentCompareId) {
                 dispatch(closeCompare({ compareId: currentCompareId }));
             }
+            dispatch(
+                setCompareFiles({
+                    fileBase: newFileBase,
+                    fileComp: newFileComp,
+                }),
+            );
             dispatch(setPathname({ pathname: paths.COMPARE }));
             dispatch(
                 initializeCompare({
@@ -112,9 +132,9 @@ const SelectCompare: React.FC = () => {
         });
         if (result && result.length > 0) {
             if (type === 'base') {
-                dispatch(setCompareFiles({ fileBase: result[0].fullPath }));
+                setFileBase(result[0].fullPath);
             } else {
-                dispatch(setCompareFiles({ fileComp: result[0].fullPath }));
+                setFileComp(result[0].fullPath);
             }
         }
     };
@@ -123,12 +143,8 @@ const SelectCompare: React.FC = () => {
         fileBase: string;
         fileComp: string;
     }) => {
-        dispatch(
-            setCompareFiles({
-                fileBase: recent.fileBase,
-                fileComp: recent.fileComp,
-            }),
-        );
+        setFileBase(recent.fileBase);
+        setFileComp(recent.fileComp);
     };
 
     // Keyboard shortcuts
@@ -176,13 +192,7 @@ const SelectCompare: React.FC = () => {
                             fullWidth
                             label="Base File"
                             value={fileBase}
-                            onChange={(e) => {
-                                dispatch(
-                                    setCompareFiles({
-                                        fileBase: e.target.value,
-                                    }),
-                                );
-                            }}
+                            onChange={handleUpdateFileBase}
                             slotProps={{
                                 input: {
                                     endAdornment: (
@@ -218,13 +228,7 @@ const SelectCompare: React.FC = () => {
                             fullWidth
                             label="Compare File"
                             value={fileComp}
-                            onChange={(e) => {
-                                dispatch(
-                                    setCompareFiles({
-                                        fileComp: e.target.value,
-                                    }),
-                                );
-                            }}
+                            onChange={handleUpdateFileComp}
                             slotProps={{
                                 input: {
                                     endAdornment: (
