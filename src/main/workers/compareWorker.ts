@@ -808,7 +808,7 @@ process.parentPort.once(
                               (summary.totalRowsChecked / totalRecords) * 100,
                           )
                         : 0;
-                if (progress < 100 && !endReached && !maxDiffCountReached) {
+                if (progress < 100 && !maxDiffCountReached) {
                     sendMessage(Math.max(progress, 1), summary.totalDiffs);
                 } else {
                     // If 100%, will send final message later
