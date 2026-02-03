@@ -38,15 +38,12 @@ function parseArgs(args: string[]): {
     const compareIndex = args.indexOf('--compare');
     if (compareIndex !== -1 && args.length > compareIndex + 2) {
         // Skip parameter arguments
-        console.log(`Parameters:${args}`);
         for (
             let i = compareIndex + 1;
             i < args.length && compareFiles === null;
             i++
         ) {
             // Skip parameter arguments
-            console.log(`Index:${i} Length:${args.length}`);
-            console.log(`Parameter:${args[i]}`);
             if (!args[i].startsWith('-') && args[i + 1]) {
                 compareFiles = {
                     path1: args[i],

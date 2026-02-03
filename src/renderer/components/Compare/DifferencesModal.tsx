@@ -25,6 +25,7 @@ import {
     InputAdornment,
     ToggleButton,
     ToggleButtonGroup,
+    Tooltip,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -90,12 +91,13 @@ const styles = {
     toggleButtonGroup: {
         height: 32,
         backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        color: 'rgba(255, 255, 255, 0.7)',
+        borderColor: 'rgba(255, 255, 255, 0.3)',
         '& .MuiToggleButton-root': {
             color: 'rgba(255, 255, 255, 0.7)',
             borderColor: 'rgba(255, 255, 255, 0.3)',
             '&.Mui-selected': {
-                color: 'white',
-                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                color: 'primary.light',
             },
             '&:hover': {
                 backgroundColor: 'rgba(255, 255, 255, 0.15)',
@@ -258,7 +260,7 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
                 apiService.writeToClipboard(diffText);
                 dispatch(
                     openSnackbar({
-                        message: `Copied to clipboard ${row} difference`,
+                        message: `Copied to clipboard row ${row + 1} difference`,
                         type: 'success',
                         props: { duration: 1000 },
                     }),
@@ -340,12 +342,16 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
                             size="small"
                             sx={styles.toggleButtonGroup}
                         >
-                            <ToggleButton value="row" title="By Row">
-                                <ViewListIcon fontSize="small" />
-                            </ToggleButton>
-                            <ToggleButton value="column" title="By Column">
-                                <ViewColumnIcon fontSize="small" />
-                            </ToggleButton>
+                            <Tooltip title="View differences grouped by rows">
+                                <ToggleButton value="row">
+                                    <ViewListIcon fontSize="small" />
+                                </ToggleButton>
+                            </Tooltip>
+                            <Tooltip title="View differences grouped by columns">
+                                <ToggleButton value="column">
+                                    <ViewColumnIcon fontSize="small" />
+                                </ToggleButton>
+                            </Tooltip>
                         </ToggleButtonGroup>
                     </Stack>
                     <Stack direction="row" spacing={2} alignItems="center">
