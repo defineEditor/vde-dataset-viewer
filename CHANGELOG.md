@@ -1,3 +1,17 @@
+# 0.6.4
+### Core Changes
+* Dataset compare functionality [#96](https://github.com/defineEditor/vde-dataset-viewer/issues/96)
+
+### Improvements
+* Better handling of invalid JSON files [#95](https://github.com/defineEditor/vde-dataset-viewer/issues/95)
+
+### Fixes
+* Conversion/Validation freezes [#97](https://github.com/defineEditor/vde-dataset-viewer/issues/97)
+
+## Technical Changes
+* Update to React 19 [70](https://github.com/defineEditor/vde-dataset-viewer/issues/70)
+* Update to MUI 7/Toolpad 16 [71](https://github.com/defineEditor/vde-dataset-viewer/issues/71)
+
 # 0.6.3
 ### Improvements
 * Improved handling of invalid Define-XML files and adding Open File button to the Define-XML screen [#92](https://github.com/defineEditor/vde-dataset-viewer/issues/92)
