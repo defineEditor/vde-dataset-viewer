@@ -27,6 +27,7 @@ export interface ElectronApi {
             encoding: BufferEncoding | 'default';
             filePath?: string;
             folderPath?: string;
+            fileIdPrefix?: string;
         },
     ) => Promise<{
         fileId: string;
@@ -71,7 +72,8 @@ export interface ElectronApi {
     downloadUpdate: () => Promise<boolean>;
     writeToClipboard: (text: string) => Promise<boolean>;
     startTask: (task: MainTask) => Promise<boolean | { error: string }>;
-    onTaskProgress: (callback: (info: TaskProgress) => void) => void;
+    stopTask: (id: string) => Promise<boolean>;
+    onTaskProgress: (callback: (info: TaskProgress) => void) => () => void;
     cleanTaskProgressListeners: () => void;
     openFileDialog: (options: {
         multiple?: boolean;

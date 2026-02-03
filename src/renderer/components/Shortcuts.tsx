@@ -61,10 +61,18 @@ const shortcuts = {
         'Ctrl + F': 'Filter data',
         'Ctrl + Alt + F': 'Reset Filter',
         'Ctrl + E': 'Column Visibility',
+        'Ctrl + S': 'Select files to compare',
         'Ctrl + I': 'Dataset Information',
         'Ctrl + C': 'Copy selected cells',
         'Ctrl + Alt + C': 'Copy selected cells with headers',
         'Ctrl + `': 'Toggle opened dataset selection',
+    },
+    Compare: {
+        'Ctrl + S': 'Select files to compare',
+        'Ctrl + T': 'Toggle horizontal/vertical view',
+        'Ctrl + F': 'Filter data',
+        'Ctrl + I': 'List All Issues',
+        'Ctrl + R': 'Refresh Compare',
     },
 };
 

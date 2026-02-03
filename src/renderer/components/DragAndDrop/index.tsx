@@ -6,11 +6,12 @@ import {
     setDefineFileId,
     setPathname,
 } from 'renderer/redux/slices/ui';
-import { addRecent } from 'renderer/redux/slices/data';
+import { addRecent, setValidatorData } from 'renderer/redux/slices/data';
 import { openNewDataset } from 'renderer/utils/readData';
 import AppContext from 'renderer/utils/AppContext';
 import Follower from 'renderer/components/DragAndDrop/Follower';
 import { paths } from 'misc/constants';
+import { FileInfo } from 'interfaces/common';
 
 interface Props {
     children: React.ReactNode;
@@ -20,6 +21,7 @@ const DragAndDrop: React.FC<Props> = ({ children }) => {
     const dispatch = useAppDispatch();
     const { apiService } = useContext(AppContext);
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+    const currentPathname = useAppSelector((state) => state.ui.pathname);
     const dragoverAnimation = useAppSelector(
         (state) => state.settings.other.dragoverAnimation,
     );
@@ -37,87 +39,112 @@ const DragAndDrop: React.FC<Props> = ({ children }) => {
                 return;
             }
 
-            const filePath = window.electron.pathForFile(files[0]);
-
-            // Detect type of the file
-            const fileExtension = filePath.split('.').pop()?.toLowerCase();
-
-            if (
-                fileExtension === 'xpt' ||
-                fileExtension === 'json' ||
-                fileExtension === 'ndjson' ||
-                fileExtension === 'sas7bdat' ||
-                fileExtension === 'dsjc'
-            ) {
-                const newDataInfo = await openNewDataset(
-                    apiService,
-                    'local',
-                    filePath,
+            // If we are in converter, add files for conversion
+            if (currentPathname === paths.VALIDATOR) {
+                const showOutputName = false;
+                const filePaths = files.map((file) =>
+                    apiService.getPathForFile(file),
                 );
+                const result = await apiService.getFilesInfo(filePaths);
 
-                if (newDataInfo.errorMessage) {
-                    if (newDataInfo.errorMessage !== 'cancelled') {
-                        dispatch(
-                            openSnackbar({
-                                type: 'error',
-                                message: newDataInfo.errorMessage,
-                            }),
-                        );
-                    }
-                    setIsDragging(false);
-                    return;
-                }
-
+                const newFiles = result.map((file: FileInfo) => ({
+                    ...file,
+                    id: `${file.folder}/${file.filename}`,
+                    outputName: showOutputName ? '' : file.filename,
+                }));
                 dispatch(
-                    addRecent({
-                        name: newDataInfo.metadata.name,
-                        label: newDataInfo.metadata.label,
-                        path: newDataInfo.path,
-                    }),
-                );
-
-                dispatch(
-                    openDataset({
-                        fileId: newDataInfo.fileId,
-                        type: newDataInfo.type,
-                        name: newDataInfo.metadata.name,
-                        label: newDataInfo.metadata.label,
-                        mode: 'local',
-                        totalRecords: newDataInfo.metadata.records,
-                        currentFileId,
-                    }),
-                );
-            } else if (fileExtension === 'xml') {
-                // Define-XML file
-                const fileInfo = await apiService.openDefineXml(filePath);
-                if (fileInfo === null) {
-                    return;
-                }
-
-                dispatch(
-                    openSnackbar({
-                        type: 'info',
-                        message: `Opening ${fileInfo.filename}`,
-                    }),
-                );
-                dispatch(setDefineFileId(fileInfo.fileId));
-                dispatch(
-                    setPathname({
-                        pathname: paths.DEFINEXML,
+                    setValidatorData({
+                        selectedFiles: newFiles,
                     }),
                 );
             } else {
-                // Unsupported file type
-                dispatch(
-                    openSnackbar({
-                        type: 'error',
-                        message: `Type .${fileExtension} is not supported.`,
-                    }),
-                );
+                files.forEach(async (file) => {
+                    const filePath = window.electron.pathForFile(file);
+                    // Detect type of the file
+                    const fileExtension = filePath
+                        .split('.')
+                        .pop()
+                        ?.toLowerCase();
+
+                    if (
+                        fileExtension === 'xpt' ||
+                        fileExtension === 'json' ||
+                        fileExtension === 'ndjson' ||
+                        fileExtension === 'sas7bdat' ||
+                        fileExtension === 'dsjc'
+                    ) {
+                        const newDataInfo = await openNewDataset(
+                            apiService,
+                            'local',
+                            filePath,
+                        );
+
+                        if (newDataInfo.errorMessage) {
+                            if (newDataInfo.errorMessage !== 'cancelled') {
+                                dispatch(
+                                    openSnackbar({
+                                        type: 'error',
+                                        message: newDataInfo.errorMessage,
+                                    }),
+                                );
+                            }
+                            setIsDragging(false);
+                            return;
+                        }
+                        dispatch(
+                            addRecent({
+                                name: newDataInfo.metadata.name,
+                                label: newDataInfo.metadata.label,
+                                path: newDataInfo.path,
+                            }),
+                        );
+
+                        dispatch(
+                            openDataset({
+                                fileId: newDataInfo.fileId,
+                                type: newDataInfo.type,
+                                name: newDataInfo.metadata.name,
+                                label: newDataInfo.metadata.label,
+                                mode: 'local',
+                                totalRecords: newDataInfo.metadata.records,
+                                currentFileId,
+                            }),
+                        );
+                    } else if (fileExtension === 'xml') {
+                        // Define-XML file
+                        const fileInfo =
+                            await apiService.openDefineXml(filePath);
+                        if (fileInfo === null) {
+                            return;
+                        }
+
+                        dispatch(
+                            openSnackbar({
+                                type: 'info',
+                                message: `Opening ${fileInfo.filename}`,
+                            }),
+                        );
+                        dispatch(setDefineFileId(fileInfo.fileId));
+                        dispatch(
+                            setPathname({
+                                pathname: paths.DEFINEXML,
+                            }),
+                        );
+                    } else {
+                        // Unsupported file type
+                        dispatch(
+                            openSnackbar({
+                                type: 'error',
+                                message: `Type .${fileExtension} is not supported.`,
+                            }),
+                        );
+                    }
+                });
             }
+
             setIsDragging(false);
         },
-        [apiService, dispatch, currentFileId],
+        [apiService, dispatch, currentFileId, currentPathname],
     );
 
     const handleDragOver = useCallback(

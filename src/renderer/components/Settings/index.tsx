@@ -27,6 +27,7 @@ import { ISettings } from 'interfaces/common';
 import { Viewer } from 'renderer/components/Settings/Viewer';
 import { Converter } from 'renderer/components/Settings/Converter';
 import { Validator } from 'renderer/components/Settings/Validator';
+import { Compare } from 'renderer/components/Settings/Compare';
 import { Other } from 'renderer/components/Settings/Other';
 
 const Settings: React.FC = () => {
@@ -124,10 +125,14 @@ const Settings: React.FC = () => {
                 'estimateWidthRows',
                 'maxColWidth',
                 'maxPrecision',
+                'maxDiffCount',
+                'maxColumnDiffCount',
                 'threads',
             ].includes(setting)
         ) {
             newValue = parseInt(value as string, 10);
+        } else if (['tolerance'].includes(setting)) {
+            newValue = parseFloat(value as string);
         }
         setNewSettings({
             ...newSettings,
@@ -169,6 +174,7 @@ const Settings: React.FC = () => {
                     <Tab label="VIEWER" />
                     <Tab label="CONVERTER" />
                     <Tab label="VALIDATION" />
+                    <Tab label="COMPARE" />
                     <Tab label="OTHER" />
                 </Tabs>
                 <Box sx={styles.scrollableContent}>
@@ -196,6 +202,12 @@ const Settings: React.FC = () => {
                         />
                     </Box>
                     <Box hidden={tabIndex !== 3} sx={styles.tabPanel}>
+                        <Compare
+                            settings={newSettings}
+                            onSettingChange={handleInputChange}
+                        />
+                    </Box>
+                    <Box hidden={tabIndex !== 4} sx={styles.tabPanel}>
                         <Other
                             settings={newSettings}
                             onSettingChange={handleInputChange}

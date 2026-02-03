@@ -9,10 +9,15 @@ import {
     IMask,
     IUiValidationPage,
     ValidatorData,
+    DatasetDiff,
 } from 'interfaces/common';
 import deepEqual from 'renderer/utils/deepEqual';
 import getFolderName from 'renderer/utils/getFolderName';
-import { closeDataset, openDataset } from 'renderer/redux/slices/ui';
+import {
+    closeDataset,
+    openDataset,
+    closeCompare,
+} from 'renderer/redux/slices/ui';
 
 export const dataSlice = createSlice({
     name: 'data',
@@ -50,7 +55,11 @@ export const dataSlice = createSlice({
         },
         setFilter: (
             state,
-            action: PayloadAction<{ filter: BasicFilter; datasetName: string }>,
+            action: PayloadAction<{
+                fileId: string;
+                filter: BasicFilter;
+                datasetName: string;
+            }>,
         ) => {
             const newRecentFilters = state.filterData.recentFilters.slice();
             // Check if the new filter is already present in the recent filters
@@ -77,28 +86,37 @@ export const dataSlice = createSlice({
                 ...state,
                 filterData: {
                     ...state.filterData,
-                    currentFilter: action.payload.filter,
+                    currentFilter: {
+                        ...state.filterData.currentFilter,
+                        [action.payload.fileId]: action.payload.filter,
+                    },
                     recentFilters: newRecentFilters,
                     lastOptions: action.payload.filter.options,
                 },
             };
             return newState;
         },
-        resetFilter: (state) => {
-            const newState = {
-                ...state,
-                filterData: {
-                    ...state.filterData,
-                    currentFilter: null,
-                },
-            };
-            return newState;
+        resetFilter: (state, action: PayloadAction<{ fileId: string }>) => {
+            if (state.filterData.currentFilter[action.payload.fileId]) {
+                delete state.filterData.currentFilter[action.payload.fileId];
+            }
+            return state;
         },
         setLoadedRecords: (
             state,
             action: PayloadAction<{ fileId: string; records: number }>,
         ) => {
             state.loadedRecords[action.payload.fileId] = action.payload.records;
+        },
+        clearLoadedRecords: (
+            state,
+            action: PayloadAction<{ fileIds: string[] }>,
+        ) => {
+            action.payload.fileIds.forEach((fileId) => {
+                if (state.loadedRecords[fileId]) {
+                    delete state.loadedRecords[fileId];
+                }
+            });
         },
         setConverterData: (state, action: PayloadAction<ConverterData>) => {
             state.converter = action.payload;
@@ -207,32 +225,51 @@ export const dataSlice = createSlice({
         setReportLastSaveFolder: (state, action: PayloadAction<string>) => {
             state.validator.lastReportSaveFolder = action.payload;
         },
+        setCompareData: (
+            state,
+            action: PayloadAction<{
+                compareId: string;
+                fileBase: string | null;
+                fileComp: string | null;
+                datasetDiff: DatasetDiff | null;
+            }>,
+        ) => {
+            // Delete existing compare data for the same files
+            Object.keys(state.compare.data).forEach((cId) => {
+                const compareEntry = state.compare.data[cId];
+                if (
+                    compareEntry.fileBase === action.payload.fileBase &&
+                    compareEntry.fileComp === action.payload.fileComp
+                ) {
+                    delete state.compare.data[cId];
+                }
+            });
+
+            state.compare.data[action.payload.compareId] = {
+                fileBase: action.payload.fileBase,
+                fileComp: action.payload.fileComp,
+                datasetDiff: action.payload.datasetDiff,
+            };
+        },
+        addRecentCompare: (
+            state,
+            action: PayloadAction<{ fileBase: string; fileComp: string }>,
+        ) => {
+            const { fileBase, fileComp } = action.payload;
+            // Check if already exists
+            const index = state.compare.recentCompares.findIndex(
+                (c) => c.fileBase === fileBase && c.fileComp === fileComp,
+            );
+            if (index !== -1) {
+                state.compare.recentCompares.splice(index, 1);
+            } else if (state.compare.recentCompares.length >= 20) {
+                state.compare.recentCompares.pop();
+            }
+            state.compare.recentCompares.unshift({ fileBase, fileComp });
+        },
     },
     extraReducers: (builder) => {
-        builder.addCase(openDataset, (state, action) => {
-            const { fileId } = action.payload;
-            if (action.payload.currentFileId !== fileId) {
-                // Save the filter;
-                if (
-                    action.payload.currentFileId &&
-                    state.filterData.currentFilter
-                ) {
-                    state.openDatasets[action.payload.currentFileId] = {
-                        filter: state.filterData.currentFilter,
-                    };
-                }
-                // Check if filter is saved;
-                if (
-                    state.openDatasets[fileId] &&
-                    state.openDatasets[fileId].filter
-                ) {
-                    state.filterData.currentFilter =
-                        state.openDatasets[fileId].filter;
-                } else {
-                    state.filterData.currentFilter = null;
-                }
-            }
-
+        builder.addCase(openDataset, (state, _action) => {
             // If mask is not sticky, reset it
             if (
                 state.maskData.currentMask &&
@@ -249,15 +286,26 @@ export const dataSlice = createSlice({
             if (state.loadedRecords[fileId]) {
                 delete state.loadedRecords[fileId];
             }
-            // Reset any filters
-            state.filterData.currentFilter = null;
-
+            // Remove filters associated with the closed file
+            if (state.filterData.currentFilter[fileId]) {
+                delete state.filterData.currentFilter[fileId];
+            }
             // If mask is not sticky, reset it
             if (
                 state.maskData.currentMask &&
                 !state.maskData.currentMask.sticky
             ) {
                 state.maskData.currentMask = null;
+            }
+        });
+        builder.addCase(closeCompare, (state, action) => {
+            const { compareId } = action.payload;
+            if (state.compare.data[compareId]) {
+                delete state.compare.data[compareId];
+            }
+            // Remove all filters associated with comparison
+            if (state.filterData.currentFilter[compareId]) {
+                delete state.filterData.currentFilter[compareId];
             }
         });
     },
@@ -268,6 +316,7 @@ export const {
     setFilter,
     resetFilter,
     setLoadedRecords,
+    clearLoadedRecords,
     setConverterData,
     selectMask,
     saveMask,
@@ -281,6 +330,8 @@ export const {
     setReportFilter,
     resetReportFilter,
     setReportLastSaveFolder,
+    setCompareData,
+    addRecentCompare,
 } = dataSlice.actions;
 
 export default dataSlice.reducer;

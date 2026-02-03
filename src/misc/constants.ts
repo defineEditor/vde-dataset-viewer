@@ -8,6 +8,7 @@ export const modals = {
     VARIABLEINFO: 'VARIABLEINFO',
     MASK: 'MASK',
     VALIDATOR: 'VALIDATOR',
+    SELECTCOMPARE: 'SELECTCOMPARE',
 } as const;
 
 export const paths = {
@@ -19,11 +20,13 @@ export const paths = {
     CONVERTER: '/converter',
     VALIDATOR: '/validator',
     DEFINEXML: '/definexml',
+    COMPARE: '/compare',
 } as const;
 
 export const mainTaskTypes = {
     CONVERT: 'convert',
     VALIDATE: 'validate',
+    COMPARE: 'compare',
 } as const;
 
 export type ModalType = (typeof modals)[keyof typeof modals];

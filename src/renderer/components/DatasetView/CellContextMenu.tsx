@@ -9,6 +9,7 @@ import {
 } from 'interfaces/common';
 import { handleTransformation } from 'renderer/utils/transformUtils';
 import { resetFilter, setFilter } from 'renderer/redux/slices/data';
+import { restartCompare } from 'renderer/redux/slices/ui';
 
 interface ContextMenuProps {
     open: boolean;
@@ -20,6 +21,7 @@ interface ContextMenuProps {
     value: string | number | boolean | null;
     metadata: DatasetJsonMetadata;
     header: IHeaderCell;
+    isCompare?: boolean;
 }
 
 const CellContextMenu: React.FC<ContextMenuProps> = ({
@@ -29,11 +31,16 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
     value,
     header,
     metadata,
+    isCompare = false,
 }) => {
     const dispatch = useAppDispatch();
 
+    const currentFileId = useAppSelector((state) =>
+        isCompare ? state.ui.compare.currentCompareId : state.ui.currentFileId,
+    );
+
     const currentFilter = useAppSelector(
-        (state) => state.data.filterData.currentFilter,
+        (state) => state.data.filterData.currentFilter[currentFileId] || null,
     );
 
     const dateFormat = useAppSelector(
@@ -76,10 +83,14 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
         );
         dispatch(
             setFilter({
+                fileId: currentFileId,
                 filter: newFilter.toBasicFilter(),
                 datasetName: metadata.name,
             }),
         );
+        if (isCompare) {
+            dispatch(restartCompare({ compareId: currentFileId }));
+        }
     };
 
     const hadnleAddToFilter = () => {
@@ -102,17 +113,24 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
             newFilter.update(`${filterString} and ${condition}`);
             dispatch(
                 setFilter({
+                    fileId: currentFileId,
                     filter: newFilter.toBasicFilter(),
                     datasetName: metadata.name,
                 }),
             );
+            if (isCompare) {
+                dispatch(restartCompare({ compareId: currentFileId }));
+            }
         } else {
             handleFilterByValue();
         }
     };
 
     const handleFilterReset = () => {
-        dispatch(resetFilter());
+        dispatch(resetFilter({ fileId: currentFileId }));
+        if (isCompare) {
+            dispatch(restartCompare({ compareId: currentFileId }));
+        }
     };
 
     const handleRemoveFromFilter = () => {
@@ -150,12 +168,19 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
             if (newBasicFilter.conditions.length > 0) {
                 dispatch(
                     setFilter({
+                        fileId: currentFileId,
                         filter: newBasicFilter,
                         datasetName: metadata.name,
                     }),
                 );
+                if (isCompare) {
+                    dispatch(restartCompare({ compareId: currentFileId }));
+                }
             } else {
-                dispatch(resetFilter());
+                dispatch(resetFilter({ fileId: currentFileId }));
+                if (isCompare) {
+                    dispatch(restartCompare({ compareId: currentFileId }));
+                }
             }
         }
     };

@@ -6,14 +6,18 @@ import React, {
     useRef,
 } from 'react';
 import { Box } from '@mui/material';
-import { ITableData, ItemType, IMask, TableSettings } from 'interfaces/common';
+import {
+    ITableData,
+    ItemType,
+    IMask,
+    TableSettings,
+    IUiControl,
+} from 'interfaces/common';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import {
     openSnackbar,
     setDatasetScrollPosition,
-    setGoTo,
-    setSelect,
 } from 'renderer/redux/slices/ui';
 import View from 'renderer/components/DatasetView/View';
 import useTableHeight from 'renderer/components/DatasetView/useTableHeight';
@@ -26,6 +30,9 @@ import {
     RowData,
     VisibilityState,
 } from '@tanstack/react-table';
+
+const emptySelect = { row: null, column: null };
+const emptyGoTo = { row: null, column: null, cellSelection: false };
 
 declare module '@tanstack/table-core' {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -57,7 +64,16 @@ interface DatasetViewProps {
     settings: TableSettings;
     currentPage?: number;
     currentMask?: IMask | null;
-    annotatedCells?: Map<string, { text: string; color: string }> | null;
+    annotatedCells?: Map<
+        string,
+        { text: string | React.ReactElement; color: string }
+    > | null;
+    containerRef?: React.RefObject<HTMLDivElement | null>;
+    onScroll?: (e: React.UIEvent<HTMLDivElement>) => void;
+    goTo?: IUiControl['goTo'];
+    onSetGoTo?: (goTo: Partial<IUiControl['goTo']>) => void;
+    select?: IUiControl['select'];
+    onSetSelect?: (select: Partial<IUiControl['select']>) => void;
 }
 
 const DatasetView: React.FC<DatasetViewProps> = ({
@@ -68,6 +84,12 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     currentPage = 0,
     currentMask = null,
     annotatedCells = null,
+    containerRef = undefined,
+    onScroll = undefined,
+    goTo = emptyGoTo,
+    onSetGoTo = () => {},
+    select = emptySelect,
+    onSetSelect = () => {},
 }) => {
     const dispatch = useAppDispatch();
     const [sorting, setSorting] = useState<ISortingState>([]);
@@ -208,7 +230,8 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     );
 
     // The virtualizers need to know the scrollable container element
-    const tableContainerRef = useRef<HTMLDivElement>(null);
+    const internalContainerRef = useRef<HTMLDivElement>(null);
+    const tableContainerRef = containerRef || internalContainerRef;
 
     const columnVirtualizer = useVirtualizer({
         count: visibleColumns.length - 1, // Exclude the first column
@@ -245,7 +268,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                 }
             });
         }
-    }, [scrollPositionX, tableHeight]);
+    }, [scrollPositionX, tableHeight, tableContainerRef]);
 
     // Reset the flag when fileId changes
     useEffect(() => {
@@ -276,6 +299,30 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             columnVirtualizer.getTotalSize() -
             (virtualColumns[virtualColumns.length - 1]?.end ?? 0);
     }
+
+    // Filter annotated cells to only include visible rows
+    const filteredAnnotatedCells = useMemo(() => {
+        if (!annotatedCells) {
+            return null;
+        }
+        const newMap = new Map<
+            string,
+            { text: string | React.ReactElement; color: string }
+        >();
+        annotatedCells.forEach((value, key) => {
+            const [rowIndexStr] = key.split('#');
+            const rowIndex = parseInt(rowIndexStr, 10);
+            if (
+                rowIndex >= currentPage * settings.pageSize &&
+                rowIndex < (currentPage + 1) * settings.pageSize
+            ) {
+                const newRowIndex = rowIndex - currentPage * settings.pageSize;
+                const newKey = key.replace(rowIndexStr, newRowIndex.toString());
+                newMap.set(newKey, value);
+            }
+        });
+        return newMap;
+    }, [annotatedCells, currentPage, settings.pageSize]);
 
     const [highlightedCells, setHighlightedCells] = useState<
         { row: number; column: number }[]
@@ -380,6 +427,9 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             offsetY: e.currentTarget.scrollTop,
             offsetX: e.currentTarget.scrollLeft,
         };
+        if (onScroll) {
+            onScroll(e);
+        }
     };
 
     useEffect(() => {
@@ -535,13 +585,6 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         };
     }, []);
 
-    // GoTo control
-    const goTo = useAppSelector((state) =>
-        state.ui.control[tableData.fileId]
-            ? state.ui.control[tableData.fileId].goTo
-            : { row: null, column: null, cellSelection: false },
-    );
-
     useEffect(() => {
         // Scroll to the row if it is on the current page, otherwise change will be changed and scroll will not be visible
         if (
@@ -553,7 +596,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         ) {
             const row = (goTo.row - 1) % settings.pageSize;
             rowVirtualizer.scrollToIndex(row, { align: 'center' });
-            dispatch(setGoTo({ fileId: tableData.fileId, row: null }));
+            onSetGoTo({ row: null });
             // Highlight the row number
             if (!goTo.cellSelection) {
                 handleCellClick(row, 0);
@@ -583,6 +626,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         handleCellClick,
         isLoading,
         tableHeight,
+        onSetGoTo,
     ]);
 
     useEffect(() => {
@@ -598,7 +642,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                     align: 'center',
                 });
             }
-            dispatch(setGoTo({ fileId: tableData.fileId, column: null }));
+            onSetGoTo({ column: null });
             // Highlight the column
             if (!goTo.cellSelection) {
                 handleColumnSelect(columnIndex);
@@ -614,15 +658,10 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         dispatch,
         handleColumnSelect,
         tableHeight,
+        onSetGoTo,
     ]);
 
     // Select control
-    const select = useAppSelector((state) =>
-        state.ui.control[tableData.fileId]
-            ? state.ui.control[tableData.fileId].select
-            : { row: null, column: null },
-    );
-
     useEffect(() => {
         if (
             select.row !== null ||
@@ -652,13 +691,10 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                 handleColumnSelect(columnIndex);
             }
             // Clean select control
-            dispatch(
-                setSelect({
-                    fileId: tableData.fileId,
-                    row: null,
-                    column: null,
-                }),
-            );
+            onSetSelect({
+                row: null,
+                column: null,
+            });
         }
     }, [
         select,
@@ -669,6 +705,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         handleColumnSelect,
         settings.pageSize,
         tableHeight,
+        onSetSelect,
     ]);
 
     const updatedSettings = { ...settings, height: tableHeight };
@@ -687,7 +724,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                     virtualRows={virtualRows}
                     rows={rows}
                     highlightedCells={highlightedCells}
-                    annotatedCells={annotatedCells}
+                    annotatedCells={filteredAnnotatedCells}
                     handleCellClick={handleCellClick}
                     handleMouseDown={handleMouseDown}
                     handleMouseOver={handleMouseOver}

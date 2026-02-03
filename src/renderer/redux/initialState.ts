@@ -6,6 +6,7 @@ import {
     IApi,
     ConverterData,
     ValidatorData,
+    CompareData,
 } from 'interfaces/common';
 import { paths } from 'misc/constants';
 
@@ -59,6 +60,15 @@ export const settings: ISettings = {
     define: {
         stylesheetShowComments: false,
     },
+    compare: {
+        tolerance: 10e-12,
+        idColumns: [],
+        maxDiffCount: 100,
+        maxColumnDiffCount: 50,
+        ignorePattern: '',
+        ignoreColumnCase: true,
+        reorderCompareColumns: true,
+    },
 };
 export const ui: IUi = {
     pathname: paths.SELECT,
@@ -95,6 +105,16 @@ export const ui: IUi = {
         selectedVariableOid: null,
         searchTerm: '',
         scrollPosition: {},
+    },
+    compare: {
+        currentCompareId: '',
+        startCompare: false,
+        fileBase: null,
+        fileComp: null,
+        view: 'horizontal',
+        resultTab: 'data',
+        showAllDifferences: false,
+        info: {},
     },
 };
 
@@ -148,13 +168,17 @@ export const validator: ValidatorData = {
     lastReportSaveFolder: '',
 };
 
+const compare: CompareData = {
+    data: {},
+    recentCompares: [],
+};
+
 export const data: IData = {
     loadedRecords: {},
     recentFolders: [],
     recentFiles: [],
-    openDatasets: {},
     filterData: {
-        currentFilter: null,
+        currentFilter: {},
         recentFilters: [],
         lastOptions: { caseInsensitive: true },
         lastType: 'manual',
@@ -171,6 +195,7 @@ export const data: IData = {
     },
     converter,
     validator,
+    compare,
 };
 
 export const api: IApi = {

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
+import Box from '@mui/material/Box';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -9,7 +10,11 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
 import Filter from 'js-array-filter';
-import { closeModal, setFilterInputMode } from 'renderer/redux/slices/ui';
+import {
+    closeModal,
+    setFilterInputMode,
+    restartCompare,
+} from 'renderer/redux/slices/ui';
 import ManualInput from 'renderer/components/Modal/Filter/ManualInput';
 import {
     setFilter,
@@ -77,6 +82,10 @@ const styles = {
         maxHeight: 320,
         overflow: 'auto',
     },
+    box: {
+        display: 'flex',
+        alignItems: 'center',
+    },
 };
 
 // Create dummy filter for conversion and validation purposes;
@@ -85,6 +94,7 @@ const filterForConversion = new Filter('dataset-json1.1', [], '', {
 });
 
 interface FilterBodyProps extends IUiModalFilter {
+    fileId: string;
     data: ITableRow[];
     metadata: DatasetJsonMetadata;
     dataset: { name: string; label: string };
@@ -94,6 +104,7 @@ interface FilterBodyProps extends IUiModalFilter {
 }
 
 const FilterBody: React.FC<FilterBodyProps> = ({
+    fileId,
     type,
     filterType,
     data,
@@ -183,9 +194,15 @@ const FilterBody: React.FC<FilterBodyProps> = ({
     }, [dispatch, type]);
 
     const handleResetFilter = () => {
-        dispatch(
-            filterType === 'dataset' ? resetFilter() : resetReportFilter(),
-        );
+        if (['dataset', 'compare'].includes(filterType)) {
+            dispatch(resetFilter({ fileId }));
+        } else if (filterType === 'report') {
+            dispatch(resetReportFilter());
+        }
+        // If compare and the filter has changed, reinitiate compare process
+        if (filterType === 'compare' && currentBasicFilter !== null) {
+            dispatch(restartCompare({ compareId: fileId }));
+        }
         handleClose();
     };
 
@@ -374,11 +391,16 @@ const FilterBody: React.FC<FilterBodyProps> = ({
             }
 
             if (finalFilter === '') {
-                dispatch(
-                    filterType === 'dataset'
-                        ? resetFilter()
-                        : resetReportFilter(),
-                );
+                if (['dataset', 'compare'].includes(filterType)) {
+                    dispatch(resetFilter({ fileId }));
+                } else if (filterType === 'report') {
+                    dispatch(resetReportFilter());
+                }
+                // In case of compare we need to reinitiate the compare process;
+                if (filterType === 'compare') {
+                    dispatch(restartCompare({ compareId: fileId }));
+                }
+
                 handleClose();
             } else if (newFilter.validateFilterString(finalFilter)) {
                 newFilter.update(finalFilter);
@@ -386,14 +408,23 @@ const FilterBody: React.FC<FilterBodyProps> = ({
                     ...newFilter.toBasicFilter(),
                     options: { caseInsensitive },
                 };
-                dispatch(
-                    filterType === 'dataset'
-                        ? setFilter({
-                              filter: basicFilter,
-                              datasetName: dataset.name,
-                          })
-                        : setReportFilter({ filter: basicFilter, reportTab }),
-                );
+                if (['dataset', 'compare'].includes(filterType)) {
+                    dispatch(
+                        setFilter({
+                            fileId,
+                            filter: basicFilter,
+                            datasetName: dataset.name,
+                        }),
+                    );
+                } else if (filterType === 'report') {
+                    dispatch(
+                        setReportFilter({ filter: basicFilter, reportTab }),
+                    );
+                }
+                // In case of compare we need to reinitiate the compare process;
+                if (filterType === 'compare') {
+                    dispatch(restartCompare({ compareId: fileId }));
+                }
                 handleClose();
             }
         },
@@ -409,13 +440,21 @@ const FilterBody: React.FC<FilterBodyProps> = ({
             metadata,
             filterType,
             reportTab,
+            fileId,
         ],
     );
 
     const handleReloadData = () => {
-        dispatch(
-            filterType === 'dataset' ? resetFilter() : resetReportFilter(),
-        );
+        if (filterType === 'dataset') {
+            dispatch(resetFilter({ fileId }));
+        } else if (filterType === 'compare') {
+            // For compare it is difficult to reset the filter, so close it for now
+            dispatch(resetFilter({ fileId }));
+            dispatch(restartCompare({ compareId: fileId }));
+            handleClose();
+        } else if (filterType === 'report') {
+            dispatch(resetReportFilter());
+        }
     };
 
     const handleSelectFilter = useCallback(
@@ -482,7 +521,7 @@ const FilterBody: React.FC<FilterBodyProps> = ({
         <Dialog
             open
             onClose={handleClose}
-            PaperProps={{ sx: { ...styles.dialog } }}
+            slotProps={{ paper: { sx: { ...styles.dialog } } }}
         >
             <DialogTitle sx={styles.title}>Filter Data</DialogTitle>
             <DialogContent>
@@ -516,7 +555,7 @@ const FilterBody: React.FC<FilterBodyProps> = ({
                             }
                             label="Case Insensitive"
                         />
-                        {filterType === 'dataset' &&
+                        {['dataset', 'compare'].includes(filterType) &&
                             currentBasicFilter !== null &&
                             inputType === 'interactive' && (
                                 <Stack
@@ -555,7 +594,7 @@ const FilterBody: React.FC<FilterBodyProps> = ({
                             datasetName={dataset.name}
                         />
                     )}
-                    {filterType === 'dataset' && (
+                    {['dataset', 'compare'].includes(filterType) && (
                         <>
                             <Typography
                                 variant="h6"
@@ -595,24 +634,26 @@ const FilterBody: React.FC<FilterBodyProps> = ({
                                                     }}
                                                 />
                                                 <Tooltip title="Edit filter">
-                                                    <IconButton
-                                                        edge="end"
-                                                        aria-label="edit"
-                                                        disabled={
-                                                            /* For interactive mode, cannot edit invalid filter */
-                                                            !filterItem.isValid &&
-                                                            inputType ===
-                                                                'interactive'
-                                                        }
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleSelectFilter(
-                                                                filterItem.filter,
-                                                            );
-                                                        }}
-                                                    >
-                                                        <EditIcon />
-                                                    </IconButton>
+                                                    <Box sx={styles.box}>
+                                                        <IconButton
+                                                            edge="end"
+                                                            aria-label="edit"
+                                                            disabled={
+                                                                /* For interactive mode, cannot edit invalid filter */
+                                                                !filterItem.isValid &&
+                                                                inputType ===
+                                                                    'interactive'
+                                                            }
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleSelectFilter(
+                                                                    filterItem.filter,
+                                                                );
+                                                            }}
+                                                        >
+                                                            <EditIcon />
+                                                        </IconButton>
+                                                    </Box>
                                                 </Tooltip>
                                             </ListItem>
                                             {index <

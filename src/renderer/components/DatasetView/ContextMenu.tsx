@@ -14,6 +14,7 @@ interface ContextMenuProps {
     metadata: DatasetJsonMetadata;
     header: IHeaderCell;
     isHeader?: boolean;
+    isCompare?: boolean;
 }
 
 const ContextMenu: React.FC<ContextMenuProps> = ({
@@ -24,8 +25,12 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
     metadata,
     header,
     isHeader = false,
+    isCompare = false,
 }) => {
     if (isHeader) {
+        if (isCompare) {
+            return null;
+        }
         return (
             <HeaderContextMenu
                 open={open}
@@ -43,6 +48,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
             value={value}
             metadata={metadata}
             header={header}
+            isCompare={isCompare}
         />
     );
 };

@@ -7,6 +7,7 @@ import {
     TableCell,
     Paper,
     Box,
+    Stack,
     TableSortLabel,
     IconButton,
     Tooltip,
@@ -144,11 +145,15 @@ const styles = {
         backgroundColor: '#42a5f533',
     },
     annotatedCell: {
-        backgroundColor: '#ffe082',
-        border: '1px solid #ffca28',
+        backgroundColor: '#fff8e1',
+        border: '1px solid #ffe082',
+    },
+    annotatedRowCell: {
+        backgroundColor: '#fff8e1;',
+        border: '1px solid #ffe082;',
     },
     highlightedAnnotatedCell: {
-        backgroundColor: '#ffe08290',
+        backgroundColor: '#ffca28',
         border: '1px solid #ffca2890',
     },
     headerRowNumberCell: {
@@ -223,7 +228,7 @@ const getTypeIcon = (type: string | undefined) => {
 
 const DatasetViewUI: React.FC<{
     table: ITable<ITableRow>;
-    tableContainerRef: React.RefObject<HTMLDivElement>;
+    tableContainerRef: React.RefObject<HTMLDivElement | null>;
     visibleColumns: IColumn<ITableRow, unknown>[];
     virtualPaddingLeft: number | undefined;
     virtualPaddingRight: number | undefined;
@@ -248,7 +253,10 @@ const DatasetViewUI: React.FC<{
     ) => void;
     filteredColumns?: string[];
     containerStyle?: React.CSSProperties;
-    annotatedCells?: Map<string, { text: string; color: string }> | null;
+    annotatedCells?: Map<
+        string,
+        { text: string | React.ReactElement; color: string }
+    > | null;
 }> = ({
     table,
     tableContainerRef,
@@ -293,6 +301,9 @@ const DatasetViewUI: React.FC<{
                                         ...styles.tableHeaderCell,
                                         width: visibleColumns[0].getSize(),
                                         ...styles.headerRowNumberCell,
+                                        ...(settings.denseHeader
+                                            ? { height: '30px' }
+                                            : {}),
                                     }}
                                 >
                                     <Tooltip
@@ -328,6 +339,9 @@ const DatasetViewUI: React.FC<{
                                             ...styles.tableHeaderCell,
                                             width: header.getSize(),
                                             cursor: 'pointer',
+                                            ...(settings.denseHeader
+                                                ? { height: '30px' }
+                                                : {}),
                                         }}
                                         onContextMenu={(event) =>
                                             handleContextMenu(
@@ -337,103 +351,159 @@ const DatasetViewUI: React.FC<{
                                             )
                                         }
                                     >
-                                        <TableSortLabel
-                                            onClick={() => {
-                                                const isSorted = sorting.find(
-                                                    (sort) =>
-                                                        sort.id === header.id,
-                                                );
-                                                onSortingChange([
-                                                    {
-                                                        id: header.id,
-                                                        desc: isSorted
-                                                            ? !isSorted.desc
-                                                            : false,
-                                                    },
-                                                ]);
-                                            }}
-                                            onMouseDown={(
-                                                event: React.MouseEvent,
-                                            ) => {
-                                                if (event.button === 0) {
-                                                    handleMouseDown(
-                                                        0,
-                                                        vc.index + 1,
-                                                    );
-                                                }
-                                            }}
-                                            onMouseOver={() =>
-                                                handleMouseOver(0, vc.index + 1)
-                                            }
-                                            active={
-                                                !!sorting.find(
-                                                    (sort) =>
-                                                        sort.id === header.id,
-                                                )
-                                            }
-                                            direction={
-                                                sorting.find(
-                                                    (sort) =>
-                                                        sort.id === header.id,
-                                                )?.desc
-                                                    ? 'desc'
-                                                    : 'asc'
-                                            }
-                                            sx={styles.tableHeaderLabel}
-                                        >
-                                            <Box sx={styles.tableHeaderText}>
-                                                {flexRender(
-                                                    header.column.columnDef
-                                                        .header,
-                                                    header.getContext(),
-                                                )}
-                                            </Box>
-                                            {settings.showTypeIcons &&
-                                                getTypeIcon(
-                                                    header.column.columnDef.meta
-                                                        ?.type,
-                                                )}
-                                            {filteredColumns.includes(
-                                                header.id,
-                                            ) && (
-                                                <FilterIcon
-                                                    sx={styles.filterIcon}
-                                                />
+                                        <>
+                                            {settings.disableSorting ? (
+                                                <Stack
+                                                    sx={styles.tableHeaderLabel}
+                                                    direction="row"
+                                                    alignItems="center"
+                                                >
+                                                    <Box
+                                                        sx={
+                                                            styles.tableHeaderText
+                                                        }
+                                                    >
+                                                        {flexRender(
+                                                            header.column
+                                                                .columnDef
+                                                                .header,
+                                                            header.getContext(),
+                                                        )}
+                                                    </Box>
+                                                    {settings.showTypeIcons &&
+                                                        getTypeIcon(
+                                                            header.column
+                                                                .columnDef.meta
+                                                                ?.type,
+                                                        )}
+                                                    {filteredColumns.includes(
+                                                        header.id,
+                                                    ) && (
+                                                        <FilterIcon
+                                                            sx={
+                                                                styles.filterIcon
+                                                            }
+                                                        />
+                                                    )}
+                                                </Stack>
+                                            ) : (
+                                                <TableSortLabel
+                                                    onClick={() => {
+                                                        const isSorted =
+                                                            sorting.find(
+                                                                (sort) =>
+                                                                    sort.id ===
+                                                                    header.id,
+                                                            );
+                                                        onSortingChange([
+                                                            {
+                                                                id: header.id,
+                                                                desc: isSorted
+                                                                    ? !isSorted.desc
+                                                                    : false,
+                                                            },
+                                                        ]);
+                                                    }}
+                                                    onMouseDown={(
+                                                        event: React.MouseEvent,
+                                                    ) => {
+                                                        if (
+                                                            event.button === 0
+                                                        ) {
+                                                            handleMouseDown(
+                                                                0,
+                                                                vc.index + 1,
+                                                            );
+                                                        }
+                                                    }}
+                                                    onMouseOver={() =>
+                                                        handleMouseOver(
+                                                            0,
+                                                            vc.index + 1,
+                                                        )
+                                                    }
+                                                    active={
+                                                        !!sorting.find(
+                                                            (sort) =>
+                                                                sort.id ===
+                                                                header.id,
+                                                        )
+                                                    }
+                                                    direction={
+                                                        sorting.find(
+                                                            (sort) =>
+                                                                sort.id ===
+                                                                header.id,
+                                                        )?.desc
+                                                            ? 'desc'
+                                                            : 'asc'
+                                                    }
+                                                    sx={styles.tableHeaderLabel}
+                                                >
+                                                    <Box
+                                                        sx={
+                                                            styles.tableHeaderText
+                                                        }
+                                                    >
+                                                        {flexRender(
+                                                            header.column
+                                                                .columnDef
+                                                                .header,
+                                                            header.getContext(),
+                                                        )}
+                                                    </Box>
+                                                    {settings.showTypeIcons &&
+                                                        getTypeIcon(
+                                                            header.column
+                                                                .columnDef.meta
+                                                                ?.type,
+                                                        )}
+                                                    {filteredColumns.includes(
+                                                        header.id,
+                                                    ) && (
+                                                        <FilterIcon
+                                                            sx={
+                                                                styles.filterIcon
+                                                            }
+                                                        />
+                                                    )}
+                                                </TableSortLabel>
                                             )}
-                                        </TableSortLabel>
-                                        <Box
-                                            sx={styles.resizer}
-                                            {...{
-                                                onDoubleClick: () =>
-                                                    header.column.resetSize(),
-                                                onMouseDown:
-                                                    header.getResizeHandler(),
-                                                onMouseUp: () =>
-                                                    handleResizeEnd(),
-                                                onTouchStart:
-                                                    header.getResizeHandler(),
-                                                className: `resizer ${
-                                                    table.options
-                                                        .columnResizeDirection
-                                                }`,
-                                                style: {
-                                                    transform:
-                                                        header.column.getIsResizing()
-                                                            ? `translateX(${
-                                                                  (table.options
-                                                                      .columnResizeDirection ===
-                                                                  'rtl'
-                                                                      ? -1
-                                                                      : 1) *
-                                                                  (table.getState()
-                                                                      .columnSizingInfo
-                                                                      .deltaOffset ??
-                                                                      0)
-                                                              }px)`
-                                                            : '',
-                                                },
-                                            }}
-                                        />
+                                            <Box
+                                                sx={styles.resizer}
+                                                {...{
+                                                    onDoubleClick: () =>
+                                                        header.column.resetSize(),
+                                                    onMouseDown:
+                                                        header.getResizeHandler(),
+                                                    onMouseUp: () =>
+                                                        handleResizeEnd(),
+                                                    onTouchStart:
+                                                        header.getResizeHandler(),
+                                                    className: `resizer ${
+                                                        table.options
+                                                            .columnResizeDirection
+                                                    }`,
+                                                    style: {
+                                                        transform:
+                                                            header.column.getIsResizing()
+                                                                ? `translateX(${
+                                                                      (table
+                                                                          .options
+                                                                          .columnResizeDirection ===
+                                                                      'rtl'
+                                                                          ? -1
+                                                                          : 1) *
+                                                                      (table.getState()
+                                                                          .columnSizingInfo
+                                                                          .deltaOffset ??
+                                                                          0)
+                                                                  }px)`
+                                                                : '',
+                                                    },
+                                                }}
+                                            />
+                                        </>
                                     </TableCell>
                                 );
                             })}
@@ -458,6 +528,10 @@ const DatasetViewUI: React.FC<{
                         virtualRows.map((virtualRow) => {
                             const row = rows[virtualRow.index];
                             const visibleCells = row.getVisibleCells();
+                            const rowAnnotation =
+                                annotatedCells !== null &&
+                                annotatedCells.get(`${virtualRow.index}`);
+                            const isRowAnnotated = !!rowAnnotation;
 
                             return (
                                 <TableRow
@@ -466,13 +540,11 @@ const DatasetViewUI: React.FC<{
                                             ? virtualRow.index
                                             : undefined
                                     }
-                                    ref={(node) =>
-                                        settings.dynamicRowHeight
-                                            ? rowVirtualizer.measureElement(
-                                                  node,
-                                              )
-                                            : null
-                                    }
+                                    ref={(node) => {
+                                        if (settings.dynamicRowHeight) {
+                                            rowVirtualizer.measureElement(node);
+                                        }
+                                    }}
                                     key={row.id}
                                     sx={{
                                         ...styles.tableRow,
@@ -492,6 +564,9 @@ const DatasetViewUI: React.FC<{
                                                     : styles.tableCellFixed),
                                                 width: visibleCells[0].column.getSize(),
                                                 ...styles.rowNumberCell,
+                                                ...(isRowAnnotated
+                                                    ? styles.annotatedRowCell
+                                                    : {}),
                                             }}
                                             onClick={() =>
                                                 handleCellClick(
@@ -512,10 +587,31 @@ const DatasetViewUI: React.FC<{
                                                 )
                                             }
                                         >
-                                            {flexRender(
-                                                visibleCells[0].column.columnDef
-                                                    .cell,
-                                                visibleCells[0].getContext(),
+                                            {isRowAnnotated ? (
+                                                <Tooltip
+                                                    title={
+                                                        <Box
+                                                            sx={styles.preWrap}
+                                                        >
+                                                            {
+                                                                rowAnnotation?.text
+                                                            }
+                                                        </Box>
+                                                    }
+                                                    placement="top"
+                                                >
+                                                    <Box sx={styles.allSpace}>
+                                                        {
+                                                            visibleCells[0].getValue() as string
+                                                        }
+                                                    </Box>
+                                                </Tooltip>
+                                            ) : (
+                                                flexRender(
+                                                    visibleCells[0].column
+                                                        .columnDef.cell,
+                                                    visibleCells[0].getContext(),
+                                                )
                                             )}
                                         </TableCell>
                                     )}

@@ -41,28 +41,34 @@ export const Validator: React.FC<ValidatorProps> = ({
 
     const handleUpdateData = useCallback(
         (validatorPath: string) => {
-            apiService.cleanTaskProgressListeners();
-
-            apiService.subscribeToTaskProgress((info: TaskProgress) => {
-                if (info.type !== mainTaskTypes.VALIDATE) {
-                    return;
-                }
-                if (info.id === `get-validator-info` && info.progress === 100) {
-                    if (info.error) {
-                        dispatch(
-                            openSnackbar({
-                                message: info.error,
-                                type: 'error',
-                            }),
-                        );
-                    } else if (info.result && typeof info.result === 'object') {
-                        onChangeValidatorInfo(
-                            info.result as ValidateGetInfoResult,
-                        );
+            const unsubscribe = apiService.subscribeToTaskProgress(
+                (info: TaskProgress) => {
+                    if (info.type !== mainTaskTypes.VALIDATE) {
+                        return;
                     }
-                    setUpdating(false);
-                }
-            });
+                    if (
+                        info.id === `get-validator-info` &&
+                        info.progress === 100
+                    ) {
+                        if (info.error) {
+                            dispatch(
+                                openSnackbar({
+                                    message: info.error,
+                                    type: 'error',
+                                }),
+                            );
+                        } else if (
+                            info.result &&
+                            typeof info.result === 'object'
+                        ) {
+                            onChangeValidatorInfo(
+                                info.result as ValidateGetInfoResult,
+                            );
+                        }
+                        setUpdating(false);
+                    }
+                },
+            );
 
             const runTask = async () => {
                 // Use dummy options, as only the validatorPath is needed
@@ -99,7 +105,11 @@ export const Validator: React.FC<ValidatorProps> = ({
             runTask();
 
             return () => {
-                apiService.cleanTaskProgressListeners();
+                try {
+                    unsubscribe();
+                } catch (e) {
+                    apiService.cleanTaskProgressListeners();
+                }
             };
         },
         [apiService, dispatch, onChangeValidatorInfo],
