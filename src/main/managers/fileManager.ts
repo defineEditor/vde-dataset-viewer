@@ -10,6 +10,7 @@ import {
     DatasetJsonMetadata,
     FileInfo,
     InputFileExtension,
+    ItemDataArray,
 } from 'interfaces/common';
 import openFile from 'main/openFile';
 import fs from 'fs';
@@ -18,11 +19,10 @@ import Filter from 'js-array-filter';
 import crypto from 'crypto';
 import path from 'path';
 
-const getHash = (str: string): string => {
-    const timestamp = Date.now();
+const getHash = (str: string, lastModified: number): string => {
     const hash = crypto
         .createHash('md5')
-        .update(`${str}${timestamp}`)
+        .update(`${str}${lastModified}`)
         .digest('hex');
     return hash;
 };
@@ -36,7 +36,11 @@ class FileManager {
         this.openedFiles = {};
     }
 
-    public getFileId = (pathToFile: string): string => {
+    public getFileId = (
+        pathToFile: string,
+        lastModified: number,
+        fileIdPrefix?: string,
+    ): string => {
         // Check if the file is already opened
         const foundFileIds = Object.keys(this.openedFiles).filter((fileId) => {
             const file = this.openedFiles[fileId];
@@ -44,10 +48,16 @@ class FileManager {
                 file instanceof DatasetJson ||
                 file instanceof DatasetSas7bdat
             ) {
-                return file.filePath === pathToFile;
+                return (
+                    file.filePath === pathToFile &&
+                    fileId.startsWith(fileIdPrefix || '')
+                );
             }
             if (file instanceof DatasetXpt) {
-                return file.pathToFile === pathToFile;
+                return (
+                    file.pathToFile === pathToFile &&
+                    fileId.startsWith(fileIdPrefix || '')
+                );
             }
             return false;
         });
@@ -60,7 +70,10 @@ class FileManager {
         let hash: string;
         do {
             const filename = path.parse(pathToFile).name;
-            hash = `${filename}_${getHash(path.normalize(pathToFile))}`;
+            hash = `${filename}_${getHash(path.normalize(pathToFile), lastModified)}`;
+            if (fileIdPrefix) {
+                hash = `${fileIdPrefix}_${hash}`;
+            }
         } while (allIds.includes(hash));
         return hash;
     };
@@ -72,9 +85,10 @@ class FileManager {
             encoding: BufferEncoding | 'default';
             filePath?: string;
             folderPath?: string;
+            fileIdPrefix?: string;
         },
     ): Promise<IOpenFile> => {
-        const { encoding, filePath, folderPath } = fileSettings;
+        const { encoding, filePath, folderPath, fileIdPrefix } = fileSettings;
 
         if (folderPath) {
             // Check if specified folder exists;
@@ -127,7 +141,22 @@ class FileManager {
             };
         }
 
-        const fileId = this.getFileId(newFile.path);
+        // Get last modified time
+        let lastModified = 0;
+        try {
+            const stats = fs.statSync(newFile.path);
+            lastModified = stats.mtime.getTime();
+        } catch (error) {
+            return {
+                fileId: '',
+                type: 'json',
+                path: '',
+                errorMessage: `An error occurred while opening the file ${newFile.path}: ${(error as Error).message}`,
+                lastModified: 0,
+            };
+        }
+
+        const fileId = this.getFileId(newFile.path, lastModified, fileIdPrefix);
         const extension = newFile.path.split('.').pop()?.toLowerCase();
         switch (extension) {
             case 'json':
@@ -178,21 +207,6 @@ class FileManager {
         }
         this.openedFiles[fileId] = data;
 
-        // Get last modified time
-        let lastModified = 0;
-        try {
-            const stats = fs.statSync(newFile.path);
-            lastModified = stats.mtime.getTime();
-        } catch (error) {
-            return {
-                fileId: '',
-                type: 'json',
-                path: '',
-                errorMessage: `An error occurred while opening the file ${newFile.path}: ${(error as Error).message}`,
-                lastModified: 0,
-            };
-        }
-
         return { fileId, type, path: newFile.path, lastModified };
     };
 
@@ -220,7 +234,7 @@ class FileManager {
     public handleGetMetadata = async (
         _event: IpcMainInvokeEvent,
         fileId: string,
-    ) => {
+    ): Promise<DatasetJsonMetadata | null> => {
         if (this.openedFiles[fileId]) {
             try {
                 let metadata: DatasetJsonMetadata;
@@ -252,31 +266,46 @@ class FileManager {
         filterColumns?: string[],
         filterData?: BasicFilter,
         columns?: ColumnMetadata[],
-    ) => {
+    ): Promise<ItemDataArray[] | null> => {
         if (this.openedFiles[fileId]) {
             try {
-                let filter: Filter | undefined;
+                let filter: Filter | BasicFilter | undefined;
                 if (filterData !== undefined && columns !== undefined) {
-                    filter = new Filter('dataset-json1.1', columns, filterData);
+                    if (
+                        filterColumns !== undefined &&
+                        filterColumns.length > 0
+                    ) {
+                        // In case of filter columns, the filter will be created inside the read library
+                        filter = filterData;
+                    } else {
+                        filter = new Filter(
+                            'dataset-json1.1',
+                            columns,
+                            filterData,
+                        );
+                    }
                 } else {
                     filter = undefined;
                 }
                 if (this.openedFiles[fileId] instanceof DatasetXpt) {
-                    return await this.openedFiles[fileId].getData({
+                    // For XPT we use full metadata for filter
+                    const result = await this.openedFiles[fileId].getData({
                         start,
                         length,
+                        type: 'array',
                         filterColumns,
                         filter,
                         roundPrecision: 12,
                     });
+                    return result.data as ItemDataArray[];
                 }
-                // TODO: strange TS issue, it requires filter to be undefined
-                return await this.openedFiles[fileId].getData({
+                const result = await this.openedFiles[fileId].getData({
                     start,
                     length,
                     filterColumns,
-                    filter: filter as undefined,
+                    filter,
                 });
+                return result.data as ItemDataArray[];
             } catch (error) {
                 dialog.showErrorBox(
                     'Data Error',

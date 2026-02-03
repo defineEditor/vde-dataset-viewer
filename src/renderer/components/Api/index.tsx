@@ -93,16 +93,14 @@ const SelectDataset = () => {
             if (currentStudy === undefined) {
                 return;
             }
-            const result = await apiService.openFile(
-                'remote',
-                undefined,
-                undefined,
-                {
+            const result = await apiService.openFile({
+                mode: 'remote',
+                apiInfo: {
                     api: apiRecords[currentApiId],
                     study: currentStudy,
                     dataset,
                 },
-            );
+            });
             const { errorMessage } = result;
             if (errorMessage) {
                 dispatch(

@@ -7,6 +7,8 @@ import {
     ValidationRunReport,
     FileInfo,
     DefineFileInfo,
+    DatasetDiff,
+    CompareSettings,
 } from 'interfaces/main';
 import { ParsedValidationReport } from 'interfaces/core.report';
 import { modals, ModalType, AllowedPathnames } from 'misc/constants';
@@ -58,6 +60,7 @@ export interface ISettings {
         dragoverAnimation: boolean;
         disableUiAnimation: boolean;
     };
+    compare: CompareSettings;
 }
 
 export interface IUiModalBase {
@@ -76,7 +79,8 @@ export interface IUiModalGeneral extends IUiModalBase {
         | typeof modals.FILTER
         | typeof modals.VARIABLEINFO
         | typeof modals.MASK
-        | typeof modals.VALIDATOR;
+        | typeof modals.VALIDATOR
+        | typeof modals.SELECTCOMPARE;
     data: {};
 }
 
@@ -99,7 +103,7 @@ export interface IUiModalVariableInfo extends IUiModalBase {
 
 export interface IUiModalFilter extends IUiModalBase {
     type: typeof modals.FILTER;
-    filterType: 'dataset' | 'report';
+    filterType: 'dataset' | 'report' | 'compare';
 }
 
 export type IUiModal =
@@ -188,6 +192,26 @@ export interface IUiDefine {
     scrollPosition: { [fileId: string]: number };
 }
 
+export interface IUiCompare {
+    currentCompareId: string;
+    startCompare: boolean;
+    fileBase: string | null;
+    fileComp: string | null;
+    view: 'horizontal' | 'vertical';
+    resultTab: 'summary' | 'metadata' | 'data';
+    showAllDifferences: boolean;
+    info: {
+        [compareId: string]: {
+            isComparing: boolean;
+            fileBase: string;
+            fileComp: string;
+            fileBaseId?: string;
+            fileCompId?: string;
+            currentComparePage: number;
+        };
+    };
+}
+
 export interface IUi {
     pathname: AllowedPathnames;
     currentFileId: string;
@@ -206,6 +230,7 @@ export interface IUi {
     };
     validationPage: IUiValidationPage;
     define: IUiDefine;
+    compare: IUiCompare;
 }
 
 export interface IRecentFile {
@@ -236,19 +261,25 @@ export interface ValidatorData {
     selectedFiles: FileInfo[];
 }
 
+export interface CompareData {
+    data: {
+        [compareId: string]: {
+            fileBase: string | null;
+            fileComp: string | null;
+            datasetDiff: DatasetDiff | null;
+        };
+    };
+    recentCompares: { fileBase: string; fileComp: string }[];
+}
+
 export interface IData {
     loadedRecords: {
         [name: string]: number;
     };
     recentFolders: string[];
     recentFiles: IRecentFile[];
-    openDatasets: {
-        [name: string]: {
-            filter: BasicFilter | null;
-        };
-    };
     filterData: {
-        currentFilter: BasicFilter | null;
+        currentFilter: { [fileId: string]: BasicFilter };
         recentFilters: {
             filter: BasicFilter;
             datasetName: string;
@@ -263,6 +294,7 @@ export interface IData {
     };
     converter: ConverterData;
     validator: ValidatorData;
+    compare: CompareData;
 }
 
 export interface IApiRecord {

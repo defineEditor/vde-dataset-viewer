@@ -25,6 +25,7 @@ export interface ApiOpenedFile {
     path: string;
     type: DataType;
     lastModified?: number;
+    compareId?: string;
 }
 
 export interface ApiOpenedFileWithMetadata extends ApiOpenedFile {
@@ -41,6 +42,7 @@ export interface IOpenFile {
     lastModified: number;
     datasetNames?: string[];
     errorMessage?: string;
+    compareId?: string;
 }
 
 export interface IOpenFileWithMetadata extends IOpenFile {

@@ -72,7 +72,7 @@ const Element: React.FC<Props> = ({ x, y }) => {
     const elementValue = useRef(
         DATASET_TERMS[Math.floor(Math.random() * DATASET_TERMS.length)],
     );
-    const frameRef = useRef<number>();
+    const frameRef = useRef<number | null>(null);
 
     useEffect(() => {
         // Start fade out after 4.5 seconds

@@ -1,5 +1,6 @@
 import { UpdateCheckResult } from 'electron-updater';
-import { DatasetMetadata } from 'interfaces/datasetJson';
+import { DatasetMetadata, ItemDataArray } from 'interfaces/datasetJson';
+import { BasicFilter } from 'js-array-filter';
 import { mainTaskTypes } from 'misc/constants';
 
 export interface SettingsConverter {
@@ -63,6 +64,85 @@ export interface ConvertedFileInfo extends FileInfo {
     outputName: string;
 }
 
+// Diff interfaces
+export interface CompareSettings {
+    tolerance: number;
+    idColumns: string[];
+    maxDiffCount: number;
+    maxColumnDiffCount: number;
+    ignorePattern: string;
+    ignoreColumnCase: boolean;
+    reorderCompareColumns: boolean;
+}
+
+export interface CompareFileSettings {
+    encoding: BufferEncoding | 'default';
+    bufferSize: number;
+}
+
+export interface MetadataDiff {
+    missingInBase: string[];
+    missingInCompare: string[];
+    commonCols: string[];
+    attributeDiffs: {
+        [columnName: string]: {
+            [attribute: string]: {
+                base: string | number;
+                compare: string | number;
+            };
+        };
+    };
+    positionDiffs: {
+        [columnName: string]: { base: number; compare: number };
+    };
+    dsAttributeDiffs: {
+        [attribute: string]: {
+            base: string | number;
+            compare: string | number;
+        };
+    };
+}
+
+export interface DataDiffRow {
+    rowBase: number | null;
+    rowCompare: number | null;
+    diff?: {
+        [columnName: string]: [ItemDataArray[number], ItemDataArray[number]];
+    };
+}
+
+export interface DataDiff {
+    deletedRows: DataDiffRow[];
+    addedRows: DataDiffRow[];
+    modifiedRows: DataDiffRow[];
+}
+
+export interface DiffSummary {
+    firstDiffRow: number | null;
+    lastDiffRow: number | null;
+    totalDiffs: number;
+    baseRows: number;
+    compareRows: number;
+    totalRowsChecked: number;
+    maxDiffReached: boolean;
+    maxColDiffReached: string[];
+    colsWithMetadataDiffs: number;
+    colsWithDataDiffs: number;
+    colsWithoutDiffs: number;
+}
+
+export interface DatasetDiff {
+    metadata: MetadataDiff;
+    data: DataDiff;
+    summary: DiffSummary;
+    pageMaps: {
+        base: number[];
+        comp: number[];
+    };
+}
+
+// Task interfaces
+
 export interface ConvertTaskOptions extends SettingsConverter {
     prettyPrint: boolean;
     inEncoding:
@@ -117,6 +197,16 @@ export interface ValidatorConfig {
     excludedRules: string[];
 }
 
+export interface CompareTask {
+    id: string;
+    type: typeof mainTaskTypes.COMPARE;
+    fileBase: string;
+    fileComp: string;
+    filterData: BasicFilter | null;
+    options: CompareSettings;
+    fileSettings: CompareFileSettings;
+}
+
 export interface ValidateTask {
     id: string;
     type: typeof mainTaskTypes.VALIDATE;
@@ -148,9 +238,23 @@ export interface ValidatorProcessTask {
     outputDir?: string;
 }
 
-export type MainProcessTask = ConverterProcessTask | ValidatorProcessTask;
+export interface CompareProcessTask {
+    type: CompareTask['type'];
+    id: string;
+    webContentsId: string;
+    fileBase: string;
+    fileComp: string;
+    filterData: BasicFilter | null;
+    options: CompareSettings;
+    fileSettings: CompareFileSettings;
+}
 
-export type MainTask = ConvertTask | ValidateTask;
+export type MainProcessTask =
+    | ConverterProcessTask
+    | ValidatorProcessTask
+    | CompareProcessTask;
+
+export type MainTask = ConvertTask | ValidateTask | CompareTask;
 
 export { UpdateCheckResult };
 
@@ -220,7 +324,23 @@ export interface ValidatorTaskProgress {
     logFileName?: string | null;
 }
 
-export type TaskProgress = ValidatorTaskProgress | ConverterTaskProgress;
+export interface CompareTaskProgress {
+    type: typeof mainTaskTypes.COMPARE;
+    id: string;
+    progress: number;
+    issues: number;
+    result?: DatasetDiff;
+    pageMaps?: {
+        base: number[];
+        comp: number[];
+    };
+    error?: string;
+}
+
+export type TaskProgress =
+    | ValidatorTaskProgress
+    | ConverterTaskProgress
+    | CompareTaskProgress;
 
 export interface NewWindowProps {
     goTo?: {
@@ -230,5 +350,9 @@ export interface NewWindowProps {
     issues?: {
         filteredIssues: string[];
         reportId: string;
+    };
+    compare?: {
+        path1: string;
+        path2: string;
     };
 }

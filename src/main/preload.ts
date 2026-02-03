@@ -138,13 +138,16 @@ const isWindows: ElectronApi['isWindows'] = process.platform === 'win32';
 const startTask: ElectronApi['startTask'] = (task) =>
     ipcRenderer.invoke('main:startTask', task);
 
+const stopTask: ElectronApi['stopTask'] = (id) =>
+    ipcRenderer.invoke('main:stopTask', id);
+
 const onTaskProgress: ElectronApi['onTaskProgress'] = (callback) => {
-    ipcRenderer.on(
-        'renderer:taskProgress',
-        async (_event: IpcRendererEvent, info: TaskProgress) => {
-            callback(info);
-        },
-    );
+    const subscription = (_event: IpcRendererEvent, info: TaskProgress) =>
+        callback(info);
+    ipcRenderer.on('renderer:taskProgress', subscription);
+    return () => {
+        ipcRenderer.removeListener('renderer:taskProgress', subscription);
+    };
 };
 
 const cleanTaskProgressListeners: ElectronApi['cleanTaskProgressListeners'] =
@@ -222,6 +225,7 @@ contextBridge.exposeInMainWorld('electron', {
     downloadValidationReport,
     isWindows,
     startTask,
+    stopTask,
     onTaskProgress,
     cleanTaskProgressListeners,
     getAppVersion,

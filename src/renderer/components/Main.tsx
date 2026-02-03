@@ -9,6 +9,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import KeyboardIcon from '@mui/icons-material/Keyboard';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import DescriptionIcon from '@mui/icons-material/Description';
+import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import {
     DashboardLayout,
     DashboardLayoutSlots,
@@ -24,15 +25,18 @@ import {
     setPathname,
     setZoomLevel,
     setDefineFileId,
+    initializeCompare,
 } from 'renderer/redux/slices/ui';
 import { AllowedPathnames, NewWindowProps } from 'interfaces/common';
 import ViewerToolbar from 'renderer/components/Toolbars/ViewerToolbar';
 import ReportToolbar from 'renderer/components/Toolbars/ReportToolbar';
 import DefineToolbar from 'renderer/components/Toolbars/DefineToolbar';
+import CompareToolbar from 'renderer/components/Toolbars/CompareToolbar';
 import ToolbarActions from 'renderer/components/ToolbarActions';
 import Shortcuts from 'renderer/components/Shortcuts';
 import Converter from 'renderer/components/Converter';
 import Validator from 'renderer/components/Validator';
+import Compare from 'renderer/components/Compare';
 import About from 'renderer/components/About';
 import { paths } from 'misc/constants';
 import { saveStore } from 'renderer/redux/stateUtils';
@@ -47,8 +51,9 @@ const styles = {
         width: 32,
         height: 32,
         marginTop: '3px',
+        ml: 3,
         fontSize: 16,
-        fontWeight: 500,
+        fontWeight: 700,
         color: '#1976d2',
         background:
             'radial-gradient(circle farthest-corner at right,#eeeeee,#c4c4c4)',
@@ -67,12 +72,12 @@ const NAVIGATION: Navigation = [
     },
     {
         segment: 'definexml',
-        title: 'Define-XML',
+        title: 'Define',
         icon: <DescriptionIcon />,
     },
     {
         segment: 'api',
-        title: 'Connect to API',
+        title: 'API',
         icon: <CloudIcon />,
     },
     {
@@ -91,6 +96,11 @@ const NAVIGATION: Navigation = [
         segment: 'validator',
         title: 'Validator',
         icon: <FactCheckIcon />,
+    },
+    {
+        segment: 'compare',
+        title: 'Compare',
+        icon: <CompareArrowsIcon />,
     },
     {
         kind: 'divider',
@@ -293,6 +303,23 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
             filePath: string,
             newWindowProps?: NewWindowProps,
         ) => {
+            if (newWindowProps?.compare) {
+                const { path1, path2 } = newWindowProps.compare;
+                const handleOpenCompare = async (
+                    fileBase: string,
+                    fileComp: string,
+                ) => {
+                    dispatch(
+                        initializeCompare({
+                            fileBase,
+                            fileComp,
+                        }),
+                    );
+                    dispatch(setPathname({ pathname: paths.COMPARE }));
+                };
+                return handleOpenCompare(path1, path2);
+            }
+
             // Get file extension
             const extension = filePath.split('.').pop();
 
@@ -351,6 +378,10 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
         slots.appTitle = DefineToolbar;
     }
 
+    if (pathname === paths.COMPARE) {
+        slots.appTitle = CompareToolbar;
+    }
+
     return (
         <AppProvider
             navigation={NAVIGATION}
@@ -365,6 +396,7 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                         <ViewFile />
                     )}
                     {pathname === paths.DEFINEXML && <DefineXml />}
+                    {pathname === paths.COMPARE && <Compare />}
                     {pathname === paths.SETTINGS && <Settings />}
                     {pathname === paths.API && <Api />}
                     {pathname === paths.CONVERTER && <Converter />}

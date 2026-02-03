@@ -57,33 +57,46 @@ class ApiService {
     private openedDefineContents: { [fileId: string]: DefineXmlContent } = {};
 
     // Open file
-    public openFile = async (
-        mode: 'local' | 'remote',
-        filePath?: string,
-        folderPath?: string,
+    public openFile = async ({
+        mode,
+        filePath,
+        folderPath,
+        apiInfo,
+        compareId,
+        filterColumns,
+    }: {
+        mode: 'local' | 'remote';
+        filePath?: string;
+        folderPath?: string;
         apiInfo?: {
             api: IApiRecord;
             study: IApiStudy;
             dataset: IApiStudyDataset;
-        },
-    ): Promise<IOpenFileWithMetadata> => {
+        };
+        compareId?: string;
+        filterColumns?: string[];
+    }): Promise<IOpenFileWithMetadata> => {
         let fileData: IOpenFile;
         // Check if the file is already open
         if (filePath !== undefined) {
             let foundFileData: IOpenFile | undefined;
             this.openedFiles.forEach((file) => {
-                if (file.path === filePath) {
+                if (file.path === filePath && file.compareId === compareId) {
                     foundFileData = {
                         fileId: file.fileId,
                         type: file.type,
                         path: file.path,
                         lastModified: file.lastModified || 0,
+                        compareId,
                     };
                 }
             });
             if (foundFileData !== undefined) {
                 // Get metadata
-                const metadata = await this.getMetadata(foundFileData.fileId);
+                const metadata = await this.getMetadata(
+                    foundFileData.fileId,
+                    filterColumns,
+                );
                 if (metadata === null) {
                     // Error reading metadata
                     return {
@@ -104,11 +117,16 @@ class ApiService {
                     metadata: {} as DatasetJsonMetadata,
                     errorMessage: 'API info not provided reading metadata',
                     lastModified: 0,
+                    compareId,
                 };
             }
-            fileData = await this.openFileRemote(apiInfo);
+            fileData = await this.openFileRemote(apiInfo, compareId);
         } else {
-            fileData = await this.openFileLocal(filePath, folderPath);
+            fileData = await this.openFileLocal(
+                filePath,
+                folderPath,
+                compareId,
+            );
         }
 
         if (fileData.errorMessage) {
@@ -122,7 +140,8 @@ class ApiService {
 
         // Check if the file is already open
         const fileIndex = this.openedFiles.findIndex(
-            (file) => file.path === fileData.path,
+            (file) =>
+                file.path === fileData.path && file.compareId === compareId,
         );
         if (fileIndex !== -1) {
             // Check that fileId is the same (it must be)
@@ -138,6 +157,7 @@ class ApiService {
                 mode,
                 name: fileData.path,
                 lastModified: fileData.lastModified,
+                compareId,
             };
         } else {
             this.openedFiles.push({
@@ -147,13 +167,18 @@ class ApiService {
                 mode,
                 name: fileData.path,
                 lastModified: fileData.lastModified,
+                compareId,
             });
         }
 
         // Get metadata
-        const metadata = await this.getMetadata(fileData.fileId);
+        const metadata = await this.getMetadata(fileData.fileId, filterColumns);
         if (metadata === null) {
             // Error reading metadata
+            // Remove the file from opened files
+            this.openedFiles = this.openedFiles.filter(
+                (file) => file.fileId !== fileData.fileId,
+            );
             return {
                 ...fileData,
                 metadata: {} as DatasetJsonMetadata,
@@ -167,6 +192,7 @@ class ApiService {
     private openFileLocal = async (
         filePath?: string,
         folderPath?: string,
+        compareId?: string,
     ): Promise<IOpenFile> => {
         // Read encoding from state
         const encoding = store.getState().settings.other.inEncoding;
@@ -174,6 +200,7 @@ class ApiService {
             encoding,
             filePath,
             folderPath,
+            fileIdPrefix: compareId,
         });
         if (response === null) {
             return {
@@ -182,16 +209,20 @@ class ApiService {
                 path: '',
                 errorMessage: 'Failed to open the file',
                 lastModified: 0,
+                compareId,
             };
         }
-        return response;
+        return { ...response, compareId };
     };
 
-    private openFileRemote = async (apiInfo: {
-        api: IApiRecord;
-        study: IApiStudy;
-        dataset: IApiStudyDataset;
-    }): Promise<IOpenFile> => {
+    private openFileRemote = async (
+        apiInfo: {
+            api: IApiRecord;
+            study: IApiStudy;
+            dataset: IApiStudyDataset;
+        },
+        compareId?: string,
+    ): Promise<IOpenFile> => {
         // At this stage it is already know that the dataset exists
         let lastModified = 0;
         if (apiInfo.dataset.datasetJSONCreationDateTime) {
@@ -204,6 +235,7 @@ class ApiService {
             type: 'json',
             path: `${apiInfo.api.address}${apiInfo.dataset.href}`,
             lastModified,
+            compareId,
         };
         return result;
     };
@@ -211,6 +243,7 @@ class ApiService {
     // Get dataset metadata
     public getMetadata = async (
         fileId: string,
+        filterColumns?: string[],
     ): Promise<DatasetJsonMetadata | null> => {
         const file = this.openedFiles.find(
             (fileItem) => fileItem.fileId === fileId,
@@ -232,6 +265,18 @@ class ApiService {
         }
         if (metadata === null) {
             return null;
+        }
+
+        // If filterColumns is specified filter metadata columns
+        if (filterColumns !== undefined && filterColumns.length > 0) {
+            metadata = {
+                ...metadata,
+                columns: metadata.columns.filter((col) =>
+                    filterColumns
+                        .map((fCol) => fCol.toLowerCase())
+                        .includes(col.name.toLowerCase()),
+                ),
+            };
         }
 
         // Save metadata
@@ -284,6 +329,7 @@ class ApiService {
         settings: ISettings,
         filterColumns?: string[],
         filterData?: BasicFilter,
+        keepOpenedData: boolean = false,
     ): Promise<ITableRow[]> => {
         const file = this.openedFiles.find(
             (fileItem) => fileItem.fileId === fileId,
@@ -301,39 +347,57 @@ class ApiService {
         }
 
         let result: ItemDataArray[] | null;
-        if (file.mode === 'remote') {
-            result = await this.getObservationsRemote(
-                fileId,
-                start,
-                length,
-                filterData,
-                metadata.columns,
-            );
-        } else {
-            result = await this.getObservationsLocal(
-                fileId,
-                start,
-                length,
-                filterColumns,
-                filterData,
-                metadata.columns,
-            );
+        try {
+            if (file.mode === 'remote') {
+                result = await this.getObservationsRemote(
+                    fileId,
+                    start,
+                    length,
+                    filterData,
+                    metadata.columns,
+                );
+            } else {
+                result = await this.getObservationsLocal(
+                    fileId,
+                    start,
+                    length,
+                    filterColumns,
+                    filterData,
+                    metadata.columns,
+                );
+            }
+        } catch (error) {
+            result = null;
         }
 
         if (result === null) {
             return [];
         }
 
+        let metadataFiltered = metadata;
+        if (filterColumns !== undefined) {
+            metadataFiltered = {
+                ...metadata,
+                columns: metadata.columns.filter((col) =>
+                    filterColumns
+                        .map((fCol) => fCol.toLowerCase())
+                        .includes(col.name.toLowerCase()),
+                ),
+            };
+        }
+
         // Transform data
         const transformedData = transformData(
             result,
-            metadata,
+            metadataFiltered,
             settings,
             start,
         );
 
-        // TODO: small datasets can be kept without resettings
-        this.openedFilesData = {};
+        // TODO: small datasets can be kept without resettings by default
+        if (!keepOpenedData) {
+            this.openedFilesData = {};
+        }
         this.openedFilesData[fileId] = transformedData;
 
         store.dispatch(
@@ -581,6 +645,7 @@ class ApiService {
                     type: file.type,
                     path: file.path,
                     lastModified: file.lastModified || 0,
+                    compareId: file.compareId,
                 };
             });
     };
@@ -759,10 +824,15 @@ class ApiService {
         return result;
     };
 
+    public stopTask = async (id: string) => {
+        const result = window.electron.stopTask(id);
+        return result;
+    };
+
     public subscribeToTaskProgress = (
         callback: (info: TaskProgress) => void,
-    ) => {
-        window.electron.onTaskProgress(callback);
+    ): (() => void) => {
+        return window.electron.onTaskProgress(callback);
     };
 
     public cleanTaskProgressListeners = () => {
@@ -868,6 +938,7 @@ class ApiService {
         return result;
     };
 
+    // Define XML
     public openDefineXml = async (
         filePath?: string,
     ): Promise<DefineFileInfo | null> => {
@@ -948,6 +1019,11 @@ class ApiService {
 
     public clearSearchResults = async (): Promise<void> => {
         await window.electron.clearSearchResults();
+    };
+
+    // Miscellaneous
+    public getPathForFile = (file: File): string => {
+        return window.electron.pathForFile(file);
     };
 }
 

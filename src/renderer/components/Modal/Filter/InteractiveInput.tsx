@@ -151,7 +151,9 @@ const ValueAutocomplete: React.FC<{
                     !Array.isArray(condition.value)
                     ? []
                     : (condition.value
-                          .filter((value) => value !== null)
+                          .filter(
+                              (value) => value !== null && value !== undefined,
+                          )
                           .map((value) => value.toString()) as string[]);
             }
             return condition.value === null || !Array.isArray(condition.value)
@@ -159,7 +161,9 @@ const ValueAutocomplete: React.FC<{
                 : (condition.value as string[]);
         }
         if (['number', 'boolean'].includes(columnType)) {
-            return condition.value === null ? '' : condition.value.toString();
+            return condition.value === null || condition.value === undefined
+                ? ''
+                : condition.value.toString();
         }
         return condition.value as string;
     }, [isMultiple, columnType, condition.value]);
@@ -174,7 +178,7 @@ const ValueAutocomplete: React.FC<{
     if (columnName !== undefined && uniqueValues[columnName]) {
         // Do not show null in multiselection, nulls should be handled by separate condition
         valueOptions = uniqueValues[columnName]
-            .filter((value) => value !== null)
+            .filter((value) => value !== null && value !== undefined)
             .map((value) => value.toString());
     }
 

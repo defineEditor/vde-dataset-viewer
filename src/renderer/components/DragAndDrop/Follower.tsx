@@ -50,7 +50,7 @@ const Follower: React.FC<Props> = ({ mouseX, mouseY }) => {
     const [elements, setElements] = useState<
         Array<{ id: number; x: number; y: number; createdAt: number }>
     >([]);
-    const animationFrameRef = useRef<number>();
+    const animationFrameRef = useRef<number | null>(null);
     const elementIdRef = useRef(0);
 
     // Clean up expired elements every second

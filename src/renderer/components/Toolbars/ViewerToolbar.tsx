@@ -5,6 +5,7 @@ import ShortcutIcon from '@mui/icons-material/Shortcut';
 import InfoIcon from '@mui/icons-material/Info';
 import FilterIcon from '@mui/icons-material/FilterAlt';
 import NextPlanOutlinedIcon from '@mui/icons-material/NextPlan';
+import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -15,6 +16,7 @@ import {
     setPage,
     openSnackbar,
     toggleSidebar,
+    setCompareFiles,
 } from 'renderer/redux/slices/ui';
 import { resetFilter, addRecent } from 'renderer/redux/slices/data';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
@@ -25,7 +27,7 @@ import { modals, paths } from 'misc/constants';
 const styles = {
     main: {
         width: '100%',
-        paddingLeft: 1,
+        paddingLeft: 2,
     },
     dataset: {
         color: 'grey.800',
@@ -42,14 +44,16 @@ const Header: React.FC = () => {
     const validatorVersion = useAppSelector(
         (state) => state.data.validator.info.version,
     );
+
+    const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+
     const isFilterEnabled = useAppSelector(
-        (state) => state.data.filterData.currentFilter !== null,
+        (state) =>
+            state.data.filterData.currentFilter[currentFileId] !== undefined,
     );
     const isMaskEnabled = useAppSelector(
         (state) => state.data.maskData.currentMask !== null,
     );
-
-    const currentFileId = useAppSelector((state) => state.ui.currentFileId);
 
     const isModalOpen = useAppSelector((state) => state.ui.modals?.length > 0);
 
@@ -100,8 +104,6 @@ const Header: React.FC = () => {
         );
         // Reset page for the new dataset
         dispatch(setPage({ fileId: newDataInfo.fileId, page: 0 }));
-        // Reset filter for the new dataset
-        dispatch(resetFilter());
     }, [apiService, dispatch]);
     const handleGoToClick = useCallback(() => {
         dispatch(openModal({ type: modals.GOTO, data: {} }));
@@ -114,8 +116,8 @@ const Header: React.FC = () => {
     }, [dispatch]);
 
     const handleFilterReset = useCallback(() => {
-        dispatch(resetFilter());
-    }, [dispatch]);
+        dispatch(resetFilter({ fileId: currentFileId }));
+    }, [dispatch, currentFileId]);
 
     const handleDataSetInfoClick = useCallback(() => {
         dispatch(openModal({ type: modals.DATASETINFO, data: {} }));
@@ -124,6 +126,28 @@ const Header: React.FC = () => {
     const handleMaskClick = useCallback(() => {
         dispatch(openModal({ type: modals.MASK, data: {} }));
     }, [dispatch]);
+
+    const handleCompareClick = useCallback(() => {
+        const allOpenFiles = apiService.getOpenedFiles();
+        // Check if there is a file to the left of the current dataset
+        let currentFilePath: string | undefined;
+        let previousFilePath: string | undefined;
+        allOpenFiles.some((file) => {
+            if (file.fileId === currentFileId) {
+                currentFilePath = file.path;
+                return true;
+            }
+            previousFilePath = file.path;
+            return false;
+        });
+        dispatch(
+            setCompareFiles({
+                fileBase: currentFilePath,
+                fileComp: previousFilePath,
+            }),
+        );
+        dispatch(openModal({ type: modals.SELECTCOMPARE, data: {} }));
+    }, [dispatch, apiService, currentFileId]);
 
     const handleToggleSidebar = useCallback(() => {
         dispatch(toggleSidebar());
@@ -188,12 +212,12 @@ const Header: React.FC = () => {
         );
         // Reset page for the new dataset
         dispatch(setPage({ fileId: newDataInfo.fileId, page: 0 }));
-        // Reset filter for the new dataset
-        dispatch(resetFilter());
-    }, [apiService, dispatch, currentFileId, handleCloseDataset]); // Add shortcuts for actions
+    }, [apiService, dispatch, currentFileId, handleCloseDataset]);
+
+    // Add shortcuts for actions
     useEffect(() => {
         const handleViewerToolbarKeyDown = (event: KeyboardEvent) => {
-            // Do use keywords if a Modal is open
+            // Do use shortcuts if a Modal is open
             if (event.ctrlKey && !isModalOpen) {
                 event.preventDefault();
                 event.stopPropagation();
@@ -220,6 +244,9 @@ const Header: React.FC = () => {
                     case 'e':
                         handleMaskClick();
                         break;
+                    case 's':
+                        handleCompareClick();
+                        break;
                     case '`':
                         handleToggleSidebar();
                         break;
@@ -243,6 +270,7 @@ const Header: React.FC = () => {
         handleToggleSidebar,
         handleMaskClick,
         handleReloadClick,
+        handleCompareClick,
         isModalOpen,
     ]);
 
@@ -326,6 +354,19 @@ const Header: React.FC = () => {
                     <VisibilityIcon
                         sx={{
                             color: isMaskEnabled ? 'primary.main' : 'grey.600',
+                        }}
+                    />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Compare" enterDelay={1000}>
+                <IconButton
+                    onClick={handleCompareClick}
+                    id="filterData"
+                    size="small"
+                >
+                    <CompareArrowsIcon
+                        sx={{
+                            color: 'grey.600',
                         }}
                     />
                 </IconButton>

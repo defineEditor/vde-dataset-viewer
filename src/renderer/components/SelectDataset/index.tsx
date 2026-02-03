@@ -18,7 +18,9 @@ const SelectDataset = () => {
     const recentFolders = useAppSelector((state) => state.data.recentFolders);
 
     const [openedFiles, setOpenedFiles] = useState(
-        apiService.getOpenedFiles().filter((file) => file.mode === 'local'),
+        apiService
+            .getOpenedFiles()
+            .filter((file) => file.mode === 'local' && !file.compareId),
     );
 
     const handleOpenLocal = useCallback(
@@ -91,7 +93,9 @@ const SelectDataset = () => {
         );
         apiService.close(fileId);
         setOpenedFiles(
-            apiService.getOpenedFiles().filter((file) => file.mode === 'local'),
+            apiService
+                .getOpenedFiles()
+                .filter((file) => file.mode === 'local' && !file.compareId),
         );
     };
 

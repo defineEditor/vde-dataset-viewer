@@ -47,6 +47,7 @@ const ReportFilter: React.FC<IUiModalFilter> = ({
 
     return (
         <FilterBody
+            fileId=""
             type={type}
             filterType={filterType}
             currentBasicFilter={currentBasicFilter}
