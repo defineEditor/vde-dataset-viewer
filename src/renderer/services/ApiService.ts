@@ -522,7 +522,8 @@ class ApiService {
                     .map((row) => row[columnId])
                     .filter(
                         (value, index, self) => self.indexOf(value) === index,
-                    );
+                    )
+                    .sort();
                 result[columnId] = {
                     values: uniqueValues,
                     counts: {},
