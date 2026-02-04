@@ -37,6 +37,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
                 anchorPosition={anchorPosition}
                 onClose={onClose}
                 header={header}
+                metadata={metadata}
             />
         );
     }

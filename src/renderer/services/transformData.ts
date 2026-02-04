@@ -1,3 +1,4 @@
+/* eslint-disable no-redeclare */
 import { DatasetJsonMetadata, ISettings, ITableRow } from 'interfaces/common';
 import { ItemDataArray } from 'js-stream-dataset-json';
 import {
@@ -7,12 +8,38 @@ import {
     sasTimeToComponents,
 } from 'renderer/utils/transformUtils';
 
-const transformData = (
+function transformData(
     data: ItemDataArray[],
     metadata: DatasetJsonMetadata,
     settings: ISettings,
     start: number,
-): ITableRow[] => {
+    type: 'array',
+): {
+    data: ItemDataArray[];
+    isTransformed: boolean;
+};
+
+function transformData(
+    data: ItemDataArray[],
+    metadata: DatasetJsonMetadata,
+    settings: ISettings,
+    start: number,
+    type: 'object',
+): {
+    data: ITableRow[];
+    isTransformed: boolean;
+};
+
+function transformData(
+    data: ItemDataArray[],
+    metadata: DatasetJsonMetadata,
+    settings: ISettings,
+    start: number,
+    type: 'array' | 'object',
+): {
+    data: ITableRow[] | ItemDataArray[];
+    isTransformed: boolean;
+} {
     // Inital rows;
     // If the data is rounded, round the numbers
     const colsToRound: number[] = [];
@@ -71,16 +98,28 @@ const transformData = (
         });
     }
 
-    return data.map((row, index) => {
-        const newRow: ITableRow = {};
+    const isTransformed =
+        colsToRound.length > 0 ||
+        numericDateColsToFormat.length > 0 ||
+        numericTimeColsToFormat.length > 0 ||
+        numericDatetimeColsToFormat.length > 0;
+
+    if (!isTransformed && type === 'array') {
+        // Nothing to change
+        return { data, isTransformed };
+    }
+
+    const newData = data.map((row, index) => {
+        const newRow: ITableRow | ItemDataArray = type === 'array' ? [] : {};
         row.forEach((cell, cellIndex) => {
             // Round values
+            let newCell = cell;
             if (
                 settings.viewer.roundNumbers &&
                 cell != null &&
                 colsToRound.includes(cellIndex)
             ) {
-                newRow[metadata.columns[cellIndex].name] = parseFloat(
+                newCell = parseFloat(
                     Number(cell).toFixed(settings.viewer.maxPrecision),
                 );
             }
@@ -93,7 +132,7 @@ const transformData = (
             ) {
                 // Convert numeric SAS date to character format
                 const dateValue = sasDateToJsDate(Number(cell));
-                newRow[metadata.columns[cellIndex].name] =
+                newCell =
                     settings.viewer.dateFormat === 'DDMONYEAR'
                         ? formatDateToDDMONYYYY(dateValue)
                         : dateValue.toISOString().split('T')[0];
@@ -106,8 +145,7 @@ const transformData = (
                 const { hours, minutes, seconds } = sasTimeToComponents(
                     Number(cell),
                 );
-                newRow[metadata.columns[cellIndex].name] =
-                    `${hours}:${minutes}:${seconds}`;
+                newCell = `${hours}:${minutes}:${seconds}`;
             } else if (
                 settings.viewer.applyDateFormat &&
                 cell != null &&
@@ -115,21 +153,32 @@ const transformData = (
             ) {
                 // Convert numeric SAS datetime to character format
                 const datetimeValue = sasDatetimeToJsDate(Number(cell));
-                newRow[metadata.columns[cellIndex].name] =
+                newCell =
                     settings.viewer.dateFormat === 'DDMONYEAR'
                         ? formatDateToDDMONYYYY(datetimeValue, true)
                         : datetimeValue
                               .toISOString()
                               .replace('T', ' ')
                               .split('.')[0];
+            }
+
+            if (type === 'array') {
+                newRow[cellIndex] = newCell;
             } else {
-                newRow[metadata.columns[cellIndex].name] = cell;
+                newRow[metadata.columns[cellIndex].name] = newCell;
             }
         });
-        // Add row number
-        newRow['#'] = index + 1 + start;
+        if (type === 'object') {
+            // Add row number
+            newRow['#'] = index + 1 + start;
+        }
         return newRow;
     });
-};
+
+    return {
+        data: newData as ITableRow[] | ItemDataArray[],
+        isTransformed,
+    };
+}
 
 export default transformData;

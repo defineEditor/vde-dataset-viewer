@@ -104,6 +104,9 @@ export interface IUiModalVariableInfo extends IUiModalBase {
 export interface IUiModalFilter extends IUiModalBase {
     type: typeof modals.FILTER;
     filterType: 'dataset' | 'report' | 'compare';
+    data: {
+        defaultFilter?: BasicFilter;
+    };
 }
 
 export type IUiModal =
