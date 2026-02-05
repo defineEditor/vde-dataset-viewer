@@ -72,6 +72,8 @@ export interface CompareSettings {
     maxColumnDiffCount: number;
     ignorePattern: string;
     ignoreColumnCase: boolean;
+    ignoreWhiteSpaces: boolean;
+    ignoreCase: boolean;
     reorderCompareColumns: boolean;
 }
 
@@ -135,6 +137,7 @@ export interface DatasetDiff {
     metadata: MetadataDiff;
     data: DataDiff;
     summary: DiffSummary;
+    settings: CompareSettings;
     pageMaps: {
         base: number[];
         comp: number[];
@@ -356,3 +359,11 @@ export interface NewWindowProps {
         path2: string;
     };
 }
+
+export type DeepPartial<T> = {
+    [P in keyof T]?: T[P] extends Array<infer U>
+        ? Array<DeepPartial<U>>
+        : T[P] extends object
+          ? DeepPartial<T[P]>
+          : T[P];
+};

@@ -324,7 +324,7 @@ const compareMetadata = (
     return metadataDiff;
 };
 
-const compareData = (
+export const compareData = (
     base: ItemDataArray[],
     compare: ItemDataArray[],
     baseMeta: DatasetMetadata,
@@ -340,6 +340,7 @@ const compareData = (
         maxDiffCount,
         maxColumnDiffCount,
         ignoreColumnCase,
+        ignoreWhiteSpaces,
         ignorePattern,
     } = options;
 
@@ -414,8 +415,16 @@ const compareData = (
         const isNumeric = ['integer', 'float', 'double', 'decimal'].includes(
             type,
         );
+        // TODO - I think we don't need to check typeof here, as it is either null or number
         if (isNumeric && typeof val1 === 'number' && typeof val2 === 'number') {
             return Math.abs(val1 - val2) <= tolerance;
+        }
+        if (
+            ignoreWhiteSpaces &&
+            typeof val1 === 'string' &&
+            typeof val2 === 'string'
+        ) {
+            return val1.trim() === val2.trim();
         }
         return val1 === val2;
     };
@@ -493,6 +502,22 @@ const compareData = (
                     hasDiff = true;
                     dataDiff.modifiedRows.push(diff);
                 }
+            } else if (i >= base.length) {
+                // Added row
+                hasDiff = true;
+                const diff: DataDiffRow = {
+                    rowBase: null,
+                    rowCompare: i + rowShiftCompare,
+                };
+                dataDiff.addedRows.push(diff);
+            } else if (i >= compare.length) {
+                // Deleted row
+                hasDiff = true;
+                const diff: DataDiffRow = {
+                    rowBase: i + rowShiftBase,
+                    rowCompare: null,
+                };
+                dataDiff.deletedRows.push(diff);
             }
             if (hasDiff) {
                 diffCount++;
@@ -857,6 +882,7 @@ process.parentPort.once(
             sendMessage(100, summary.totalDiffs, {
                 metadata: metadataDiff,
                 data: dataDiff,
+                settings: options,
                 summary,
                 pageMaps,
             });

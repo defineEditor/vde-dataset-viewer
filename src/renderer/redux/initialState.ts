@@ -67,6 +67,8 @@ export const settings: ISettings = {
         maxColumnDiffCount: 50,
         ignorePattern: '',
         ignoreColumnCase: true,
+        ignoreWhiteSpaces: false,
+        ignoreCase: false,
         reorderCompareColumns: true,
     },
 };
@@ -115,6 +117,7 @@ export const ui: IUi = {
         resultTab: 'data',
         showAllDifferences: false,
         info: {},
+        customSettings: {},
     },
 };
 

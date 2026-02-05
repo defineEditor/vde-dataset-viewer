@@ -12,6 +12,7 @@ import {
     IUiViewer,
     DefineTab,
     IUiCompare,
+    CompareSettings,
 } from 'interfaces/common';
 import { paths } from 'misc/constants';
 
@@ -473,11 +474,17 @@ export const uiSlice = createSlice({
             action: PayloadAction<{
                 fileBase: string;
                 fileComp: string;
+                customSettings?: Partial<CompareSettings>;
             }>,
         ) => {
             state.compare.startCompare = true;
             state.compare.fileBase = action.payload.fileBase;
             state.compare.fileComp = action.payload.fileComp;
+            if (action.payload.customSettings) {
+                state.compare.customSettings = action.payload.customSettings;
+            } else {
+                state.compare.customSettings = {};
+            }
             // Reset current compare ID
             state.compare.currentCompareId = '';
         },
@@ -498,6 +505,7 @@ export const uiSlice = createSlice({
         },
         stopCompare: (state) => {
             state.compare.startCompare = false;
+            state.compare.customSettings = {};
         },
         closeCompare: (state, action: PayloadAction<{ compareId: string }>) => {
             const { compareId } = action.payload;
@@ -515,6 +523,7 @@ export const uiSlice = createSlice({
             if (state.compare.startCompare === true) {
                 state.compare.startCompare = false;
             }
+            state.compare.customSettings = {};
         },
     },
 });

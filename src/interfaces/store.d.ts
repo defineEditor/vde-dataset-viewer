@@ -200,6 +200,7 @@ export interface IUiCompare {
     startCompare: boolean;
     fileBase: string | null;
     fileComp: string | null;
+    customSettings: Partial<CompareSettings>;
     view: 'horizontal' | 'vertical';
     resultTab: 'summary' | 'metadata' | 'data';
     showAllDifferences: boolean;

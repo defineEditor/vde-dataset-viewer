@@ -83,6 +83,9 @@ const Compare: React.FC = () => {
     const startCompare = useAppSelector(
         (state) => state.ui.compare.startCompare,
     );
+    const customSettings = useAppSelector(
+        (state) => state.ui.compare.customSettings,
+    );
     const datasetDiff = useAppSelector(
         (state) => state.data.compare.data[currentCompareId]?.datasetDiff,
     );
@@ -124,6 +127,11 @@ const Compare: React.FC = () => {
                 dispatch(stopCompare());
                 return () => {};
             }
+            // Update settings with any custom settings from UI
+            const newSettings = {
+                ...settings,
+                ...customSettings,
+            };
             // Initiate the compare task
             const fileNameBase = fileBaseUi.split(/\/|\\/).pop() || fileBaseUi;
             const fileNameComp = fileCompUi.split(/\/|\\/).pop() || fileCompUi;
@@ -133,7 +141,7 @@ const Compare: React.FC = () => {
                 type: mainTaskTypes.COMPARE,
                 fileBase: fileBaseUi,
                 fileComp: fileCompUi,
-                options: settings,
+                options: newSettings,
                 fileSettings: { encoding: 'default', bufferSize: 10000 },
                 filterData: currentFilter,
             };
@@ -237,6 +245,7 @@ const Compare: React.FC = () => {
         closeCompareFiles,
         currentFilter,
         settings,
+        customSettings,
     ]);
 
     if (isComparing) {

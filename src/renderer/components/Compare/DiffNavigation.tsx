@@ -88,18 +88,25 @@ const IssueNavigation: React.FC<{
                         .slice(0, 8)
                         .map((colId) => (
                             <React.Fragment key={colId}>
-                                <Button
-                                    variant="text"
-                                    onClick={() =>
-                                        onSetGoTo({
-                                            row: Number(key) + 1,
-                                            column: colId,
-                                            cellSelection: true,
-                                        })
-                                    }
-                                >
-                                    {colId}
-                                </Button>
+                                {colId === 'whole::row' ? (
+                                    <Typography variant="body2">
+                                        {value[colId].baseVal ||
+                                            value[colId].compVal}
+                                    </Typography>
+                                ) : (
+                                    <Button
+                                        variant="text"
+                                        onClick={() =>
+                                            onSetGoTo({
+                                                row: Number(key) + 1,
+                                                column: colId,
+                                                cellSelection: true,
+                                            })
+                                        }
+                                    >
+                                        {colId}
+                                    </Button>
+                                )}
                             </React.Fragment>
                         ))}
                     {Object.keys(value).length > 8 && (

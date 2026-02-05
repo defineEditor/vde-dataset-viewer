@@ -6,6 +6,7 @@ import {
     DialogActions,
     Button,
     Box,
+    Stack,
     TextField,
     IconButton,
     Autocomplete,
@@ -18,6 +19,8 @@ import {
     Divider,
     InputAdornment,
     Tooltip,
+    FormControlLabel,
+    Checkbox,
 } from '@mui/material';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
@@ -65,6 +68,12 @@ const styles = {
         mt: 2,
         textAlign: 'center',
     },
+    input: {
+        mt: 2,
+    },
+    flag: {
+        mb: 1,
+    },
 };
 
 const SelectCompare: React.FC = () => {
@@ -76,12 +85,19 @@ const SelectCompare: React.FC = () => {
 
     const fileBaseState =
         useAppSelector((state) => state.ui.compare.fileBase) || '';
+
+    const ignoreWhiteSpacesSettings = useAppSelector(
+        (state) => state.settings.compare.ignoreWhiteSpaces,
+    );
     const fileCompState =
         useAppSelector((state) => state.ui.compare.fileComp) || '';
     const currentCompareId = useAppSelector(
         (state) => state.ui.compare.currentCompareId,
     );
 
+    const [ignoreWhiteSpaces, setignoreWhiteSpaces] = useState<boolean>(
+        ignoreWhiteSpacesSettings,
+    );
     const [fileComp, setFileComp] = useState<string>(fileCompState);
     const [fileBase, setFileBase] = useState<string>(fileBaseState);
 
@@ -119,11 +135,12 @@ const SelectCompare: React.FC = () => {
                 initializeCompare({
                     fileBase: newFileBase,
                     fileComp: newFileComp,
+                    customSettings: { ignoreWhiteSpaces },
                 }),
             );
             handleClose();
         },
-        [dispatch, handleClose, currentCompareId],
+        [dispatch, handleClose, currentCompareId, ignoreWhiteSpaces],
     );
 
     const handleSelectFile = async (type: 'base' | 'comp') => {
@@ -186,7 +203,21 @@ const SelectCompare: React.FC = () => {
                 Select Files for Comparison
             </DialogTitle>
             <DialogContent>
-                <Box sx={{ mt: 2 }}>
+                <Stack sx={styles.input}>
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={ignoreWhiteSpaces}
+                                onChange={() =>
+                                    setignoreWhiteSpaces(!ignoreWhiteSpaces)
+                                }
+                                name="compare.ignoreWhiteSpaces"
+                            />
+                        }
+                        label="Ignore White Spaces"
+                        sx={styles.flag}
+                    />
+
                     <Box sx={styles.fileInput}>
                         <TextField
                             fullWidth
@@ -298,7 +329,7 @@ const SelectCompare: React.FC = () => {
                             );
                         }}
                     />
-                </Box>
+                </Stack>
 
                 {recentCompares.length > 0 && (
                     <>

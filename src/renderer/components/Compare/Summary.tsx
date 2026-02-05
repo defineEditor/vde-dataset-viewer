@@ -77,6 +77,23 @@ const styles = {
         overflow: 'auto',
         paddingBottom: '32px',
     },
+    settings: {
+        mt: 2,
+        p: 2,
+        flex: 1,
+        overflow: 'hidden',
+    },
+};
+
+const settingsLabels = {
+    tolerance: 'Tolerance',
+    ignoreWhiteSpaces: 'Ignore White Spaces',
+    ignorePattern: 'Column Ignore Pattern',
+    idColumns: 'ID Columns',
+    ignoreColumnCase: 'Ignore Column Case',
+    reorderCompareColumns: 'Reorder Compare Columns',
+    maxDiffCount: 'Max Differences to Record',
+    maxColumnDiffCount: 'Max Columns with Differences',
 };
 
 const Summary: React.FC = () => {
@@ -184,6 +201,23 @@ const Summary: React.FC = () => {
         },
     ];
 
+    const settingsData: { label: string; value: string }[] = [];
+    Object.keys(datasetDiff.settings)
+        .filter(
+            (key) =>
+                datasetDiff.settings[key] !== undefined &&
+                !(
+                    Array.isArray(datasetDiff.settings[key]) &&
+                    datasetDiff.settings[key].length === 0
+                ),
+        )
+        .forEach((key) => {
+            settingsData.push({
+                label: settingsLabels[key] || key,
+                value: String(datasetDiff.settings[key]),
+            });
+        });
+
     return (
         <Stack
             sx={styles.root}
@@ -210,9 +244,13 @@ const Summary: React.FC = () => {
                                         {item.label}
                                     </TableCell>
                                     <TableCell sx={styles.tableCellValue}>
-                                        <Tooltip title={item.value || ''}>
+                                        {String(item.value).length > 20 ? (
+                                            <Tooltip title={item.value || ''}>
+                                                <span>{item.value}</span>
+                                            </Tooltip>
+                                        ) : (
                                             <span>{item.value}</span>
-                                        </Tooltip>
+                                        )}
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -225,31 +263,84 @@ const Summary: React.FC = () => {
                 </Paper>
             ) : (
                 <>
-                    <Paper sx={styles.summary}>
-                        <Typography variant="h6" gutterBottom>
-                            Comparison Summary
-                        </Typography>
-                        <Table
-                            size="small"
-                            aria-label="comparison-summary"
-                            sx={styles.table}
-                        >
-                            <TableBody>
-                                {summaryData.map((item) => (
-                                    <TableRow key={item.label}>
-                                        <TableCell sx={styles.tableCellLabel}>
-                                            {item.label}
-                                        </TableCell>
-                                        <TableCell sx={styles.tableCellValue}>
-                                            <Tooltip title={item.value || ''}>
-                                                <span>{item.value}</span>
-                                            </Tooltip>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </Paper>
+                    <Stack>
+                        <Paper sx={styles.summary}>
+                            <Typography variant="h6" gutterBottom>
+                                Comparison Summary
+                            </Typography>
+                            <Table
+                                size="small"
+                                aria-label="comparison-summary"
+                                sx={styles.table}
+                            >
+                                <TableBody>
+                                    {summaryData.map((item) => (
+                                        <TableRow key={item.label}>
+                                            <TableCell
+                                                sx={styles.tableCellLabel}
+                                            >
+                                                {item.label}
+                                            </TableCell>
+                                            <TableCell
+                                                sx={styles.tableCellValue}
+                                            >
+                                                {String(item.value).length >
+                                                20 ? (
+                                                    <Tooltip
+                                                        title={item.value || ''}
+                                                    >
+                                                        <span>
+                                                            {item.value}
+                                                        </span>
+                                                    </Tooltip>
+                                                ) : (
+                                                    <span>{item.value}</span>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </Paper>
+                        <Paper sx={styles.settings}>
+                            <Typography variant="h6" gutterBottom>
+                                Comparison Settings
+                            </Typography>
+                            <Table
+                                size="small"
+                                aria-label="comparison-settings"
+                                sx={styles.table}
+                            >
+                                <TableBody>
+                                    {settingsData.map((item) => (
+                                        <TableRow key={item.label}>
+                                            <TableCell
+                                                sx={styles.tableCellLabel}
+                                            >
+                                                {item.label}
+                                            </TableCell>
+                                            <TableCell
+                                                sx={styles.tableCellValue}
+                                            >
+                                                {String(item.value).length >
+                                                20 ? (
+                                                    <Tooltip
+                                                        title={item.value || ''}
+                                                    >
+                                                        <span>
+                                                            {item.value}
+                                                        </span>
+                                                    </Tooltip>
+                                                ) : (
+                                                    <span>{item.value}</span>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </Paper>
+                    </Stack>
 
                     <Paper sx={styles.columnSummary}>
                         <Typography variant="h6" gutterBottom>
