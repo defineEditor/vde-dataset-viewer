@@ -115,6 +115,21 @@ export const Compare: React.FC<CompareProps> = ({
             <FormControlLabel
                 control={
                     <Checkbox
+                        checked={settings.compare.ignoreValueCase}
+                        onChange={onSettingChange}
+                        name="compare.ignoreValueCase"
+                    />
+                }
+                label="Case Insensitive Comparison"
+            />
+            <Typography variant="caption" sx={styles.helperText}>
+                When enabled, string value case is ignored during comparison
+            </Typography>
+        </Stack>
+        <Stack spacing={0}>
+            <FormControlLabel
+                control={
+                    <Checkbox
                         checked={settings.compare.ignoreColumnCase}
                         onChange={onSettingChange}
                         name="compare.ignoreColumnCase"

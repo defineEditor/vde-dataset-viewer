@@ -200,7 +200,7 @@ class ApiService {
             encoding,
             filePath,
             folderPath,
-            fileIdPrefix: compareId,
+            fileIdPrefix: compareId || 'f',
         });
         if (response === null) {
             return {

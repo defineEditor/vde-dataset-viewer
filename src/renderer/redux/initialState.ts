@@ -68,7 +68,7 @@ export const settings: ISettings = {
         ignorePattern: '',
         ignoreColumnCase: true,
         ignoreWhiteSpaces: false,
-        ignoreCase: false,
+        ignoreValueCase: false,
         reorderCompareColumns: true,
     },
 };

@@ -89,14 +89,20 @@ const SelectCompare: React.FC = () => {
     const ignoreWhiteSpacesSettings = useAppSelector(
         (state) => state.settings.compare.ignoreWhiteSpaces,
     );
+    const ignoreValueCaseSettings = useAppSelector(
+        (state) => state.settings.compare.ignoreValueCase,
+    );
     const fileCompState =
         useAppSelector((state) => state.ui.compare.fileComp) || '';
     const currentCompareId = useAppSelector(
         (state) => state.ui.compare.currentCompareId,
     );
 
-    const [ignoreWhiteSpaces, setignoreWhiteSpaces] = useState<boolean>(
+    const [ignoreWhiteSpaces, setIgnoreWhiteSpaces] = useState<boolean>(
         ignoreWhiteSpacesSettings,
+    );
+    const [ignoreValueCase, setIgnoreValueCase] = useState<boolean>(
+        ignoreValueCaseSettings,
     );
     const [fileComp, setFileComp] = useState<string>(fileCompState);
     const [fileBase, setFileBase] = useState<string>(fileBaseState);
@@ -135,12 +141,18 @@ const SelectCompare: React.FC = () => {
                 initializeCompare({
                     fileBase: newFileBase,
                     fileComp: newFileComp,
-                    customSettings: { ignoreWhiteSpaces },
+                    customSettings: { ignoreWhiteSpaces, ignoreValueCase },
                 }),
             );
             handleClose();
         },
-        [dispatch, handleClose, currentCompareId, ignoreWhiteSpaces],
+        [
+            dispatch,
+            handleClose,
+            currentCompareId,
+            ignoreWhiteSpaces,
+            ignoreValueCase,
+        ],
     );
 
     const handleSelectFile = async (type: 'base' | 'comp') => {
@@ -204,19 +216,34 @@ const SelectCompare: React.FC = () => {
             </DialogTitle>
             <DialogContent>
                 <Stack sx={styles.input}>
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                checked={ignoreWhiteSpaces}
-                                onChange={() =>
-                                    setignoreWhiteSpaces(!ignoreWhiteSpaces)
-                                }
-                                name="compare.ignoreWhiteSpaces"
-                            />
-                        }
-                        label="Ignore White Spaces"
-                        sx={styles.flag}
-                    />
+                    <Stack direction="row">
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={ignoreWhiteSpaces}
+                                    onChange={() =>
+                                        setIgnoreWhiteSpaces(!ignoreWhiteSpaces)
+                                    }
+                                    name="compare.ignoreWhiteSpaces"
+                                />
+                            }
+                            label="Ignore White Spaces"
+                            sx={styles.flag}
+                        />
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={ignoreValueCase}
+                                    onChange={() =>
+                                        setIgnoreValueCase(!ignoreValueCase)
+                                    }
+                                    name="compare.ignoreValueCase"
+                                />
+                            }
+                            label="Case Insensitive"
+                            sx={styles.flag}
+                        />
+                    </Stack>
 
                     <Box sx={styles.fileInput}>
                         <TextField

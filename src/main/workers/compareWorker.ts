@@ -341,6 +341,7 @@ export const compareData = (
         maxColumnDiffCount,
         ignoreColumnCase,
         ignoreWhiteSpaces,
+        ignoreValueCase,
         ignorePattern,
     } = options;
 
@@ -419,12 +420,17 @@ export const compareData = (
         if (isNumeric && typeof val1 === 'number' && typeof val2 === 'number') {
             return Math.abs(val1 - val2) <= tolerance;
         }
-        if (
-            ignoreWhiteSpaces &&
-            typeof val1 === 'string' &&
-            typeof val2 === 'string'
-        ) {
-            return val1.trim() === val2.trim();
+        if (typeof val1 === 'string' && typeof val2 === 'string') {
+            if (ignoreValueCase && ignoreWhiteSpaces) {
+                return val1.trim().toLowerCase() === val2.trim().toLowerCase();
+            }
+            if (ignoreValueCase) {
+                return val1.toLowerCase() === val2.toLowerCase();
+            }
+            if (ignoreWhiteSpaces) {
+                return val1.trim() === val2.trim();
+            }
+            return val1 === val2;
         }
         return val1 === val2;
     };

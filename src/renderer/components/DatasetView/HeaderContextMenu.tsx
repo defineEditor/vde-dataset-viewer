@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import {
     Menu,
     MenuItem,
@@ -9,6 +9,7 @@ import {
     ListItemIcon,
     ListItemText,
     Box,
+    Typography,
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { openModal, openSnackbar, setSelect } from 'renderer/redux/slices/ui';
@@ -38,6 +39,14 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+    },
+    showAll: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    subheader: {
+        lineHeight: 2,
     },
 };
 
@@ -89,6 +98,25 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
     ].includes(
         metadata.columns.find((col) => col.name === header.id)?.dataType || '',
     );
+
+    const currentFilterValues = useMemo(() => {
+        return currentFilter === null
+            ? []
+            : currentFilter.conditions
+                  .filter((condition) => condition.variable === header.id)
+                  .filter(
+                      (condition) =>
+                          condition.operator === 'eq' ||
+                          condition.operator === 'in',
+                  )
+                  .map((condition) => condition.value)
+                  .flat();
+    }, [currentFilter, header.id]);
+
+    useEffect(() => {
+        // Initialize selected items based on current filter
+        setSelectedItems(currentFilterValues);
+    }, [currentFilterValues, header.id]);
 
     const isColumnsInCurrentFilter =
         currentFilter === null
@@ -151,7 +179,11 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
         setIsLoadingValues(false);
         setGetAllValues(false);
         setFilterValues([]);
-        setSelectedItems([]);
+        if (currentFilterValues.length > 0) {
+            setSelectedItems(currentFilterValues);
+        } else {
+            setSelectedItems([]);
+        }
         onClose({}, 'action');
     };
 
@@ -357,7 +389,7 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
                         </Box>
                     </ListItemText>
                 </MenuItem>
-                {currentFilter && (
+                {currentFilter && currentFilterValues.length === 0 && (
                     <MenuItem onClick={(e) => handleOpenFilterMenu(e, 'add')}>
                         <ListItemIcon>
                             <AddCircleOutlineIcon fontSize="small" />
@@ -417,9 +449,10 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
                     </MenuItem>
                 ) : (
                     [
-                        selectedItems.length > 0 && (
+                        selectedItems.length > 0 ? (
                             <ListSubheader
                                 key="apply-filter"
+                                sx={styles.subheader}
                                 onClick={(e) =>
                                     handleApplyFilterValue(e, selectedItems)
                                 }
@@ -427,6 +460,15 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
                                 <Button variant="text" size="small">
                                     Apply Filter
                                 </Button>
+                            </ListSubheader>
+                        ) : (
+                            <ListSubheader
+                                key="apply-filter-hint"
+                                sx={styles.subheader}
+                            >
+                                <Typography variant="caption" color="grey.500">
+                                    Ctrl to multi-select
+                                </Typography>
                             </ListSubheader>
                         ),
                         filterValues.map((value) => (
@@ -450,7 +492,13 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
                                     await getValues(true);
                                 }}
                             >
-                                <ExpandMoreIcon fontSize="small" /> Show All
+                                <Typography
+                                    variant="body2"
+                                    sx={styles.showAll}
+                                    color="primary"
+                                >
+                                    <ExpandMoreIcon fontSize="small" /> Show All
+                                </Typography>
                             </MenuItem>
                         ),
                         filterValues.length === 100 && (

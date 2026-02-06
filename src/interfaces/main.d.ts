@@ -73,7 +73,7 @@ export interface CompareSettings {
     ignorePattern: string;
     ignoreColumnCase: boolean;
     ignoreWhiteSpaces: boolean;
-    ignoreCase: boolean;
+    ignoreValueCase: boolean;
     reorderCompareColumns: boolean;
 }
 

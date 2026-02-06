@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useContext } from 'react';
 import {
     Box,
     Typography,
@@ -6,6 +6,7 @@ import {
     List,
     ListItem,
     ListItemText,
+    Button,
     Chip,
     Table,
     TableBody,
@@ -15,7 +16,13 @@ import {
     Tooltip,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { useAppSelector } from 'renderer/redux/hooks';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import AppContext from 'renderer/utils/AppContext';
+import { openNewDataset } from 'renderer/utils/readData';
+import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
+import { openDataset, openSnackbar } from 'renderer/redux/slices/ui';
+import { addRecent } from 'renderer/redux/slices/data';
 
 const styles = {
     root: {
@@ -83,6 +90,14 @@ const styles = {
         flex: 1,
         overflow: 'hidden',
     },
+    booleanIcon: {
+        color: 'grey.700',
+    },
+    pathButton: {
+        textTransform: 'none',
+        padding: 0,
+        minWidth: 0,
+    },
 };
 
 const settingsLabels = {
@@ -92,11 +107,14 @@ const settingsLabels = {
     idColumns: 'ID Columns',
     ignoreColumnCase: 'Ignore Column Case',
     reorderCompareColumns: 'Reorder Compare Columns',
-    maxDiffCount: 'Max Differences to Record',
-    maxColumnDiffCount: 'Max Columns with Differences',
+    maxDiffCount: 'Max Differences to Show',
+    ignoreValueCase: 'Case Insensitive',
+    maxColumnDiffCount: 'Max Differences for Columns',
 };
 
 const Summary: React.FC = () => {
+    const dispatch = useAppDispatch();
+    const { apiService } = useContext(AppContext);
     const currentCompareId = useAppSelector(
         (state) => state.ui.compare.currentCompareId,
     );
@@ -136,6 +154,42 @@ const Summary: React.FC = () => {
 
         return stats;
     }, [datasetDiff]);
+
+    const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+    const handleOpenDataset = async (filePath: string | number | null) => {
+        if (typeof filePath !== 'string') return;
+        // Dispatch an event to open the dataset in a new tab
+        const newDataInfo = await openNewDataset(apiService, 'local', filePath);
+        if (newDataInfo.errorMessage) {
+            if (newDataInfo.errorMessage !== 'cancelled') {
+                dispatch(
+                    openSnackbar({
+                        type: 'error',
+                        message: newDataInfo.errorMessage,
+                    }),
+                );
+            }
+            return;
+        }
+        dispatch(
+            addRecent({
+                name: newDataInfo.metadata.name,
+                label: newDataInfo.metadata.label,
+                path: newDataInfo.path,
+            }),
+        );
+        dispatch(
+            openDataset({
+                fileId: newDataInfo.fileId,
+                type: newDataInfo.type,
+                name: newDataInfo.metadata.name,
+                label: newDataInfo.metadata.label,
+                mode: 'local',
+                totalRecords: newDataInfo.metadata.records,
+                currentFileId,
+            }),
+        );
+    };
 
     if (!datasetDiff) return null;
 
@@ -201,7 +255,7 @@ const Summary: React.FC = () => {
         },
     ];
 
-    const settingsData: { label: string; value: string }[] = [];
+    const settingsData: { label: string; value: string | boolean }[] = [];
     Object.keys(datasetDiff.settings)
         .filter(
             (key) =>
@@ -214,7 +268,10 @@ const Summary: React.FC = () => {
         .forEach((key) => {
             settingsData.push({
                 label: settingsLabels[key] || key,
-                value: String(datasetDiff.settings[key]),
+                value:
+                    typeof datasetDiff.settings[key] === 'boolean'
+                        ? datasetDiff.settings[key]
+                        : String(datasetDiff.settings[key]),
             });
         });
 
@@ -244,9 +301,20 @@ const Summary: React.FC = () => {
                                         {item.label}
                                     </TableCell>
                                     <TableCell sx={styles.tableCellValue}>
-                                        {String(item.value).length > 20 ? (
+                                        {item.label === 'Base File' ||
+                                        item.label === 'Compare File' ? (
                                             <Tooltip title={item.value || ''}>
-                                                <span>{item.value}</span>
+                                                <Button
+                                                    variant="text"
+                                                    sx={styles.pathButton}
+                                                    onClick={() => {
+                                                        handleOpenDataset(
+                                                            item.value,
+                                                        );
+                                                    }}
+                                                >
+                                                    {item.value}
+                                                </Button>
                                             </Tooltip>
                                         ) : (
                                             <span>{item.value}</span>
@@ -284,14 +352,25 @@ const Summary: React.FC = () => {
                                             <TableCell
                                                 sx={styles.tableCellValue}
                                             >
-                                                {String(item.value).length >
-                                                20 ? (
+                                                {item.label === 'Base File' ||
+                                                item.label ===
+                                                    'Compare File' ? (
                                                     <Tooltip
                                                         title={item.value || ''}
                                                     >
-                                                        <span>
+                                                        <Button
+                                                            variant="text"
+                                                            sx={
+                                                                styles.pathButton
+                                                            }
+                                                            onClick={() => {
+                                                                handleOpenDataset(
+                                                                    item.value,
+                                                                );
+                                                            }}
+                                                        >
                                                             {item.value}
-                                                        </span>
+                                                        </Button>
                                                     </Tooltip>
                                                 ) : (
                                                     <span>{item.value}</span>
@@ -331,6 +410,14 @@ const Summary: React.FC = () => {
                                                             {item.value}
                                                         </span>
                                                     </Tooltip>
+                                                ) : item.value === true ? (
+                                                    <CheckCircleOutlineIcon
+                                                        sx={styles.booleanIcon}
+                                                    />
+                                                ) : item.value === false ? (
+                                                    <RadioButtonUncheckedIcon
+                                                        sx={styles.booleanIcon}
+                                                    />
                                                 ) : (
                                                     <span>{item.value}</span>
                                                 )}

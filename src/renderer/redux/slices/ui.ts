@@ -452,22 +452,27 @@ export const uiSlice = createSlice({
             state,
             action: PayloadAction<{ compareId: string }>,
         ) => {
-            state.compare.currentCompareId = action.payload.compareId;
+            const { compareId } = action.payload;
+            state.compare.currentCompareId = compareId;
             const fileBase = state.compare.fileBase || '';
             const fileComp = state.compare.fileComp || '';
             // If there is a compare for the same files, remove it from the info
-            Object.entries(state.compare.info).forEach(([compareId, info]) => {
+            Object.entries(state.compare.info).forEach(([compId, info]) => {
                 if (info.fileBase === fileBase && info.fileComp === fileComp) {
-                    delete state.compare.info[compareId];
+                    delete state.compare.info[compId];
                 }
             });
             // Initialize compare info
-            state.compare.info[action.payload.compareId] = {
+            state.compare.info[compareId] = {
                 currentComparePage: 0,
                 fileBase,
                 fileComp,
                 isComparing: true,
             };
+            // Reset issue index
+            if (state.dataSettings[compareId]) {
+                state.dataSettings[compareId].currentIssueIndex = 0;
+            }
         },
         initializeCompare: (
             state,
