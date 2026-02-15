@@ -173,10 +173,26 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
                 });
             }
         });
+        datasetDiff.data.addedRows.forEach((r) => {
+            diffs.push({
+                row: r.rowBase || r.rowCompare || 0,
+                col: 'whole::row',
+                base: r.rowBase === null ? 'Row Missing' : '',
+                comp: r.rowCompare === null ? 'Row Missing' : '',
+            });
+        });
+        datasetDiff.data.deletedRows.forEach((r) => {
+            diffs.push({
+                row: r.rowBase || r.rowCompare || 0,
+                col: 'whole::row',
+                base: r.rowBase === null ? 'Row Missing' : '',
+                comp: r.rowCompare === null ? 'Row Missing' : '',
+            });
+        });
         return diffs;
     }, [datasetDiff]);
 
-    const handleGoTo = (row: number, column: string) => {
+    const handleGoTo = (row: number, column?: string) => {
         // Find index of this difference
         const diffRows = new Set();
         allDifferences.forEach((diff) => {
@@ -190,7 +206,11 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
                 index: newIndex,
             }),
         );
-        handleSetGoTo({ row, column, cellSelection: true });
+        handleSetGoTo({
+            row,
+            column,
+            cellSelection: column !== undefined,
+        });
         handleClose();
     };
 
@@ -416,34 +436,42 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
                                             <Typography variant="subtitle2">
                                                 {viewMode === 'row'
                                                     ? `Row ${Number(groupKey) + 1}`
-                                                    : `Column ${groupKey}`}
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() =>
-                                                        viewMode === 'row'
-                                                            ? handleCopy(
-                                                                  Number(
+                                                    : groupKey === 'whole::row'
+                                                      ? 'Row'
+                                                      : `Column ${groupKey}`}
+                                                {groupKey !== 'whole::row' && (
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() =>
+                                                            viewMode === 'row'
+                                                                ? handleCopy(
+                                                                      Number(
+                                                                          groupKey,
+                                                                      ),
+                                                                  )
+                                                                : handleCopy(
+                                                                      undefined,
                                                                       groupKey,
-                                                                  ),
-                                                              )
-                                                            : handleCopy(
-                                                                  undefined,
-                                                                  groupKey,
-                                                              )
-                                                    }
-                                                    sx={styles.rowIcon}
-                                                >
-                                                    <ContentCopyIcon fontSize="small" />
-                                                </IconButton>
+                                                                  )
+                                                        }
+                                                        sx={styles.rowIcon}
+                                                    >
+                                                        <ContentCopyIcon fontSize="small" />
+                                                    </IconButton>
+                                                )}
                                             </Typography>
                                         </TableCell>
                                     </TableRow>
                                     {groupedDifferences[groupKey].map(
                                         (diff) => {
-                                            const diffParts = diffChars(
-                                                String(diff.base),
-                                                String(diff.comp),
-                                            );
+                                            const isWholeRow =
+                                                diff.col === 'whole::row';
+                                            const diffParts = !isWholeRow
+                                                ? diffChars(
+                                                      String(diff.base),
+                                                      String(diff.comp),
+                                                  )
+                                                : [];
                                             return (
                                                 <TableRow
                                                     key={`${diff.row}-${diff.col}`}
@@ -455,7 +483,9 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
                                                                 handleGoTo(
                                                                     (diff.row ||
                                                                         0) + 1,
-                                                                    diff.col,
+                                                                    isWholeRow
+                                                                        ? undefined
+                                                                        : diff.col,
                                                                 )
                                                             }
                                                             sx={
@@ -463,7 +493,10 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
                                                             }
                                                         >
                                                             {viewMode === 'row'
-                                                                ? diff.col
+                                                                ? isWholeRow
+                                                                    ? diff.row +
+                                                                      1
+                                                                    : diff.col
                                                                 : diff.row + 1}
                                                         </Button>
                                                     </TableCell>
@@ -474,49 +507,56 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
                                                         {String(diff.comp)}
                                                     </TableCell>
                                                     <TableCell>
-                                                        <span>
-                                                            {diffParts.map(
-                                                                (part, i) => {
-                                                                    const style =
-                                                                        {
-                                                                            backgroundColor:
-                                                                                part.added
-                                                                                    ? 'lightgreen'
-                                                                                    : part.removed
-                                                                                      ? 'salmon'
-                                                                                      : 'transparent',
-                                                                        };
-                                                                    return (
-                                                                        <span
-                                                                            key={
-                                                                                // eslint-disable-next-line react/no-array-index-key
-                                                                                i
-                                                                            }
-                                                                            style={
-                                                                                style
-                                                                            }
-                                                                        >
+                                                        {!isWholeRow && (
+                                                            <span>
+                                                                {diffParts.map(
+                                                                    (
+                                                                        part,
+                                                                        i,
+                                                                    ) => {
+                                                                        const style =
                                                                             {
-                                                                                part.value
-                                                                            }
-                                                                        </span>
-                                                                    );
-                                                                },
-                                                            )}
-                                                        </span>
+                                                                                backgroundColor:
+                                                                                    part.added
+                                                                                        ? 'lightgreen'
+                                                                                        : part.removed
+                                                                                          ? 'salmon'
+                                                                                          : 'transparent',
+                                                                            };
+                                                                        return (
+                                                                            <span
+                                                                                key={
+                                                                                    // eslint-disable-next-line react/no-array-index-key
+                                                                                    i
+                                                                                }
+                                                                                style={
+                                                                                    style
+                                                                                }
+                                                                            >
+                                                                                {
+                                                                                    part.value
+                                                                                }
+                                                                            </span>
+                                                                        );
+                                                                    },
+                                                                )}
+                                                            </span>
+                                                        )}
                                                     </TableCell>
                                                     <TableCell>
-                                                        <IconButton
-                                                            size="small"
-                                                            onClick={() =>
-                                                                handleCopy(
-                                                                    diff.row,
-                                                                    diff.col,
-                                                                )
-                                                            }
-                                                        >
-                                                            <ContentCopyIcon fontSize="small" />
-                                                        </IconButton>
+                                                        {!isWholeRow && (
+                                                            <IconButton
+                                                                size="small"
+                                                                onClick={() =>
+                                                                    handleCopy(
+                                                                        diff.row,
+                                                                        diff.col,
+                                                                    )
+                                                                }
+                                                            >
+                                                                <ContentCopyIcon fontSize="small" />
+                                                            </IconButton>
+                                                        )}
                                                     </TableCell>
                                                 </TableRow>
                                             );

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useContext } from 'react';
 import {
     Box,
     Typography,
@@ -6,6 +6,7 @@ import {
     List,
     ListItem,
     ListItemText,
+    Button,
     Chip,
     Table,
     TableBody,
@@ -15,7 +16,13 @@ import {
     Tooltip,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { useAppSelector } from 'renderer/redux/hooks';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import AppContext from 'renderer/utils/AppContext';
+import { openNewDataset } from 'renderer/utils/readData';
+import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
+import { openDataset, openSnackbar } from 'renderer/redux/slices/ui';
+import { addRecent } from 'renderer/redux/slices/data';
 
 const styles = {
     root: {
@@ -77,9 +84,37 @@ const styles = {
         overflow: 'auto',
         paddingBottom: '32px',
     },
+    settings: {
+        mt: 2,
+        p: 2,
+        flex: 1,
+        overflow: 'hidden',
+    },
+    booleanIcon: {
+        color: 'grey.700',
+    },
+    pathButton: {
+        textTransform: 'none',
+        padding: 0,
+        minWidth: 0,
+    },
+};
+
+const settingsLabels = {
+    tolerance: 'Tolerance',
+    ignoreWhiteSpaces: 'Ignore White Spaces',
+    ignorePattern: 'Column Ignore Pattern',
+    idColumns: 'ID Columns',
+    ignoreColumnCase: 'Ignore Column Case',
+    reorderCompareColumns: 'Reorder Compare Columns',
+    maxDiffCount: 'Max Differences to Show',
+    ignoreValueCase: 'Case Insensitive',
+    maxColumnDiffCount: 'Max Differences for Columns',
 };
 
 const Summary: React.FC = () => {
+    const dispatch = useAppDispatch();
+    const { apiService } = useContext(AppContext);
     const currentCompareId = useAppSelector(
         (state) => state.ui.compare.currentCompareId,
     );
@@ -119,6 +154,42 @@ const Summary: React.FC = () => {
 
         return stats;
     }, [datasetDiff]);
+
+    const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+    const handleOpenDataset = async (filePath: string | number | null) => {
+        if (typeof filePath !== 'string') return;
+        // Dispatch an event to open the dataset in a new tab
+        const newDataInfo = await openNewDataset(apiService, 'local', filePath);
+        if (newDataInfo.errorMessage) {
+            if (newDataInfo.errorMessage !== 'cancelled') {
+                dispatch(
+                    openSnackbar({
+                        type: 'error',
+                        message: newDataInfo.errorMessage,
+                    }),
+                );
+            }
+            return;
+        }
+        dispatch(
+            addRecent({
+                name: newDataInfo.metadata.name,
+                label: newDataInfo.metadata.label,
+                path: newDataInfo.path,
+            }),
+        );
+        dispatch(
+            openDataset({
+                fileId: newDataInfo.fileId,
+                type: newDataInfo.type,
+                name: newDataInfo.metadata.name,
+                label: newDataInfo.metadata.label,
+                mode: 'local',
+                totalRecords: newDataInfo.metadata.records,
+                currentFileId,
+            }),
+        );
+    };
 
     if (!datasetDiff) return null;
 
@@ -184,6 +255,26 @@ const Summary: React.FC = () => {
         },
     ];
 
+    const settingsData: { label: string; value: string | boolean }[] = [];
+    Object.keys(datasetDiff.settings)
+        .filter(
+            (key) =>
+                datasetDiff.settings[key] !== undefined &&
+                !(
+                    Array.isArray(datasetDiff.settings[key]) &&
+                    datasetDiff.settings[key].length === 0
+                ),
+        )
+        .forEach((key) => {
+            settingsData.push({
+                label: settingsLabels[key] || key,
+                value:
+                    typeof datasetDiff.settings[key] === 'boolean'
+                        ? datasetDiff.settings[key]
+                        : String(datasetDiff.settings[key]),
+            });
+        });
+
     return (
         <Stack
             sx={styles.root}
@@ -210,9 +301,24 @@ const Summary: React.FC = () => {
                                         {item.label}
                                     </TableCell>
                                     <TableCell sx={styles.tableCellValue}>
-                                        <Tooltip title={item.value || ''}>
+                                        {item.label === 'Base File' ||
+                                        item.label === 'Compare File' ? (
+                                            <Tooltip title={item.value || ''}>
+                                                <Button
+                                                    variant="text"
+                                                    sx={styles.pathButton}
+                                                    onClick={() => {
+                                                        handleOpenDataset(
+                                                            item.value,
+                                                        );
+                                                    }}
+                                                >
+                                                    {item.value}
+                                                </Button>
+                                            </Tooltip>
+                                        ) : (
                                             <span>{item.value}</span>
-                                        </Tooltip>
+                                        )}
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -225,31 +331,103 @@ const Summary: React.FC = () => {
                 </Paper>
             ) : (
                 <>
-                    <Paper sx={styles.summary}>
-                        <Typography variant="h6" gutterBottom>
-                            Comparison Summary
-                        </Typography>
-                        <Table
-                            size="small"
-                            aria-label="comparison-summary"
-                            sx={styles.table}
-                        >
-                            <TableBody>
-                                {summaryData.map((item) => (
-                                    <TableRow key={item.label}>
-                                        <TableCell sx={styles.tableCellLabel}>
-                                            {item.label}
-                                        </TableCell>
-                                        <TableCell sx={styles.tableCellValue}>
-                                            <Tooltip title={item.value || ''}>
-                                                <span>{item.value}</span>
-                                            </Tooltip>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </Paper>
+                    <Stack>
+                        <Paper sx={styles.summary}>
+                            <Typography variant="h6" gutterBottom>
+                                Comparison Summary
+                            </Typography>
+                            <Table
+                                size="small"
+                                aria-label="comparison-summary"
+                                sx={styles.table}
+                            >
+                                <TableBody>
+                                    {summaryData.map((item) => (
+                                        <TableRow key={item.label}>
+                                            <TableCell
+                                                sx={styles.tableCellLabel}
+                                            >
+                                                {item.label}
+                                            </TableCell>
+                                            <TableCell
+                                                sx={styles.tableCellValue}
+                                            >
+                                                {item.label === 'Base File' ||
+                                                item.label ===
+                                                    'Compare File' ? (
+                                                    <Tooltip
+                                                        title={item.value || ''}
+                                                    >
+                                                        <Button
+                                                            variant="text"
+                                                            sx={
+                                                                styles.pathButton
+                                                            }
+                                                            onClick={() => {
+                                                                handleOpenDataset(
+                                                                    item.value,
+                                                                );
+                                                            }}
+                                                        >
+                                                            {item.value}
+                                                        </Button>
+                                                    </Tooltip>
+                                                ) : (
+                                                    <span>{item.value}</span>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </Paper>
+                        <Paper sx={styles.settings}>
+                            <Typography variant="h6" gutterBottom>
+                                Comparison Settings
+                            </Typography>
+                            <Table
+                                size="small"
+                                aria-label="comparison-settings"
+                                sx={styles.table}
+                            >
+                                <TableBody>
+                                    {settingsData.map((item) => (
+                                        <TableRow key={item.label}>
+                                            <TableCell
+                                                sx={styles.tableCellLabel}
+                                            >
+                                                {item.label}
+                                            </TableCell>
+                                            <TableCell
+                                                sx={styles.tableCellValue}
+                                            >
+                                                {String(item.value).length >
+                                                20 ? (
+                                                    <Tooltip
+                                                        title={item.value || ''}
+                                                    >
+                                                        <span>
+                                                            {item.value}
+                                                        </span>
+                                                    </Tooltip>
+                                                ) : item.value === true ? (
+                                                    <CheckCircleOutlineIcon
+                                                        sx={styles.booleanIcon}
+                                                    />
+                                                ) : item.value === false ? (
+                                                    <RadioButtonUncheckedIcon
+                                                        sx={styles.booleanIcon}
+                                                    />
+                                                ) : (
+                                                    <span>{item.value}</span>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </Paper>
+                    </Stack>
 
                     <Paper sx={styles.columnSummary}>
                         <Typography variant="h6" gutterBottom>

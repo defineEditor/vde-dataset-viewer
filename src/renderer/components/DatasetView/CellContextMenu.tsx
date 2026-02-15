@@ -1,5 +1,12 @@
 import React from 'react';
-import { Menu, MenuItem, Divider, ListSubheader } from '@mui/material';
+import {
+    Menu,
+    MenuItem,
+    Divider,
+    ListSubheader,
+    ListItemIcon,
+    ListItemText,
+} from '@mui/material';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import Filter from 'js-array-filter';
 import {
@@ -7,6 +14,10 @@ import {
     BasicFilter,
     IHeaderCell,
 } from 'interfaces/common';
+import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import ChecklistIcon from '@mui/icons-material/Checklist';
+import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import { handleTransformation } from 'renderer/utils/transformUtils';
 import { resetFilter, setFilter } from 'renderer/redux/slices/data';
 import { restartCompare } from 'renderer/redux/slices/ui';
@@ -158,7 +169,7 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
                 if (index === 0 && newBasicFilter.connectors.length > 0) {
                     // If first condition is removed, remove first connector
                     newBasicFilter.connectors.splice(0, 1);
-                } else if (index < newBasicFilter.conditions.length + 1) {
+                } else if (index < newBasicFilter.connectors.length + 1) {
                     // For other cases, remove connector at index-1
                     newBasicFilter.connectors.splice(index - 1, 1);
                 }
@@ -200,7 +211,10 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
                     onClose({}, 'action');
                 }}
             >
-                Filter by value
+                <ListItemIcon>
+                    <ChecklistIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>Filter by value</ListItemText>
             </MenuItem>
             {currentFilter !== null && (
                 <MenuItem
@@ -209,7 +223,10 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
                         onClose({}, 'action');
                     }}
                 >
-                    Add to filter
+                    <ListItemIcon>
+                        <AddCircleOutlineIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>Add to filter</ListItemText>
                 </MenuItem>
             )}
             {isColumnsInCurrentFilter && (
@@ -219,7 +236,10 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
                         onClose({}, 'action');
                     }}
                 >
-                    Remove from filter
+                    <ListItemIcon>
+                        <RemoveCircleOutlineIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>Remove from filter</ListItemText>
                 </MenuItem>
             )}
             {currentFilter !== null && (
@@ -229,7 +249,10 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
                         onClose({}, 'action');
                     }}
                 >
-                    Reset filter
+                    <ListItemIcon>
+                        <FilterAltOffIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>Reset Filter</ListItemText>
                 </MenuItem>
             )}
         </Menu>

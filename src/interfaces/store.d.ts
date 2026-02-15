@@ -104,6 +104,9 @@ export interface IUiModalVariableInfo extends IUiModalBase {
 export interface IUiModalFilter extends IUiModalBase {
     type: typeof modals.FILTER;
     filterType: 'dataset' | 'report' | 'compare';
+    data: {
+        defaultFilter?: BasicFilter;
+    };
 }
 
 export type IUiModal =
@@ -197,6 +200,7 @@ export interface IUiCompare {
     startCompare: boolean;
     fileBase: string | null;
     fileComp: string | null;
+    customSettings: Partial<CompareSettings>;
     view: 'horizontal' | 'vertical';
     resultTab: 'summary' | 'metadata' | 'data';
     showAllDifferences: boolean;

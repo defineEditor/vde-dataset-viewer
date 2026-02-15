@@ -7,16 +7,21 @@ import FilterBody from 'renderer/components/Modal/Filter/FilterBody';
 const DatasetFilter: React.FC<IUiModalFilter> = ({
     type,
     filterType,
+    data,
 }: IUiModalFilter) => {
     const { apiService } = useContext(AppContext);
 
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
 
-    const currentBasicFilter = useAppSelector(
+    const stateBasicFilter = useAppSelector(
         (state) => state.data.filterData.currentFilter[currentFileId] || null,
     );
 
-    const data = apiService.getOpenedFileData(currentFileId);
+    const defaultFilter = data?.defaultFilter;
+
+    const currentBasicFilter = defaultFilter || stateBasicFilter || null;
+
+    const currentData = apiService.getOpenedFileData(currentFileId);
 
     const metadata = apiService.getOpenedFileMetadata(currentFileId);
 
@@ -48,7 +53,7 @@ const DatasetFilter: React.FC<IUiModalFilter> = ({
             type={type}
             filterType={filterType}
             currentBasicFilter={currentBasicFilter}
-            data={data}
+            data={currentData}
             metadata={metadata}
             dataset={dataset}
             loadedRecords={loadedRecords}
