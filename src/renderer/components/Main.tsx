@@ -241,7 +241,11 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
     const currentZoom = useAppSelector((state) => state.ui.zoomLevel);
     useEffect(() => {
         const handleZoom = async (event: WheelEvent | KeyboardEvent) => {
-            if (event.ctrlKey || event.metaKey) {
+            if (
+                (event.ctrlKey || event.metaKey) &&
+                (event instanceof WheelEvent ||
+                    ['+', '-', '=', '_', '0'].includes(event.key))
+            ) {
                 const zoomStep = 0.1;
                 const minZoom = -5; // ~25% zoom
                 const maxZoom = 3; // ~800% zoom

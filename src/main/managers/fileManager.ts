@@ -50,13 +50,13 @@ class FileManager {
             ) {
                 return (
                     file.filePath === pathToFile &&
-                    fileId.startsWith(fileIdPrefix || '')
+                    (!fileIdPrefix || fileId.startsWith(fileIdPrefix))
                 );
             }
             if (file instanceof DatasetXpt) {
                 return (
                     file.pathToFile === pathToFile &&
-                    fileId.startsWith(fileIdPrefix || '')
+                    (!fileIdPrefix || fileId.startsWith(fileIdPrefix))
                 );
             }
             return false;

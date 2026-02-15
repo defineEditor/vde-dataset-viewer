@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { settings as initialSettings } from 'renderer/redux/initialState';
-import { ISettings } from 'interfaces/common';
+import { ISettings, DeepPartial } from 'interfaces/common';
 
 export const dataSlice = createSlice({
     name: 'data',
@@ -12,7 +12,7 @@ export const dataSlice = createSlice({
             };
             return newState;
         },
-        setSettings: (state, action: PayloadAction<ISettings>) => {
+        setSettings: (state, action: PayloadAction<DeepPartial<ISettings>>) => {
             const newSettings = action.payload;
 
             // Go through each key in the new settings and update the state

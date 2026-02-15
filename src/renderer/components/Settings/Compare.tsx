@@ -36,36 +36,6 @@ export const Compare: React.FC<CompareProps> = ({
     <Stack spacing={2}>
         <Typography variant="h6">Compare Processing Settings</Typography>
         <TextField
-            label="Tolerance Size"
-            name="compare.tolerance"
-            value={settings.compare.tolerance}
-            type="number"
-            helperText="Numeric tolerance used when comparing float/double numbers"
-            select
-            onChange={(event) =>
-                onSettingChange(event as React.ChangeEvent<HTMLInputElement>)
-            }
-            fullWidth
-            sx={styles.inputField}
-        >
-            <MenuItem value="1e-15">1e-15</MenuItem>
-            <MenuItem value="1e-14">1e-14</MenuItem>
-            <MenuItem value="1e-13">1e-13</MenuItem>
-            <MenuItem value="1e-12">1e-12</MenuItem>
-            <MenuItem value="1e-11">1e-11</MenuItem>
-            <MenuItem value="1e-10">1e-10</MenuItem>
-            <MenuItem value="1e-9">1e-9</MenuItem>
-            <MenuItem value="1e-8">1e-8</MenuItem>
-            <MenuItem value="1e-7">1e-7</MenuItem>
-            <MenuItem value="1e-6">1e-6</MenuItem>
-            <MenuItem value="1e-5">1e-5</MenuItem>
-            <MenuItem value="1e-4">1e-4</MenuItem>
-            <MenuItem value="1e-3">1e-3</MenuItem>
-            <MenuItem value="1e-2">1e-2</MenuItem>
-            <MenuItem value="1e-1">1e-1</MenuItem>
-            <MenuItem value="1">1</MenuItem>
-        </TextField>
-        <TextField
             label="Maximum Number of Differences"
             name="compare.maxDiffCount"
             helperText="Compare will stop after this many different rows are found (0 = unlimited)"
@@ -95,6 +65,67 @@ export const Compare: React.FC<CompareProps> = ({
             onChange={onSettingChange}
             sx={styles.inputFieldLong}
         />
+        <TextField
+            label="Tolerance Size"
+            name="compare.tolerance"
+            value={settings.compare.tolerance}
+            type="number"
+            helperText="Numeric tolerance used when comparing float/double numbers"
+            select
+            onChange={(event) =>
+                onSettingChange(event as React.ChangeEvent<HTMLInputElement>)
+            }
+            fullWidth
+            sx={styles.inputField}
+        >
+            <MenuItem value="1e-15">1e-15</MenuItem>
+            <MenuItem value="1e-14">1e-14</MenuItem>
+            <MenuItem value="1e-13">1e-13</MenuItem>
+            <MenuItem value="1e-12">1e-12</MenuItem>
+            <MenuItem value="1e-11">1e-11</MenuItem>
+            <MenuItem value="1e-10">1e-10</MenuItem>
+            <MenuItem value="1e-9">1e-9</MenuItem>
+            <MenuItem value="1e-8">1e-8</MenuItem>
+            <MenuItem value="1e-7">1e-7</MenuItem>
+            <MenuItem value="1e-6">1e-6</MenuItem>
+            <MenuItem value="1e-5">1e-5</MenuItem>
+            <MenuItem value="1e-4">1e-4</MenuItem>
+            <MenuItem value="1e-3">1e-3</MenuItem>
+            <MenuItem value="1e-2">1e-2</MenuItem>
+            <MenuItem value="1e-1">1e-1</MenuItem>
+            <MenuItem value="1">1</MenuItem>
+        </TextField>
+        <Stack spacing={0}>
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        checked={settings.compare.ignoreWhiteSpaces}
+                        onChange={onSettingChange}
+                        name="compare.ignoreWhiteSpaces"
+                    />
+                }
+                label="Ignore White Space Differences"
+            />
+            <Typography variant="caption" sx={styles.helperText}>
+                When enabled, values will be trimmed of leading and trailing
+                spaces
+            </Typography>
+        </Stack>
+        <Stack spacing={0}>
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        checked={settings.compare.ignoreValueCase}
+                        onChange={onSettingChange}
+                        name="compare.ignoreValueCase"
+                    />
+                }
+                label="Case Insensitive Comparison"
+            />
+            <Typography variant="caption" sx={styles.helperText}>
+                When enabled, string value case is ignored during comparison
+            </Typography>
+        </Stack>
         <Stack spacing={0}>
             <FormControlLabel
                 control={

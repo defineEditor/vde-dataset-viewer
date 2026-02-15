@@ -12,6 +12,7 @@ import {
     IUiViewer,
     DefineTab,
     IUiCompare,
+    CompareSettings,
 } from 'interfaces/common';
 import { paths } from 'misc/constants';
 
@@ -451,33 +452,44 @@ export const uiSlice = createSlice({
             state,
             action: PayloadAction<{ compareId: string }>,
         ) => {
-            state.compare.currentCompareId = action.payload.compareId;
+            const { compareId } = action.payload;
+            state.compare.currentCompareId = compareId;
             const fileBase = state.compare.fileBase || '';
             const fileComp = state.compare.fileComp || '';
             // If there is a compare for the same files, remove it from the info
-            Object.entries(state.compare.info).forEach(([compareId, info]) => {
+            Object.entries(state.compare.info).forEach(([compId, info]) => {
                 if (info.fileBase === fileBase && info.fileComp === fileComp) {
-                    delete state.compare.info[compareId];
+                    delete state.compare.info[compId];
                 }
             });
             // Initialize compare info
-            state.compare.info[action.payload.compareId] = {
+            state.compare.info[compareId] = {
                 currentComparePage: 0,
                 fileBase,
                 fileComp,
                 isComparing: true,
             };
+            // Reset issue index
+            if (state.dataSettings[compareId]) {
+                state.dataSettings[compareId].currentIssueIndex = 0;
+            }
         },
         initializeCompare: (
             state,
             action: PayloadAction<{
                 fileBase: string;
                 fileComp: string;
+                customSettings?: Partial<CompareSettings>;
             }>,
         ) => {
             state.compare.startCompare = true;
             state.compare.fileBase = action.payload.fileBase;
             state.compare.fileComp = action.payload.fileComp;
+            if (action.payload.customSettings) {
+                state.compare.customSettings = action.payload.customSettings;
+            } else {
+                state.compare.customSettings = {};
+            }
             // Reset current compare ID
             state.compare.currentCompareId = '';
         },
@@ -498,6 +510,7 @@ export const uiSlice = createSlice({
         },
         stopCompare: (state) => {
             state.compare.startCompare = false;
+            state.compare.customSettings = {};
         },
         closeCompare: (state, action: PayloadAction<{ compareId: string }>) => {
             const { compareId } = action.payload;
@@ -515,6 +528,7 @@ export const uiSlice = createSlice({
             if (state.compare.startCompare === true) {
                 state.compare.startCompare = false;
             }
+            state.compare.customSettings = {};
         },
     },
 });

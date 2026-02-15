@@ -200,7 +200,7 @@ class ApiService {
             encoding,
             filePath,
             folderPath,
-            fileIdPrefix: compareId,
+            fileIdPrefix: compareId || 'f',
         });
         if (response === null) {
             return {
@@ -392,7 +392,8 @@ class ApiService {
             metadataFiltered,
             settings,
             start,
-        );
+            'object',
+        ).data;
 
         // TODO: small datasets can be kept without resettings by default
         if (!keepOpenedData) {
@@ -482,13 +483,23 @@ class ApiService {
         return result;
     };
 
-    public getUniqueValues = async (
-        fileId: string,
-        columnIds: string[],
-        limit?: number,
-        addCount: boolean = false,
-        getAllValues: boolean = false,
-    ): Promise<{
+    public getUniqueValues = async ({
+        fileId,
+        columnIds,
+        limit,
+        addCount,
+        getAllValues,
+        metadata,
+        settings,
+    }: {
+        fileId: string;
+        columnIds: string[];
+        limit?: number;
+        addCount: boolean;
+        getAllValues: boolean;
+        metadata?: DatasetJsonMetadata;
+        settings?: ISettings;
+    }): Promise<{
         [columnId: string]: {
             values: TableRowValue[];
             counts: { [value: string]: number };
@@ -511,7 +522,8 @@ class ApiService {
                     .map((row) => row[columnId])
                     .filter(
                         (value, index, self) => self.indexOf(value) === index,
-                    );
+                    )
+                    .sort();
                 result[columnId] = {
                     values: uniqueValues,
                     counts: {},
@@ -572,6 +584,51 @@ class ApiService {
             if (uniqueValues === null) {
                 return result;
             }
+            // We need to transform the values according to settings
+            if (settings !== undefined && metadata !== undefined) {
+                Object.keys(uniqueValues).forEach((columnId) => {
+                    const tableData = uniqueValues[columnId].values.map(
+                        (value) => [value],
+                    );
+                    const tableMetadata: DatasetJsonMetadata = {
+                        ...metadata,
+                        columns: metadata.columns.filter(
+                            (col) => col.name === columnId,
+                        ),
+                    };
+                    const transformedData = transformData(
+                        tableData,
+                        tableMetadata,
+                        settings,
+                        0,
+                        'array',
+                    );
+                    if (transformedData.isTransformed) {
+                        const valueMap = new Map<
+                            TableRowValue,
+                            TableRowValue
+                        >();
+                        const { values, counts } = uniqueValues[columnId];
+                        const newValues: TableRowValue[] = [];
+                        transformedData.data.forEach((row, index) => {
+                            valueMap.set(String(values[index]), String(row[0]));
+                            newValues.push(row[0]);
+                        });
+                        uniqueValues[columnId].values = newValues;
+
+                        if (addCount) {
+                            // Remap keys in counts
+                            const newCounts = {};
+                            Object.entries(counts).forEach(([value, count]) => {
+                                newCounts[String(valueMap.get(String(value)))] =
+                                    count;
+                            });
+                            uniqueValues[columnId].counts = newCounts;
+                        }
+                    }
+                });
+            }
+
             return uniqueValues;
         }
 

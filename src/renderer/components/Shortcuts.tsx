@@ -66,6 +66,7 @@ const shortcuts = {
         'Ctrl + C': 'Copy selected cells',
         'Ctrl + Alt + C': 'Copy selected cells with headers',
         'Ctrl + `': 'Toggle opened dataset selection',
+        'Ctrl + Arrows': 'Navigate to edges of table',
     },
     Compare: {
         'Ctrl + S': 'Select files to compare',

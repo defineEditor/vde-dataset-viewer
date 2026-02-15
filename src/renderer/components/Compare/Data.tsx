@@ -120,8 +120,8 @@ const Data: React.FC = () => {
         datasetDiff !== null &&
         datasetDiff.data.modifiedRows.length === 0 &&
         datasetDiff.data.addedRows.length === 0 &&
-        datasetDiff.data.deletedRows.length === 0;
-
+        datasetDiff.data.deletedRows.length === 0 &&
+        datasetDiff.summary.baseRows === datasetDiff.summary.compareRows;
     const totalRowsChecked = datasetDiff?.summary.totalRowsChecked || 0;
 
     const [data, setData] = useState<{
@@ -366,6 +366,66 @@ const Data: React.FC = () => {
             }
         });
 
+        datasetDiff?.data.addedRows.forEach((addedRow) => {
+            const { rowCompare, rowBase } = addedRow;
+            if (rowBase !== null) {
+                baseMap.set(`${rowBase}`, {
+                    text: 'Row missing in compare',
+                    color: '',
+                });
+                const baseDiffsRow = {};
+                baseDiffsRow['whole::row'] = {
+                    baseVal: `Missing in compare`,
+                    compVal: '',
+                    diff: '',
+                };
+                baseDiffsMap.set(rowBase, baseDiffsRow);
+            }
+            if (rowCompare !== null) {
+                compMap.set(`${rowCompare}`, {
+                    text: 'Row missing in base',
+                    color: '',
+                });
+                const baseDiffsRow = {};
+                baseDiffsRow['whole::row'] = {
+                    baseVal: '',
+                    compVal: `Missing in base`,
+                    diff: '',
+                };
+                baseDiffsMap.set(rowCompare, baseDiffsRow);
+            }
+        });
+
+        datasetDiff?.data.deletedRows.forEach((deletedRow) => {
+            const { rowCompare, rowBase } = deletedRow;
+            if (rowBase !== null) {
+                baseMap.set(`${rowBase}`, {
+                    text: 'Row missing in compare',
+                    color: '',
+                });
+                const baseDiffsRow = {};
+                baseDiffsRow['whole::row'] = {
+                    baseVal: `Missing in compare`,
+                    compVal: '',
+                    diff: '',
+                };
+                baseDiffsMap.set(rowBase, baseDiffsRow);
+            }
+            if (rowCompare !== null) {
+                compMap.set(`${rowCompare}`, {
+                    text: 'Row missing in base',
+                    color: '',
+                });
+                const baseDiffsRow = {};
+                baseDiffsRow['whole::row'] = {
+                    baseVal: '',
+                    compVal: `Missing in base`,
+                    diff: '',
+                };
+                baseDiffsMap.set(rowCompare, baseDiffsRow);
+            }
+        });
+
         return {
             baseAnnotations: baseMap,
             compAnnotations: compMap,
@@ -524,12 +584,7 @@ const Data: React.FC = () => {
         );
     }
 
-    if (
-        datasetDiff !== null &&
-        datasetDiff.data.modifiedRows.length === 0 &&
-        datasetDiff.data.addedRows.length === 0 &&
-        datasetDiff.data.deletedRows.length === 0
-    ) {
+    if (noDataDifferences) {
         return (
             <Box sx={styles.loading}>
                 <Typography>No differences found</Typography>

@@ -78,6 +78,7 @@ const VariableInfo: React.FC<IUiModalVariableInfo> = ({
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
     const { apiService } = useContext(AppContext);
     const currentMetadata = apiService.getOpenedFileMetadata(currentFileId);
+    const settings = useAppSelector((state) => state.settings);
     const [hasAllValues, setHasAllValues] = useState(
         apiService.isFullyLoaded(currentFileId),
     );
@@ -124,12 +125,13 @@ const VariableInfo: React.FC<IUiModalVariableInfo> = ({
     useEffect(() => {
         const getValues = async () => {
             setLoading(true);
-            const initialValues = await apiService.getUniqueValues(
-                currentFileId,
-                [columnId],
-                1000,
-                true,
-            );
+            const initialValues = await apiService.getUniqueValues({
+                fileId: currentFileId,
+                columnIds: [columnId],
+                limit: 1000,
+                addCount: true,
+                getAllValues: false,
+            });
             setValues(initialValues[columnId]);
             setLoading(false);
         };
@@ -167,13 +169,21 @@ const VariableInfo: React.FC<IUiModalVariableInfo> = ({
 
     const handleGetValues = async () => {
         setLoading(true);
-        const newValues = await apiService.getUniqueValues(
-            currentFileId,
-            [columnId],
-            1000,
-            true,
-            true,
-        );
+        const varMetadata = {
+            ...currentMetadata,
+            columns: currentMetadata.columns.filter(
+                (col) => col.name === columnId,
+            ),
+        };
+        const newValues = await apiService.getUniqueValues({
+            fileId: currentFileId,
+            columnIds: [columnId],
+            limit: 1000,
+            addCount: true,
+            getAllValues: true,
+            metadata: varMetadata,
+            settings,
+        });
         setLoading(false);
         setValues(newValues[columnId]);
         setHasAllValues(true);

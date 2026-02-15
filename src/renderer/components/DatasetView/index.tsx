@@ -570,13 +570,46 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             } else if (event.key === 'Escape') {
                 // Escape to clear selection
                 setHighlightedCells([]);
+            } else if (event.ctrlKey) {
+                switch (event.key) {
+                    case 'ArrowUp':
+                        if (rows.length > 0) {
+                            rowVirtualizer.scrollToIndex(0);
+                        }
+                        break;
+                    case 'ArrowDown':
+                        if (rows.length > 0) {
+                            rowVirtualizer.scrollToIndex(rows.length - 1);
+                        }
+                        break;
+                    case 'ArrowLeft':
+                        columnVirtualizer.scrollToIndex(0);
+                        break;
+                    case 'ArrowRight':
+                        if (visibleColumns.length > 1) {
+                            columnVirtualizer.scrollToIndex(
+                                visibleColumns.length - 2,
+                            );
+                        }
+                        break;
+                    default:
+                        break;
+                }
             }
         };
         document.addEventListener('keydown', handleKeyDown);
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [highlightedCells, handleCopyToClipboard, settings.copyWithHeaders]);
+    }, [
+        highlightedCells,
+        handleCopyToClipboard,
+        settings.copyWithHeaders,
+        rowVirtualizer,
+        columnVirtualizer,
+        rows.length,
+        visibleColumns.length,
+    ]);
 
     useEffect(() => {
         document.addEventListener('mouseup', handleMouseUp);

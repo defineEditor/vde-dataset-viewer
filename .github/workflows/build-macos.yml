@@ -51,7 +51,7 @@ jobs:
 
       - name: Package macOS build (${{ matrix.arch }})
         run: |
-          npx electron-builder build --mac --${{ matrix.arch }} --publish never
+          npx electron-builder build --mac --${{ matrix.arch }} --publish never -c.mac.identity=null
         env:
           npm_config_arch: ${{ matrix.arch }}
 

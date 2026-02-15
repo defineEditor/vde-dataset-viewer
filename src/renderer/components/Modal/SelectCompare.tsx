@@ -6,6 +6,7 @@ import {
     DialogActions,
     Button,
     Box,
+    Stack,
     TextField,
     IconButton,
     Autocomplete,
@@ -18,6 +19,8 @@ import {
     Divider,
     InputAdornment,
     Tooltip,
+    FormControlLabel,
+    Checkbox,
 } from '@mui/material';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
@@ -65,6 +68,12 @@ const styles = {
         mt: 2,
         textAlign: 'center',
     },
+    input: {
+        mt: 2,
+    },
+    flag: {
+        mb: 1,
+    },
 };
 
 const SelectCompare: React.FC = () => {
@@ -76,12 +85,25 @@ const SelectCompare: React.FC = () => {
 
     const fileBaseState =
         useAppSelector((state) => state.ui.compare.fileBase) || '';
+
+    const ignoreWhiteSpacesSettings = useAppSelector(
+        (state) => state.settings.compare.ignoreWhiteSpaces,
+    );
+    const ignoreValueCaseSettings = useAppSelector(
+        (state) => state.settings.compare.ignoreValueCase,
+    );
     const fileCompState =
         useAppSelector((state) => state.ui.compare.fileComp) || '';
     const currentCompareId = useAppSelector(
         (state) => state.ui.compare.currentCompareId,
     );
 
+    const [ignoreWhiteSpaces, setIgnoreWhiteSpaces] = useState<boolean>(
+        ignoreWhiteSpacesSettings,
+    );
+    const [ignoreValueCase, setIgnoreValueCase] = useState<boolean>(
+        ignoreValueCaseSettings,
+    );
     const [fileComp, setFileComp] = useState<string>(fileCompState);
     const [fileBase, setFileBase] = useState<string>(fileBaseState);
 
@@ -119,11 +141,18 @@ const SelectCompare: React.FC = () => {
                 initializeCompare({
                     fileBase: newFileBase,
                     fileComp: newFileComp,
+                    customSettings: { ignoreWhiteSpaces, ignoreValueCase },
                 }),
             );
             handleClose();
         },
-        [dispatch, handleClose, currentCompareId],
+        [
+            dispatch,
+            handleClose,
+            currentCompareId,
+            ignoreWhiteSpaces,
+            ignoreValueCase,
+        ],
     );
 
     const handleSelectFile = async (type: 'base' | 'comp') => {
@@ -186,7 +215,36 @@ const SelectCompare: React.FC = () => {
                 Select Files for Comparison
             </DialogTitle>
             <DialogContent>
-                <Box sx={{ mt: 2 }}>
+                <Stack sx={styles.input}>
+                    <Stack direction="row">
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={ignoreWhiteSpaces}
+                                    onChange={() =>
+                                        setIgnoreWhiteSpaces(!ignoreWhiteSpaces)
+                                    }
+                                    name="compare.ignoreWhiteSpaces"
+                                />
+                            }
+                            label="Ignore White Spaces"
+                            sx={styles.flag}
+                        />
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={ignoreValueCase}
+                                    onChange={() =>
+                                        setIgnoreValueCase(!ignoreValueCase)
+                                    }
+                                    name="compare.ignoreValueCase"
+                                />
+                            }
+                            label="Case Insensitive"
+                            sx={styles.flag}
+                        />
+                    </Stack>
+
                     <Box sx={styles.fileInput}>
                         <TextField
                             fullWidth
@@ -298,7 +356,7 @@ const SelectCompare: React.FC = () => {
                             );
                         }}
                     />
-                </Box>
+                </Stack>
 
                 {recentCompares.length > 0 && (
                     <>
