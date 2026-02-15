@@ -212,7 +212,7 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
                 if (index === 0 && newBasicFilter.connectors.length > 0) {
                     // If first condition is removed, remove first connector
                     newBasicFilter.connectors.splice(0, 1);
-                } else if (index < newBasicFilter.conditions.length + 1) {
+                } else if (index < newBasicFilter.connectors.length + 1) {
                     // For other cases, remove connector at index-1
                     newBasicFilter.connectors.splice(index - 1, 1);
                 }
