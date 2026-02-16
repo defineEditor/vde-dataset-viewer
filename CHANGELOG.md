@@ -1,3 +1,17 @@
+# 0.6.5
+### Improvements
+* Filtering using column headers [#100](https://github.com/defineEditor/vde-dataset-viewer/issues/100)
+* Open datasets from compare summary [#85](https://github.com/defineEditor/vde-dataset-viewer/issues/85)
+* Option to ignore case when comparing string values [#107](https://github.com/defineEditor/vde-dataset-viewer/issues/107)
+* Option to ignore leading and trailing in differences [#105](https://github.com/defineEditor/vde-dataset-viewer/issues/105)
+* Ctrl + Arrows to navigate to dataset borders [#101](https://github.com/defineEditor/vde-dataset-viewer/issues/101)
+
+
+### Fixes
+* Cannot compile binary for Mac in GitHub [#104](https://github.com/defineEditor/vde-dataset-viewer/issues/104)
+* When comparing datasets with a different number of records, show that data is different [#102](https://github.com/defineEditor/vde-dataset-viewer/issues/102)
+* Numeric Datetime variables are incorrectly shown in Unique Values section of Variable info [#103](https://github.com/defineEditor/vde-dataset-viewer/issues/103)
+
 # 0.6.4
 ### Core Changes
 * Dataset compare functionality [#96](https://github.com/defineEditor/vde-dataset-viewer/issues/96)
