@@ -15,6 +15,7 @@ import {
     IHeaderCell,
     ITableData,
     DatasetJsonMetadata,
+    TableRowValue,
 } from 'interfaces/common';
 import { Typography, LinearProgress } from '@mui/material';
 import DatasetView from 'renderer/components/DatasetView';
@@ -212,26 +213,29 @@ const UniqueValues: React.FC<{
     });
 
     const handleContextMenu = useCallback(
-        (event: React.MouseEvent, rowIndex: number, _columnIndex: number) => {
+        (
+            event: React.MouseEvent,
+            _columnId: string,
+            value: TableRowValue,
+            isHeader?: boolean,
+        ) => {
             event.preventDefault();
-            if (rowIndex === -1) return; // Ignore header row
 
-            // In case mask is used, we need to get the index of the column with mask applied
+            // We need to use the specific columnId for the unique values modal, not the one from the cell
             const cellHeader: IHeaderCell = {
                 id: columnId,
                 label: '',
             };
-            const value = data[rowIndex] ? data[rowIndex].value : '';
 
             setContextMenu({
                 position: { top: event.clientY, left: event.clientX },
                 value,
                 header: cellHeader,
                 open: true,
-                isHeader: false,
+                isHeader: isHeader || false,
             });
         },
-        [data, columnId],
+        [columnId],
     );
 
     const handleCloseContextMenu = (

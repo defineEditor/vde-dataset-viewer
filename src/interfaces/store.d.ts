@@ -140,6 +140,10 @@ export interface IUiControl {
         offsetX: number;
     };
     currentPage: number;
+    sorting: {
+        desc: boolean;
+        id: string;
+    }[];
 }
 
 export interface IUiViewer {

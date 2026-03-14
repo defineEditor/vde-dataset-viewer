@@ -12,12 +12,14 @@ import {
     IMask,
     TableSettings,
     IUiControl,
+    TableRowValue,
 } from 'interfaces/common';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import {
     openSnackbar,
     setDatasetScrollPosition,
+    setDatasetSorting,
 } from 'renderer/redux/slices/ui';
 import View from 'renderer/components/DatasetView/View';
 import useTableHeight from 'renderer/components/DatasetView/useTableHeight';
@@ -57,9 +59,10 @@ interface DatasetViewProps {
     tableData: ITableData;
     isLoading: boolean;
     handleContextMenu: (
-        event: React.MouseEvent,
-        rowIndex: number,
-        columnIndex: number,
+        event: React.MouseEvent<HTMLTableCellElement, MouseEvent>,
+        columnId: string,
+        value: TableRowValue,
+        isHeader?: boolean,
     ) => void;
     settings: TableSettings;
     currentPage?: number;
@@ -92,7 +95,28 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     onSetSelect = () => {},
 }) => {
     const dispatch = useAppDispatch();
-    const [sorting, setSorting] = useState<ISortingState>([]);
+
+    const sorting = useAppSelector(
+        (state) => state.ui.control[tableData.fileId]?.sorting || [],
+    );
+    const handleSetSorting = (
+        updatedSorting:
+            | ISortingState
+            | ((oldSorting: ISortingState) => ISortingState),
+    ) => {
+        let newSorting: ISortingState;
+        if (typeof updatedSorting === 'function') {
+            newSorting = updatedSorting(sorting);
+        } else {
+            newSorting = updatedSorting;
+        }
+        dispatch(
+            setDatasetSorting({
+                fileId: tableData.fileId,
+                sorting: newSorting,
+            }),
+        );
+    };
 
     const columns = useMemo<ColumnDef<ITableRow>[]>(() => {
         const result = tableData.header.map((column) => {
@@ -208,7 +232,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             sorting,
             columnVisibility,
         },
-        onSortingChange: setSorting,
+        onSortingChange: handleSetSorting,
     });
 
     const rows = useMemo(() => {
@@ -768,7 +792,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                     settings={updatedSettings}
                     rowVirtualizer={rowVirtualizer}
                     sorting={sorting}
-                    onSortingChange={setSorting}
+                    onSortingChange={handleSetSorting}
                     filteredColumns={filteredColumns}
                 />
             )}

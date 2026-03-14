@@ -27,7 +27,7 @@ import ExposureIcon from '@mui/icons-material/Exposure';
 import LooksOneIcon from '@mui/icons-material/LooksOne';
 import AccessTimeIcon from '@mui/icons-material/HourglassFull';
 import { VirtualItem, Virtualizer } from '@tanstack/react-virtual';
-import { ITableRow, TableSettings } from 'interfaces/common';
+import { ITableRow, TableRowValue, TableSettings } from 'interfaces/common';
 import Loading from 'renderer/components/Loading';
 
 const getContainerStyle = (settings: TableSettings): React.CSSProperties => {
@@ -248,8 +248,9 @@ const DatasetViewUI: React.FC<{
     settings: TableSettings;
     handleContextMenu?: (
         event: React.MouseEvent<HTMLTableCellElement, MouseEvent>,
-        rowIndex: number,
-        columnIndex: number,
+        columnId: string,
+        value: TableRowValue,
+        isHeader?: boolean,
     ) => void;
     filteredColumns?: string[];
     containerStyle?: React.CSSProperties;
@@ -277,7 +278,7 @@ const DatasetViewUI: React.FC<{
     rowVirtualizer,
     sorting,
     onSortingChange,
-    handleContextMenu = (_event, _rowIndex, _columnIndex) => {},
+    handleContextMenu = (_event, _columnId, _value, _isHeader = false) => {},
     filteredColumns = [],
     containerStyle = undefined,
     annotatedCells = null,
@@ -331,7 +332,7 @@ const DatasetViewUI: React.FC<{
                             ) : null}
                             {virtualColumns.map((vc) => {
                                 const header =
-                                    headerGroup.headers[vc.index + 1]; // Adjust index
+                                    headerGroup.headers[vc.index + 1]; // Adjust index to account for row number column
                                 return (
                                     <TableCell
                                         key={header.id}
@@ -346,8 +347,9 @@ const DatasetViewUI: React.FC<{
                                         onContextMenu={(event) =>
                                             handleContextMenu(
                                                 event,
-                                                -1,
-                                                vc.index + 1,
+                                                header.id,
+                                                '',
+                                                true,
                                             )
                                         }
                                     >
@@ -699,8 +701,8 @@ const DatasetViewUI: React.FC<{
                                                 onContextMenu={(event) =>
                                                     handleContextMenu(
                                                         event,
-                                                        virtualRow.index,
-                                                        vc.index + 1,
+                                                        cell.column.id,
+                                                        cell.getValue() as TableRowValue,
                                                     )
                                                 }
                                             >

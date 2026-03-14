@@ -6,6 +6,7 @@ import {
     ITableData,
     IUiControl,
     SettingsViewer,
+    TableRowValue,
 } from 'interfaces/common';
 
 interface CompareDataContainerProps {
@@ -57,23 +58,28 @@ const CompareDataContainer: React.FC<CompareDataContainerProps> = ({
     });
 
     const handleContextMenu = useCallback(
-        (event: React.MouseEvent, rowIndex: number, columnIndex: number) => {
+        (
+            event: React.MouseEvent,
+            columnId: string,
+            value: TableRowValue,
+            isHeader?: boolean,
+        ) => {
             event.preventDefault();
-            if (columnIndex === 0 || !tableData) return; // Ignore row number column
+            if (columnId === '#' || !tableData?.header) return; // Ignore row number column
 
-            const rows = tableData.data;
-            const header = tableData.header[columnIndex - 1];
-            const value = rowIndex === -1 ? '' : rows[rowIndex][header.id];
+            const header = tableData.header.find((col) => col.id === columnId);
+
+            if (!header) return;
 
             setContextMenu({
                 position: { top: event.clientY, left: event.clientX },
                 value,
                 header,
                 open: true,
-                isHeader: rowIndex === -1,
+                isHeader: isHeader || false,
             });
         },
-        [tableData],
+        [tableData?.header],
     );
 
     const handleCloseContextMenu = () => {

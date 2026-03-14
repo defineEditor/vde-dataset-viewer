@@ -13,6 +13,7 @@ import {
     DefineTab,
     IUiCompare,
     CompareSettings,
+    IUiControl,
 } from 'interfaces/common';
 import { paths } from 'misc/constants';
 
@@ -54,6 +55,7 @@ export const uiSlice = createSlice({
                             offsetX: 0,
                         },
                         currentPage: 0,
+                        sorting: [],
                     };
                 }
                 // Open dataset view
@@ -202,6 +204,19 @@ export const uiSlice = createSlice({
                 return;
             }
             state.control[fileId].scrollPosition = { offsetX, offsetY };
+        },
+        setDatasetSorting: (
+            state,
+            action: PayloadAction<{
+                fileId: string;
+                sorting: IUiControl['sorting'];
+            }>,
+        ) => {
+            const { fileId, sorting } = action.payload;
+            if (!state.control[fileId]) {
+                return;
+            }
+            state.control[fileId].sorting = sorting;
         },
         setBottomSection: (
             state,
@@ -547,6 +562,7 @@ export const {
     setPage,
     setDatasetInfoTab,
     setDatasetScrollPosition,
+    setDatasetSorting,
     setBottomSection,
     setValidationModalTab,
     setFilterInputMode,
