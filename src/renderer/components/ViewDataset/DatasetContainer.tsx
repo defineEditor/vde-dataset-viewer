@@ -13,6 +13,7 @@ import {
     IMask,
     ParsedValidationReport,
     IUiControl,
+    TableRowValue,
 } from 'interfaces/common';
 import DatasetView from 'renderer/components/DatasetView';
 import ContextMenu from 'renderer/components/DatasetView/ContextMenu';
@@ -100,47 +101,28 @@ const DatasetContainer: React.FC = () => {
     });
 
     const handleContextMenu = useCallback(
-        (event: React.MouseEvent, rowIndex: number, columnIndex: number) => {
+        (
+            event: React.MouseEvent,
+            columnId: string,
+            value: TableRowValue,
+            isHeader?: boolean,
+        ) => {
             event.preventDefault();
-            if (columnIndex === 0 || !table) return; // Ignore row number column
+            if (columnId === '#' || !table?.header) return; // Ignore row number column
 
-            const rows = table.data;
-            // In case mask is used, we need to get the index of the column with mask applied
-            let updatedColumnIndex = columnIndex;
-            if (
-                currentMask !== null &&
-                currentMask.columns.length > 0 &&
-                currentMask.columns.length >= columnIndex
-            ) {
-                // Find id with the mask applied
-                const allIds = table.header.map((header) => header.id);
-                // Mask order can be different from original dataset
-                const maskOrderedColumns = currentMask.columns
-                    .slice()
-                    .sort((a, b) => {
-                        return allIds.indexOf(a) - allIds.indexOf(b);
-                    });
-                // Mask might contain variables not in the dataset
-                const originalId = maskOrderedColumns.filter((id) =>
-                    allIds.includes(id),
-                )[columnIndex - 1];
-                updatedColumnIndex =
-                    table.header.findIndex((item) => item.id === originalId) +
-                    1;
-            }
+            const header = table.header.find((col) => col.id === columnId);
 
-            const header = table.header[updatedColumnIndex - 1];
-            const value = rowIndex === -1 ? '' : rows[rowIndex][header.id];
+            if (!header) return;
 
             setContextMenu({
                 position: { top: event.clientY, left: event.clientX },
                 value,
                 header,
                 open: true,
-                isHeader: rowIndex === -1,
+                isHeader: isHeader || false,
             });
         },
-        [table, currentMask],
+        [table?.header],
     );
 
     const handleCloseContextMenu = () => {

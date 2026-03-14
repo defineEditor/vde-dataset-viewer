@@ -12,6 +12,7 @@ import {
     IMask,
     TableSettings,
     IUiControl,
+    TableRowValue,
 } from 'interfaces/common';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
@@ -57,9 +58,10 @@ interface DatasetViewProps {
     tableData: ITableData;
     isLoading: boolean;
     handleContextMenu: (
-        event: React.MouseEvent,
-        rowIndex: number,
-        columnIndex: number,
+        event: React.MouseEvent<HTMLTableCellElement, MouseEvent>,
+        columnId: string,
+        value: TableRowValue,
+        isHeader?: boolean,
     ) => void;
     settings: TableSettings;
     currentPage?: number;
