@@ -79,6 +79,7 @@ export interface IUiModalGeneral extends IUiModalBase {
         | typeof modals.FILTER
         | typeof modals.VARIABLEINFO
         | typeof modals.MASK
+        | typeof modals.SORTING
         | typeof modals.VALIDATOR
         | typeof modals.SELECTCOMPARE;
     data: {};

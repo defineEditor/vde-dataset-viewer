@@ -9,6 +9,7 @@ import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import SortIcon from '@mui/icons-material/Sort';
 import {
     openDataset,
     closeDataset,
@@ -125,6 +126,10 @@ const Header: React.FC = () => {
 
     const handleMaskClick = useCallback(() => {
         dispatch(openModal({ type: modals.MASK, data: {} }));
+    }, [dispatch]);
+
+    const handleSortingClick = useCallback(() => {
+        dispatch(openModal({ type: modals.SORTING, data: {} }));
     }, [dispatch]);
 
     const handleCompareClick = useCallback(() => {
@@ -354,6 +359,20 @@ const Header: React.FC = () => {
                     <VisibilityIcon
                         sx={{
                             color: isMaskEnabled ? 'primary.main' : 'grey.600',
+                        }}
+                    />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Sort" enterDelay={1000}>
+                <IconButton
+                    onClick={handleSortingClick}
+                    id="sort"
+                    size="small"
+                    disabled={pathname !== paths.VIEWFILE}
+                >
+                    <SortIcon
+                        sx={{
+                            color: 'grey.600',
                         }}
                     />
                 </IconButton>
