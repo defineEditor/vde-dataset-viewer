@@ -56,8 +56,13 @@ const Header: React.FC = () => {
     const isMaskEnabled = useAppSelector(
         (state) => state.data.maskData.currentMask !== null,
     );
+
     const isIdColumnsEnabled = useAppSelector(
         (state) => (state.ui.control[currentFileId]?.idCols || []).length > 0,
+    );
+
+    const isSortingEnabled = useAppSelector(
+        (state) => (state.ui.control[currentFileId]?.sorting || []).length > 0,
     );
 
     const isModalOpen = useAppSelector((state) => state.ui.modals?.length > 0);
@@ -380,7 +385,9 @@ const Header: React.FC = () => {
                 >
                     <SortIcon
                         sx={{
-                            color: 'grey.600',
+                            color: isSortingEnabled
+                                ? 'primary.main'
+                                : 'grey.600',
                         }}
                     />
                 </IconButton>

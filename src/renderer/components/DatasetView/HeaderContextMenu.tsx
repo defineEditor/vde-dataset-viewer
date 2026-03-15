@@ -12,7 +12,13 @@ import {
     Typography,
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
-import { openModal, openSnackbar, setSelect } from 'renderer/redux/slices/ui';
+import {
+    openModal,
+    openSnackbar,
+    setDatasetIdColumns,
+    setDatasetSorting,
+    setSelect,
+} from 'renderer/redux/slices/ui';
 import { resetFilter, setFilter } from 'renderer/redux/slices/data';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -23,6 +29,8 @@ import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import ChecklistIcon from '@mui/icons-material/Checklist';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
+import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
+import SortIcon from '@mui/icons-material/Sort';
 import { handleTransformation } from 'renderer/utils/transformUtils';
 import { modals } from 'misc/constants';
 import {
@@ -72,6 +80,12 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
     const currentFilter = useAppSelector(
         (state) => state.data.filterData.currentFilter[currentFileId] || null,
+    );
+    const currentSorting = useAppSelector(
+        (state) => state.ui.control[currentFileId]?.sorting || [],
+    );
+    const currentIdColumns = useAppSelector(
+        (state) => state.ui.control[currentFileId]?.idCols || [],
     );
     const settings = useAppSelector((state) => state.settings);
     const dateFormat = useAppSelector(
@@ -124,6 +138,8 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
             : currentFilter.conditions
                   .map((condition) => condition.variable)
                   .includes(header.id);
+    const isPinned = currentIdColumns.includes(header.id);
+    const isInSorting = currentSorting.some((item) => item.id === header.id);
 
     const handleShowInfo = () => {
         dispatch(
@@ -136,6 +152,57 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
 
     const handleSelect = () => {
         dispatch(setSelect({ fileId: currentFileId, column: header.id }));
+    };
+
+    const handleClose = () => {
+        setFilterMenuAnchor(null);
+        setIsLoadingValues(false);
+        setGetAllValues(false);
+        setFilterValues([]);
+        if (currentFilterValues.length > 0) {
+            setSelectedItems(currentFilterValues);
+        } else {
+            setSelectedItems([]);
+        }
+        onClose({}, 'action');
+    };
+
+    const handleTogglePin = () => {
+        const idCols = isPinned
+            ? currentIdColumns.filter((columnId) => columnId !== header.id)
+            : [...currentIdColumns, header.id];
+
+        dispatch(
+            setDatasetIdColumns({
+                fileId: currentFileId,
+                idCols,
+            }),
+        );
+        handleClose();
+    };
+
+    const handleAddToSorting = () => {
+        if (isInSorting) {
+            return;
+        }
+
+        dispatch(
+            setDatasetSorting({
+                fileId: currentFileId,
+                sorting: [...currentSorting, { id: header.id, desc: false }],
+            }),
+        );
+        handleClose();
+    };
+
+    const handleRemoveFromSorting = () => {
+        dispatch(
+            setDatasetSorting({
+                fileId: currentFileId,
+                sorting: currentSorting.filter((item) => item.id !== header.id),
+            }),
+        );
+        handleClose();
     };
 
     const getValues = async (getAll: boolean) => {
@@ -172,19 +239,6 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
         setFilterByValueType(type);
         setFilterMenuAnchor(event.currentTarget);
         await getValues(false);
-    };
-
-    const handleClose = () => {
-        setFilterMenuAnchor(null);
-        setIsLoadingValues(false);
-        setGetAllValues(false);
-        setFilterValues([]);
-        if (currentFilterValues.length > 0) {
-            setSelectedItems(currentFilterValues);
-        } else {
-            setSelectedItems([]);
-        }
-        onClose({}, 'action');
     };
 
     const handleRemoveFromFilter = () => {
@@ -356,6 +410,7 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
                     </ListItemIcon>
                     <ListItemText>Column Info</ListItemText>
                 </MenuItem>
+                <Divider />
                 <MenuItem
                     onClick={() => {
                         handleSelect();
@@ -367,6 +422,33 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
                     </ListItemIcon>
                     <ListItemText>Select Column</ListItemText>
                 </MenuItem>
+                <MenuItem onClick={handleTogglePin}>
+                    <ListItemIcon>
+                        {isPinned ? (
+                            <RemoveCircleOutlineIcon fontSize="small" />
+                        ) : (
+                            <PushPinOutlinedIcon fontSize="small" />
+                        )}
+                    </ListItemIcon>
+                    <ListItemText>
+                        {isPinned ? 'Unpin Column' : 'Pin Column'}
+                    </ListItemText>
+                </MenuItem>
+                {isInSorting ? (
+                    <MenuItem onClick={handleRemoveFromSorting}>
+                        <ListItemIcon>
+                            <RemoveCircleOutlineIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Remove from Sorting</ListItemText>
+                    </MenuItem>
+                ) : (
+                    <MenuItem onClick={handleAddToSorting}>
+                        <ListItemIcon>
+                            <SortIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Add to Sorting</ListItemText>
+                    </MenuItem>
+                )}
                 <Divider />
                 <MenuItem
                     onClick={() => {
