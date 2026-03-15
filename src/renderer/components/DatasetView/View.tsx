@@ -262,10 +262,13 @@ type AnnotationData = {
     color: string;
 };
 
+type HighlightedCells = {
+    [columnId: string]: number[];
+};
+
 const DatasetHeaderCell: React.FC<{
     column: IColumn<ITableRow, unknown>;
     header: IHeader<ITableRow, unknown>;
-    columnIndex: number;
     filteredColumns: string[];
     handleContextMenu: (
         event: React.MouseEvent<HTMLTableCellElement, MouseEvent>,
@@ -273,8 +276,8 @@ const DatasetHeaderCell: React.FC<{
         value: TableRowValue,
         isHeader?: boolean,
     ) => void;
-    handleMouseDown: (rowIndex: number, columnIndex: number) => void;
-    handleMouseOver: (rowIndex: number, columnIndex: number) => void;
+    handleMouseDown: (rowIndex: number | null, columnId: string | null) => void;
+    handleMouseOver: (rowIndex: number | null, columnId: string | null) => void;
     handleResizeEnd: () => void;
     onSortingChange: (updater: IUpdater<ISortingState>) => void;
     settings: TableSettings;
@@ -284,7 +287,6 @@ const DatasetHeaderCell: React.FC<{
 }> = ({
     column,
     header,
-    columnIndex,
     filteredColumns,
     handleContextMenu,
     handleMouseDown,
@@ -324,7 +326,7 @@ const DatasetHeaderCell: React.FC<{
                     <IconButton
                         sx={styles.squareIconButton}
                         onClick={() => {
-                            handleMouseDown(-1, -1);
+                            handleMouseDown(null, null);
                         }}
                     >
                         <SelectAllIcon />
@@ -362,10 +364,10 @@ const DatasetHeaderCell: React.FC<{
                             }}
                             onMouseDown={(event: React.MouseEvent) => {
                                 if (event.button === 0) {
-                                    handleMouseDown(0, columnIndex);
+                                    handleMouseDown(null, header.id);
                                 }
                             }}
-                            onMouseOver={() => handleMouseOver(0, columnIndex)}
+                            onMouseOver={() => handleMouseOver(null, header.id)}
                             active={!!isSorted}
                             direction={isSorted?.desc ? 'desc' : 'asc'}
                             sx={styles.tableHeaderLabel}
@@ -409,16 +411,15 @@ const DatasetHeaderCell: React.FC<{
 const DatasetBodyCell: React.FC<{
     annotation: AnnotationData | null;
     cell: ICell<ITableRow, unknown>;
-    columnIndex: number;
-    handleCellClick: (rowIndex: number, columnIndex: number) => void;
+    handleCellClick: (rowIndex: number, columnId: string) => void;
     handleContextMenu: (
         event: React.MouseEvent<HTMLTableCellElement, MouseEvent>,
         columnId: string,
         value: TableRowValue,
         isHeader?: boolean,
     ) => void;
-    handleMouseDown: (rowIndex: number, columnIndex: number) => void;
-    handleMouseOver: (rowIndex: number, columnIndex: number) => void;
+    handleMouseDown: (rowIndex: number | null, columnId: string | null) => void;
+    handleMouseOver: (rowIndex: number | null, columnId: string | null) => void;
     isHighlighted: boolean;
     rowAnnotation: AnnotationData | null;
     rowIndex: number;
@@ -427,7 +428,6 @@ const DatasetBodyCell: React.FC<{
 }> = ({
     annotation,
     cell,
-    columnIndex,
     handleCellClick,
     handleContextMenu,
     handleMouseDown,
@@ -513,9 +513,9 @@ const DatasetBodyCell: React.FC<{
         <TableCell
             key={cell.id}
             sx={cellStyle}
-            onClick={() => handleCellClick(rowIndex, columnIndex)}
-            onMouseDown={() => handleMouseDown(rowIndex, columnIndex)}
-            onMouseOver={() => handleMouseOver(rowIndex, columnIndex)}
+            onClick={() => handleCellClick(rowIndex, cell.column.id)}
+            onMouseDown={() => handleMouseDown(rowIndex, cell.column.id)}
+            onMouseOver={() => handleMouseOver(rowIndex, cell.column.id)}
             onContextMenu={
                 isRowNumber
                     ? undefined
@@ -543,10 +543,10 @@ const DatasetViewUI: React.FC<{
     virtualColumns: VirtualItem[];
     virtualRows: VirtualItem[];
     rows: IRow<ITableRow>[];
-    highlightedCells: { row: number; column: number }[];
-    handleCellClick: (rowIndex: number, columnIndex: number) => void;
-    handleMouseDown: (rowIndex: number, columnIndex: number) => void;
-    handleMouseOver: (rowIndex: number, columnIndex: number) => void;
+    highlightedCells: HighlightedCells;
+    handleCellClick: (rowIndex: number, columnId: string) => void;
+    handleMouseDown: (rowIndex: number | null, columnId: string | null) => void;
+    handleMouseOver: (rowIndex: number | null, columnId: string | null) => void;
     handleResizeEnd: () => void;
     handleScroll: (event: React.UIEvent<HTMLDivElement, UIEvent>) => void;
     isLoading: boolean;
@@ -610,10 +610,6 @@ const DatasetViewUI: React.FC<{
                                 const header = headerGroup.headers.find(
                                     (headerItem) => headerItem.id === column.id,
                                 );
-                                const columnIndex = visibleColumns.findIndex(
-                                    (visibleColumn) =>
-                                        visibleColumn.id === column.id,
-                                );
 
                                 if (!header) {
                                     return null;
@@ -624,7 +620,6 @@ const DatasetViewUI: React.FC<{
                                         key={header.id}
                                         column={column}
                                         header={header}
-                                        columnIndex={columnIndex}
                                         filteredColumns={filteredColumns}
                                         handleContextMenu={handleContextMenu}
                                         handleMouseDown={handleMouseDown}
@@ -656,17 +651,11 @@ const DatasetViewUI: React.FC<{
                                     return null;
                                 }
 
-                                const columnIndex = visibleColumns.findIndex(
-                                    (visibleColumn) =>
-                                        visibleColumn.id === header.id,
-                                );
-
                                 return (
                                     <DatasetHeaderCell
                                         key={header.id}
                                         column={column}
                                         header={header}
-                                        columnIndex={columnIndex}
                                         filteredColumns={filteredColumns}
                                         handleContextMenu={handleContextMenu}
                                         handleMouseDown={handleMouseDown}
@@ -735,31 +724,34 @@ const DatasetViewUI: React.FC<{
                                     }}
                                 >
                                     {leftPinnedCells.map((cell) => {
-                                        const columnIndex =
-                                            visibleColumns.findIndex(
-                                                (column) =>
-                                                    column.id ===
-                                                    cell.column.id,
-                                            );
                                         const isHighlighted =
-                                            highlightedCells.some(
-                                                (highlightedCell) =>
-                                                    highlightedCell.row ===
-                                                        virtualRow.index &&
-                                                    highlightedCell.column ===
-                                                        columnIndex,
-                                            );
-                                        const annotation =
-                                            annotatedCells?.get(
-                                                `${virtualRow.index}#${columnIndex}`,
-                                            ) || null;
+                                            highlightedCells[
+                                                cell.column.id
+                                            ]?.includes(virtualRow.index) ||
+                                            false;
+
+                                        let annotation: {
+                                            text: string | React.ReactElement;
+                                            color: string;
+                                        } | null = null;
+                                        if (annotatedCells) {
+                                            const columnIndex =
+                                                visibleColumns.findIndex(
+                                                    (column) =>
+                                                        column.id ===
+                                                        cell.column.id,
+                                                );
+                                            annotation =
+                                                annotatedCells?.get(
+                                                    `${virtualRow.index}#${columnIndex}`,
+                                                ) || null;
+                                        }
 
                                         return (
                                             <DatasetBodyCell
                                                 key={cell.id}
                                                 annotation={annotation}
                                                 cell={cell}
-                                                columnIndex={columnIndex}
                                                 handleCellClick={
                                                     handleCellClick
                                                 }
@@ -795,33 +787,35 @@ const DatasetViewUI: React.FC<{
                                             return null;
                                         }
 
-                                        const columnIndex =
-                                            visibleColumns.findIndex(
-                                                (visibleColumn) =>
-                                                    visibleColumn.id ===
-                                                    cell.column.id,
-                                            );
-
                                         const isHighlighted =
-                                            highlightedCells.some(
-                                                (highlightedCell) =>
-                                                    highlightedCell.row ===
-                                                        virtualRow.index &&
-                                                    highlightedCell.column ===
-                                                        columnIndex,
-                                            );
+                                            highlightedCells[
+                                                cell.column.id
+                                            ]?.includes(virtualRow.index) ||
+                                            false;
 
-                                        const annotation =
-                                            annotatedCells?.get(
-                                                `${virtualRow.index}#${columnIndex}`,
-                                            ) || null;
+                                        let annotation: {
+                                            text: string | React.ReactElement;
+                                            color: string;
+                                        } | null = null;
+
+                                        if (annotatedCells) {
+                                            const columnIndex =
+                                                visibleColumns.findIndex(
+                                                    (visibleColumn) =>
+                                                        visibleColumn.id ===
+                                                        cell.column.id,
+                                                );
+                                            annotation =
+                                                annotatedCells.get(
+                                                    `${virtualRow.index}#${columnIndex}`,
+                                                ) || null;
+                                        }
 
                                         return (
                                             <DatasetBodyCell
                                                 key={cell.id}
                                                 annotation={annotation}
                                                 cell={cell}
-                                                columnIndex={columnIndex}
                                                 handleCellClick={
                                                     handleCellClick
                                                 }
