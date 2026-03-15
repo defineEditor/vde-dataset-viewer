@@ -7,6 +7,7 @@ import Filter from 'renderer/components/Modal/Filter';
 import AppUpdate from 'renderer/components/Modal/AppUpdate';
 import EditApi from 'renderer/components/Modal/EditApi';
 import ErrorModal from 'renderer/components/Modal/ErrorModal';
+import IdColumns from 'renderer/components/Modal/IdColumns';
 import Mask from 'renderer/components/Modal/Mask';
 import Sorting from 'renderer/components/Modal/Sorting';
 import Validator from 'renderer/components/Modal/Validator';
@@ -22,6 +23,7 @@ const MODAL_COMPONENTS = {
     [modalNames.EDITAPI]: EditApi,
     [modalNames.ERROR]: ErrorModal,
     [modalNames.VARIABLEINFO]: VariableInfo,
+    [modalNames.IDCOLUMNS]: IdColumns,
     [modalNames.MASK]: Mask,
     [modalNames.SORTING]: Sorting,
     [modalNames.VALIDATOR]: Validator,

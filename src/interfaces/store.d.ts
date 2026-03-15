@@ -80,6 +80,7 @@ export interface IUiModalGeneral extends IUiModalBase {
         | typeof modals.VARIABLEINFO
         | typeof modals.MASK
         | typeof modals.SORTING
+        | typeof modals.IDCOLUMNS
         | typeof modals.VALIDATOR
         | typeof modals.SELECTCOMPARE;
     data: {};
@@ -145,6 +146,7 @@ export interface IUiControl {
         desc: boolean;
         id: string;
     }[];
+    idCols: string[];
 }
 
 export interface IUiViewer {

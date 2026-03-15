@@ -56,6 +56,7 @@ export const uiSlice = createSlice({
                         },
                         currentPage: 0,
                         sorting: [],
+                        idCols: [],
                     };
                 }
                 // Open dataset view
@@ -217,6 +218,19 @@ export const uiSlice = createSlice({
                 return;
             }
             state.control[fileId].sorting = sorting;
+        },
+        setDatasetIdColumns: (
+            state,
+            action: PayloadAction<{
+                fileId: string;
+                idCols: IUiControl['idCols'];
+            }>,
+        ) => {
+            const { fileId, idCols } = action.payload;
+            if (!state.control[fileId]) {
+                return;
+            }
+            state.control[fileId].idCols = idCols;
         },
         setBottomSection: (
             state,
@@ -563,6 +577,7 @@ export const {
     setDatasetInfoTab,
     setDatasetScrollPosition,
     setDatasetSorting,
+    setDatasetIdColumns,
     setBottomSection,
     setValidationModalTab,
     setFilterInputMode,

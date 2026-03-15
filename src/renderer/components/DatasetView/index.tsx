@@ -96,6 +96,10 @@ const DatasetView: React.FC<DatasetViewProps> = ({
 }) => {
     const dispatch = useAppDispatch();
 
+    const reduxIdCols = useAppSelector(
+        (state) => state.ui.control[tableData.fileId]?.idCols || [],
+    );
+
     const columns = useMemo<ColumnDef<ITableRow>[]>(() => {
         const result = tableData.header.map((column) => {
             const headerCell: {
@@ -176,12 +180,13 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             const columnId = header.id;
             if (columnId !== '#') {
                 visibilityState[columnId] =
-                    currentMask.columns.includes(columnId);
+                    currentMask.columns.includes(columnId) ||
+                    reduxIdCols.includes(columnId);
             }
         });
 
         return visibilityState;
-    }, [currentMask, tableData.header]);
+    }, [currentMask, reduxIdCols, tableData.header]);
 
     const filteredColumns = useMemo<string[]>(() => {
         return tableData.header
@@ -196,6 +201,24 @@ const DatasetView: React.FC<DatasetViewProps> = ({
 
     const [localSorting, setLocalSorting] = useState<ISortingState>([]);
     const sorting = reduxSorting !== null ? reduxSorting : localSorting;
+
+    const pinnedLeftColumnIds = useMemo(() => {
+        const availableColumns = new Set(
+            tableData.header.map((column) => column.id),
+        );
+        const pinnedColumns = settings.hideRowNumbers ? [] : ['#'];
+
+        reduxIdCols.forEach((columnId) => {
+            if (
+                availableColumns.has(columnId) &&
+                !pinnedColumns.includes(columnId)
+            ) {
+                pinnedColumns.push(columnId);
+            }
+        });
+
+        return pinnedColumns;
+    }, [reduxIdCols, settings.hideRowNumbers, tableData.header]);
 
     const handleSetSorting = (
         updatedSorting:
@@ -230,14 +253,12 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         getSortedRowModel: getSortedRowModel(),
         debugTable: true,
         columnResizeMode: 'onEnd',
-        initialState: {
-            columnPinning: {
-                left: ['#'],
-            },
-        },
         state: {
             sorting,
             columnVisibility,
+            columnPinning: {
+                left: pinnedLeftColumnIds,
+            },
         },
         onSortingChange: handleSetSorting,
     });
@@ -250,6 +271,10 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     }, [table, data, isLoading, sorting]);
 
     const visibleColumns = table.getVisibleLeafColumns();
+    const leftPinnedColumns = table
+        .getLeftVisibleLeafColumns()
+        .filter((column) => !settings.hideRowNumbers || column.id !== '#');
+    const centerColumns = table.getCenterVisibleLeafColumns();
 
     const scrollPositionX = useAppSelector(
         (state) =>
@@ -265,8 +290,8 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     const tableContainerRef = containerRef || internalContainerRef;
 
     const columnVirtualizer = useVirtualizer({
-        count: visibleColumns.length - 1, // Exclude the first column
-        estimateSize: (index) => visibleColumns[index + 1].getSize(), // Adjust index
+        count: centerColumns.length,
+        estimateSize: (index) => centerColumns[index].getSize(),
         getScrollElement: () => tableContainerRef.current,
         horizontal: true,
         overscan: 4,
@@ -782,6 +807,8 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                     table={table}
                     tableContainerRef={tableContainerRef}
                     visibleColumns={visibleColumns}
+                    leftPinnedColumns={leftPinnedColumns}
+                    centerColumns={centerColumns}
                     virtualPaddingLeft={virtualPaddingLeft}
                     virtualPaddingRight={virtualPaddingRight}
                     virtualColumns={virtualColumns}

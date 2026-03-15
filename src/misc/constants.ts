@@ -8,6 +8,7 @@ export const modals = {
     VARIABLEINFO: 'VARIABLEINFO',
     MASK: 'MASK',
     SORTING: 'SORTING',
+    IDCOLUMNS: 'IDCOLUMNS',
     VALIDATOR: 'VALIDATOR',
     SELECTCOMPARE: 'SELECTCOMPARE',
 } as const;
