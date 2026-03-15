@@ -21,6 +21,12 @@ export interface IMask {
     sticky?: boolean;
 }
 
+export interface IIdColumnSet {
+    name: string;
+    id: string;
+    columns: string[];
+}
+
 export type ClipboardCopyFormat = 'tab' | 'csv' | 'json';
 
 export interface SettingsDefine {
@@ -302,6 +308,9 @@ export interface IData {
     maskData: {
         currentMask: IMask | null;
         savedMasks: IMask[];
+    };
+    idColumnData: {
+        savedSets: IIdColumnSet[];
     };
     converter: ConverterData;
     validator: ValidatorData;

@@ -7,6 +7,7 @@ import {
     ValidationRunReport,
     ParsedValidationReport,
     IMask,
+    IIdColumnSet,
     IUiValidationPage,
     ValidatorData,
     DatasetDiff,
@@ -151,6 +152,25 @@ export const dataSlice = createSlice({
         },
         clearMask: (state) => {
             state.maskData.currentMask = null;
+            return state;
+        },
+        saveIdColumnSet: (state, action: PayloadAction<IIdColumnSet>) => {
+            const existingIndex = state.idColumnData.savedSets.findIndex(
+                (savedSet) => savedSet.id === action.payload.id,
+            );
+
+            if (existingIndex !== -1) {
+                state.idColumnData.savedSets[existingIndex] = action.payload;
+            } else {
+                state.idColumnData.savedSets.push(action.payload);
+            }
+
+            return state;
+        },
+        deleteIdColumnSet: (state, action: PayloadAction<IIdColumnSet>) => {
+            state.idColumnData.savedSets = state.idColumnData.savedSets.filter(
+                (savedSet) => savedSet.id !== action.payload.id,
+            );
             return state;
         },
         setValidatorData: (
@@ -322,6 +342,8 @@ export const {
     saveMask,
     deleteMask,
     clearMask,
+    saveIdColumnSet,
+    deleteIdColumnSet,
     setValidatorData,
     resetValidatorInfo,
     addValidationReport,

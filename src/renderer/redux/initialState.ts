@@ -196,6 +196,15 @@ export const data: IData = {
             },
         ],
     },
+    idColumnData: {
+        savedSets: [
+            {
+                id: 'id-columns-example-1',
+                name: 'BDS Identifiers',
+                columns: ['USUBJID', 'PARAMCD', 'AVISIT'],
+            },
+        ],
+    },
     converter,
     validator,
     compare,
