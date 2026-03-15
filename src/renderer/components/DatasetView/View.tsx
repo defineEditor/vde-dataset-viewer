@@ -409,7 +409,7 @@ const DatasetHeaderCell: React.FC<{
 };
 
 const DatasetBodyCell: React.FC<{
-    annotation: AnnotationData | null;
+    annotatedCells: Map<string, AnnotationData> | null;
     cell: ICell<ITableRow, unknown>;
     handleCellClick: (rowIndex: number, columnId: string) => void;
     handleContextMenu: (
@@ -420,24 +420,39 @@ const DatasetBodyCell: React.FC<{
     ) => void;
     handleMouseDown: (rowIndex: number | null, columnId: string | null) => void;
     handleMouseOver: (rowIndex: number | null, columnId: string | null) => void;
-    isHighlighted: boolean;
+    highlightedCells: Record<string, number[]>;
     rowAnnotation: AnnotationData | null;
     rowIndex: number;
+    visibleColumns: IColumn<ITableRow, unknown>[];
     settings: TableSettings;
     usePinningStyles?: boolean;
 }> = ({
-    annotation,
+    annotatedCells,
     cell,
     handleCellClick,
     handleContextMenu,
     handleMouseDown,
     handleMouseOver,
-    isHighlighted,
+    highlightedCells,
     rowAnnotation,
     rowIndex,
+    visibleColumns,
     settings,
     usePinningStyles = false,
 }) => {
+    const isHighlighted =
+        highlightedCells[cell.column.id]?.includes(rowIndex) || false;
+
+    let annotation: {
+        text: string | React.ReactElement;
+        color: string;
+    } | null = null;
+    if (annotatedCells) {
+        const columnIndex = visibleColumns.findIndex(
+            (column) => column.id === cell.column.id,
+        );
+        annotation = annotatedCells?.get(`${rowIndex}#${columnIndex}`) || null;
+    }
     const isRowNumber = cell.column.id === '#';
     const isAnnotated = !!annotation;
 
@@ -724,33 +739,11 @@ const DatasetViewUI: React.FC<{
                                     }}
                                 >
                                     {leftPinnedCells.map((cell) => {
-                                        const isHighlighted =
-                                            highlightedCells[
-                                                cell.column.id
-                                            ]?.includes(virtualRow.index) ||
-                                            false;
-
-                                        let annotation: {
-                                            text: string | React.ReactElement;
-                                            color: string;
-                                        } | null = null;
-                                        if (annotatedCells) {
-                                            const columnIndex =
-                                                visibleColumns.findIndex(
-                                                    (column) =>
-                                                        column.id ===
-                                                        cell.column.id,
-                                                );
-                                            annotation =
-                                                annotatedCells?.get(
-                                                    `${virtualRow.index}#${columnIndex}`,
-                                                ) || null;
-                                        }
-
                                         return (
                                             <DatasetBodyCell
                                                 key={cell.id}
-                                                annotation={annotation}
+                                                annotatedCells={annotatedCells}
+                                                visibleColumns={visibleColumns}
                                                 cell={cell}
                                                 handleCellClick={
                                                     handleCellClick
@@ -764,7 +757,9 @@ const DatasetViewUI: React.FC<{
                                                 handleMouseOver={
                                                     handleMouseOver
                                                 }
-                                                isHighlighted={isHighlighted}
+                                                highlightedCells={
+                                                    highlightedCells
+                                                }
                                                 rowAnnotation={rowAnnotation}
                                                 rowIndex={virtualRow.index}
                                                 settings={settings}
@@ -786,35 +781,11 @@ const DatasetViewUI: React.FC<{
                                         if (!cell) {
                                             return null;
                                         }
-
-                                        const isHighlighted =
-                                            highlightedCells[
-                                                cell.column.id
-                                            ]?.includes(virtualRow.index) ||
-                                            false;
-
-                                        let annotation: {
-                                            text: string | React.ReactElement;
-                                            color: string;
-                                        } | null = null;
-
-                                        if (annotatedCells) {
-                                            const columnIndex =
-                                                visibleColumns.findIndex(
-                                                    (visibleColumn) =>
-                                                        visibleColumn.id ===
-                                                        cell.column.id,
-                                                );
-                                            annotation =
-                                                annotatedCells.get(
-                                                    `${virtualRow.index}#${columnIndex}`,
-                                                ) || null;
-                                        }
-
                                         return (
                                             <DatasetBodyCell
                                                 key={cell.id}
-                                                annotation={annotation}
+                                                annotatedCells={annotatedCells}
+                                                visibleColumns={visibleColumns}
                                                 cell={cell}
                                                 handleCellClick={
                                                     handleCellClick
@@ -828,7 +799,9 @@ const DatasetViewUI: React.FC<{
                                                 handleMouseOver={
                                                     handleMouseOver
                                                 }
-                                                isHighlighted={isHighlighted}
+                                                highlightedCells={
+                                                    highlightedCells
+                                                }
                                                 rowAnnotation={null}
                                                 rowIndex={virtualRow.index}
                                                 settings={settings}
