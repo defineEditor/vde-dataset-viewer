@@ -96,28 +96,6 @@ const DatasetView: React.FC<DatasetViewProps> = ({
 }) => {
     const dispatch = useAppDispatch();
 
-    const sorting = useAppSelector(
-        (state) => state.ui.control[tableData.fileId]?.sorting || [],
-    );
-    const handleSetSorting = (
-        updatedSorting:
-            | ISortingState
-            | ((oldSorting: ISortingState) => ISortingState),
-    ) => {
-        let newSorting: ISortingState;
-        if (typeof updatedSorting === 'function') {
-            newSorting = updatedSorting(sorting);
-        } else {
-            newSorting = updatedSorting;
-        }
-        dispatch(
-            setDatasetSorting({
-                fileId: tableData.fileId,
-                sorting: newSorting,
-            }),
-        );
-    };
-
     const columns = useMemo<ColumnDef<ITableRow>[]>(() => {
         const result = tableData.header.map((column) => {
             const headerCell: {
@@ -210,6 +188,35 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             .filter((column) => column.isFiltered)
             .map((column) => column.id);
     }, [tableData.header]);
+
+    // Sorting
+    const reduxSorting = useAppSelector(
+        (state) => state.ui.control[tableData.fileId]?.sorting || null,
+    );
+
+    const [localSorting, setLocalSorting] = useState<ISortingState>([]);
+    const sorting = reduxSorting !== null ? reduxSorting : localSorting;
+
+    const handleSetSorting = (
+        updatedSorting:
+            | ISortingState
+            | ((oldSorting: ISortingState) => ISortingState),
+    ) => {
+        if (reduxSorting === null) {
+            setLocalSorting(updatedSorting);
+        } else {
+            if (typeof updatedSorting === 'function') {
+                return;
+            }
+
+            dispatch(
+                setDatasetSorting({
+                    fileId: tableData.fileId,
+                    sorting: updatedSorting,
+                }),
+            );
+        }
+    };
 
     // Height measurements
     const { tableHeight, viewContainerRef } = useTableHeight();

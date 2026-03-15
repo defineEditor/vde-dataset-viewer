@@ -8,6 +8,7 @@ import AppUpdate from 'renderer/components/Modal/AppUpdate';
 import EditApi from 'renderer/components/Modal/EditApi';
 import ErrorModal from 'renderer/components/Modal/ErrorModal';
 import Mask from 'renderer/components/Modal/Mask';
+import Sorting from 'renderer/components/Modal/Sorting';
 import Validator from 'renderer/components/Modal/Validator';
 import SelectCompare from 'renderer/components/Modal/SelectCompare';
 import { modals as modalNames } from 'misc/constants';
@@ -22,6 +23,7 @@ const MODAL_COMPONENTS = {
     [modalNames.ERROR]: ErrorModal,
     [modalNames.VARIABLEINFO]: VariableInfo,
     [modalNames.MASK]: Mask,
+    [modalNames.SORTING]: Sorting,
     [modalNames.VALIDATOR]: Validator,
     [modalNames.SELECTCOMPARE]: SelectCompare,
 };

@@ -7,6 +7,7 @@ export const modals = {
     ERROR: 'ERROR',
     VARIABLEINFO: 'VARIABLEINFO',
     MASK: 'MASK',
+    SORTING: 'SORTING',
     VALIDATOR: 'VALIDATOR',
     SELECTCOMPARE: 'SELECTCOMPARE',
 } as const;
