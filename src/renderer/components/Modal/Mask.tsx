@@ -220,6 +220,7 @@ const Mask: React.FC = () => {
                         handleClose();
                     }
                 } else if (event.key === 's' && editingMaskId === null) {
+                    event.preventDefault();
                     handleApply();
                 }
             }
@@ -264,7 +265,7 @@ const Mask: React.FC = () => {
                         options={columnNames}
                         value={selectedColumns}
                         onChange={(_, newValue) => setSelectedColumns(newValue)}
-                        renderTags={(value, getTagProps) =>
+                        renderValue={(value, getTagProps) =>
                             value.map((option, index) => (
                                 <Chip
                                     label={option}

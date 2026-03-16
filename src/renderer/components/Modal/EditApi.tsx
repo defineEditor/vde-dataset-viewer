@@ -97,6 +97,7 @@ const EditApi: React.FC<IUiModalEditApi> = ({ type, data }) => {
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.ctrlKey && event.key === 's') {
+                event.preventDefault();
                 handleAddApi();
             } else if (event.key === 'Escape') {
                 handleClose();

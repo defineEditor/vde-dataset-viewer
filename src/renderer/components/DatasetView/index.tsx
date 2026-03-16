@@ -681,7 +681,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                             return selectedColumnIds
                                 .map((columnId) => {
                                     const cell = rowCellMap.get(columnId);
-                                    return cell?.getValue() || '';
+                                    return cell?.getValue() ?? '';
                                 })
                                 .join('\t');
                         })
@@ -704,7 +704,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                             return selectedColumnIds
                                 .map((columnId) => {
                                     const cell = rowCellMap.get(columnId);
-                                    return `"${(cell?.getValue() as string | number | boolean | null)?.toString().replace(/"/g, '""') || ''}"`;
+                                    return `"${(cell?.getValue() as string | number | boolean | null)?.toString().replace(/"/g, '""') ?? ''}"`;
                                 })
                                 .join(',');
                         })
@@ -732,7 +732,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                             (columnId) => {
                                 const cell = rowCellMap.get(columnId);
                                 return {
-                                    [columnId]: cell?.getValue() || null,
+                                    [columnId]: cell?.getValue() ?? null,
                                 };
                             },
                         );
