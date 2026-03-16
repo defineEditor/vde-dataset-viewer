@@ -232,6 +232,19 @@ export const uiSlice = createSlice({
             }
             state.control[fileId].idCols = idCols;
         },
+        setDatasetShowLabels: (
+            state,
+            action: PayloadAction<{
+                fileId: string;
+                showLabels: boolean;
+            }>,
+        ) => {
+            const { fileId, showLabels } = action.payload;
+            if (!state.control[fileId]) {
+                return;
+            }
+            state.control[fileId].showLabels = showLabels;
+        },
         setBottomSection: (
             state,
             action: PayloadAction<'dataset' | 'issues'>,
@@ -578,6 +591,7 @@ export const {
     setDatasetScrollPosition,
     setDatasetSorting,
     setDatasetIdColumns,
+    setDatasetShowLabels,
     setBottomSection,
     setValidationModalTab,
     setFilterInputMode,

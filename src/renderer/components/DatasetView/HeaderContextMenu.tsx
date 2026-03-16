@@ -18,6 +18,7 @@ import {
     setDatasetIdColumns,
     setDatasetSorting,
     setSelect,
+    setDatasetShowLabels,
 } from 'renderer/redux/slices/ui';
 import { resetFilter, setFilter } from 'renderer/redux/slices/data';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
@@ -30,6 +31,8 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import ChecklistIcon from '@mui/icons-material/Checklist';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
+import LabelIcon from '@mui/icons-material/Label';
+import LabelOffIcon from '@mui/icons-material/LabelOff';
 import SortIcon from '@mui/icons-material/Sort';
 import { handleTransformation } from 'renderer/utils/transformUtils';
 import { modals } from 'misc/constants';
@@ -88,6 +91,12 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
         (state) => state.ui.control[currentFileId]?.idCols || [],
     );
     const settings = useAppSelector((state) => state.settings);
+    const currentShowLabels = useAppSelector((state) => {
+        return (
+            state.ui.control[currentFileId]?.showLabels ??
+            state.settings.viewer.showLabels
+        );
+    });
     const dateFormat = useAppSelector(
         (state) => state.settings.viewer.dateFormat,
     );
@@ -141,19 +150,6 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
     const isPinned = currentIdColumns.includes(header.id);
     const isInSorting = currentSorting.some((item) => item.id === header.id);
 
-    const handleShowInfo = () => {
-        dispatch(
-            openModal({
-                type: modals.VARIABLEINFO,
-                data: { columnId: header.id },
-            }),
-        );
-    };
-
-    const handleSelect = () => {
-        dispatch(setSelect({ fileId: currentFileId, column: header.id }));
-    };
-
     const handleClose = () => {
         setFilterMenuAnchor(null);
         setIsLoadingValues(false);
@@ -165,6 +161,31 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
             setSelectedItems([]);
         }
         onClose({}, 'action');
+    };
+
+    const handleShowInfo = () => {
+        dispatch(
+            openModal({
+                type: modals.VARIABLEINFO,
+                data: { columnId: header.id },
+            }),
+        );
+        handleClose();
+    };
+
+    const handleShowLabels = () => {
+        dispatch(
+            setDatasetShowLabels({
+                fileId: currentFileId,
+                showLabels: !currentShowLabels,
+            }),
+        );
+        handleClose();
+    };
+
+    const handleSelect = () => {
+        dispatch(setSelect({ fileId: currentFileId, column: header.id }));
+        handleClose();
     };
 
     const handleTogglePin = () => {
@@ -402,7 +423,6 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
                 <MenuItem
                     onClick={() => {
                         handleShowInfo();
-                        handleClose();
                     }}
                 >
                     <ListItemIcon>
@@ -410,11 +430,26 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
                     </ListItemIcon>
                     <ListItemText>Column Info</ListItemText>
                 </MenuItem>
+                <MenuItem
+                    onClick={() => {
+                        handleShowLabels();
+                    }}
+                >
+                    <ListItemIcon>
+                        {currentShowLabels ? (
+                            <LabelOffIcon fontSize="small" />
+                        ) : (
+                            <LabelIcon fontSize="small" />
+                        )}
+                    </ListItemIcon>
+                    <ListItemText>
+                        {currentShowLabels ? 'Show Names' : 'Show Labels'}
+                    </ListItemText>
+                </MenuItem>
                 <Divider />
                 <MenuItem
                     onClick={() => {
                         handleSelect();
-                        handleClose();
                     }}
                 >
                     <ListItemIcon>

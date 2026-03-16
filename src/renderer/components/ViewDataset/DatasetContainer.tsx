@@ -48,12 +48,14 @@ const updateWidth = (
     estimateWidthRows: number,
     maxColWidth: number,
     showTypeIcons: boolean = false,
+    showLabels: boolean = false,
 ) => {
     const widths = estimateWidth(
         data,
         estimateWidthRows,
         maxColWidth,
         showTypeIcons,
+        showLabels,
     );
     // Update column style with default width
     return data.header.map((col) => {
@@ -139,6 +141,12 @@ const DatasetContainer: React.FC = () => {
             : 0,
     );
 
+    const showLabels = useAppSelector(
+        (state) =>
+            state.ui.control[currentFileId]?.showLabels ??
+            state.settings.viewer.showLabels,
+    );
+
     // Load initial data
     useEffect(() => {
         if (table?.fileId === currentFileId) {
@@ -184,6 +192,7 @@ const DatasetContainer: React.FC = () => {
                     settings.viewer.estimateWidthRows,
                     settings.viewer.maxColWidth,
                     settings.viewer.showTypeIcons,
+                    showLabels,
                 );
                 setTotalRecords(newData.metadata.records);
                 setTable(newData);
@@ -201,6 +210,7 @@ const DatasetContainer: React.FC = () => {
         settings,
         currentFilter,
         table?.fileId,
+        showLabels,
     ]);
 
     // Pagination
@@ -229,6 +239,7 @@ const DatasetContainer: React.FC = () => {
                         settings.viewer.estimateWidthRows,
                         settings.viewer.maxColWidth,
                         settings.viewer.showTypeIcons,
+                        showLabels,
                     );
                     setTable(newData);
                     dispatch(setPage({ fileId: currentFileId, page: newPage }));
@@ -238,7 +249,15 @@ const DatasetContainer: React.FC = () => {
 
             readNext((newPage as number) * pageSize);
         },
-        [currentFileId, pageSize, table, dispatch, apiService, settings],
+        [
+            currentFileId,
+            pageSize,
+            table,
+            dispatch,
+            apiService,
+            settings,
+            showLabels,
+        ],
     );
 
     // Filter change
@@ -276,6 +295,7 @@ const DatasetContainer: React.FC = () => {
                     settings.viewer.estimateWidthRows,
                     settings.viewer.maxColWidth,
                     settings.viewer.showTypeIcons,
+                    showLabels,
                 );
                 // Mark filtered columns
                 if (currentFilter !== null) {
@@ -316,6 +336,7 @@ const DatasetContainer: React.FC = () => {
         page,
         apiService,
         settings,
+        showLabels,
     ]);
 
     // GoTo control

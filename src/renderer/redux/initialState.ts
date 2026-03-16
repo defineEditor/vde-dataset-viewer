@@ -23,6 +23,7 @@ export const settings: ISettings = {
         applyDateFormat: true,
         showTypeIcons: false,
         copyWithHeaders: false,
+        showLabels: false,
     },
     converter: {
         threads: 2,

@@ -109,7 +109,12 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         (state) => state.ui.control[tableData.fileId]?.idCols || [],
     );
 
+    const reduxShowLabels = useAppSelector(
+        (state) => state.ui.control[tableData.fileId]?.showLabels,
+    );
+
     const columns = useMemo<ColumnDef<ITableRow>[]>(() => {
+        console.log('Generating columns...');
         const result = tableData.header.map((column) => {
             const headerCell: {
                 accessorKey: string;
@@ -124,7 +129,10 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                 cell?: ColumnDef<ITableRow>['cell'];
             } = {
                 accessorKey: column.id,
-                header: settings.showLabel ? column.label : column.id,
+                header:
+                    (reduxShowLabels ?? settings.showLabels) && column.label
+                        ? column.label
+                        : column.id,
                 size: column.size,
                 enableResizing: true,
                 meta: {
@@ -170,7 +178,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             });
         }
         return result;
-    }, [tableData.header, settings]);
+    }, [tableData.header, settings, reduxShowLabels]);
 
     // Create column visibility state based on current mask
     const columnVisibility = useMemo<VisibilityState>(() => {

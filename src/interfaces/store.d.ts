@@ -45,6 +45,7 @@ export interface SettingsViewer {
     copyFormat: ClipboardCopyFormat;
     showTypeIcons: boolean;
     copyWithHeaders: boolean;
+    showLabels: boolean;
 }
 
 export interface ISettings {
@@ -153,6 +154,7 @@ export interface IUiControl {
         id: string;
     }[];
     idCols: string[];
+    showLabels?: boolean;
 }
 
 export interface IUiViewer {

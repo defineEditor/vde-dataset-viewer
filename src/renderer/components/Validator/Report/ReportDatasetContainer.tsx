@@ -24,7 +24,7 @@ const DatasetContainer: React.FC<{
         showTypeIcons: false,
         dynamicRowHeight: true,
         hideRowNumbers: false,
-        showLabel: true,
+        showLabels: true,
     };
 
     // Measure width of the table

@@ -253,7 +253,7 @@ const UniqueValues: React.FC<{
         ...settings,
         showTypeIcons: false,
         hideRowNumbers: true,
-        showLabel: true,
+        showLabels: true,
         width: containerWidth || undefined,
     };
 
