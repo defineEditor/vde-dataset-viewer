@@ -186,6 +186,7 @@ export const data: IData = {
         recentFilters: [],
         lastOptions: { caseInsensitive: true },
         lastType: 'manual',
+        recentCommands: [],
     },
     maskData: {
         currentMask: null,

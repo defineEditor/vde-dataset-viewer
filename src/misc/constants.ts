@@ -1,5 +1,6 @@
 export const modals = {
     GOTO: 'GOTO',
+    COMMANDLINE: 'COMMANDLINE',
     DATASETINFO: 'DATASETINFO',
     FILTER: 'FILTER',
     APPUPDATE: 'APPUPDATE',

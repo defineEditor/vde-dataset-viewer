@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useCallback } from 'react';
 import { Typography, Tooltip, IconButton, Stack } from '@mui/material';
 import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
 import ShortcutIcon from '@mui/icons-material/Shortcut';
+import TerminalIcon from '@mui/icons-material/Terminal';
 import InfoIcon from '@mui/icons-material/Info';
 import FilterIcon from '@mui/icons-material/FilterAlt';
 import NextPlanOutlinedIcon from '@mui/icons-material/NextPlan';
@@ -117,6 +118,10 @@ const Header: React.FC = () => {
     }, [apiService, dispatch]);
     const handleGoToClick = useCallback(() => {
         dispatch(openModal({ type: modals.GOTO, data: {} }));
+    }, [dispatch]);
+
+    const handleCommandLineClick = useCallback(() => {
+        dispatch(openModal({ type: modals.COMMANDLINE, data: {} }));
     }, [dispatch]);
 
     const handleFilterClick = useCallback(() => {
@@ -243,6 +248,9 @@ const Header: React.FC = () => {
                     case 'g':
                         handleGoToClick();
                         break;
+                    case 'l':
+                        handleCommandLineClick();
+                        break;
                     case 'o':
                         handleOpenClick();
                         break;
@@ -281,6 +289,7 @@ const Header: React.FC = () => {
         };
     }, [
         handleGoToClick,
+        handleCommandLineClick,
         handleOpenClick,
         handleFilterClick,
         handleDataSetInfoClick,
@@ -340,6 +349,20 @@ const Header: React.FC = () => {
                     disabled={pathname !== paths.VIEWFILE}
                 >
                     <ShortcutIcon
+                        sx={{
+                            color: 'grey.600',
+                        }}
+                    />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Command Line" enterDelay={1000}>
+                <IconButton
+                    onClick={handleCommandLineClick}
+                    id="commandLine"
+                    size="small"
+                    disabled={pathname !== paths.VIEWFILE}
+                >
+                    <TerminalIcon
                         sx={{
                             color: 'grey.600',
                         }}
