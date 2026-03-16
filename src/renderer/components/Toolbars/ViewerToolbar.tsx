@@ -9,6 +9,7 @@ import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import SortIcon from '@mui/icons-material/Sort';
 import {
     openDataset,
@@ -54,6 +55,14 @@ const Header: React.FC = () => {
     );
     const isMaskEnabled = useAppSelector(
         (state) => state.data.maskData.currentMask !== null,
+    );
+
+    const isIdColumnsEnabled = useAppSelector(
+        (state) => (state.ui.control[currentFileId]?.idCols || []).length > 0,
+    );
+
+    const isSortingEnabled = useAppSelector(
+        (state) => (state.ui.control[currentFileId]?.sorting || []).length > 0,
     );
 
     const isModalOpen = useAppSelector((state) => state.ui.modals?.length > 0);
@@ -130,6 +139,10 @@ const Header: React.FC = () => {
 
     const handleSortingClick = useCallback(() => {
         dispatch(openModal({ type: modals.SORTING, data: {} }));
+    }, [dispatch]);
+
+    const handleIdColumnsClick = useCallback(() => {
+        dispatch(openModal({ type: modals.IDCOLUMNS, data: {} }));
     }, [dispatch]);
 
     const handleCompareClick = useCallback(() => {
@@ -372,7 +385,25 @@ const Header: React.FC = () => {
                 >
                     <SortIcon
                         sx={{
-                            color: 'grey.600',
+                            color: isSortingEnabled
+                                ? 'primary.main'
+                                : 'grey.600',
+                        }}
+                    />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="ID Columns" enterDelay={1000}>
+                <IconButton
+                    onClick={handleIdColumnsClick}
+                    id="idColumns"
+                    size="small"
+                    disabled={pathname !== paths.VIEWFILE}
+                >
+                    <PushPinOutlinedIcon
+                        sx={{
+                            color: isIdColumnsEnabled
+                                ? 'primary.main'
+                                : 'grey.600',
                         }}
                     />
                 </IconButton>

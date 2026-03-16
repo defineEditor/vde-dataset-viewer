@@ -21,6 +21,12 @@ export interface IMask {
     sticky?: boolean;
 }
 
+export interface IIdColumnSet {
+    name: string;
+    id: string;
+    columns: string[];
+}
+
 export type ClipboardCopyFormat = 'tab' | 'csv' | 'json';
 
 export interface SettingsDefine {
@@ -80,6 +86,7 @@ export interface IUiModalGeneral extends IUiModalBase {
         | typeof modals.VARIABLEINFO
         | typeof modals.MASK
         | typeof modals.SORTING
+        | typeof modals.IDCOLUMNS
         | typeof modals.VALIDATOR
         | typeof modals.SELECTCOMPARE;
     data: {};
@@ -145,6 +152,7 @@ export interface IUiControl {
         desc: boolean;
         id: string;
     }[];
+    idCols: string[];
 }
 
 export interface IUiViewer {
@@ -300,6 +308,9 @@ export interface IData {
     maskData: {
         currentMask: IMask | null;
         savedMasks: IMask[];
+    };
+    idColumnData: {
+        savedSets: IIdColumnSet[];
     };
     converter: ConverterData;
     validator: ValidatorData;

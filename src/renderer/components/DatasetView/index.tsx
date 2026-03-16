@@ -49,6 +49,15 @@ interface ITableRow {
     [key: string]: string | number | boolean | null;
 }
 
+type HighlightedCells = {
+    [columnId: string]: number[];
+};
+
+type SelectionAnchor = {
+    row: number | null;
+    columnId: string | null;
+};
+
 const styles = {
     fullHeight: {
         height: '100%',
@@ -95,6 +104,10 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     onSetSelect = () => {},
 }) => {
     const dispatch = useAppDispatch();
+
+    const reduxIdCols = useAppSelector(
+        (state) => state.ui.control[tableData.fileId]?.idCols || [],
+    );
 
     const columns = useMemo<ColumnDef<ITableRow>[]>(() => {
         const result = tableData.header.map((column) => {
@@ -176,12 +189,13 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             const columnId = header.id;
             if (columnId !== '#') {
                 visibilityState[columnId] =
-                    currentMask.columns.includes(columnId);
+                    currentMask.columns.includes(columnId) ||
+                    reduxIdCols.includes(columnId);
             }
         });
 
         return visibilityState;
-    }, [currentMask, tableData.header]);
+    }, [currentMask, reduxIdCols, tableData.header]);
 
     const filteredColumns = useMemo<string[]>(() => {
         return tableData.header
@@ -196,6 +210,24 @@ const DatasetView: React.FC<DatasetViewProps> = ({
 
     const [localSorting, setLocalSorting] = useState<ISortingState>([]);
     const sorting = reduxSorting !== null ? reduxSorting : localSorting;
+
+    const pinnedLeftColumnIds = useMemo(() => {
+        const availableColumns = new Set(
+            tableData.header.map((column) => column.id),
+        );
+        const pinnedColumns = settings.hideRowNumbers ? [] : ['#'];
+
+        reduxIdCols.forEach((columnId) => {
+            if (
+                availableColumns.has(columnId) &&
+                !pinnedColumns.includes(columnId)
+            ) {
+                pinnedColumns.push(columnId);
+            }
+        });
+
+        return pinnedColumns;
+    }, [reduxIdCols, settings.hideRowNumbers, tableData.header]);
 
     const handleSetSorting = (
         updatedSorting:
@@ -230,14 +262,12 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         getSortedRowModel: getSortedRowModel(),
         debugTable: true,
         columnResizeMode: 'onEnd',
-        initialState: {
-            columnPinning: {
-                left: ['#'],
-            },
-        },
         state: {
             sorting,
             columnVisibility,
+            columnPinning: {
+                left: pinnedLeftColumnIds,
+            },
         },
         onSortingChange: handleSetSorting,
     });
@@ -250,6 +280,14 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     }, [table, data, isLoading, sorting]);
 
     const visibleColumns = table.getVisibleLeafColumns();
+    const visibleColumnIds = useMemo(
+        () => visibleColumns.map((column) => column.id),
+        [visibleColumns],
+    );
+    const leftPinnedColumns = table
+        .getLeftVisibleLeafColumns()
+        .filter((column) => !settings.hideRowNumbers || column.id !== '#');
+    const centerColumns = table.getCenterVisibleLeafColumns();
 
     const scrollPositionX = useAppSelector(
         (state) =>
@@ -265,8 +303,8 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     const tableContainerRef = containerRef || internalContainerRef;
 
     const columnVirtualizer = useVirtualizer({
-        count: visibleColumns.length - 1, // Exclude the first column
-        estimateSize: (index) => visibleColumns[index + 1].getSize(), // Adjust index
+        count: centerColumns.length,
+        estimateSize: (index) => centerColumns[index].getSize(),
         getScrollElement: () => tableContainerRef.current,
         horizontal: true,
         overscan: 4,
@@ -355,90 +393,189 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         return newMap;
     }, [annotatedCells, currentPage, settings.pageSize]);
 
-    const [highlightedCells, setHighlightedCells] = useState<
-        { row: number; column: number }[]
-    >([]);
-    const [selecting, setSelecting] = useState(false);
-    const [startCell, setStartCell] = useState<{
-        row: number;
-        column: number;
-    } | null>(null);
-
-    const handleCellClick = useCallback(
-        (rowIndex: number, columnIndex: number) => {
-            // If user clicks on the row number, highlight the entire row
-            if (columnIndex === 0) {
-                const newHighlightedCells: { row: number; column: number }[] =
-                    [];
-                for (let column = 0; column < visibleColumns.length; column++) {
-                    newHighlightedCells.push({ row: rowIndex, column });
-                }
-                setHighlightedCells(newHighlightedCells);
-            } else {
-                setHighlightedCells([{ row: rowIndex, column: columnIndex }]);
-            }
-        },
-        [visibleColumns.length],
+    const [highlightedCells, setHighlightedCells] = useState<HighlightedCells>(
+        {},
     );
+    const [selecting, setSelecting] = useState(false);
+    const [startCell, setStartCell] = useState<SelectionAnchor | null>(null);
 
-    const handleColumnSelect = useCallback(
-        (columnIndex: number) => {
-            const newHighlightedCells: { row: number; column: number }[] = [];
-            for (let row = 0; row < rows.length; row++) {
-                newHighlightedCells.push({ row, column: columnIndex });
-            }
-            setHighlightedCells(newHighlightedCells);
-        },
+    const allRowIndices = useMemo(
+        () => Array.from({ length: rows.length }, (_unused, row) => row),
         [rows.length],
     );
 
-    const handleMouseDown = (rowIndex: number, columnIndex: number) => {
-        if (rowIndex === -1 && columnIndex === -1) {
-            // If user clicks on the header row number, select the entire table
-            const newHighlightedCells: { row: number; column: number }[] = [];
-            for (let row = 0; row < rows.length; row++) {
-                for (let column = 0; column < visibleColumns.length; column++) {
-                    newHighlightedCells.push({ row, column });
-                }
+    const buildSelection = useCallback(
+        (rowsToSelect: number[], columnIdsToSelect: string[]) => {
+            const selection: HighlightedCells = {};
+
+            columnIdsToSelect.forEach((columnId) => {
+                selection[columnId] = [...rowsToSelect];
+            });
+
+            return selection;
+        },
+        [],
+    );
+
+    const getColumnSelectionRange = useCallback(
+        (startColumnId: string, endColumnId: string) => {
+            const leftColumnIds = leftPinnedColumns.map((column) => column.id);
+            const centerColumnIds = centerColumns.map((column) => column.id);
+            const startLeftIndex = leftColumnIds.indexOf(startColumnId);
+            const endLeftIndex = leftColumnIds.indexOf(endColumnId);
+            const startCenterIndex = centerColumnIds.indexOf(startColumnId);
+            const endCenterIndex = centerColumnIds.indexOf(endColumnId);
+
+            if (startLeftIndex !== -1 && endLeftIndex !== -1) {
+                return leftColumnIds.slice(
+                    Math.min(startLeftIndex, endLeftIndex),
+                    Math.max(startLeftIndex, endLeftIndex) + 1,
+                );
             }
-            setHighlightedCells(newHighlightedCells);
+
+            if (startCenterIndex !== -1 && endCenterIndex !== -1) {
+                return centerColumnIds.slice(
+                    Math.min(startCenterIndex, endCenterIndex),
+                    Math.max(startCenterIndex, endCenterIndex) + 1,
+                );
+            }
+
+            if (startLeftIndex !== -1 && endCenterIndex !== -1) {
+                return [
+                    ...leftColumnIds.slice(startLeftIndex),
+                    ...centerColumnIds.slice(0, endCenterIndex + 1),
+                ];
+            }
+
+            if (startCenterIndex !== -1 && endLeftIndex !== -1) {
+                return [
+                    ...leftColumnIds.slice(endLeftIndex),
+                    ...centerColumnIds.slice(0, startCenterIndex + 1),
+                ];
+            }
+
+            return [];
+        },
+        [centerColumns, leftPinnedColumns],
+    );
+
+    const getColumnIdByName = useCallback(
+        (columnName: string) => {
+            const matchingHeader = tableData.header.find(
+                (item) => item.id.toLowerCase() === columnName.toLowerCase(),
+            );
+
+            return matchingHeader?.id || null;
+        },
+        [tableData.header],
+    );
+
+    const handleCellClick = useCallback(
+        (rowIndex: number, columnId: string) => {
+            // If user clicks on the row number, highlight the entire row
+            if (columnId === '#') {
+                setHighlightedCells(
+                    buildSelection([rowIndex], visibleColumnIds),
+                );
+            } else {
+                setHighlightedCells(buildSelection([rowIndex], [columnId]));
+            }
+        },
+        [buildSelection, visibleColumnIds],
+    );
+
+    const handleColumnSelect = useCallback(
+        (columnId: string) => {
+            setHighlightedCells(buildSelection(allRowIndices, [columnId]));
+        },
+        [allRowIndices, buildSelection],
+    );
+
+    const handleMouseDown = (
+        rowIndex: number | null,
+        columnId: string | null,
+    ) => {
+        if (rowIndex === null && columnId === null) {
+            // If user clicks on the header row number, select the entire table
+            setHighlightedCells(
+                buildSelection(allRowIndices, visibleColumnIds),
+            );
             setSelecting(false);
             setStartCell(null);
             return;
         }
         // If user clicks on a cell, start selecting
         setSelecting(true);
-        setStartCell({ row: rowIndex, column: columnIndex });
-        setHighlightedCells([{ row: rowIndex, column: columnIndex }]);
+        setStartCell({ row: rowIndex, columnId });
+
+        if (rowIndex === null && columnId !== null) {
+            handleColumnSelect(columnId);
+            return;
+        }
+
+        if (rowIndex !== null && columnId !== null) {
+            setHighlightedCells(buildSelection([rowIndex], [columnId]));
+        }
     };
 
-    const handleMouseOver = (rowIndex: number, columnIndex: number) => {
+    const handleMouseOver = (
+        rowIndex: number | null,
+        columnId: string | null,
+    ) => {
         if (selecting && startCell) {
-            const newHighlightedCells: { row: number; column: number }[] = [];
-            let startRow = Math.min(startCell.row, rowIndex);
-            let endRow = Math.max(startCell.row, rowIndex);
-            // If user hovers on the row number, highlight the entire row
-            let startColumn;
-            let endColumn;
-            if (columnIndex === 0) {
-                startColumn = 0;
-                endColumn = visibleColumns.length - 1;
-            } else if (rowIndex === 0) {
-                startColumn = Math.min(startCell.column, columnIndex);
-                endColumn = Math.max(startCell.column, columnIndex);
-                startRow = 0;
-                endRow = rows.length - 1;
-            } else {
-                startColumn = Math.min(startCell.column, columnIndex);
-                endColumn = Math.max(startCell.column, columnIndex);
+            if (startCell.row === null && startCell.columnId !== null) {
+                if (!columnId) {
+                    return;
+                }
+
+                const selectedColumnIds = getColumnSelectionRange(
+                    startCell.columnId,
+                    columnId,
+                );
+
+                if (selectedColumnIds.length === 0) {
+                    return;
+                }
+
+                setHighlightedCells(
+                    buildSelection(allRowIndices, selectedColumnIds),
+                );
+                return;
             }
 
-            for (let row = startRow; row <= endRow; row++) {
-                for (let column = startColumn; column <= endColumn; column++) {
-                    newHighlightedCells.push({ row, column });
+            if (
+                startCell.row !== null &&
+                startCell.columnId !== null &&
+                rowIndex !== null &&
+                columnId !== null
+            ) {
+                const startRow = Math.min(startCell.row, rowIndex);
+                const endRow = Math.max(startCell.row, rowIndex);
+                const rowsToSelect = Array.from(
+                    { length: endRow - startRow + 1 },
+                    (_unused, index) => startRow + index,
+                );
+
+                if (startCell.columnId === '#' || columnId === '#') {
+                    setHighlightedCells(
+                        buildSelection(rowsToSelect, visibleColumnIds),
+                    );
+                    return;
                 }
+
+                const selectedColumnIds = getColumnSelectionRange(
+                    startCell.columnId,
+                    columnId,
+                );
+
+                if (selectedColumnIds.length === 0) {
+                    return;
+                }
+
+                setHighlightedCells(
+                    buildSelection(rowsToSelect, selectedColumnIds),
+                );
             }
-            setHighlightedCells(newHighlightedCells);
         }
     };
 
@@ -477,16 +614,26 @@ const DatasetView: React.FC<DatasetViewProps> = ({
 
     const handleCopyToClipboard = useCallback(
         (withHeaders: boolean) => {
-            if (highlightedCells.length > 0) {
-                const rowIndices = [
-                    ...new Set(highlightedCells.map((cell) => cell.row)),
-                ];
-                const columnIndices = [
-                    ...new Set(highlightedCells.map((cell) => cell.column)),
-                ];
+            const leftColumnIds = leftPinnedColumns.map((column) => column.id);
+            const centerColumnIds = centerColumns.map((column) => column.id);
+            const allColumnIds = [...leftColumnIds, ...centerColumnIds].filter(
+                (columnId) => visibleColumnIds.includes(columnId),
+            );
+            const selectedColumnIds = allColumnIds.filter(
+                (columnId) => (highlightedCells[columnId] || []).length > 0,
+            );
+
+            if (selectedColumnIds.length > 0) {
+                const rowIndexSet = new Set<number>();
+                selectedColumnIds.forEach((columnId) => {
+                    (highlightedCells[columnId] || []).forEach((rowIndex) => {
+                        rowIndexSet.add(rowIndex);
+                    });
+                });
+
+                const rowIndices = [...rowIndexSet];
 
                 rowIndices.sort((a, b) => a - b);
-                columnIndices.sort((a, b) => a - b);
 
                 // Check if row or column indeces exists
                 let invalidIndeces = false;
@@ -498,8 +645,8 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                     }
                     return false;
                 });
-                columnIndices.some((columnIndex) => {
-                    if (visibleColumns[columnIndex] === undefined) {
+                selectedColumnIds.some((columnId) => {
+                    if (!visibleColumnIds.includes(columnId)) {
                         // Column index is out of bounds
                         invalidIndeces = true;
                         return true;
@@ -517,43 +664,49 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                     selectedData = rowIndices
                         .map((rowIndex) => {
                             const row = rows[rowIndex];
-                            return columnIndices
-                                .map((columnIndex) => {
-                                    const cell =
-                                        row.getVisibleCells()[columnIndex];
-                                    return cell.getValue();
+                            const rowCellMap = new Map(
+                                row
+                                    .getVisibleCells()
+                                    .map((cell) => [cell.column.id, cell]),
+                            );
+
+                            return selectedColumnIds
+                                .map((columnId) => {
+                                    const cell = rowCellMap.get(columnId);
+                                    return cell?.getValue() || '';
                                 })
                                 .join('\t');
                         })
                         .join('\n');
                     // If withHeaders is true, add headers
                     if (withHeaders) {
-                        const headerRow = visibleColumns
-                            .filter((_, index) => columnIndices.includes(index))
-                            .map((column) => column.id)
-                            .join('\t');
+                        const headerRow = selectedColumnIds.join('\t');
                         selectedData = `${headerRow}\n${selectedData}`;
                     }
                 } else if (settings.copyFormat === 'csv') {
                     selectedData = rowIndices
                         .map((rowIndex) => {
                             const row = rows[rowIndex];
-                            return columnIndices
-                                .map((columnIndex) => {
-                                    const cell =
-                                        row.getVisibleCells()[columnIndex];
-                                    return `"${(cell.getValue() as string).toString().replace(/"/g, '""')}"`;
+                            const rowCellMap = new Map(
+                                row
+                                    .getVisibleCells()
+                                    .map((cell) => [cell.column.id, cell]),
+                            );
+
+                            return selectedColumnIds
+                                .map((columnId) => {
+                                    const cell = rowCellMap.get(columnId);
+                                    return `"${(cell?.getValue() as string | number | boolean | null)?.toString().replace(/"/g, '""') || ''}"`;
                                 })
                                 .join(',');
                         })
                         .join('\n');
                     // If withHeaders is true, add headers
                     if (withHeaders) {
-                        const headerRow = visibleColumns
-                            .filter((_, index) => columnIndices.includes(index))
+                        const headerRow = selectedColumnIds
                             .map(
-                                (column) =>
-                                    `"${column.id.replace(/"/g, '""')}"`,
+                                (columnId) =>
+                                    `"${columnId.replace(/"/g, '""')}"`,
                             )
                             .join(',');
                         selectedData = `${headerRow}\n${selectedData}`;
@@ -561,12 +714,17 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                 } else if (settings.copyFormat === 'json') {
                     const selectedRows = rowIndices.map((rowIndex) => {
                         const row = rows[rowIndex];
-                        const selectedColumns = columnIndices.map(
-                            (columnIndex) => {
-                                const cell = row.getVisibleCells()[columnIndex];
+                        const rowCellMap = new Map(
+                            row
+                                .getVisibleCells()
+                                .map((cell) => [cell.column.id, cell]),
+                        );
+
+                        const selectedColumns = selectedColumnIds.map(
+                            (columnId) => {
+                                const cell = rowCellMap.get(columnId);
                                 return {
-                                    [visibleColumns[columnIndex].id]:
-                                        cell.getValue(),
+                                    [columnId]: cell?.getValue() || null,
                                 };
                             },
                         );
@@ -587,7 +745,15 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                 );
             }
         },
-        [highlightedCells, rows, dispatch, settings.copyFormat, visibleColumns],
+        [
+            dispatch,
+            highlightedCells,
+            leftPinnedColumns,
+            centerColumns,
+            rows,
+            settings.copyFormat,
+            visibleColumnIds,
+        ],
     );
 
     useEffect(() => {
@@ -600,7 +766,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                 handleCopyToClipboard(settings.copyWithHeaders);
             } else if (event.key === 'Escape') {
                 // Escape to clear selection
-                setHighlightedCells([]);
+                setHighlightedCells({});
             } else if (event.ctrlKey) {
                 switch (event.key) {
                     case 'ArrowUp':
@@ -633,7 +799,6 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             document.removeEventListener('keydown', handleKeyDown);
         };
     }, [
-        highlightedCells,
         handleCopyToClipboard,
         settings.copyWithHeaders,
         rowVirtualizer,
@@ -663,17 +828,12 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             onSetGoTo({ row: null });
             // Highlight the row number
             if (!goTo.cellSelection) {
-                handleCellClick(row, 0);
+                handleCellClick(row, '#');
             } else if (goTo.column !== null && goTo.cellSelection) {
                 // Highlight the cell
-                const columnIndex =
-                    tableData.header.findIndex(
-                        (item) =>
-                            item.id.toLowerCase() ===
-                            goTo.column?.toLowerCase(),
-                    ) + 1;
-                if (columnIndex !== -1) {
-                    handleCellClick(row, columnIndex);
+                const columnId = getColumnIdByName(goTo.column);
+                if (columnId !== null) {
+                    handleCellClick(row, columnId);
                 }
             }
         }
@@ -688,6 +848,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         settings.pageSize,
         currentPage,
         handleCellClick,
+        getColumnIdByName,
         isLoading,
         tableHeight,
         onSetGoTo,
@@ -695,24 +856,24 @@ const DatasetView: React.FC<DatasetViewProps> = ({
 
     useEffect(() => {
         if (goTo.column !== null && goTo.row === null && tableHeight > 0) {
-            // Add +1 as the first column is the row number
-            const columnIndex =
-                tableData.header.findIndex(
-                    (item) =>
-                        item.id.toLowerCase() === goTo.column?.toLowerCase(),
-                ) + 1;
-            if (columnIndex !== -1) {
-                columnVirtualizer.scrollToIndex(columnIndex, {
+            const columnId = getColumnIdByName(goTo.column);
+            const centerColumnIndex = centerColumns.findIndex(
+                (column) => column.id === columnId,
+            );
+
+            if (centerColumnIndex !== -1) {
+                columnVirtualizer.scrollToIndex(centerColumnIndex, {
                     align: 'center',
                 });
             }
             onSetGoTo({ column: null });
             // Highlight the column
-            if (!goTo.cellSelection) {
-                handleColumnSelect(columnIndex);
+            if (!goTo.cellSelection && columnId !== null) {
+                handleColumnSelect(columnId);
             }
         }
     }, [
+        centerColumns,
         goTo.column,
         goTo.row,
         goTo.cellSelection,
@@ -720,6 +881,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         tableData.fileId,
         columnVirtualizer,
         dispatch,
+        getColumnIdByName,
         handleColumnSelect,
         tableHeight,
         onSetGoTo,
@@ -731,28 +893,22 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             select.row !== null ||
             (select.column !== null && tableHeight > 0)
         ) {
-            let columnIndex = -1;
+            let columnId: string | null = null;
             if (select.column !== null) {
-                // Add +1 as the first column is the row number
-                columnIndex =
-                    tableData.header.findIndex(
-                        (item) =>
-                            item.id.toLowerCase() ===
-                            select.column?.toLowerCase(),
-                    ) + 1;
+                columnId = getColumnIdByName(select.column);
             }
 
-            if (select.row !== null && columnIndex !== -1) {
+            if (select.row !== null && columnId !== null) {
                 // Cell selection
                 const row = (select.row - 1) % settings.pageSize;
-                handleCellClick(row, columnIndex);
+                handleCellClick(row, columnId);
             } else if (select.row !== null) {
                 // Row selection
                 const row = (select.row - 1) % settings.pageSize;
-                handleCellClick(row, 0);
-            } else if (columnIndex !== -1) {
+                handleCellClick(row, '#');
+            } else if (columnId !== null) {
                 // Column selection
-                handleColumnSelect(columnIndex);
+                handleColumnSelect(columnId);
             }
             // Clean select control
             onSetSelect({
@@ -765,6 +921,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         tableData.header,
         tableData.fileId,
         dispatch,
+        getColumnIdByName,
         handleCellClick,
         handleColumnSelect,
         settings.pageSize,
@@ -782,6 +939,8 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                     table={table}
                     tableContainerRef={tableContainerRef}
                     visibleColumns={visibleColumns}
+                    leftPinnedColumns={leftPinnedColumns}
+                    centerColumns={centerColumns}
                     virtualPaddingLeft={virtualPaddingLeft}
                     virtualPaddingRight={virtualPaddingRight}
                     virtualColumns={virtualColumns}
