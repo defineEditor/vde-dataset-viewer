@@ -101,7 +101,6 @@ export const dataSlice = createSlice({
             state,
             action: PayloadAction<{
                 command: string;
-                datasetName: string;
             }>,
         ) => {
             const newRecentCommands = state.filterData.recentCommands.slice();
@@ -118,7 +117,6 @@ export const dataSlice = createSlice({
 
             newRecentCommands.unshift({
                 command: action.payload.command,
-                datasetName: action.payload.datasetName,
                 date: Date.now(),
             });
 

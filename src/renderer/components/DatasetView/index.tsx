@@ -114,7 +114,6 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     );
 
     const columns = useMemo<ColumnDef<ITableRow>[]>(() => {
-        console.log('Generating columns...');
         const result = tableData.header.map((column) => {
             const headerCell: {
                 accessorKey: string;

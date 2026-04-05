@@ -309,7 +309,6 @@ export interface IData {
         lastType: 'manual' | 'ui';
         recentCommands: {
             command: string;
-            datasetName: string;
             date: number;
         }[];
     };

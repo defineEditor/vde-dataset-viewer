@@ -3,10 +3,12 @@ import React, {
     useContext,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from 'react';
 import {
     Autocomplete,
+    AutocompleteChangeReason,
     AutocompleteInputChangeReason,
     Button,
     Dialog,
@@ -14,6 +16,8 @@ import {
     DialogContent,
     DialogTitle,
     TextField,
+    Typography,
+    Box,
 } from '@mui/material';
 import AppContext from 'renderer/utils/AppContext';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
@@ -34,6 +38,10 @@ import {
 import { IMask, IUiModal } from 'interfaces/common';
 import { modals } from 'misc/constants';
 import { parseDatasetCommand } from 'renderer/utils/commandLine';
+import {
+    getCommandHelperText,
+    useCommandAutocomplete,
+} from 'renderer/components/Modal/useCommandAutocomplete';
 
 const styles = {
     dialog: {
@@ -49,31 +57,45 @@ const styles = {
     field: {
         mt: 1,
     },
+    showAllValuesHint: {
+        m: 2,
+    },
 };
 
-const COMMAND_SYNTAX = {
-    id: 'id [selectors] - set ID columns',
-    idadd: 'idadd|ia [selectors] - add columns to ID columns',
-    sort: 'sort [selector] [asc|desc] ... - set sorting',
-    sortadd: 'sortadd|osa [selector] [asc|desc] ... - add sorting columns',
-    show: 'show [selectors] - show only selected columns',
-    showadd: 'showadd|sha [selectors] - add columns to visible columns',
-    hide: 'hide [selectors] - hide selected columns',
-    hideadd: 'hideadd|ha [selectors] - remove columns from visible columns',
-    info: 'info [column] - open variable info',
-    filter: 'filter [expression] - replace current filter',
-    filteradd: 'filteradd|fa [expression] - append filter with AND',
-    go: 'go [row] | [column] | [row:column] | [column:row]',
-    reset: 'reset - clear masks, filters, id columns, and sorting',
-    selectors:
-        'Selectors for multi-column commands: exact names, /regex/, re:regex, COL+, COL-',
-} as const;
+const handleRenderOption = (
+    props: React.HTMLAttributes<HTMLLIElement> & {
+        key: string;
+    },
+    option: string | React.ReactNode,
+    _state,
+    _ownerStae,
+): string | React.ReactNode => {
+    if (option === '_show_all_values_') {
+        return (
+            <Typography
+                variant="caption"
+                color="primary"
+                sx={styles.showAllValuesHint}
+            >
+                Press Tab to show all values (max 1000)
+            </Typography>
+        );
+    }
+    const { key, ...optionProps } = props;
+    return (
+        <Box key={key} component="li" {...optionProps}>
+            {option}
+        </Box>
+    );
+};
 
 const CommandLine: React.FC<IUiModal> = () => {
     const dispatch = useAppDispatch();
     const { apiService } = useContext(AppContext);
+    const inputRef = useRef<HTMLInputElement | null>(null);
 
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+    const settings = useAppSelector((state) => state.settings);
     const currentMask = useAppSelector(
         (state) => state.data.maskData.currentMask,
     );
@@ -95,55 +117,71 @@ const CommandLine: React.FC<IUiModal> = () => {
 
     const metadata = apiService.getOpenedFileMetadata(currentFileId);
     const allColumnNames = useMemo(
-        () => metadata.columns.map((column) => column.name),
+        () => metadata?.columns.map((column) => column.name) || [],
         [metadata],
     );
+    const columnTypes = useMemo(() => {
+        if (!metadata) {
+            return {};
+        }
+        const types: Record<string, 'numeric' | 'string' | 'boolean'> = {};
+        metadata.columns.forEach((col) => {
+            if (
+                ['integer', 'float', 'double', 'number'].includes(col.dataType)
+            ) {
+                types[col.name] = 'numeric';
+            } else if (['boolean'].includes(col.dataType)) {
+                types[col.name] = 'boolean';
+            } else {
+                types[col.name] = 'string';
+            }
+        });
+        return types;
+    }, [metadata]);
     const currentVisibleColumns = currentMask?.columns || allColumnNames;
-    const dataset = useMemo(
-        () =>
-            apiService
-                .getOpenedFiles()
-                .find((file) => file.fileId === currentFileId),
-        [apiService, currentFileId],
-    );
 
     const recentCommandStrings = useMemo(() => {
         return recentCommands
             .slice()
-            .sort(
-                (a, b) =>
-                    b.date * (b.datasetName === dataset?.name ? 10000 : 1) -
-                    a.date / (a.datasetName === dataset?.name ? 10000 : 1),
-            )
+            .sort((a, b) => b.date - a.date)
             .map((item) => item.command);
-    }, [dataset?.name, recentCommands]);
+    }, [recentCommands]);
 
     const [command, setCommand] = useState('');
     const [helperText, setHelperText] = useState({ text: '', isError: false });
+    const [historyRequested, setHistoryRequested] = useState(false);
+    const [allValuesColumns, setAllValuesColumns] = useState<string[]>([]);
+    const showHistory = historyRequested;
+    const { commandAutocomplete, isAutocompleteLoading, resolvedCategory } =
+        useCommandAutocomplete({
+            apiService,
+            allColumnNames,
+            category: showHistory ? 'history' : undefined,
+            columnTypes,
+            allValuesColumns,
+            command,
+            currentFileId,
+            historyOptions: recentCommandStrings,
+            metadata,
+            settings,
+        });
+
+    const autocompleteOptions = commandAutocomplete?.options || [];
+
+    const [autocompleteOpen, setAutocompleteOpen] = useState(false);
 
     useEffect(() => {
-        const commandKey = Object.keys(COMMAND_SYNTAX).find(
-            (key) =>
-                key !== 'selectors' && command.toLowerCase().startsWith(key),
+        setAutocompleteOpen(
+            Boolean(
+                commandAutocomplete &&
+                    (commandAutocomplete.options.length > 0 ||
+                        commandAutocomplete.loadingColumnId),
+            ),
         );
+    }, [commandAutocomplete]);
 
-        if (commandKey) {
-            setHelperText({
-                text: `${COMMAND_SYNTAX[commandKey as keyof typeof COMMAND_SYNTAX]}. ${COMMAND_SYNTAX.selectors}`,
-                isError: false,
-            });
-            return;
-        }
-
-        if (command.trim() !== '' && command.indexOf(' ') > 0) {
-            setHelperText({
-                text: `Unknown command.`,
-                isError: true,
-            });
-            return;
-        }
-
-        setHelperText({ text: '', isError: false });
+    useEffect(() => {
+        setHelperText(getCommandHelperText(command));
     }, [command]);
 
     const handleClose = useCallback(() => {
@@ -170,112 +208,114 @@ const CommandLine: React.FC<IUiModal> = () => {
         dispatch(
             addRecentCommand({
                 command: trimmedCommand,
-                datasetName: dataset?.name || '',
             }),
         );
 
-        const { action } = result;
-
-        switch (action.type) {
-            case 'reset-all':
-                dispatch(clearMask());
-                dispatch(resetFilter({ fileId: currentFileId }));
-                dispatch(
-                    setDatasetIdColumns({ fileId: currentFileId, idCols: [] }),
-                );
-                dispatch(
-                    setDatasetSorting({ fileId: currentFileId, sorting: [] }),
-                );
-                handleClose();
-                return;
-            case 'reset-id-columns':
-                dispatch(
-                    setDatasetIdColumns({ fileId: currentFileId, idCols: [] }),
-                );
-                handleClose();
-                return;
-            case 'reset-sorting':
-                dispatch(
-                    setDatasetSorting({ fileId: currentFileId, sorting: [] }),
-                );
-                handleClose();
-                return;
-            case 'clear-mask':
-                dispatch(clearMask());
-                handleClose();
-                return;
-            case 'set-id-columns':
-                dispatch(
-                    setDatasetIdColumns({
-                        fileId: currentFileId,
-                        idCols: action.columns,
-                    }),
-                );
-                handleClose();
-                return;
-            case 'set-sorting':
-                dispatch(
-                    setDatasetSorting({
-                        fileId: currentFileId,
-                        sorting: action.sorting,
-                    }),
-                );
-                handleClose();
-                return;
-            case 'set-mask': {
-                const normalizedColumns = allColumnNames.filter((column) =>
-                    action.columns.includes(column),
-                );
-
-                if (normalizedColumns.length === allColumnNames.length) {
+        result.actions.forEach((action) => {
+            switch (action.type) {
+                case 'resetAll':
                     dispatch(clearMask());
-                    handleClose();
-                    return;
+                    dispatch(resetFilter({ fileId: currentFileId }));
+                    dispatch(
+                        setDatasetIdColumns({
+                            fileId: currentFileId,
+                            idCols: [],
+                        }),
+                    );
+                    dispatch(
+                        setDatasetSorting({
+                            fileId: currentFileId,
+                            sorting: [],
+                        }),
+                    );
+                    break;
+                case 'resetIdColumns':
+                    dispatch(
+                        setDatasetIdColumns({
+                            fileId: currentFileId,
+                            idCols: [],
+                        }),
+                    );
+                    break;
+                case 'resetSorting':
+                    dispatch(
+                        setDatasetSorting({
+                            fileId: currentFileId,
+                            sorting: [],
+                        }),
+                    );
+                    break;
+                case 'clearMask':
+                    dispatch(clearMask());
+                    break;
+                case 'setIdColumns':
+                    dispatch(
+                        setDatasetIdColumns({
+                            fileId: currentFileId,
+                            idCols: action.columns,
+                        }),
+                    );
+                    break;
+                case 'setSorting':
+                    dispatch(
+                        setDatasetSorting({
+                            fileId: currentFileId,
+                            sorting: action.sorting,
+                        }),
+                    );
+                    break;
+                case 'setMask': {
+                    const normalizedColumns = allColumnNames.filter((column) =>
+                        action.columns.includes(column),
+                    );
+
+                    if (normalizedColumns.length === allColumnNames.length) {
+                        dispatch(clearMask());
+                        break;
+                    }
+
+                    const mask: IMask = {
+                        name: '',
+                        id: '',
+                        sticky: currentMask?.sticky || false,
+                        columns: normalizedColumns,
+                    };
+
+                    dispatch(selectMask(mask));
+                    break;
                 }
-
-                const mask: IMask = {
-                    name: '',
-                    id: '',
-                    sticky: currentMask?.sticky || false,
-                    columns: normalizedColumns,
-                };
-
-                dispatch(selectMask(mask));
-                handleClose();
-                return;
+                case 'openVariableInfo':
+                    dispatch(
+                        openModal({
+                            type: modals.VARIABLEINFO,
+                            data: { columnId: action.columnId },
+                        }),
+                    );
+                    break;
+                case 'setFilter':
+                    dispatch(
+                        setFilter({
+                            fileId: currentFileId,
+                            filter: action.filter,
+                            datasetName: metadata?.name || '',
+                        }),
+                    );
+                    break;
+                case 'setGoTo':
+                    dispatch(
+                        setGoTo({
+                            fileId: currentFileId,
+                            row: action.row,
+                            column: action.column,
+                        }),
+                    );
+                    break;
+                default:
+                    break;
             }
-            case 'open-variable-info':
-                handleClose();
-                dispatch(
-                    openModal({
-                        type: modals.VARIABLEINFO,
-                        data: { columnId: action.columnId },
-                    }),
-                );
-                return;
-            case 'set-filter':
-                dispatch(
-                    setFilter({
-                        fileId: currentFileId,
-                        filter: action.filter,
-                        datasetName: dataset?.name || '',
-                    }),
-                );
-                handleClose();
-                return;
-            case 'set-go-to':
-                dispatch(
-                    setGoTo({
-                        fileId: currentFileId,
-                        row: action.row,
-                        column: action.column,
-                    }),
-                );
-                handleClose();
-                break;
-            default:
-                break;
-        }
+        });
+
+        handleClose();
     }, [
         allColumnNames,
         command,
@@ -285,29 +325,11 @@ const CommandLine: React.FC<IUiModal> = () => {
         currentMask,
         currentSorting,
         currentVisibleColumns,
-        dataset?.name,
         dispatch,
         handleClose,
         lastFilterOptions,
         metadata,
     ]);
-
-    useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                handleSubmit();
-            } else if (event.key === 'Escape') {
-                event.preventDefault();
-                handleClose();
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [handleClose, handleSubmit]);
 
     const handleInputChange = useCallback(
         (
@@ -317,13 +339,111 @@ const CommandLine: React.FC<IUiModal> = () => {
         ) => {
             if (reason === 'selectOption') {
                 event.stopPropagation();
+                setAutocompleteOpen(false);
+                return;
+            }
+            if (reason === 'reset') {
+                return;
             }
             if (reason === 'clear') {
+                setAutocompleteOpen(false);
                 setHelperText({ text: '', isError: false });
             }
             setCommand(value);
         },
         [],
+    );
+
+    const handleOptionSelect = useCallback(
+        (
+            _event: React.SyntheticEvent,
+            value: string | null,
+            reason: AutocompleteChangeReason,
+        ) => {
+            if (value === null || reason === 'createOption') {
+                return;
+            }
+
+            if (resolvedCategory === 'history' || !commandAutocomplete) {
+                setCommand(value);
+                setHistoryRequested(false);
+                requestAnimationFrame(() => {
+                    inputRef.current?.focus();
+                    inputRef.current?.setSelectionRange(
+                        value.length,
+                        value.length,
+                    );
+                });
+                return;
+            }
+
+            const nextCommand = `${command.slice(
+                0,
+                commandAutocomplete.replaceStart,
+            )}${value}${commandAutocomplete.insertSuffix}${command.slice(
+                commandAutocomplete.replaceEnd,
+            )}`;
+
+            setCommand(nextCommand);
+            setHistoryRequested(false);
+
+            requestAnimationFrame(() => {
+                const nextCursor =
+                    commandAutocomplete.replaceStart +
+                    value.length +
+                    commandAutocomplete.insertSuffix.length;
+                inputRef.current?.focus();
+                inputRef.current?.setSelectionRange(nextCursor, nextCursor);
+            });
+        },
+        [command, commandAutocomplete, resolvedCategory],
+    );
+
+    const handleInputKeyDown = useCallback(
+        (event: React.KeyboardEvent<HTMLInputElement>) => {
+            if (event.key === 'ArrowDown' && command.trim() === '') {
+                setHistoryRequested(true);
+                event.preventDefault();
+                return;
+            }
+
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                if (showHistory) {
+                    setHistoryRequested(false);
+                    return;
+                }
+                if (autocompleteOpen) {
+                    setAutocompleteOpen(false);
+                    return;
+                }
+                handleClose();
+                return;
+            }
+
+            if (event.key === 'Enter' && !autocompleteOpen) {
+                event.preventDefault();
+                handleSubmit();
+            }
+
+            if (event.key === 'Tab' && commandAutocomplete?.columnId) {
+                event.preventDefault();
+                setAllValuesColumns((prev) => {
+                    if (prev.includes(commandAutocomplete.columnId!)) {
+                        return prev;
+                    }
+                    return [...prev, commandAutocomplete.columnId!];
+                });
+            }
+        },
+        [
+            command,
+            commandAutocomplete?.columnId,
+            handleClose,
+            handleSubmit,
+            autocompleteOpen,
+            showHistory,
+        ],
     );
 
     if (!metadata) {
@@ -342,20 +462,32 @@ const CommandLine: React.FC<IUiModal> = () => {
             <DialogContent>
                 <Autocomplete
                     freeSolo
-                    options={recentCommandStrings}
+                    options={autocompleteOptions}
+                    open={autocompleteOpen}
+                    loading={isAutocompleteLoading}
                     inputValue={command}
+                    onChange={handleOptionSelect}
                     onInputChange={handleInputChange}
+                    renderOption={handleRenderOption}
+                    onClose={() => {
+                        if (showHistory) {
+                            setHistoryRequested(false);
+                        }
+                    }}
+                    filterOptions={(options) => options}
                     sx={styles.field}
                     renderInput={(params) => (
                         <TextField
                             {...params}
                             autoFocus
+                            inputRef={inputRef}
                             fullWidth
                             label="Command"
-                            placeholder="idadd USUBJID AVISIT | sort /A.*/ desc | hide VISIT-"
+                            placeholder="id USUBJID; idadd AVISIT; sort /A.*/ desc"
+                            onKeyDown={handleInputKeyDown}
                             helperText={
                                 helperText.text ||
-                                'Commands: id<add>, sort<add>, show<add>, hide<add>, filter<add>, info, go, reset'
+                                'Commands: id<add>, sort<add>, show<add>, hide<add>, filter<add>, info, go, reset. Separate multiple commands with ;'
                             }
                             error={helperText.isError}
                         />

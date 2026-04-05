@@ -2,18 +2,18 @@ import Filter, { BasicFilter } from 'js-array-filter';
 import { DatasetJsonMetadata, IUiControl } from 'interfaces/common';
 
 type DatasetCommandAction =
-    | { type: 'reset-all' }
-    | { type: 'reset-id-columns' }
-    | { type: 'reset-sorting' }
-    | { type: 'clear-mask' }
-    | { type: 'set-id-columns'; columns: string[] }
-    | { type: 'set-sorting'; sorting: IUiControl['sorting'] }
-    | { type: 'set-mask'; columns: string[] }
-    | { type: 'open-variable-info'; columnId: string }
-    | { type: 'set-filter'; filter: BasicFilter }
-    | { type: 'set-go-to'; row?: number; column?: string };
+    | { type: 'resetAll' }
+    | { type: 'resetIdColumns' }
+    | { type: 'resetSorting' }
+    | { type: 'clearMask' }
+    | { type: 'setIdColumns'; columns: string[] }
+    | { type: 'setSorting'; sorting: IUiControl['sorting'] }
+    | { type: 'setMask'; columns: string[] }
+    | { type: 'openVariableInfo'; columnId: string }
+    | { type: 'setFilter'; filter: BasicFilter }
+    | { type: 'setGoTo'; row?: number; column?: string };
 
-type DatasetCommandResultOk = { ok: true; action: DatasetCommandAction };
+type DatasetCommandResultOk = { ok: true; actions: DatasetCommandAction[] };
 
 type DatasetCommandResultError = { ok: false; error: string };
 
@@ -26,6 +26,18 @@ interface ParseDatasetCommandParams {
     currentFilter?: BasicFilter | null;
     currentIdColumns?: string[];
     currentSorting?: IUiControl['sorting'];
+    currentVisibleColumns?: string[];
+}
+
+interface ParseSingleDatasetCommandParams
+    extends Omit<ParseDatasetCommandParams, 'commandLine'> {
+    command: string;
+}
+
+interface CommandExecutionState {
+    currentFilter: BasicFilter | null;
+    currentIdColumns: string[];
+    currentSorting: IUiControl['sorting'];
     currentVisibleColumns?: string[];
 }
 
@@ -81,6 +93,79 @@ const tokenizeArguments = (value: string): string[] => {
         .map((match) => stripWrappingQuotes(match));
 };
 
+const splitCommandLine = (value: string): string[] => {
+    const commands: string[] = [];
+    let currentCommand = '';
+    let inSingleQuote = false;
+    let inDoubleQuote = false;
+    let inRegex = false;
+    let inRegexCharClass = false;
+    let isEscaped = false;
+
+    const isRegexStart = (index: number): boolean => {
+        const previousCharacter = value.slice(0, index).trimEnd().slice(-1);
+        return previousCharacter === '' || /\s|;/.test(previousCharacter);
+    };
+
+    for (let index = 0; index < value.length; index += 1) {
+        const character = value[index];
+
+        if (isEscaped) {
+            currentCommand += character;
+            isEscaped = false;
+        } else if (
+            character === '\\' &&
+            (inSingleQuote || inDoubleQuote || inRegex)
+        ) {
+            currentCommand += character;
+            isEscaped = true;
+        } else if (!inDoubleQuote && !inRegex && character === "'") {
+            inSingleQuote = !inSingleQuote;
+            currentCommand += character;
+        } else if (!inSingleQuote && !inRegex && character === '"') {
+            inDoubleQuote = !inDoubleQuote;
+            currentCommand += character;
+        } else if (!inSingleQuote && !inDoubleQuote && character === '/') {
+            if (!inRegex && isRegexStart(index)) {
+                inRegex = true;
+                currentCommand += character;
+            } else if (inRegex && !inRegexCharClass) {
+                inRegex = false;
+                currentCommand += character;
+            } else {
+                currentCommand += character;
+            }
+        } else if (inRegex) {
+            if (character === '[') {
+                inRegexCharClass = true;
+            } else if (character === ']') {
+                inRegexCharClass = false;
+            }
+            currentCommand += character;
+        } else if (
+            character === ';' &&
+            !inSingleQuote &&
+            !inDoubleQuote &&
+            !inRegex
+        ) {
+            const trimmedCommand = currentCommand.trim();
+            if (trimmedCommand !== '') {
+                commands.push(trimmedCommand);
+            }
+            currentCommand = '';
+        } else {
+            currentCommand += character;
+        }
+    }
+
+    const trimmedCommand = currentCommand.trim();
+    if (trimmedCommand !== '') {
+        commands.push(trimmedCommand);
+    }
+
+    return commands;
+};
+
 const normalizeRowValue = (value: string): number | null => {
     const normalizedValue = value.replace(/[\s.,]/g, '');
     if (normalizedValue === '') {
@@ -117,14 +202,8 @@ const getColumnNames = (metadata: DatasetJsonMetadata): string[] => {
     return metadata.columns.map((column) => column.name);
 };
 
-const dedupeColumns = (columns: string[]): string[] => {
-    const result: string[] = [];
-    columns.forEach((column) => {
-        if (!result.includes(column)) {
-            result.push(column);
-        }
-    });
-    return result;
+const removeDuplicates = (columns: string[]): string[] => {
+    return columns.filter((column, index) => columns.indexOf(column) === index);
 };
 
 const parseRegexSelector = (value: string): RegExp | null => {
@@ -137,15 +216,6 @@ const parseRegexSelector = (value: string): RegExp | null => {
                 pattern,
                 flags.includes('i') ? flags : `${flags}i`,
             );
-        } catch (_error) {
-            return null;
-        }
-    }
-
-    if (value.toLowerCase().startsWith('re:')) {
-        const pattern = value.slice(3);
-        try {
-            return new RegExp(pattern, 'i');
         } catch (_error) {
             return null;
         }
@@ -178,10 +248,6 @@ const resolveColumnSelector = (
             };
         }
         return { ok: true, columns: matchedColumns };
-    }
-
-    if (selector.toLowerCase().startsWith('re:')) {
-        return { ok: false, error: `Invalid regex selector: ${selector}` };
     }
 
     if (selector.endsWith('+') || selector.endsWith('-')) {
@@ -239,7 +305,7 @@ const resolveColumns = (
         };
     }
 
-    return { ok: true, columns: dedupeColumns(resolvedColumns) };
+    return { ok: true, columns: removeDuplicates(resolvedColumns) };
 };
 
 const parseSortColumns = (
@@ -301,13 +367,6 @@ const parseSortColumns = (
     }
 
     return { ok: true, sorting };
-};
-
-const mergeColumns = (
-    currentColumns: string[],
-    addedColumns: string[],
-): string[] => {
-    return dedupeColumns([...currentColumns, ...addedColumns]);
 };
 
 const mergeSorting = (
@@ -389,7 +448,7 @@ const parseGoTarget = (
             }
             return {
                 ok: true,
-                action: { type: 'set-go-to', row: firstRow, column },
+                actions: [{ type: 'setGoTo', row: firstRow, column }],
             };
         }
 
@@ -406,7 +465,7 @@ const parseGoTarget = (
             }
             return {
                 ok: true,
-                action: { type: 'set-go-to', row: secondRow, column },
+                actions: [{ type: 'setGoTo', row: secondRow, column }],
             };
         }
 
@@ -424,7 +483,7 @@ const parseGoTarget = (
                 error: `Row number must be between 1 and ${metadata.records}.`,
             };
         }
-        return { ok: true, action: { type: 'set-go-to', row } };
+        return { ok: true, actions: [{ type: 'setGoTo', row }] };
     }
 
     const column = resolveColumn(
@@ -435,32 +494,32 @@ const parseGoTarget = (
         return { ok: false, error: `Unknown column: ${trimmedValue}` };
     }
 
-    return { ok: true, action: { type: 'set-go-to', column } };
+    return { ok: true, actions: [{ type: 'setGoTo', column }] };
 };
 
-export const parseDatasetCommand = ({
-    commandLine,
+const parseSingleDatasetCommand = ({
+    command: commandText,
     metadata,
     lastFilterOptions,
     currentFilter = null,
     currentIdColumns = [],
     currentSorting = [],
     currentVisibleColumns,
-}: ParseDatasetCommandParams): DatasetCommandResult => {
-    const trimmedCommand = commandLine.trim();
+}: ParseSingleDatasetCommandParams): DatasetCommandResult => {
+    const trimmedCommand = commandText.trim();
     if (trimmedCommand === '') {
         return { ok: false, error: 'Enter a command.' };
     }
 
     const [rawCommand, ...restParts] = trimmedCommand.split(/\s+/);
-    const command = COMMAND_ALIASES[rawCommand.toLowerCase()];
+    const normalizedCommand = COMMAND_ALIASES[rawCommand.toLowerCase()];
     const rest = trimmedCommand.slice(rawCommand.length).trim();
 
-    if (!command) {
+    if (!normalizedCommand) {
         return { ok: false, error: `Unknown command: ${rawCommand}` };
     }
 
-    switch (command) {
+    switch (normalizedCommand) {
         case 'reset': {
             if (restParts.length > 0) {
                 return {
@@ -468,12 +527,12 @@ export const parseDatasetCommand = ({
                     error: 'Reset does not accept any arguments.',
                 };
             }
-            return { ok: true, action: { type: 'reset-all' } };
+            return { ok: true, actions: [{ type: 'resetAll' }] };
         }
         case 'id': {
             const args = tokenizeArguments(rest);
             if (args.length === 0) {
-                return { ok: true, action: { type: 'reset-id-columns' } };
+                return { ok: true, actions: [{ type: 'resetIdColumns' }] };
             }
             const resolvedColumns = resolveColumns(metadata, args);
             if (!resolvedColumns.ok) {
@@ -481,10 +540,12 @@ export const parseDatasetCommand = ({
             }
             return {
                 ok: true,
-                action: {
-                    type: 'set-id-columns',
-                    columns: resolvedColumns.columns,
-                },
+                actions: [
+                    {
+                        type: 'setIdColumns',
+                        columns: resolvedColumns.columns,
+                    },
+                ],
             };
         }
         case 'idadd': {
@@ -501,19 +562,21 @@ export const parseDatasetCommand = ({
             }
             return {
                 ok: true,
-                action: {
-                    type: 'set-id-columns',
-                    columns: mergeColumns(
-                        currentIdColumns,
-                        resolvedColumns.columns,
-                    ),
-                },
+                actions: [
+                    {
+                        type: 'setIdColumns',
+                        columns: removeDuplicates([
+                            ...currentIdColumns,
+                            ...resolvedColumns.columns,
+                        ]),
+                    },
+                ],
             };
         }
         case 'sort': {
             const args = tokenizeArguments(rest);
             if (args.length === 0) {
-                return { ok: true, action: { type: 'reset-sorting' } };
+                return { ok: true, actions: [{ type: 'resetSorting' }] };
             }
             const sortColumns = parseSortColumns(metadata, args);
             if (!sortColumns.ok) {
@@ -521,10 +584,12 @@ export const parseDatasetCommand = ({
             }
             return {
                 ok: true,
-                action: {
-                    type: 'set-sorting',
-                    sorting: sortColumns.sorting,
-                },
+                actions: [
+                    {
+                        type: 'setSorting',
+                        sorting: sortColumns.sorting,
+                    },
+                ],
             };
         }
         case 'sortadd': {
@@ -541,16 +606,21 @@ export const parseDatasetCommand = ({
             }
             return {
                 ok: true,
-                action: {
-                    type: 'set-sorting',
-                    sorting: mergeSorting(currentSorting, sortColumns.sorting),
-                },
+                actions: [
+                    {
+                        type: 'setSorting',
+                        sorting: mergeSorting(
+                            currentSorting,
+                            sortColumns.sorting,
+                        ),
+                    },
+                ],
             };
         }
         case 'show': {
             const args = tokenizeArguments(rest);
             if (args.length === 0) {
-                return { ok: true, action: { type: 'clear-mask' } };
+                return { ok: true, actions: [{ type: 'clearMask' }] };
             }
             const resolvedColumns = resolveColumns(metadata, args);
             if (!resolvedColumns.ok) {
@@ -558,7 +628,12 @@ export const parseDatasetCommand = ({
             }
             return {
                 ok: true,
-                action: { type: 'set-mask', columns: resolvedColumns.columns },
+                actions: [
+                    {
+                        type: 'setMask',
+                        columns: resolvedColumns.columns,
+                    },
+                ],
             };
         }
         case 'showadd': {
@@ -577,19 +652,21 @@ export const parseDatasetCommand = ({
                 currentVisibleColumns || getColumnNames(metadata);
             return {
                 ok: true,
-                action: {
-                    type: 'set-mask',
-                    columns: mergeColumns(
-                        visibleColumns,
-                        resolvedColumns.columns,
-                    ),
-                },
+                actions: [
+                    {
+                        type: 'setMask',
+                        columns: removeDuplicates([
+                            ...visibleColumns,
+                            ...resolvedColumns.columns,
+                        ]),
+                    },
+                ],
             };
         }
         case 'hide': {
             const args = tokenizeArguments(rest);
             if (args.length === 0) {
-                return { ok: true, action: { type: 'clear-mask' } };
+                return { ok: true, actions: [{ type: 'clearMask' }] };
             }
             const resolvedColumns = resolveColumns(metadata, args);
             if (!resolvedColumns.ok) {
@@ -598,12 +675,14 @@ export const parseDatasetCommand = ({
             const hiddenColumns = new Set(resolvedColumns.columns);
             return {
                 ok: true,
-                action: {
-                    type: 'set-mask',
-                    columns: metadata.columns
-                        .map((column) => column.name)
-                        .filter((column) => !hiddenColumns.has(column)),
-                },
+                actions: [
+                    {
+                        type: 'setMask',
+                        columns: metadata.columns
+                            .map((column) => column.name)
+                            .filter((column) => !hiddenColumns.has(column)),
+                    },
+                ],
             };
         }
         case 'hideadd': {
@@ -623,12 +702,14 @@ export const parseDatasetCommand = ({
             const hiddenColumns = new Set(resolvedColumns.columns);
             return {
                 ok: true,
-                action: {
-                    type: 'set-mask',
-                    columns: visibleColumns.filter(
-                        (column) => !hiddenColumns.has(column),
-                    ),
-                },
+                actions: [
+                    {
+                        type: 'setMask',
+                        columns: visibleColumns.filter(
+                            (column) => !hiddenColumns.has(column),
+                        ),
+                    },
+                ],
             };
         }
         case 'info': {
@@ -645,10 +726,12 @@ export const parseDatasetCommand = ({
             }
             return {
                 ok: true,
-                action: {
-                    type: 'open-variable-info',
-                    columnId: resolvedColumns.columns[0],
-                },
+                actions: [
+                    {
+                        type: 'openVariableInfo',
+                        columnId: resolvedColumns.columns[0],
+                    },
+                ],
             };
         }
         case 'filter': {
@@ -666,16 +749,18 @@ export const parseDatasetCommand = ({
             filter.update(rest);
             return {
                 ok: true,
-                action: {
-                    type: 'set-filter',
-                    filter: {
-                        ...filter.toBasicFilter(),
-                        options: {
-                            caseInsensitive:
-                                lastFilterOptions?.caseInsensitive ?? true,
+                actions: [
+                    {
+                        type: 'setFilter',
+                        filter: {
+                            ...filter.toBasicFilter(),
+                            options: {
+                                caseInsensitive:
+                                    lastFilterOptions?.caseInsensitive ?? true,
+                            },
                         },
                     },
-                },
+                ],
             };
         }
         case 'filteradd': {
@@ -693,18 +778,20 @@ export const parseDatasetCommand = ({
             filter.update(rest);
             return {
                 ok: true,
-                action: {
-                    type: 'set-filter',
-                    filter: mergeFilter(currentFilter, {
-                        ...filter.toBasicFilter(),
-                        options: {
-                            caseInsensitive:
-                                currentFilter?.options?.caseInsensitive ??
-                                lastFilterOptions?.caseInsensitive ??
-                                true,
-                        },
-                    }),
-                },
+                actions: [
+                    {
+                        type: 'setFilter',
+                        filter: mergeFilter(currentFilter, {
+                            ...filter.toBasicFilter(),
+                            options: {
+                                caseInsensitive:
+                                    currentFilter?.options?.caseInsensitive ??
+                                    lastFilterOptions?.caseInsensitive ??
+                                    true,
+                            },
+                        }),
+                    },
+                ],
             };
         }
         case 'go': {
@@ -719,6 +806,95 @@ export const parseDatasetCommand = ({
         default:
             return { ok: false, error: `Unknown command: ${rawCommand}` };
     }
+};
+
+const applyActionToState = (
+    action: DatasetCommandAction,
+    state: CommandExecutionState,
+    metadata: DatasetJsonMetadata,
+): CommandExecutionState => {
+    const allColumns = getColumnNames(metadata);
+
+    switch (action.type) {
+        case 'resetAll':
+            return {
+                currentFilter: null,
+                currentIdColumns: [],
+                currentSorting: [],
+                currentVisibleColumns: allColumns,
+            };
+        case 'resetIdColumns':
+            return { ...state, currentIdColumns: [] };
+        case 'resetSorting':
+            return { ...state, currentSorting: [] };
+        case 'clearMask':
+            return { ...state, currentVisibleColumns: allColumns };
+        case 'setIdColumns':
+            return { ...state, currentIdColumns: action.columns };
+        case 'setSorting':
+            return { ...state, currentSorting: action.sorting };
+        case 'setMask':
+            return { ...state, currentVisibleColumns: action.columns };
+        case 'setFilter':
+            return { ...state, currentFilter: action.filter };
+        case 'openVariableInfo':
+        case 'setGoTo':
+            return state;
+        default:
+            return state;
+    }
+};
+
+export const parseDatasetCommand = ({
+    commandLine,
+    metadata,
+    lastFilterOptions,
+    currentFilter = null,
+    currentIdColumns = [],
+    currentSorting = [],
+    currentVisibleColumns,
+}: ParseDatasetCommandParams): DatasetCommandResult => {
+    const commands = splitCommandLine(commandLine);
+    if (commands.length === 0) {
+        return { ok: false, error: 'Enter a command.' };
+    }
+
+    const actions: DatasetCommandAction[] = [];
+    let state: CommandExecutionState = {
+        currentFilter,
+        currentIdColumns,
+        currentSorting,
+        currentVisibleColumns,
+    };
+
+    for (let index = 0; index < commands.length; index += 1) {
+        const result = parseSingleDatasetCommand({
+            command: commands[index],
+            metadata,
+            lastFilterOptions,
+            currentFilter: state.currentFilter,
+            currentIdColumns: state.currentIdColumns,
+            currentSorting: state.currentSorting,
+            currentVisibleColumns: state.currentVisibleColumns,
+        });
+
+        if (!result.ok) {
+            return {
+                ok: false,
+                error:
+                    commands.length > 1
+                        ? `Command ${index + 1}: ${result.error}`
+                        : result.error,
+            };
+        }
+
+        actions.push(...result.actions);
+        for (const action of result.actions) {
+            state = applyActionToState(action, state, metadata);
+        }
+    }
+
+    return { ok: true, actions };
 };
 
 export type { DatasetCommandAction, DatasetCommandResult };
