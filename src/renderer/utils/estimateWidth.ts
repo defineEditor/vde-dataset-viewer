@@ -6,6 +6,7 @@ export default function estimateWidth(
     widthEstimateRows: number,
     maxColWidth: number,
     showTypeIcons: boolean = false,
+    showLabels: boolean = false,
     skipIdLength: boolean = false,
 ): { [id: string]: number } {
     const { header, data: tableData } = data;
@@ -19,6 +20,15 @@ export default function estimateWidth(
             const columnData = dataSlice.map((row) => row[column.id]);
             let columnWidth = 0;
             let longestWord = 0;
+            let longestLabelWord = 0;
+            if (showLabels) {
+                // If labels are shown in the header, we need to calculate the longest word in the column label
+                const labelWords = column.label.split(' ');
+                longestLabelWord = Math.max(
+                    longestLabelWord,
+                    ...labelWords.map((word) => word.length),
+                );
+            }
             if (
                 !['integer', 'float', 'boolean', 'double', 'decimal'].includes(
                     column.type || '',
@@ -84,7 +94,9 @@ export default function estimateWidth(
                         : Math.max(
                               columnWidth,
                               longestWord,
-                              id.length * 1.3 + iconsSize,
+                              (showLabels
+                                  ? longestLabelWord * 1.1
+                                  : id.length * 1.3) + iconsSize,
                           ),
                 ),
                 maxColWidth,

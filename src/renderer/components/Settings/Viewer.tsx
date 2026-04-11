@@ -217,6 +217,22 @@ export const Viewer: React.FC<ViewerProps> = ({
             <FormControlLabel
                 control={
                     <Checkbox
+                        checked={settings.viewer.showLabels}
+                        onChange={onSettingChange}
+                        name="viewer.showLabels"
+                    />
+                }
+                label="Show Labels"
+            />
+            <Typography variant="caption" sx={styles.helperText}>
+                When enabled, column labels are shown in the header of the table
+                instead of names
+            </Typography>
+        </Stack>
+        <Stack spacing={0}>
+            <FormControlLabel
+                control={
+                    <Checkbox
                         checked={settings.viewer.copyWithHeaders}
                         onChange={onSettingChange}
                         name="viewer.copyWithHeaders"

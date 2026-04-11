@@ -224,6 +224,7 @@ const IdColumns: React.FC = () => {
                         handleClose();
                     }
                 } else if (event.key === 's' && editingSetId === null) {
+                    event.preventDefault();
                     handleApply();
                 }
             }
@@ -259,15 +260,17 @@ const IdColumns: React.FC = () => {
                         multiple
                         sx={styles.field}
                         options={columnOptions}
-                        value={idCols
-                            .map((item) =>
-                                columnOptions.find(
-                                    (option) => option.id === item,
-                                ),
-                            )
-                            .filter(
-                                (option): option is IdColumnOption => !!option,
-                            )}
+                        value={idCols.map((item) => {
+                            const existingOption = columnOptions.find(
+                                (option) => option.id === item,
+                            );
+                            return (
+                                existingOption ?? {
+                                    id: item,
+                                    label: item,
+                                }
+                            );
+                        })}
                         onChange={(_event, newValue) => {
                             setIdCols(newValue.map((option) => option.id));
                         }}
@@ -275,7 +278,7 @@ const IdColumns: React.FC = () => {
                             option.id === value.id
                         }
                         getOptionLabel={(option) => option.label}
-                        renderTags={(value, getTagProps) =>
+                        renderValue={(value, getTagProps) =>
                             value.map((option, index) => (
                                 <Chip
                                     label={option.label}
