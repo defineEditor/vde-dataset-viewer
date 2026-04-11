@@ -2,7 +2,7 @@ import type {
     CommandAutocompleteCategory,
     CommandHelperTextState,
     ResolvedAutocompleteContext,
-} from 'interfaces/useCommandAutocomplete';
+} from 'interfaces/common';
 import { getActiveSegment } from 'renderer/components/hooks/useCommandAutocomplete/utils';
 
 const COMMAND_SYNTAX_BASE = {
@@ -150,8 +150,9 @@ export const resolveAutocompleteContext = ({
 
     const rawCommand = trimmedSegment.split(/\s+/)[0];
     const normalizedCommand = COMMAND_ALIASES[rawCommand.toLowerCase()];
+    const hasSpace = /\S+\s/.test(trimmedSegment);
 
-    if (!normalizedCommand) {
+    if (!normalizedCommand || !hasSpace) {
         return {
             category: 'blank',
             sourceText: command,

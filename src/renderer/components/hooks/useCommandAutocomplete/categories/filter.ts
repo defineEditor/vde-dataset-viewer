@@ -7,24 +7,20 @@ import {
 import type {
     CategoryAutocompleteParams,
     CommandAutocompleteState,
-} from 'interfaces/useCommandAutocomplete';
+} from 'interfaces/common';
 import {
     filterOptions,
     getColumnName,
+    getInOperatorValueInput,
+    getLastFilterCondition,
     tokenizeQuotedText,
 } from 'renderer/components/hooks/useCommandAutocomplete/utils';
 
 const FILTER_CONNECTORS = ['and', 'or'];
 const FILTER_COMPARATORS = {
-    numeric: numberOperators.map((op) =>
-        (operatorLabels[op] || op).toLowerCase(),
-    ),
-    string: stringOperators.map((op) =>
-        (operatorLabels[op] || op).toLowerCase(),
-    ),
-    boolean: booleanOperators.map((op) =>
-        (operatorLabels[op] || op).toLowerCase(),
-    ),
+    numeric: numberOperators.map((op) => operatorLabels[op] || op),
+    string: stringOperators.map((op) => operatorLabels[op] || op),
+    boolean: booleanOperators.map((op) => operatorLabels[op] || op),
 };
 
 export const getFilterAutocomplete = ({
@@ -52,13 +48,6 @@ export const getFilterAutocomplete = ({
 
     const filterTokens = tokenizeQuotedText(trimmedFilter);
     const endsWithSpace = /\s$/.test(trimmedFilter);
-    const normalizedTokens = filterTokens.map((token) => token.toLowerCase());
-    const lastConnectorIndex = normalizedTokens.reduce(
-        (latestIndex, token, index) =>
-            FILTER_CONNECTORS.includes(token) ? index : latestIndex,
-        -1,
-    );
-    const conditionTokens = filterTokens.slice(lastConnectorIndex + 1);
     const lastToken = filterTokens[filterTokens.length - 1] || '';
     const currentFilterToken = endsWithSpace ? '' : lastToken;
     const separatorPrefix = currentFilterToken.match(/^[(),]+/)?.[0] || '';
@@ -70,7 +59,10 @@ export const getFilterAutocomplete = ({
         context.sourceText.length -
         currentFilterToken.length +
         separatorPrefix.length;
+    const conditionText = getLastFilterCondition(trimmedFilter);
+    const conditionTokens = tokenizeQuotedText(conditionText);
 
+    // If the last token is a connector, suggest columns
     if (FILTER_CONNECTORS.includes(lastToken.toLowerCase()) && !endsWithSpace) {
         return {
             options: filterOptions(FILTER_CONNECTORS, currentFilterPrefix),
@@ -82,6 +74,7 @@ export const getFilterAutocomplete = ({
         };
     }
 
+    // A new condition is being started after a connector, suggest columns
     if (FILTER_CONNECTORS.includes(lastToken.toLowerCase()) && endsWithSpace) {
         return {
             options: allColumnNames,
@@ -93,7 +86,9 @@ export const getFilterAutocomplete = ({
         };
     }
 
+    // If there is none or only one token
     if (conditionTokens.length === 0 || conditionTokens.length === 1) {
+        // If a column name is fully typed and followed by a space, suggest operators
         if (endsWithSpace && conditionTokens.length === 1) {
             const columnId = getColumnName(allColumnNames, conditionTokens[0]);
             if (!columnId) {
@@ -126,7 +121,13 @@ export const getFilterAutocomplete = ({
             return null;
         }
 
+        const comparator = conditionTokens[1].toLowerCase();
+
         if (endsWithSpace) {
+            if (comparator === 'in' || comparator === 'notin') {
+                return null;
+            }
+
             const updatedUniqueValueOptions = { ...uniqueValueOptions };
             if (
                 allValuesColumns &&
@@ -184,14 +185,32 @@ export const getFilterAutocomplete = ({
 
     const comparator = conditionTokens[1].toLowerCase();
     if (comparator === 'in' || comparator === 'notin') {
+        const valueInput = getInOperatorValueInput(context.sourceText);
+
+        if (
+            !valueInput.hasOpeningParenthesis ||
+            valueInput.endsWithClosingParenthesis
+        ) {
+            return null;
+        }
+
+        const selectedValues = new Set(valueInput.selectedValues);
+        const availableOptions = (
+            updatedUniqueValueOptions[columnId] || []
+        ).filter(
+            (option) =>
+                option === '_show_all_values_' || !selectedValues.has(option),
+        );
+
         return {
             options: filterOptions(
-                updatedUniqueValueOptions[columnId] || [],
-                currentFilterPrefix,
+                availableOptions,
+                valueInput.currentValueSearch,
+                true,
             ),
-            replaceStart,
+            replaceStart: valueInput.replaceStart,
             replaceEnd: context.sourceText.length,
-            insertSuffix: ' ',
+            insertSuffix: ', ',
             columnId,
             tokenType: 'value',
             loadingColumnId:
@@ -206,10 +225,11 @@ export const getFilterAutocomplete = ({
             options: filterOptions(
                 updatedUniqueValueOptions[columnId] || [],
                 currentFilterPrefix,
+                true,
             ),
             replaceStart,
             replaceEnd: context.sourceText.length,
-            insertSuffix: ' ',
+            insertSuffix: '',
             columnId,
             tokenType: 'value',
             loadingColumnId:

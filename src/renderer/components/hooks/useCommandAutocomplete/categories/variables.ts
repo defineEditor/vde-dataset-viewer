@@ -1,7 +1,7 @@
 import type {
     CategoryAutocompleteParams,
     CommandAutocompleteState,
-} from 'interfaces/useCommandAutocomplete';
+} from 'interfaces/common';
 import {
     filterOptions,
     isNumericToken,

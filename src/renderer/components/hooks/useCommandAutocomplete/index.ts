@@ -1,22 +1,23 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { DatasetJsonMetadata, ISettings } from 'interfaces/common';
-import { resolveAutocompleteContext } from 'renderer/components/hooks/commandAutocomplete/config';
-import { getFilterAutocomplete } from 'renderer/components/hooks/commandAutocomplete/categories/filter';
-import { getHistoryAutocomplete } from 'renderer/components/hooks/commandAutocomplete/categories/history';
-import { getVariablesAutocomplete } from 'renderer/components/hooks/commandAutocomplete/categories/variables';
-import { formatFilterValueOption } from 'renderer/components/hooks/commandAutocomplete/utils';
 import type {
+    DatasetJsonMetadata,
+    ISettings,
     CommandAutocompleteCategory,
     CommandAutocompleteState,
     UniqueValuesApi,
-} from 'renderer/components/hooks/commandAutocomplete/types';
+} from 'interfaces/common';
+import { resolveAutocompleteContext } from 'renderer/components/hooks/useCommandAutocomplete/config';
+import { getFilterAutocomplete } from 'renderer/components/hooks/useCommandAutocomplete/categories/filter';
+import { getHistoryAutocomplete } from 'renderer/components/hooks/useCommandAutocomplete/categories/history';
+import { getVariablesAutocomplete } from 'renderer/components/hooks/useCommandAutocomplete/categories/variables';
+import { formatFilterValueOption } from 'renderer/components/hooks/useCommandAutocomplete/utils';
 
 export type {
     CommandAutocompleteCategory,
     CommandAutocompleteState,
     CommandHelperTextState,
-} from 'renderer/components/hooks/commandAutocomplete/types';
-export { getCommandHelperText } from 'renderer/components/hooks/commandAutocomplete/config';
+} from 'interfaces/useCommandAutocomplete';
+export { getCommandHelperText } from 'renderer/components/hooks/useCommandAutocomplete/config';
 
 export const useCommandAutocomplete = ({
     apiService,

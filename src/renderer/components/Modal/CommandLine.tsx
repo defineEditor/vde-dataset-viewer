@@ -8,7 +8,6 @@ import React, {
 } from 'react';
 import {
     Autocomplete,
-    AutocompleteChangeReason,
     AutocompleteInputChangeReason,
     Button,
     Dialog,
@@ -41,7 +40,7 @@ import { parseDatasetCommand } from 'renderer/utils/commandLine';
 import {
     getCommandHelperText,
     useCommandAutocomplete,
-} from 'renderer/components/Modal/useCommandAutocomplete';
+} from 'renderer/components/hooks/useCommandAutocomplete';
 
 const styles = {
     dialog: {
@@ -171,13 +170,23 @@ const CommandLine: React.FC<IUiModal> = () => {
     const [autocompleteOpen, setAutocompleteOpen] = useState(false);
 
     useEffect(() => {
-        setAutocompleteOpen(
-            Boolean(
+        setAutocompleteOpen((prevValue) => {
+            if (
+                prevValue === false &&
+                commandAutocomplete?.tokenType === 'value' &&
+                commandAutocomplete.options.length === 1 &&
+                commandAutocomplete.replaceEnd -
+                    commandAutocomplete.replaceStart ===
+                    commandAutocomplete.options[0].length
+            ) {
+                return false;
+            }
+            return Boolean(
                 commandAutocomplete &&
                     (commandAutocomplete.options.length > 0 ||
                         commandAutocomplete.loadingColumnId),
-            ),
-        );
+            );
+        });
     }, [commandAutocomplete]);
 
     useEffect(() => {
@@ -333,68 +342,81 @@ const CommandLine: React.FC<IUiModal> = () => {
 
     const handleInputChange = useCallback(
         (
-            event: React.SyntheticEvent,
+            _event: React.SyntheticEvent,
             value: string,
             reason: AutocompleteInputChangeReason,
         ) => {
             if (reason === 'selectOption') {
-                event.stopPropagation();
                 setAutocompleteOpen(false);
+
+                if (resolvedCategory === 'history' || !commandAutocomplete) {
+                    setCommand(value);
+                    setHistoryRequested(false);
+                    requestAnimationFrame(() => {
+                        inputRef.current?.focus();
+                        inputRef.current?.setSelectionRange(
+                            value.length,
+                            value.length,
+                        );
+                    });
+                    return;
+                }
+
+                // If a comparator function is selected, we need to transform the command to the function call;
+                let nextCommand = '';
+                if (
+                    commandAutocomplete.tokenType === 'operator' &&
+                    ['missing', 'notMissing'].includes(value)
+                ) {
+                    const commandParts = command.split(';');
+                    const updatedCommand = `${command.replace(/^(\s*\S+).*/, '$1')} ${value}(${commandAutocomplete.columnId})`;
+                    commandParts.splice(
+                        commandParts.length - 1,
+                        1,
+                        updatedCommand,
+                    );
+                    nextCommand = commandParts.join(';');
+                } else {
+                    let suffix = commandAutocomplete.insertSuffix || '';
+                    // If in or notin are used, add the opening parenthesis.
+                    if (
+                        ['in', 'notin'].includes(value.toLowerCase()) &&
+                        commandAutocomplete.tokenType === 'operator'
+                    ) {
+                        suffix += '(';
+                    }
+                    nextCommand = `${command.slice(
+                        0,
+                        commandAutocomplete.replaceStart,
+                    )}${value}${suffix}${command.slice(
+                        commandAutocomplete.replaceEnd,
+                    )}`;
+                }
+
+                setCommand(nextCommand);
+                setHistoryRequested(false);
+
+                // requestAnimationFrame(() => {
+                //     const nextCursor =
+                //         commandAutocomplete.replaceStart +
+                //         value.length +
+                //         commandAutocomplete.insertSuffix.length;
+                //     inputRef.current?.focus();
+                //     inputRef.current?.setSelectionRange(nextCursor, nextCursor);
+                // });
                 return;
             }
+
             if (reason === 'reset') {
                 return;
             }
+
             if (reason === 'clear') {
                 setAutocompleteOpen(false);
                 setHelperText({ text: '', isError: false });
             }
+
             setCommand(value);
-        },
-        [],
-    );
-
-    const handleOptionSelect = useCallback(
-        (
-            _event: React.SyntheticEvent,
-            value: string | null,
-            reason: AutocompleteChangeReason,
-        ) => {
-            if (value === null || reason === 'createOption') {
-                return;
-            }
-
-            if (resolvedCategory === 'history' || !commandAutocomplete) {
-                setCommand(value);
-                setHistoryRequested(false);
-                requestAnimationFrame(() => {
-                    inputRef.current?.focus();
-                    inputRef.current?.setSelectionRange(
-                        value.length,
-                        value.length,
-                    );
-                });
-                return;
-            }
-
-            const nextCommand = `${command.slice(
-                0,
-                commandAutocomplete.replaceStart,
-            )}${value}${commandAutocomplete.insertSuffix}${command.slice(
-                commandAutocomplete.replaceEnd,
-            )}`;
-
-            setCommand(nextCommand);
-            setHistoryRequested(false);
-
-            requestAnimationFrame(() => {
-                const nextCursor =
-                    commandAutocomplete.replaceStart +
-                    value.length +
-                    commandAutocomplete.insertSuffix.length;
-                inputRef.current?.focus();
-                inputRef.current?.setSelectionRange(nextCursor, nextCursor);
-            });
         },
         [command, commandAutocomplete, resolvedCategory],
     );
@@ -466,7 +488,6 @@ const CommandLine: React.FC<IUiModal> = () => {
                     open={autocompleteOpen}
                     loading={isAutocompleteLoading}
                     inputValue={command}
-                    onChange={handleOptionSelect}
                     onInputChange={handleInputChange}
                     renderOption={handleRenderOption}
                     onClose={() => {
