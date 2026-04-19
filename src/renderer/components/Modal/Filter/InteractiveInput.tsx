@@ -9,7 +9,7 @@ import {
     Box,
     Fab,
 } from '@mui/material';
-import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
+import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutlined';
 import AddIcon from '@mui/icons-material/Add';
 import { AutocompleteChangeReason } from '@mui/material/Autocomplete';
 import {

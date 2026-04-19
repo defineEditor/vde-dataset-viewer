@@ -71,7 +71,11 @@ const ErrorModal: React.FC<IUiModalMessage> = ({ type, data }) => {
     }, [handleClose]);
 
     return (
-        <Dialog open onClose={handleClose} PaperProps={{ sx: styles.dialog }}>
+        <Dialog
+            open
+            onClose={handleClose}
+            slotProps={{ paper: { sx: styles.dialog } }}
+        >
             <DialogTitle sx={styles.title}>An Error Occurred</DialogTitle>
             <DialogContent>
                 <DialogContentText>

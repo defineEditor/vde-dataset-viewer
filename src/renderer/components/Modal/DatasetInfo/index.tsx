@@ -128,7 +128,7 @@ const DatasetInfo: React.FC<IUiModal> = (props: IUiModal) => {
         <Dialog
             open
             onClose={handleClose}
-            PaperProps={{ sx: { ...styles.dialog } }}
+            slotProps={{ paper: { sx: { ...styles.dialog } } }}
         >
             <DialogTitle sx={styles.title}>
                 <Stack

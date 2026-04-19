@@ -172,7 +172,10 @@ const About: React.FC = () => {
                                 <Typography variant="h6" color="primary">
                                     Development Team
                                 </Typography>
-                                <Typography variant="body1" paragraph>
+                                <Typography
+                                    variant="body1"
+                                    sx={{ marginBottom: '16px' }}
+                                >
                                     <a
                                         onClick={openLink}
                                         href="https://www.linkedin.com/in/dmitry-kolosov-91751413/"
@@ -189,7 +192,10 @@ const About: React.FC = () => {
                                 <Typography variant="h6" color="primary">
                                     Source Code and Development
                                 </Typography>
-                                <Typography variant="body1" paragraph>
+                                <Typography
+                                    variant="body1"
+                                    sx={{ marginBottom: '16px' }}
+                                >
                                     <a
                                         onClick={openLink}
                                         href="https://github.com/defineEditor/vde-dataset-viewer"

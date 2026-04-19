@@ -190,7 +190,11 @@ const VariableInfo: React.FC<IUiModalVariableInfo> = ({
     };
 
     return (
-        <Dialog open onClose={handleClose} PaperProps={{ sx: styles.dialog }}>
+        <Dialog
+            open
+            onClose={handleClose}
+            slotProps={{ paper: { sx: styles.dialog } }}
+        >
             <DialogTitle sx={styles.title}>
                 <Stack
                     direction="row"

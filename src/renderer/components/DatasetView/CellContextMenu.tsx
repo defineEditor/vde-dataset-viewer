@@ -15,9 +15,9 @@ import {
     IHeaderCell,
 } from 'interfaces/common';
 import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutlined';
 import ChecklistIcon from '@mui/icons-material/Checklist';
-import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
+import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutlined';
 import { handleTransformation } from 'renderer/utils/transformUtils';
 import { resetFilter, setFilter } from 'renderer/redux/slices/data';
 import { restartCompare } from 'renderer/redux/slices/ui';

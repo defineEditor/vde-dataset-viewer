@@ -87,7 +87,7 @@ const Shortcuts: React.FC<{
             open={open}
             onClose={onClose}
             sx={styles.drawer}
-            PaperProps={{ sx: styles.paper }}
+            slotProps={{ paper: { sx: styles.paper } }}
             anchor="right"
         >
             <Box tabIndex={0} role="button">
