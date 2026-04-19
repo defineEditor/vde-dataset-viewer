@@ -75,13 +75,15 @@ const styles = {
     root: {
         display: 'flex',
         height: '100vh',
+        width: '100vw',
+        overflow: 'hidden',
         backgroundColor: 'background.default',
     },
     main: {
-        flex: 1,
-        minHeight: 0,
-        padding: 0,
+        display: 'flex',
+        flex: '1 1 0%',
         overflow: 'auto',
+        flexDirection: 'column',
     },
     logo: {
         width: 32,
@@ -188,11 +190,10 @@ const styles = {
         color: selected ? 'primary.main' : 'grey.800',
     }),
     mainContainer: {
-        flex: 1,
+        flex: '1 1 0%',
         minWidth: 0,
         display: 'flex',
         flexDirection: 'column',
-        height: '100vh',
     },
     divider: {
         mt: 1,
@@ -477,9 +478,9 @@ const Toolpad: React.FC<ToolpadProps> = ({
                     })}
                 </List>
             </Drawer>
-            <Box component="main" sx={styles.mainContainer}>
+            <Box sx={styles.mainContainer}>
                 <Toolbar />
-                <Box sx={styles.main} id="main">
+                <Box component="main" sx={styles.main} id="main">
                     {children}
                 </Box>
             </Box>

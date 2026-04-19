@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { Box } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import SelectDataset from 'renderer/components/SelectDataset';
 import Api from 'renderer/components/Api';
@@ -19,10 +18,45 @@ import Converter from 'renderer/components/Converter';
 import Validator from 'renderer/components/Validator';
 import Compare from 'renderer/components/Compare';
 import About from 'renderer/components/About';
-import MainChrome from 'renderer/components/Toolpad';
+import Toolpad from 'renderer/components/Toolpad';
 import { paths } from 'misc/constants';
 import { saveStore } from 'renderer/redux/stateUtils';
 import handleOpenDataset from 'renderer/utils/handleOpenDataset';
+
+const renderPage = (
+    pathname: string,
+    isDataLoaded: boolean,
+): React.ReactElement | null => {
+    if (pathname === paths.SELECT) {
+        return <SelectDataset />;
+    }
+    if (pathname === paths.VIEWFILE && isDataLoaded) {
+        return <ViewFile />;
+    }
+    if (pathname === paths.DEFINEXML) {
+        return <DefineXml />;
+    }
+    if (pathname === paths.COMPARE) {
+        return <Compare />;
+    }
+    if (pathname === paths.SETTINGS) {
+        return <Settings />;
+    }
+    if (pathname === paths.API) {
+        return <Api />;
+    }
+    if (pathname === paths.CONVERTER) {
+        return <Converter />;
+    }
+    if (pathname === paths.VALIDATOR) {
+        return <Validator />;
+    }
+    if (pathname === paths.ABOUT) {
+        return <About />;
+    }
+
+    return null;
+};
 
 const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
     const title = 'VDE Dataset Viewer';
@@ -237,40 +271,8 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
         };
     }, [apiService, currentFileId, dispatch]);
 
-    const renderPage = () => {
-        if (pathname === paths.SELECT) {
-            return <SelectDataset />;
-        }
-        if (pathname === paths.VIEWFILE && isDataLoaded) {
-            return <ViewFile />;
-        }
-        if (pathname === paths.DEFINEXML) {
-            return <DefineXml />;
-        }
-        if (pathname === paths.COMPARE) {
-            return <Compare />;
-        }
-        if (pathname === paths.SETTINGS) {
-            return <Settings />;
-        }
-        if (pathname === paths.API) {
-            return <Api />;
-        }
-        if (pathname === paths.CONVERTER) {
-            return <Converter />;
-        }
-        if (pathname === paths.VALIDATOR) {
-            return <Validator />;
-        }
-        if (pathname === paths.ABOUT) {
-            return <About />;
-        }
-
-        return null;
-    };
-
     return (
-        <MainChrome
+        <Toolpad
             theme={theme}
             title={title}
             pathname={pathname}
@@ -278,8 +280,8 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
             onOpenShortcuts={() => setShortcutsOpen(true)}
             onCloseShortcuts={() => setShortcutsOpen(false)}
         >
-            <Box sx={{ height: '100%' }}>{renderPage()}</Box>
-        </MainChrome>
+            <>{renderPage(pathname, isDataLoaded)}</>
+        </Toolpad>
     );
 };
 
