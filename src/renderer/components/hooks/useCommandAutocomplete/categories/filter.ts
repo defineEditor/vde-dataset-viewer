@@ -101,7 +101,7 @@ export const getFilterAutocomplete = ({
                 replaceEnd: context.sourceText.length,
                 insertSuffix: ' ',
                 columnId,
-                tokenType: 'column',
+                tokenType: 'operator',
             };
         }
 

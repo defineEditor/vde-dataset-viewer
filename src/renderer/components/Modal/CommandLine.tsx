@@ -56,8 +56,13 @@ const styles = {
     field: {
         mt: 1,
     },
-    showAllValuesHint: {
-        m: 2,
+    showAllValuesLi: {
+        pointerEvents: 'none',
+        opacity: 1,
+        '&.MuiAutocomplete-option[aria-disabled="true"]': {
+            pointerEvents: 'none',
+            opacity: 1,
+        },
     },
 };
 
@@ -67,20 +72,30 @@ const handleRenderOption = (
     },
     option: string | React.ReactNode,
     _state,
-    _ownerStae,
+    _ownerState,
 ): string | React.ReactNode => {
+    const { key, ...optionProps } = props;
     if (option === '_show_all_values_') {
         return (
-            <Typography
-                variant="caption"
-                color="primary"
-                sx={styles.showAllValuesHint}
+            <Box
+                key={key}
+                component="li"
+                {...optionProps}
+                aria-disabled
+                onMouseDown={(event: React.MouseEvent<HTMLLIElement>) => {
+                    event.preventDefault();
+                }}
+                onClick={(event: React.MouseEvent<HTMLLIElement>) => {
+                    event.preventDefault();
+                }}
+                sx={styles.showAllValuesLi}
             >
-                Press Tab to show all values (max 1000)
-            </Typography>
+                <Typography variant="caption" color="primary">
+                    Press Tab to show all values (max 1000)
+                </Typography>
+            </Box>
         );
     }
-    const { key, ...optionProps } = props;
     return (
         <Box key={key} component="li" {...optionProps}>
             {option}

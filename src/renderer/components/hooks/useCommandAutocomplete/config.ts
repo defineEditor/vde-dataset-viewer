@@ -5,11 +5,11 @@ import type {
 } from 'interfaces/common';
 import { getActiveSegment } from 'renderer/components/hooks/useCommandAutocomplete/utils';
 
-const COMMAND_SYNTAX_BASE = {
+const COMMAND_SYNTAX = {
     id: 'id [selectors] - set ID columns',
     idadd: 'idadd|ia [selectors] - add columns to ID columns',
     sort: 'sort [selector] [asc|desc] ... - set sorting',
-    sortadd: 'sortadd|osa [selector] [asc|desc] ... - add sorting columns',
+    sortadd: 'sortadd|soa [selector] [asc|desc] ... - add sorting columns',
     show: 'show [selectors] - show only selected columns',
     showadd: 'showadd|sha [selectors] - add columns to visible columns',
     hide: 'hide [selectors] - hide selected columns',
@@ -26,7 +26,7 @@ const COMMAND_SYNTAX_BASE = {
 const MULTIKEY_COMMANDS = [
     'sort',
     'sortadd',
-    'osa',
+    'soa',
     'idadd',
     'ia',
     'show',
@@ -52,7 +52,6 @@ export const COMMAND_ALIASES: Record<string, string> = {
     ia: 'idadd',
     idadd: 'idadd',
     info: 'info',
-    osa: 'sortadd',
     r: 'reset',
     reset: 'reset',
     sha: 'showadd',
@@ -81,23 +80,14 @@ const COMMAND_CATEGORIES: Record<string, CommandAutocompleteCategory> = {
     reset: 'blank',
 };
 
-export const COMMAND_SYNTAX = {
-    ...COMMAND_SYNTAX_BASE,
-    ia: COMMAND_SYNTAX_BASE.idadd,
-    osa: COMMAND_SYNTAX_BASE.sortadd,
-    sha: COMMAND_SYNTAX_BASE.showadd,
-    ha: COMMAND_SYNTAX_BASE.hideadd,
-    f: COMMAND_SYNTAX_BASE.filter,
-    fa: COMMAND_SYNTAX_BASE.filteradd,
-    r: COMMAND_SYNTAX_BASE.reset,
-};
-
 export const getCommandHelperText = (
     command: string,
 ): CommandHelperTextState => {
-    const activeCommand = command.split(';').pop()?.trimStart().toLowerCase();
+    const activeSegment = command.split(';').pop()?.trimStart().toLowerCase();
+    const activeCommand = activeSegment?.split(' ')[0];
+    const normalizedCommand = COMMAND_ALIASES[activeCommand || ''];
     const commandKey = Object.keys(COMMAND_SYNTAX).find(
-        (key) => key !== 'selectors' && activeCommand?.startsWith(key),
+        (key) => key !== 'selectors' && normalizedCommand === key,
     );
 
     if (commandKey) {
