@@ -23,7 +23,6 @@ const styles = {
         width: '100%',
         overflow: 'hidden',
         height: 52,
-        alignItems: 'space-between',
     },
     leftSection: {
         maxWidth: '100%',
