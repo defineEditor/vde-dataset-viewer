@@ -8,6 +8,7 @@ export const styles = {
         borderRadius: 0,
     },
     contentContainer: {
+        userSelect: 'none',
         display: 'flex',
         flexDirection: 'column',
         flex: 1,
