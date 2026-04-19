@@ -81,6 +81,7 @@ export interface IUiModalAppUpdate extends IUiModalBase {
 
 export interface IUiModalGeneral extends IUiModalBase {
     type:
+        | typeof modals.COMMANDLINE
         | typeof modals.GOTO
         | typeof modals.DATASETINFO
         | typeof modals.FILTER
@@ -306,6 +307,10 @@ export interface IData {
         }[];
         lastOptions: BasicFilter['options'];
         lastType: 'manual' | 'ui';
+        recentCommands: {
+            command: string;
+            date: number;
+        }[];
     };
     maskData: {
         currentMask: IMask | null;

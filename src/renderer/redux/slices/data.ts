@@ -97,6 +97,32 @@ export const dataSlice = createSlice({
             };
             return newState;
         },
+        addRecentCommand: (
+            state,
+            action: PayloadAction<{
+                command: string;
+            }>,
+        ) => {
+            const newRecentCommands = state.filterData.recentCommands.slice();
+            const index = newRecentCommands.findIndex(
+                (recentCommand) =>
+                    recentCommand.command === action.payload.command,
+            );
+
+            if (index !== -1) {
+                newRecentCommands.splice(index, 1);
+            } else if (newRecentCommands.length >= 100) {
+                newRecentCommands.pop();
+            }
+
+            newRecentCommands.unshift({
+                command: action.payload.command,
+                date: Date.now(),
+            });
+
+            state.filterData.recentCommands = newRecentCommands;
+            return state;
+        },
         resetFilter: (state, action: PayloadAction<{ fileId: string }>) => {
             if (state.filterData.currentFilter[action.payload.fileId]) {
                 delete state.filterData.currentFilter[action.payload.fileId];
@@ -334,6 +360,7 @@ export const dataSlice = createSlice({
 export const {
     addRecent,
     setFilter,
+    addRecentCommand,
     resetFilter,
     setLoadedRecords,
     clearLoadedRecords,

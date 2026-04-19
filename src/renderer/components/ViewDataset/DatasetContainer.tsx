@@ -55,6 +55,7 @@ const updateWidth = (
         estimateWidthRows,
         maxColWidth,
         showTypeIcons,
+        false,
         showLabels,
     );
     // Update column style with default width

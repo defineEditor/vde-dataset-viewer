@@ -58,6 +58,7 @@ const shortcuts = {
     Viewer: {
         'Ctrl + O': 'Open a new file',
         'Ctrl + G': 'Go to line or column',
+        'Ctrl + L': 'Open command line',
         'Ctrl + F': 'Filter data',
         'Ctrl + Alt + F': 'Reset Filter',
         'Ctrl + E': 'Column Visibility',
