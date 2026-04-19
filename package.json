@@ -99,7 +99,6 @@
         "@reduxjs/toolkit": "^2.11.2",
         "@tanstack/react-table": "^8.21.3",
         "@tanstack/react-virtual": "^3.13.18",
-        "@toolpad/core": "^0.16.0",
         "diff": "^8.0.3",
         "dompurify": "^3.2.7",
         "electron-debug": "^3.2.0",

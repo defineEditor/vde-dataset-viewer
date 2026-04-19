@@ -30,6 +30,10 @@ const styles = {
         backgroundColor: 'primary.main',
         color: 'grey.100',
     },
+    titleStack: {
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
     actions: {
         m: 1,
     },
@@ -68,6 +72,9 @@ const styles = {
         },
     },
     searchIcon: { color: 'white' },
+    valuesStack: {
+        flex: 1,
+    },
 };
 
 const VariableInfo: React.FC<IUiModalVariableInfo> = ({
@@ -196,11 +203,7 @@ const VariableInfo: React.FC<IUiModalVariableInfo> = ({
             slotProps={{ paper: { sx: styles.dialog } }}
         >
             <DialogTitle sx={styles.title}>
-                <Stack
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                >
+                <Stack direction="row" sx={styles.titleStack}>
                     Variable Information: {variableInfo.name}
                     <TextField
                         size="small"
@@ -243,7 +246,7 @@ const VariableInfo: React.FC<IUiModalVariableInfo> = ({
                                 ))}
                         </List>
                     </Stack>
-                    <Stack direction="column" flex={1}>
+                    <Stack direction="column" sx={styles.valuesStack}>
                         <UniqueValues
                             counts={values.counts}
                             loading={loading}

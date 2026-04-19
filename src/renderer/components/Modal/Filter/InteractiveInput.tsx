@@ -37,6 +37,9 @@ const styles = {
         width: '70px',
         textAlign: 'center',
     },
+    rowAlignCenter: {
+        alignItems: 'center',
+    },
 };
 
 const updateConditionVariable = (
@@ -415,7 +418,7 @@ const InteractiveInput: React.FC<{
                 <Stack
                     direction="row"
                     spacing={2}
-                    alignItems="center"
+                    sx={styles.rowAlignCenter}
                     // eslint-disable-next-line react/no-array-index-key
                     key={index}
                 >

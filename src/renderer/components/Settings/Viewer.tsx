@@ -177,7 +177,7 @@ export const Viewer: React.FC<ViewerProps> = ({
                     />
                 }
                 label={
-                    <Stack direction="row" alignItems="center">
+                    <Stack direction="row" sx={styles.rowAlignCenter}>
                         <Box>Show Type Icons</Box>
                         <Tooltip
                             title={

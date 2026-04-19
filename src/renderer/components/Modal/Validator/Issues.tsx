@@ -39,6 +39,10 @@ const styles = {
         mb: 1,
         p: 1,
     },
+    headerRow: {
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
     listContainer: {
         overflow: 'auto',
         backgroundColor: 'grey.50',
@@ -310,11 +314,7 @@ const Issues: React.FC<IssuesProps> = ({
     return (
         <Stack spacing={1} sx={styles.container}>
             {/* Header */}
-            <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-            >
+            <Stack direction="row" sx={styles.headerRow}>
                 <Box sx={styles.header}>
                     <Typography variant="h4" color="primary.main">
                         {datasetName}

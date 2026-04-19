@@ -236,6 +236,7 @@ export interface IUi {
     pathname: AllowedPathnames;
     currentFileId: string;
     zoomLevel: number;
+    appBarExpanded: boolean;
     viewer: IUiViewer;
     modals: IUiModal[];
     snackbar: IUiSnackbar;

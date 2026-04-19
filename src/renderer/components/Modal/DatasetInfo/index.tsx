@@ -50,6 +50,8 @@ const styles = {
     title: {
         backgroundColor: 'primary.main',
         color: 'grey.100',
+        alignItems: 'center',
+        justifyContent: 'space-between',
     },
     label: {
         py: 0.5,
@@ -131,11 +133,7 @@ const DatasetInfo: React.FC<IUiModal> = (props: IUiModal) => {
             slotProps={{ paper: { sx: { ...styles.dialog } } }}
         >
             <DialogTitle sx={styles.title}>
-                <Stack
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                >
+                <Stack direction="row">
                     <Typography variant="h6" sx={styles.label}>
                         Dataset Information
                     </Typography>

@@ -29,6 +29,7 @@ const styles = {
     container: {
         height: '100%',
         width: '100%',
+        alignItems: 'center',
     },
 };
 
@@ -103,12 +104,7 @@ const IssueNavigation: React.FC<{
     }
 
     return (
-        <Stack
-            direction="row"
-            alignItems="center"
-            spacing={2}
-            sx={styles.container}
-        >
+        <Stack direction="row" spacing={2} sx={styles.container}>
             <Typography variant="body2">
                 {currentIssueIndex + 1}/{totalIssues}
             </Typography>

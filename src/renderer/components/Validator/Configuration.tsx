@@ -257,12 +257,7 @@ const ValidatorConfiguration: React.FC<ValidatorConfigurationProps> = ({
                 <Typography variant="h6" gutterBottom>
                     Standard Options
                 </Typography>
-                <Stack
-                    sx={styles.configRow}
-                    direction="row"
-                    spacing={2}
-                    alignItems="center"
-                >
+                <Stack sx={styles.configRow} direction="row" spacing={2}>
                     <TextField
                         select
                         name="standard"

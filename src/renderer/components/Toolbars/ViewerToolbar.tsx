@@ -31,6 +31,7 @@ const styles = {
     main: {
         width: '100%',
         paddingLeft: 2,
+        justifyContent: 'flex-start',
     },
     dataset: {
         color: 'grey.800',
@@ -302,12 +303,7 @@ const Header: React.FC = () => {
     ]);
 
     return (
-        <Stack
-            sx={styles.main}
-            direction="row"
-            justifyContent="flex-start"
-            spacing={1}
-        >
+        <Stack sx={styles.main} direction="row" spacing={1}>
             <Typography variant="h6" sx={styles.dataset}>
                 {dsName}
             </Typography>

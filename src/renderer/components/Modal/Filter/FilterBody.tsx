@@ -86,6 +86,9 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
     },
+    rowAlignCenter: {
+        alignItems: 'center',
+    },
 };
 
 // Create dummy filter for conversion and validation purposes;
@@ -93,7 +96,9 @@ const filterForConversion = new Filter('dataset-json1.1', [], '', {
     caseInsensitiveColNames: true,
 });
 
-interface FilterBodyProps extends IUiModalFilter {
+interface FilterBodyProps {
+    type: IUiModalFilter['type'];
+    filterType: IUiModalFilter['filterType'];
     fileId: string;
     data: ITableRow[];
     metadata: DatasetJsonMetadata;
@@ -560,8 +565,8 @@ const FilterBody: React.FC<FilterBodyProps> = ({
                             inputType === 'interactive' && (
                                 <Stack
                                     direction="row"
-                                    alignItems="center"
                                     spacing={1}
+                                    sx={styles.rowAlignCenter}
                                 >
                                     <Typography variant="caption" color="info">
                                         Value selection is limited to filtered

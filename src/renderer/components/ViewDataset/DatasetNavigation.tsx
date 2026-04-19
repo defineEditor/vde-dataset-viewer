@@ -23,6 +23,8 @@ const styles = {
     },
     container: {
         width: '100%',
+        alignItems: 'center',
+        justifyContent: 'space-between',
     },
 };
 
@@ -122,8 +124,6 @@ const DatasetNavigation: React.FC = () => {
                         <Stack
                             direction="row"
                             spacing={0}
-                            alignItems="center"
-                            justifyContent="space-between"
                             sx={styles.container}
                         >
                             <Box sx={styles.label}>{file.name}</Box>

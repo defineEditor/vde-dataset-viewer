@@ -93,9 +93,15 @@ const styles = {
     title: {
         px: 2,
         pt: 2,
+        mb: 2,
         flex: '1 1 1%',
         minHeight: 60,
         overflowY: 'auto',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    reportTitle: {
+        fontWeight: 'medium',
     },
     listContentContainer: {
         px: 2,
@@ -380,13 +386,7 @@ const ValidationResults: React.FC<ResultsProps> = ({
 
     return (
         <Box sx={styles.container}>
-            <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                mb={2}
-                sx={styles.title}
-            >
+            <Stack direction="row" sx={styles.title}>
                 <Typography variant="h6" gutterBottom>
                     Validation Results ({filteredReports.length})
                 </Typography>
@@ -541,7 +541,7 @@ const ValidationResults: React.FC<ResultsProps> = ({
                                     primary={
                                         <Typography
                                             variant="subtitle1"
-                                            fontWeight="medium"
+                                            sx={styles.reportTitle}
                                         >
                                             {reportTitles[report.id]}
                                         </Typography>

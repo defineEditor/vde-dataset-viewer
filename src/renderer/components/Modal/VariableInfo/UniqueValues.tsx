@@ -36,12 +36,30 @@ const styles = {
             fontWeight: 'bold',
         },
     },
+    value: {
+        minWidth: '50px',
+    },
     getValues: {
         '&&': {
             mt: 1,
             mb: 1,
         },
         height: '100%',
+        alignItems: 'center',
+    },
+    frequencyStack: {
+        alignItems: 'center',
+        width: '100%',
+    },
+    centerOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 };
 
@@ -50,7 +68,7 @@ const FrequencyCell: React.FC<{ value: number; percentage: number }> = ({
     percentage,
 }) => {
     return (
-        <Stack direction="row" spacing={1} alignItems="center" width="100%">
+        <Stack direction="row" spacing={1} sx={styles.frequencyStack}>
             <Box sx={{ width: '100%', position: 'relative' }}>
                 <LinearProgress
                     variant="determinate"
@@ -64,24 +82,13 @@ const FrequencyCell: React.FC<{ value: number; percentage: number }> = ({
                         },
                     }}
                 />
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    }}
-                >
+                <Box sx={styles.centerOverlay}>
                     <Typography variant="caption" color="black">
                         {percentage.toFixed(1)}%
                     </Typography>
                 </Box>
             </Box>
-            <Typography variant="body2" minWidth="50px">
+            <Typography variant="body2" sx={styles.value}>
                 {value}
             </Typography>
         </Stack>
@@ -269,12 +276,7 @@ const UniqueValues: React.FC<{
                     Unique Values {data.length > 0 ? `(${data.length})` : ''}
                 </Typography>
                 {!hasAllValues && (
-                    <Stack
-                        direction="row"
-                        alignItems="center"
-                        spacing={1}
-                        sx={styles.getValues}
-                    >
+                    <Stack direction="row" spacing={1} sx={styles.getValues}>
                         <Typography variant="caption" color="info">
                             Value list is limited to currently shown data
                         </Typography>

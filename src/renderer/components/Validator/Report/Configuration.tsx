@@ -41,6 +41,9 @@ const styles = {
         height: 24,
         m: 1,
     },
+    commandStack: {
+        alignItems: 'center',
+    },
 };
 
 const Command: React.FC<{
@@ -48,7 +51,7 @@ const Command: React.FC<{
     onCopyToClipboard: (text: string) => void;
 }> = ({ command, onCopyToClipboard }) => {
     return (
-        <Stack direction="row" alignItems="center">
+        <Stack direction="row" sx={styles.commandStack}>
             <Typography variant="caption" sx={styles.command}>
                 {command}
             </Typography>

@@ -2,14 +2,18 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import ConstructionIcon from '@mui/icons-material/Construction';
 
+const styles = {
+    container: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'column',
+        height: '100%',
+    },
+};
+
 const UnderConstruction: React.FC = () => (
-    <Box
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        flexDirection="column"
-        height="100%"
-    >
+    <Box sx={styles.container}>
         <ConstructionIcon
             sx={{ fontSize: 70, marginBottom: 2, color: 'grey.600' }}
         />

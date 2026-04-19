@@ -63,6 +63,10 @@ export const styles = {
         mb: 0.5,
         ml: 1,
     },
+    rowAlignCenter: {
+        display: 'flex',
+        alignItems: 'center',
+    },
     typeIcon: {
         fontSize: 16,
         verticalAlign: 'middle',

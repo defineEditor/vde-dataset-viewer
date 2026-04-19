@@ -29,6 +29,9 @@ const styles = {
         justifyContent: 'center',
         height: '100%',
     },
+    selectStack: {
+        alignItems: 'center',
+    },
     loading: {
         position: 'fixed',
         top: '50%',
@@ -259,7 +262,7 @@ const Compare: React.FC = () => {
     if (!fileBase || !fileComp) {
         return (
             <Box sx={styles.selectContainer}>
-                <Stack direction="row" alignItems="center">
+                <Stack direction="row" sx={styles.selectStack}>
                     <Button
                         sx={styles.selectButton}
                         onClick={handleSelectFiles}

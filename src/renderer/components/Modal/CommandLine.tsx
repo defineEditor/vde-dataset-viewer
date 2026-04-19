@@ -68,7 +68,7 @@ const styles = {
 
 const handleRenderOption = (
     props: React.HTMLAttributes<HTMLLIElement> & {
-        key: string;
+        key: React.Key;
     },
     option: string | React.ReactNode,
     _state,

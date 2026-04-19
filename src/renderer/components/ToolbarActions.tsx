@@ -6,7 +6,8 @@ import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 
 const styles = {
     main: {
-        width: '100%',
+        width: 'auto',
+        justifyContent: 'flex-start',
     },
 };
 
@@ -19,12 +20,7 @@ const ToolbarActions: React.FC = () => {
     }, [dispatch]);
 
     return (
-        <Stack
-            sx={styles.main}
-            direction="row"
-            justifyContent="flex-start"
-            spacing={1}
-        >
+        <Stack sx={styles.main} direction="row" spacing={1}>
             {currentZoomLevel !== 0 && (
                 <Tooltip title="Reset Zoom" enterDelay={1000}>
                     <IconButton

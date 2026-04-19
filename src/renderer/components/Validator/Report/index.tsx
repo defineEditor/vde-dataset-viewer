@@ -50,6 +50,7 @@ const styles = {
         px: 0,
         backgroundColor: 'grey.300',
         height: '100%',
+        justifyContent: 'flex-start',
     },
     fullHeight: {
         height: '100%',
@@ -267,7 +268,7 @@ const ValidationReportPage: React.FC = () => {
     }
 
     return (
-        <Stack spacing={0} justifyContent="flex-start" sx={styles.root}>
+        <Stack spacing={0} sx={styles.root}>
             <TabContext value={tab}>
                 <TabList
                     onChange={handleTabChange}

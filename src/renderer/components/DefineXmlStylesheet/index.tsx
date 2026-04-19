@@ -41,6 +41,15 @@ const styles = {
         minWidth: 'auto',
         lineHeight: 1,
     },
+    emptyCenter: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%',
+    },
+    rowAlignCenter: {
+        alignItems: 'center',
+    },
 };
 
 const DefineXml: React.FC = () => {
@@ -166,13 +175,8 @@ const DefineXml: React.FC = () => {
             );
         }
         return (
-            <Box
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                height="100%"
-            >
-                <Stack direction="row" alignItems="center">
+            <Box sx={styles.emptyCenter}>
+                <Stack direction="row" sx={styles.rowAlignCenter}>
                     <Button sx={styles.openButton} onClick={handleOpenDefine}>
                         Open file
                     </Button>
