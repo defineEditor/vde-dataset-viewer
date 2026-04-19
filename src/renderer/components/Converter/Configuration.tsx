@@ -53,6 +53,12 @@ const styles = {
         maxHeight: '40px',
         p: 2,
     },
+    rowAlignCenter: {
+        alignItems: 'center',
+    },
+    rowJustifyFlexEnd: {
+        justifyContent: 'flex-end',
+    },
 };
 
 const Converter: React.FC<{
@@ -299,7 +305,7 @@ const Converter: React.FC<{
         <Stack spacing={2} sx={styles.container}>
             {/* Conversion Configuration */}
             <Typography variant="h6">Conversion Configuration</Typography>
-            <Stack direction="row" spacing={2} alignItems="center">
+            <Stack direction="row" spacing={2} sx={styles.rowAlignCenter}>
                 <TextField
                     select
                     label="Output Format"
@@ -389,7 +395,7 @@ const Converter: React.FC<{
                 />
             </Box>
             {/* Action Buttons */}
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Stack direction="row" spacing={2} sx={styles.rowJustifyFlexEnd}>
                 <Button
                     variant="contained"
                     onClick={handleConvert}

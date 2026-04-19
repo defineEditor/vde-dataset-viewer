@@ -77,6 +77,7 @@ export const ui: IUi = {
     pathname: paths.SELECT,
     currentFileId: '',
     zoomLevel: 0,
+    appBarExpanded: false,
     viewer: {
         datasetInfoTab: 0,
         validatorTab: 'validation',

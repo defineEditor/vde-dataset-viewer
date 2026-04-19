@@ -16,7 +16,7 @@ import {
     Tooltip,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlined';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import AppContext from 'renderer/utils/AppContext';
 import { openNewDataset } from 'renderer/utils/readData';
@@ -30,6 +30,8 @@ const styles = {
         height: '100%',
         overflow: 'hidden',
         flexWrap: 'wrap',
+        justifyContent: 'space-around',
+        alignItems: 'flex-start',
     },
     section: {
         mb: 3,
@@ -276,14 +278,7 @@ const Summary: React.FC = () => {
         });
 
     return (
-        <Stack
-            sx={styles.root}
-            direction="row"
-            justifyContent="space-around"
-            alignItems="flex-start"
-            spacing={2}
-            useFlexGap
-        >
+        <Stack sx={styles.root} direction="row" spacing={2} useFlexGap>
             {allEqual ? (
                 <Paper sx={styles.summary}>
                     <Typography variant="h6" gutterBottom>

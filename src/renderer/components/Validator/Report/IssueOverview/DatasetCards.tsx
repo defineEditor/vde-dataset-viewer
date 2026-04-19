@@ -44,6 +44,9 @@ const styles = {
         px: 2,
         py: 1,
     },
+    cardHeaderRow: {
+        alignItems: 'center',
+    },
     datasetButton: {
         textTransform: 'none',
         color: 'primary.main',
@@ -53,6 +56,11 @@ const styles = {
     },
     issueCountChip: {
         scale: 0.8,
+    },
+    rowSpaceBetweenCenter: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
 };
 
@@ -161,8 +169,8 @@ const DatasetCards: React.FC<DatasetCardsProps> = ({
                             title={
                                 <Stack
                                     direction="row"
-                                    alignItems="center"
                                     spacing={2}
+                                    sx={styles.cardHeaderRow}
                                 >
                                     <ButtonBase
                                         sx={styles.datasetButton}
@@ -221,13 +229,7 @@ const DatasetCards: React.FC<DatasetCardsProps> = ({
                             )}
                         </CardContent>
                         <CardActions>
-                            <Stack
-                                display="flex"
-                                direction="row"
-                                justifyContent="space-between"
-                                alignItems="flex-end"
-                                sx={styles.actions}
-                            >
+                            <Stack direction="row" sx={styles.actions}>
                                 <Tooltip title="Show issue details">
                                     <IconButton
                                         onClick={() =>
@@ -276,9 +278,9 @@ const DatasetCards: React.FC<DatasetCardsProps> = ({
                                         <ListItemText
                                             primary={
                                                 <Box
-                                                    display="flex"
-                                                    justifyContent="space-between"
-                                                    alignItems="center"
+                                                    sx={
+                                                        styles.rowSpaceBetweenCenter
+                                                    }
                                                 >
                                                     <ButtonBase
                                                         onClick={() =>

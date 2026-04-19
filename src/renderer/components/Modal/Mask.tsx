@@ -241,7 +241,7 @@ const Mask: React.FC = () => {
             onClose={handleClose}
             maxWidth="md"
             fullWidth
-            PaperProps={{ sx: { ...styles.dialog } }}
+            slotProps={{ paper: { sx: { ...styles.dialog } } }}
         >
             <DialogTitle sx={styles.title}>Column Visibility</DialogTitle>
             <DialogContent>
@@ -265,11 +265,11 @@ const Mask: React.FC = () => {
                         options={columnNames}
                         value={selectedColumns}
                         onChange={(_, newValue) => setSelectedColumns(newValue)}
-                        renderValue={(value, getTagProps) =>
+                        renderValue={(value, getItemProps) =>
                             value.map((option, index) => (
                                 <Chip
                                     label={option}
-                                    {...getTagProps({ index })}
+                                    {...getItemProps({ index })}
                                     sx={
                                         columnNames.includes(option)
                                             ? styles.existingColumn
@@ -294,36 +294,44 @@ const Mask: React.FC = () => {
                                 }
                                 placeholder="Select columns to display"
                                 fullWidth
-                                InputProps={{
-                                    ...params.InputProps,
-                                    endAdornment: (
-                                        <>
-                                            {params.InputProps?.endAdornment}
-                                            {editingMaskId === null && (
-                                                <InputAdornment
-                                                    position="end"
-                                                    sx={styles.saveNewButton}
-                                                >
-                                                    <Tooltip title="Save new set (max 10)">
-                                                        <IconButton
-                                                            onClick={() =>
-                                                                handleSaveNew()
-                                                            }
-                                                            disabled={
-                                                                savedMasks.length >=
-                                                                    10 ||
-                                                                selectedColumns.length ===
-                                                                    0
-                                                            }
-                                                            edge="end"
-                                                        >
-                                                            <SaveIcon />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                </InputAdornment>
-                                            )}
-                                        </>
-                                    ),
+                                slotProps={{
+                                    ...(params.slotProps ?? {}),
+                                    input: {
+                                        ...(params.slotProps?.input ?? {}),
+                                        endAdornment: (
+                                            <>
+                                                {
+                                                    params.slotProps?.input
+                                                        ?.endAdornment
+                                                }
+                                                {editingMaskId === null && (
+                                                    <InputAdornment
+                                                        position="end"
+                                                        sx={
+                                                            styles.saveNewButton
+                                                        }
+                                                    >
+                                                        <Tooltip title="Save new set (max 10)">
+                                                            <IconButton
+                                                                onClick={() =>
+                                                                    handleSaveNew()
+                                                                }
+                                                                disabled={
+                                                                    savedMasks.length >=
+                                                                        10 ||
+                                                                    selectedColumns.length ===
+                                                                        0
+                                                                }
+                                                                edge="end"
+                                                            >
+                                                                <SaveIcon />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    </InputAdornment>
+                                                )}
+                                            </>
+                                        ),
+                                    },
                                 }}
                             />
                         )}

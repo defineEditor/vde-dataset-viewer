@@ -11,7 +11,7 @@ import {
     Tooltip,
 } from '@mui/material';
 import { ISettings } from 'interfaces/common';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
 import FontDownloadIcon from '@mui/icons-material/FontDownload';
 import LooksOneIcon from '@mui/icons-material/LooksOne';
 import AccessTimeIcon from '@mui/icons-material/HourglassFull';
@@ -177,7 +177,7 @@ export const Viewer: React.FC<ViewerProps> = ({
                     />
                 }
                 label={
-                    <Stack direction="row" alignItems="center">
+                    <Stack direction="row" sx={styles.rowAlignCenter}>
                         <Box>Show Type Icons</Box>
                         <Tooltip
                             title={

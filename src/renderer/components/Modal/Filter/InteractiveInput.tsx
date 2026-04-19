@@ -9,7 +9,7 @@ import {
     Box,
     Fab,
 } from '@mui/material';
-import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
+import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutlined';
 import AddIcon from '@mui/icons-material/Add';
 import { AutocompleteChangeReason } from '@mui/material/Autocomplete';
 import {
@@ -36,6 +36,9 @@ const styles = {
     connector: {
         width: '70px',
         textAlign: 'center',
+    },
+    rowAlignCenter: {
+        alignItems: 'center',
     },
 };
 
@@ -415,7 +418,7 @@ const InteractiveInput: React.FC<{
                 <Stack
                     direction="row"
                     spacing={2}
-                    alignItems="center"
+                    sx={styles.rowAlignCenter}
                     // eslint-disable-next-line react/no-array-index-key
                     key={index}
                 >

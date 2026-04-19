@@ -70,6 +70,10 @@ const styles = {
         bottom: 24,
         right: 5,
     },
+    rowSpaceBetweenCenter: {
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
 };
 
 const DatasetCard: React.FC<{
@@ -115,11 +119,7 @@ const DatasetCard: React.FC<{
                 <Typography gutterBottom sx={styles.label}>
                     {label}
                 </Typography>
-                <Stack
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="center"
-                >
+                <Stack direction="row" sx={styles.rowSpaceBetweenCenter}>
                     <Typography variant="h5" component="div" sx={styles.name}>
                         {name}
                     </Typography>

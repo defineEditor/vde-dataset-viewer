@@ -15,6 +15,8 @@ const styles = {
         padding: '16px',
         height: '100%',
         userSelect: 'none',
+        alignItems: 'flex-start',
+        justifyContent: 'flex-start',
     },
     title: {
         marginBottom: '16px',
@@ -76,13 +78,7 @@ const Layout: React.FC<{
     }, []);
 
     return (
-        <Stack
-            ref={stackRef}
-            spacing={2}
-            sx={styles.main}
-            alignItems="flex-start"
-            justifyContent="flex-start"
-        >
+        <Stack ref={stackRef} spacing={2} sx={styles.main}>
             <Box sx={styles.section}>
                 <Typography variant="h5" sx={styles.title}>
                     Opened Datasets

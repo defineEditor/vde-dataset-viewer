@@ -263,6 +263,9 @@ export const uiSlice = createSlice({
         ) => {
             state.viewer.filterInputMode = action.payload;
         },
+        toggleAppBarExpanded: (state) => {
+            state.appBarExpanded = !state.appBarExpanded;
+        },
         toggleSidebar: (state) => {
             state.viewer.sidebarOpen = !state.viewer.sidebarOpen;
         },
@@ -595,6 +598,7 @@ export const {
     setBottomSection,
     setValidationModalTab,
     setFilterInputMode,
+    toggleAppBarExpanded,
     toggleSidebar,
     updateValidation,
     setValidationReport,

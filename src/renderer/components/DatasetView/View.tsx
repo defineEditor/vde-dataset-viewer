@@ -105,6 +105,7 @@ const styles = {
         textAlign: 'center',
         flex: 1,
         justifyContent: 'center',
+        alignItems: 'center',
     },
     tableHeaderText: {
         py: 1,
@@ -335,11 +336,7 @@ const DatasetHeaderCell: React.FC<{
             ) : (
                 <>
                     {settings.disableSorting ? (
-                        <Stack
-                            sx={styles.tableHeaderLabel}
-                            direction="row"
-                            alignItems="center"
-                        >
+                        <Stack sx={styles.tableHeaderLabel} direction="row">
                             <Box sx={styles.tableHeaderText}>
                                 {flexRender(
                                     header.column.columnDef.header,

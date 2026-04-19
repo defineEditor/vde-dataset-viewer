@@ -114,7 +114,7 @@ const EditApi: React.FC<IUiModalEditApi> = ({ type, data }) => {
         <Dialog
             open
             onClose={handleClose}
-            PaperProps={{ sx: { ...styles.dialog } }}
+            slotProps={{ paper: { sx: { ...styles.dialog } } }}
         >
             <DialogTitle sx={styles.title}>API Record</DialogTitle>
             <DialogContent>

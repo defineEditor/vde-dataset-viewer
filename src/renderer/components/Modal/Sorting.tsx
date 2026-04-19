@@ -157,9 +157,9 @@ const Sorting: React.FC = () => {
                         option.id === value.id
                     }
                     getOptionLabel={(option) => option.label}
-                    renderValue={(value, getTagProps) =>
+                    renderValue={(value, getItemProps) =>
                         value.map((option, index) => {
-                            const tagProps = getTagProps({ index });
+                            const tagProps = getItemProps({ index });
                             const currentSort = sorting.find(
                                 (item) => item.id === option.id,
                             );

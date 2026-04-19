@@ -8,6 +8,7 @@ export const styles = {
         borderRadius: 0,
     },
     contentContainer: {
+        userSelect: 'none',
         display: 'flex',
         flexDirection: 'column',
         flex: 1,
@@ -62,6 +63,10 @@ export const styles = {
         fontSize: 24,
         mb: 0.5,
         ml: 1,
+    },
+    rowAlignCenter: {
+        display: 'flex',
+        alignItems: 'center',
     },
     typeIcon: {
         fontSize: 16,

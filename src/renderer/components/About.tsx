@@ -18,6 +18,7 @@ const styles = {
         width: '100%',
         height: '100%',
         backgroundColor: 'grey.100',
+        justifyContent: 'center',
     },
     main: {
         mt: 4,
@@ -27,6 +28,7 @@ const styles = {
     },
     features: {
         width: '95%',
+        justifyContent: 'center',
     },
     highlights: {
         backgroundColor: '#fff',
@@ -83,7 +85,7 @@ const About: React.FC = () => {
     }, [apiService]);
 
     return (
-        <Stack sx={styles.root} justifyContent="center" spacing={10}>
+        <Stack sx={styles.root} spacing={10}>
             <Box sx={styles.main}>
                 <Typography
                     variant="h5"
@@ -119,97 +121,101 @@ const About: React.FC = () => {
                     help users review datasets.
                 </Typography>
             </Box>
-            <Box sx={styles.features}>
-                <Stack spacing={5} direction="row" justifyContent="center">
-                    <Card sx={styles.card}>
-                        <Box sx={styles.cardContent}>
-                            <CardContent>
-                                <Typography variant="h6" color="primary">
-                                    Contacts
-                                </Typography>
-                                <Typography variant="body1">
-                                    <a
-                                        onClick={openLink}
-                                        href="https://t.me/defineeditor"
-                                    >
-                                        Telegram
-                                    </a>
-                                    <br />
-                                    <a
-                                        onClick={openLink}
-                                        href="https://chat.whatsapp.com/HpBqZZboqCJ2fp7gOpxRZR"
-                                    >
-                                        WhatsApp
-                                    </a>
-                                    <br />
-                                    <a
-                                        onClick={openLink}
-                                        href="http://defineeditor.com"
-                                    >
-                                        Website
-                                    </a>
-                                    <br />
-                                    <a
-                                        onClick={openLink}
-                                        href="https://twitter.com/defineeditor"
-                                    >
-                                        Twitter
-                                    </a>
-                                    <br />
-                                    <a
-                                        onClick={openLink}
-                                        href="mailto:info@defineeditor.com"
-                                    >
-                                        E-mail
-                                    </a>
-                                </Typography>
-                            </CardContent>
-                        </Box>
-                    </Card>
-                    <Card sx={styles.card}>
-                        <Box sx={styles.cardContent}>
-                            <CardContent>
-                                <Typography variant="h6" color="primary">
-                                    Development Team
-                                </Typography>
-                                <Typography variant="body1" paragraph>
-                                    <a
-                                        onClick={openLink}
-                                        href="https://www.linkedin.com/in/dmitry-kolosov-91751413/"
-                                    >
-                                        Dmitry Kolosov
-                                    </a>
-                                </Typography>
-                            </CardContent>
-                        </Box>
-                    </Card>
-                    <Card sx={styles.card}>
-                        <Box sx={styles.cardContent}>
-                            <CardContent>
-                                <Typography variant="h6" color="primary">
-                                    Source Code and Development
-                                </Typography>
-                                <Typography variant="body1" paragraph>
-                                    <a
-                                        onClick={openLink}
-                                        href="https://github.com/defineEditor/vde-dataset-viewer"
-                                    >
-                                        GitHub
-                                    </a>
-                                    <br />
-                                    <a
-                                        onClick={openLink}
-                                        href="https://trello.com/b/UKjKhRZA"
-                                    >
-                                        Trello (development)
-                                    </a>
-                                    <br />
-                                </Typography>
-                            </CardContent>
-                        </Box>
-                    </Card>
-                </Stack>
-            </Box>
+            <Stack spacing={5} direction="row" sx={styles.features}>
+                <Card sx={styles.card}>
+                    <Box sx={styles.cardContent}>
+                        <CardContent>
+                            <Typography variant="h6" color="primary">
+                                Contacts
+                            </Typography>
+                            <Typography variant="body1">
+                                <a
+                                    onClick={openLink}
+                                    href="https://t.me/defineeditor"
+                                >
+                                    Telegram
+                                </a>
+                                <br />
+                                <a
+                                    onClick={openLink}
+                                    href="https://chat.whatsapp.com/HpBqZZboqCJ2fp7gOpxRZR"
+                                >
+                                    WhatsApp
+                                </a>
+                                <br />
+                                <a
+                                    onClick={openLink}
+                                    href="http://defineeditor.com"
+                                >
+                                    Website
+                                </a>
+                                <br />
+                                <a
+                                    onClick={openLink}
+                                    href="https://twitter.com/defineeditor"
+                                >
+                                    Twitter
+                                </a>
+                                <br />
+                                <a
+                                    onClick={openLink}
+                                    href="mailto:info@defineeditor.com"
+                                >
+                                    E-mail
+                                </a>
+                            </Typography>
+                        </CardContent>
+                    </Box>
+                </Card>
+                <Card sx={styles.card}>
+                    <Box sx={styles.cardContent}>
+                        <CardContent>
+                            <Typography variant="h6" color="primary">
+                                Development Team
+                            </Typography>
+                            <Typography
+                                variant="body1"
+                                sx={{ marginBottom: '16px' }}
+                            >
+                                <a
+                                    onClick={openLink}
+                                    href="https://www.linkedin.com/in/dmitry-kolosov-91751413/"
+                                >
+                                    Dmitry Kolosov
+                                </a>
+                            </Typography>
+                        </CardContent>
+                    </Box>
+                </Card>
+                <Card sx={styles.card}>
+                    <Box sx={styles.cardContent}>
+                        <CardContent>
+                            <Typography variant="h6" color="primary">
+                                Source Code and Development
+                            </Typography>
+                            <Typography
+                                variant="body1"
+                                sx={{ marginBottom: '16px' }}
+                            >
+                                <a
+                                    onClick={openLink}
+                                    href="https://github.com/defineEditor/vde-dataset-viewer"
+                                >
+                                    GitHub
+                                </a>
+                                <br />
+                                <a
+                                    onClick={openLink}
+                                    href="https://trello.com/b/UKjKhRZA"
+                                >
+                                    Trello (development)
+                                </a>
+                                <br />
+                            </Typography>
+                        </CardContent>
+                    </Box>
+                </Card>
+            </Stack>
         </Stack>
     );
 };

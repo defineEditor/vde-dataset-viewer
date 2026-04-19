@@ -278,11 +278,11 @@ const IdColumns: React.FC = () => {
                             option.id === value.id
                         }
                         getOptionLabel={(option) => option.label}
-                        renderValue={(value, getTagProps) =>
+                        renderValue={(value, getItemProps) =>
                             value.map((option, index) => (
                                 <Chip
                                     label={option.label}
-                                    {...getTagProps({ index })}
+                                    {...getItemProps({ index })}
                                     sx={
                                         columnOptions.some(
                                             (column) => column.id === option.id,
@@ -310,36 +310,44 @@ const IdColumns: React.FC = () => {
                                 }
                                 placeholder="Select ID columns"
                                 fullWidth
-                                InputProps={{
-                                    ...params.InputProps,
-                                    endAdornment: (
-                                        <>
-                                            {params.InputProps?.endAdornment}
-                                            {editingSetId === null && (
-                                                <InputAdornment
-                                                    position="end"
-                                                    sx={styles.saveNewButton}
-                                                >
-                                                    <Tooltip title="Save new set (max 10)">
-                                                        <IconButton
-                                                            onClick={() =>
-                                                                handleSaveNew()
-                                                            }
-                                                            disabled={
-                                                                savedSets.length >=
-                                                                    10 ||
-                                                                idCols.length ===
-                                                                    0
-                                                            }
-                                                            edge="end"
-                                                        >
-                                                            <SaveIcon />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                </InputAdornment>
-                                            )}
-                                        </>
-                                    ),
+                                slotProps={{
+                                    ...(params.slotProps ?? {}),
+                                    input: {
+                                        ...(params.slotProps?.input ?? {}),
+                                        endAdornment: (
+                                            <>
+                                                {
+                                                    params.slotProps?.input
+                                                        ?.endAdornment
+                                                }
+                                                {editingSetId === null && (
+                                                    <InputAdornment
+                                                        position="end"
+                                                        sx={
+                                                            styles.saveNewButton
+                                                        }
+                                                    >
+                                                        <Tooltip title="Save new set (max 10)">
+                                                            <IconButton
+                                                                onClick={() =>
+                                                                    handleSaveNew()
+                                                                }
+                                                                disabled={
+                                                                    savedSets.length >=
+                                                                        10 ||
+                                                                    idCols.length ===
+                                                                        0
+                                                                }
+                                                                edge="end"
+                                                            >
+                                                                <SaveIcon />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    </InputAdornment>
+                                                )}
+                                            </>
+                                        ),
+                                    },
                                 }}
                             />
                         )}

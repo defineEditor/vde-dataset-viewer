@@ -20,6 +20,7 @@ const styles = {
         backgroundColor: 'grey.100',
         height: '100%',
         overflow: 'hidden',
+        justifyContent: 'flex-start',
     },
     tabs: {
         width: '100%',
@@ -80,7 +81,7 @@ const Results: React.FC = () => {
     };
 
     return (
-        <Stack spacing={0} justifyContent="flex-start" sx={styles.root}>
+        <Stack spacing={0} sx={styles.root}>
             <TabContext value={currentTab || 'summary'}>
                 <TabList
                     onChange={handleTabChange}

@@ -18,6 +18,7 @@ const styles = {
         p: 2,
         minHeight: '100%',
         backgroundColor: 'grey.100',
+        alignItems: 'flex-start',
     },
     progressContainer: {
         width: '100%',
@@ -101,7 +102,7 @@ const CompareProgress: React.FC<{
     );
 
     return (
-        <Stack spacing={2} sx={styles.container} alignItems="flex-start">
+        <Stack spacing={2} sx={styles.container}>
             <Typography variant="h6">Processing</Typography>
             <ProgressContainer progress={progress} issues={issues} />
             <Zoom in={progress !== 100} timeout={1000}>

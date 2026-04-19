@@ -104,6 +104,14 @@ const styles = {
             },
         },
     },
+    titleHeader: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    rowCenter: {
+        alignItems: 'center',
+    },
 };
 
 interface AllDifferencesModalProps {
@@ -344,12 +352,8 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
             slotProps={{ paper: { sx: styles.dialog } }}
         >
             <DialogTitle sx={styles.title}>
-                <Stack
-                    alignItems="center"
-                    justifyContent="space-between"
-                    direction="row"
-                >
-                    <Stack direction="row" spacing={2} alignItems="center">
+                <Stack direction="row" sx={styles.titleHeader}>
+                    <Stack direction="row" spacing={2} sx={styles.rowCenter}>
                         <Typography variant="h6">
                             Dataset Differences
                         </Typography>
@@ -374,7 +378,7 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
                             </Tooltip>
                         </ToggleButtonGroup>
                     </Stack>
-                    <Stack direction="row" spacing={2} alignItems="center">
+                    <Stack direction="row" spacing={2} sx={styles.rowCenter}>
                         <TextField
                             placeholder="Ctrl + F to search"
                             size="small"

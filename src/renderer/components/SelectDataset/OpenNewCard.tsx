@@ -23,6 +23,10 @@ const styles = {
         color: 'grey.100',
         fontSize: 50,
     },
+    stackCenter: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
 };
 
 const OpenNewCard: React.FC<{
@@ -31,12 +35,7 @@ const OpenNewCard: React.FC<{
     return (
         <Card sx={styles.card}>
             <CardContent onClick={() => handleOpenLocal()}>
-                <Stack
-                    spacing={2}
-                    justifyContent="center"
-                    direction="column"
-                    alignItems="center"
-                >
+                <Stack spacing={2} direction="column" sx={styles.stackCenter}>
                     <Typography variant="h3" sx={styles.cardContent}>
                         Open New File
                     </Typography>

@@ -30,6 +30,9 @@ import {
 const styles = {
     actions: {
         width: '100%',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-end',
     },
     card: {
         width: '300px',
@@ -65,6 +68,15 @@ const styles = {
     },
     issueCountChip: {
         scale: 0.8,
+    },
+    headerStack: {
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    listItemPrimary: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
 };
 
@@ -213,9 +225,8 @@ const IssueCards: React.FC<IssueCardsProps> = ({
                             title={
                                 <Stack
                                     direction="row"
-                                    alignItems="center"
-                                    justifyContent="space-between"
                                     spacing={2}
+                                    sx={styles.headerStack}
                                 >
                                     <ButtonBase
                                         sx={styles.issueButton}
@@ -248,13 +259,7 @@ const IssueCards: React.FC<IssueCardsProps> = ({
                             />
                         </CardContent>
                         <CardActions>
-                            <Stack
-                                display="flex"
-                                direction="row"
-                                justifyContent="space-between"
-                                alignItems="flex-end"
-                                sx={styles.actions}
-                            >
+                            <Stack direction="row" sx={styles.actions}>
                                 <Tooltip title="Show issue details">
                                     <IconButton
                                         onClick={() =>
@@ -301,9 +306,9 @@ const IssueCards: React.FC<IssueCardsProps> = ({
                                             <ListItemText
                                                 primary={
                                                     <Box
-                                                        display="flex"
-                                                        justifyContent="space-between"
-                                                        alignItems="center"
+                                                        sx={
+                                                            styles.listItemPrimary
+                                                        }
                                                     >
                                                         <ButtonBase
                                                             onClick={() =>

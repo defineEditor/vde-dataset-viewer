@@ -93,7 +93,7 @@ const AppUpdate: React.FC<IUiModalAppUpdate> = ({ type, data }) => {
         <Dialog
             open
             onClose={handleClose}
-            PaperProps={{ sx: { ...styles.dialog } }}
+            slotProps={{ paper: { sx: { ...styles.dialog } } }}
         >
             <DialogTitle sx={styles.title}>Application Update</DialogTitle>
             <DialogContent sx={{ display: 'flex', flexDirection: 'column' }}>

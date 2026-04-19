@@ -9,6 +9,9 @@ const styles = {
     metadataItem: {
         secondary: { sx: { color: 'primary.main' } },
     },
+    rowJustifyFlexStart: {
+        justifyContent: 'flex-start',
+    },
 };
 
 const MetadataInfo: React.FC<{
@@ -74,7 +77,7 @@ const MetadataInfo: React.FC<{
     const secondHalf = metadataAttrs.slice(half);
 
     return (
-        <Stack spacing={2} direction="row" justifyContent="flex-start">
+        <Stack spacing={2} direction="row" sx={styles.rowJustifyFlexStart}>
             <List sx={styles.metadataColumn}>
                 {firstHalf.map((attr) => (
                     <ListItem key={attr.key}>
