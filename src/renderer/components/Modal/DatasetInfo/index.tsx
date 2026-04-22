@@ -24,6 +24,7 @@ import {
     InputAdornment,
     Typography,
 } from '@mui/material';
+import { Theme } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
 import { closeModal, setDatasetInfoTab } from 'renderer/redux/slices/ui';
 
@@ -35,10 +36,9 @@ const styles = {
     tabs: {
         flexGrow: 1,
     },
-    tab: {
-        background:
-            'radial-gradient(circle farthest-corner at bottom center,#eeeeee,#e5e4e4)',
-    },
+    tab: (theme: Theme) => ({
+        background: theme.appTheme.gradients.tabStrip,
+    }),
     metadataPanel: {
         height: '100%',
         overflow: 'auto',

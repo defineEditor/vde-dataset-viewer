@@ -80,10 +80,10 @@ const styles = {
     },
     searchIcon: { color: 'white' },
     rowDiffHeader: {
-        backgroundColor: '#f5f5f5',
+        backgroundColor: 'action.hover',
     },
     headerIcon: {
-        color: '#ffffff',
+        color: 'primary.contrastText',
     },
     rowIcon: {
         ml: 1,

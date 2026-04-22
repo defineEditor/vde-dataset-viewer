@@ -21,12 +21,28 @@ interface OtherProps {
 
 export const Other: React.FC<OtherProps> = ({ settings, onSettingChange }) => (
     <Stack spacing={2}>
+        <Typography variant="h6">Appearance</Typography>
+        <TextField
+            label="Color theme"
+            helperText="Select the color theme"
+            name="other.colorMode"
+            value={settings.other.colorMode}
+            select
+            onChange={(event) =>
+                onSettingChange(event as React.ChangeEvent<HTMLInputElement>)
+            }
+            sx={styles.inputField}
+        >
+            <MenuItem value="system">System</MenuItem>
+            <MenuItem value="light">Light</MenuItem>
+            <MenuItem value="dark">Dark</MenuItem>
+        </TextField>
         <Typography variant="h6">Miscellaneous Settings</Typography>
         <TextField
             label="Input encoding"
             helperText={
                 settings.other.inEncoding === 'default'
-                    ? 'Ecoding used when reading files'
+                    ? 'Encoding used when reading files'
                     : 'Be sure the correct encoding is specified, in most situations you should use UTF8'
             }
             name="other.inEncoding"

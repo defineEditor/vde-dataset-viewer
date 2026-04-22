@@ -46,6 +46,7 @@ export const settings: ISettings = {
     },
     other: {
         checkForUpdates: true,
+        colorMode: 'light',
         loadingAnimation: 'random',
         inEncoding: 'utf8',
         dragoverAnimation: true,

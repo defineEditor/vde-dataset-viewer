@@ -33,7 +33,8 @@ const styles = {
         width: '100%',
     },
     tableContainer: {
-        border: '1px solid #e0e0e0',
+        border: '1px solid',
+        borderColor: 'divider',
     },
     successMessage: {
         display: 'flex',

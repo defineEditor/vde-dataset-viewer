@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
-import { theme, themeWithoutAnimation } from 'renderer/utils/theme';
+import { createAppTheme, resolveThemeMode } from 'renderer/utils/theme';
 import Main from 'renderer/components/Main';
 import Snackbar from 'renderer/components/Snackbar';
 import Modal from 'renderer/components/Modal';
-import { CssBaseline } from '@mui/material';
+import { CssBaseline, useMediaQuery } from '@mui/material';
 import { Provider } from 'react-redux';
 import store from 'renderer/redux/store';
 import AppContext from 'renderer/utils/AppContext';
@@ -62,14 +62,26 @@ const AppWithContext: React.FC = () => {
         (state) => state.settings.other.checkForUpdates,
     );
 
+    const colorMode = useAppSelector((state) => state.settings.other.colorMode);
+
     const disableUiAnimation = useAppSelector(
         (state) => state.settings.other.disableUiAnimation,
     );
 
-    let selectedTheme = theme;
-    if (disableUiAnimation) {
-        selectedTheme = themeWithoutAnimation;
-    }
+    const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)', {
+        noSsr: true,
+    });
+
+    const saveStoreListenerRegistered = React.useRef(false);
+
+    const selectedTheme = React.useMemo(
+        () =>
+            createAppTheme({
+                mode: resolveThemeMode(colorMode, prefersDarkMode),
+                disableAnimation: disableUiAnimation,
+            }),
+        [colorMode, disableUiAnimation, prefersDarkMode],
+    );
 
     useEffect(() => {
         // At app startup load the saved state
@@ -94,20 +106,26 @@ const AppWithContext: React.FC = () => {
         }
     }, [apiService, dispatch, checkForUpdates]);
 
-    // Add listener to save the store when the app is closed
-    window.electron.onSaveStore(async () => {
-        const state = dehydrateState(store.getState());
-        if (state) {
-            await apiService.saveLocalStore({ reduxStore: state });
+    useEffect(() => {
+        if (saveStoreListenerRegistered.current) {
+            return;
         }
-    });
+
+        saveStoreListenerRegistered.current = true;
+        window.electron.onSaveStore(async () => {
+            const state = dehydrateState(store.getState());
+            if (state) {
+                await apiService.saveLocalStore({ reduxStore: state });
+            }
+        });
+    }, [apiService]);
 
     return (
         <ThemeProvider theme={selectedTheme}>
             <CssBaseline />
             <ErrorBoundary>
                 <DragAndDrop>
-                    <Main theme={selectedTheme} />
+                    <Main />
                     <Snackbar />
                     <Modal />
                 </DragAndDrop>

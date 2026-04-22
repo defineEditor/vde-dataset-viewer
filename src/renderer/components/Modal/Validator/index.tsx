@@ -17,6 +17,7 @@ import {
     DialogTitle,
     Stack,
 } from '@mui/material';
+import { Theme } from '@mui/material/styles';
 import Configuration from 'renderer/components/Modal/Validator/Configuration';
 import Issues from 'renderer/components/Modal/Validator/Issues';
 import Results from 'renderer/components/Common/ValidationResults';
@@ -46,10 +47,9 @@ const styles = {
     tabs: {
         flexGrow: 1,
     },
-    tab: {
-        background:
-            'radial-gradient(circle farthest-corner at bottom center,#eeeeee,#e5e4e4)',
-    },
+    tab: (theme: Theme) => ({
+        background: theme.appTheme.gradients.tabStrip,
+    }),
     tabPanel: {
         height: 'calc(100% - 48px)', // Adjust height to account for tab header
         overflow: 'auto',

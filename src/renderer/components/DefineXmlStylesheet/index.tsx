@@ -16,14 +16,14 @@ const styles = {
     container: {
         height: '100%',
         width: '100%',
-        backgroundColor: '#FFF',
+        backgroundColor: 'background.paper',
     },
     loading: {
         position: 'fixed',
         top: '50%',
         left: '50%',
         display: 'flex',
-        backgroundColor: '#FFF',
+        backgroundColor: 'background.paper',
         flexDirection: 'column',
         transform: 'translate(-50%, -50%)',
         zIndex: 999,
@@ -31,7 +31,7 @@ const styles = {
     sponsored: {
         marginTop: '10px',
         fontSize: '14px',
-        color: '#888',
+        color: 'text.secondary',
         textAlign: 'center',
     },
     openButton: {

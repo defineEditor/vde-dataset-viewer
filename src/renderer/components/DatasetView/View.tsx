@@ -12,6 +12,7 @@ import {
     IconButton,
     Tooltip,
 } from '@mui/material';
+import { Theme, useTheme } from '@mui/material/styles';
 import {
     Cell as ICell,
     flexRender,
@@ -64,13 +65,13 @@ const getLoadingStyle = (settings: TableSettings): React.CSSProperties => {
 };
 
 const styles = {
-    header: {
-        backgroundColor: '#f4f4f4',
+    header: (theme: Theme) => ({
+        backgroundColor: theme.appTheme.table.header,
         display: 'grid',
         position: 'sticky',
         top: 0,
         zIndex: 1,
-    },
+    }),
     headerColumn: {
         display: 'flex',
         width: '100%',
@@ -91,15 +92,15 @@ const styles = {
     virtualPadding: {
         display: 'flex',
     },
-    tableHeaderCell: {
+    tableHeaderCell: (theme: Theme) => ({
         padding: 0,
         fontFamily: 'Roboto Mono',
         display: 'flex',
         position: 'relative',
         justifyContent: 'center',
         width: '100%',
-        backgroundColor: '#f4f4f4',
-    },
+        backgroundColor: theme.appTheme.table.header,
+    }),
     tableHeaderLabel: {
         width: '100%',
         textAlign: 'center',
@@ -130,13 +131,13 @@ const styles = {
         textOverflow: 'ellipsis',
         padding: 1,
     },
-    resizer: {
+    resizer: (theme: Theme) => ({
         top: 0,
         position: 'absolute',
         height: '100%',
         right: 0,
         width: '3px',
-        background: 'rgba(0, 0, 0, 0.5)',
+        background: theme.appTheme.table.resizeHandle,
         cursor: 'col-resize',
         userSelect: 'none',
         touchAction: 'none',
@@ -145,33 +146,33 @@ const styles = {
             backgroundColor: 'primary.light',
             width: '5px',
         },
-    },
-    highlightedCell: {
-        backgroundColor: '#bbe0ff',
-    },
-    annotatedCell: {
-        backgroundColor: '#fff8e1',
-        border: '1px solid #ffe082',
-    },
-    annotatedRowCell: {
-        backgroundColor: '#fff8e1;',
-        border: '1px solid #ffe082;',
-    },
-    highlightedAnnotatedCell: {
-        backgroundColor: '#ffca28',
-        border: '1px solid #ffca2890',
-    },
-    headerRowNumberCell: {
+    }),
+    highlightedCell: (theme: Theme) => ({
+        backgroundColor: theme.appTheme.table.highlightedCell,
+    }),
+    annotatedCell: (theme: Theme) => ({
+        backgroundColor: theme.appTheme.table.annotatedCell,
+        border: `1px solid ${theme.appTheme.table.annotatedBorder}`,
+    }),
+    annotatedRowCell: (theme: Theme) => ({
+        backgroundColor: theme.appTheme.table.annotatedCell,
+        border: `1px solid ${theme.appTheme.table.annotatedBorder}`,
+    }),
+    highlightedAnnotatedCell: (theme: Theme) => ({
+        backgroundColor: theme.appTheme.table.highlightedAnnotatedCell,
+        border: `1px solid ${theme.appTheme.table.highlightedAnnotatedBorder}`,
+    }),
+    headerRowNumberCell: (theme: Theme) => ({
         justifyContent: 'center',
         fontSize: 'small',
-        backgroundColor: '#f4f4f4',
+        backgroundColor: theme.appTheme.table.rowNumber,
         position: 'sticky',
         left: 0,
         zIndex: 2,
         maxHeight: '100%',
-    },
-    rowNumberCell: {
-        backgroundColor: '#f4f4f4',
+    }),
+    rowNumberCell: (theme: Theme) => ({
+        backgroundColor: theme.appTheme.table.rowNumber,
         fontSize: 'small',
         overflow: 'visible',
         padding: 0.5,
@@ -181,12 +182,12 @@ const styles = {
         zIndex: 2,
         maxHeight: '100%',
         textAlign: 'center',
-    },
+    }),
     loading: {},
     sponsored: {
         marginTop: '10px',
         fontSize: '14px',
-        color: '#888',
+        color: 'text.secondary',
         textAlign: 'center',
     },
     filterIcon: {
@@ -218,6 +219,7 @@ const styles = {
 const getCommonPinningStyles = (
     column: IColumn<ITableRow, unknown>,
     backgroundColor: string,
+    pinShadowColor: string,
     zIndex = 1,
 ): React.CSSProperties => {
     const isPinned = column.getIsPinned();
@@ -229,9 +231,9 @@ const getCommonPinningStyles = (
     return {
         backgroundColor,
         boxShadow: isLastLeftPinnedColumn
-            ? '-4px 0 4px -4px rgba(0, 0, 0, 0.25) inset'
+            ? `-4px 0 4px -4px ${pinShadowColor} inset`
             : isFirstRightPinnedColumn
-              ? '4px 0 4px -4px rgba(0, 0, 0, 0.25) inset'
+              ? `4px 0 4px -4px ${pinShadowColor} inset`
               : undefined,
         left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
         right:
@@ -299,15 +301,23 @@ const DatasetHeaderCell: React.FC<{
     table,
     usePinningStyles = false,
 }) => {
+    const theme = useTheme();
     const isRowNumber = column.id === '#';
     const isSorted = sorting.find((sort) => sort.id === header.id);
 
     const headerCellSx = {
-        ...styles.tableHeaderCell,
+        ...styles.tableHeaderCell(theme),
         width: header.getSize(),
-        ...(isRowNumber ? styles.headerRowNumberCell : { cursor: 'pointer' }),
+        ...(isRowNumber
+            ? styles.headerRowNumberCell(theme)
+            : { cursor: 'pointer' }),
         ...(usePinningStyles
-            ? getCommonPinningStyles(column, '#f4f4f4', 4)
+            ? getCommonPinningStyles(
+                  column,
+                  theme.appTheme.table.header,
+                  theme.appTheme.table.pinShadow,
+                  4,
+              )
             : {}),
         ...(settings.denseHeader ? { height: '30px' } : {}),
     };
@@ -437,6 +447,7 @@ const DatasetBodyCell: React.FC<{
     settings,
     usePinningStyles = false,
 }) => {
+    const theme = useTheme();
     const isHighlighted =
         highlightedCells[cell.column.id]?.includes(rowIndex) || false;
 
@@ -458,11 +469,14 @@ const DatasetBodyCell: React.FC<{
             ? styles.tableCellDynamic
             : styles.tableCellFixed),
         width: cell.column.getSize(),
-        ...(isRowNumber ? styles.rowNumberCell : {}),
+        ...(isRowNumber ? styles.rowNumberCell(theme) : {}),
         ...(usePinningStyles
             ? getCommonPinningStyles(
                   cell.column,
-                  isRowNumber ? '#f4f4f4' : '#ffffff',
+                  isRowNumber
+                      ? theme.appTheme.table.rowNumber
+                      : theme.palette.background.paper,
+                  theme.appTheme.table.pinShadow,
                   3,
               )
             : {}),
@@ -471,22 +485,22 @@ const DatasetBodyCell: React.FC<{
     if (isRowNumber && rowAnnotation) {
         cellStyle = {
             ...cellStyle,
-            ...styles.annotatedRowCell,
+            ...styles.annotatedRowCell(theme),
         };
     } else if (isAnnotated && isHighlighted) {
         cellStyle = {
             ...cellStyle,
-            ...styles.highlightedAnnotatedCell,
+            ...styles.highlightedAnnotatedCell(theme),
         };
     } else if (isAnnotated) {
         cellStyle = {
             ...cellStyle,
-            ...styles.annotatedCell,
+            ...styles.annotatedCell(theme),
         };
     } else if (isHighlighted) {
         cellStyle = {
             ...cellStyle,
-            ...styles.highlightedCell,
+            ...styles.highlightedCell(theme),
         };
     }
 

@@ -31,7 +31,7 @@ const styles = {
         justifyContent: 'center',
     },
     highlights: {
-        backgroundColor: '#fff',
+        backgroundColor: 'background.paper',
     },
     card: {
         width: '320px',

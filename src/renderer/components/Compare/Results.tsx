@@ -1,5 +1,5 @@
 import React from 'react';
-import { styled } from '@mui/material/styles';
+import { styled, Theme } from '@mui/material/styles';
 import Stack from '@mui/material/Stack';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
@@ -22,12 +22,11 @@ const styles = {
         overflow: 'hidden',
         justifyContent: 'flex-start',
     },
-    tabs: {
+    tabs: (theme: Theme) => ({
         width: '100%',
-        background:
-            'radial-gradient(circle farthest-corner at bottom center,#eeeeee,#e5e4e4)',
+        background: theme.appTheme.gradients.tabStrip,
         textTransform: 'none',
-    },
+    }),
     fullHeight: {
         height: '100%',
         width: '100%',

@@ -51,10 +51,11 @@ const styles = {
     },
     existingColumn: {
         backgroundColor: 'primary.main',
-        color: '#ffffff',
+        color: 'primary.contrastText',
     },
     nonExistingColumn: {
         backgroundColor: 'secondary.main',
+        color: 'secondary.contrastText',
     },
     editingListItem: {
         padding: '8px 16px',

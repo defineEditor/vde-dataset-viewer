@@ -1,5 +1,6 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { Box, Tabs, Tab, Paper, Button, Stack } from '@mui/material';
+import { Theme } from '@mui/material/styles';
 import Results from 'renderer/components/Common/ValidationResults';
 import Report from 'renderer/components/Validator/Report';
 import {
@@ -55,19 +56,19 @@ const styles = {
     paper: {
         mb: 0,
     },
-    tabs: {
+    tabs: (theme: Theme) => ({
         width: '100%',
-        background:
-            'radial-gradient(circle farthest-corner at bottom center,#eeeeee,#e5e4e4)',
+        background: theme.appTheme.gradients.tabStrip,
         textTransform: 'none',
-    },
+    }),
     actions: {
         display: 'flex',
         justifyContent: 'flex-end',
         mt: 2,
         p: 2,
         backgroundColor: 'grey.100',
-        borderTop: '1px solid #e0e0e0',
+        borderTop: '1px solid',
+        borderColor: 'divider',
     },
 };
 

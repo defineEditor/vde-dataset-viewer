@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Box, CircularProgress } from '@mui/material';
+import { Box, CircularProgress, CssBaseline } from '@mui/material';
+import { ThemeProvider, useTheme } from '@mui/material/styles';
 import LoadingSanta from 'renderer/components/Loading/LoadingSanta';
 import LoadingCat from 'renderer/components/Loading/LoadingCat';
 import LoadingDog from 'renderer/components/Loading/LoadingDog';
@@ -19,6 +20,7 @@ const getRandomLoadingComponent = () => {
 
 const Loading: React.FC = () => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
+    const theme = useTheme();
     const loadingAnimation = useAppSelector(
         (state) => state.settings.other.loadingAnimation,
     );
@@ -36,24 +38,37 @@ const Loading: React.FC = () => {
                 iframeDoc.body.style.justifyContent = 'center';
                 iframeDoc.body.style.alignItems = 'center';
                 iframeDoc.body.style.height = '100vh';
+                iframeDoc.body.style.backgroundColor =
+                    theme.palette.background.paper;
+                iframeDoc.body.style.color = theme.palette.text.primary;
                 iframeDoc.body.style.overflow = 'hidden'; // Hide scrollbars
                 iframeDoc.body.appendChild(root);
                 const reactRoot = createRoot(root);
+
+                const renderWithTheme = (component: React.ReactElement) => {
+                    reactRoot.render(
+                        <ThemeProvider theme={theme}>
+                            <CssBaseline />
+                            {component}
+                        </ThemeProvider>,
+                    );
+                };
+
                 if (loadingAnimation === 'random') {
                     const RandomLoadingComponent = getRandomLoadingComponent();
-                    reactRoot.render(<RandomLoadingComponent />);
+                    renderWithTheme(<RandomLoadingComponent />);
                 } else if (loadingAnimation === 'cat') {
-                    reactRoot.render(<LoadingCat />);
+                    renderWithTheme(<LoadingCat />);
                 } else if (loadingAnimation === 'dog') {
-                    reactRoot.render(<LoadingDog />);
+                    renderWithTheme(<LoadingDog />);
                 } else if (loadingAnimation === 'santa') {
-                    reactRoot.render(<LoadingSanta />);
+                    renderWithTheme(<LoadingSanta />);
                 } else if (loadingAnimation === 'normal') {
-                    reactRoot.render(<CircularProgress />);
+                    renderWithTheme(<CircularProgress />);
                 }
             }
         }
-    }, [loadingAnimation]);
+    }, [loadingAnimation, theme]);
 
     if (loadingAnimation === 'normal') {
         return (

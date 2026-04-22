@@ -7,7 +7,7 @@ const styles = {
     container: {
         width: '100%',
         display: 'flex',
-        backgroundColor: '#FFF',
+        backgroundColor: 'background.paper',
         flex: '1 1 auto',
     },
     mainStack: {

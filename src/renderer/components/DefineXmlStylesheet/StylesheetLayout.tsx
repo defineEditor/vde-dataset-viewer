@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { alpha, useTheme } from '@mui/material/styles';
 import {
     DefineXmlContent,
     DefineStylesheetSection as Section,
@@ -29,6 +30,7 @@ const StylesheetLayout: React.FC<StylesheetLayoutProps> = ({
     content,
     onOpenFile,
 }) => {
+    const theme = useTheme();
     const dispatch = useAppDispatch();
     const currentFileId = useAppSelector(
         (state) => state.ui.define.currentFileId,
@@ -108,11 +110,33 @@ const StylesheetLayout: React.FC<StylesheetLayoutProps> = ({
         contentRefs.current[section] = el;
     };
 
+    const stylesheetVariables = {
+        '--color-menu-body-bg': theme.palette.background.paper,
+        '--color-menu-body-fg': theme.palette.text.primary,
+        '--color-hmenu-text': theme.palette.primary.main,
+        '--color-hmenu-bullet': theme.palette.text.disabled,
+        '--color-caption': theme.palette.text.secondary,
+        '--color-table-bg': theme.appTheme.surfaces.subtle,
+        '--color-tr-header-back': theme.palette.primary.main,
+        '--color-tr-header': theme.appTheme.text.onPrimary,
+        '--color-tablerow-odd': theme.palette.background.paper,
+        '--color-tablerow-even': theme.appTheme.surfaces.subtle,
+        '--color-tr-vlm-back': theme.appTheme.surfaces.chrome,
+        '--color-border': alpha(theme.palette.text.primary, 0.3),
+        '--color-error': theme.palette.error.main,
+        '--color-warning': theme.palette.warning.main,
+        '--color-link': theme.palette.primary.main,
+        '--color-link-hover': theme.palette.warning.dark,
+        '--color-link-visited': theme.palette.secondary.dark,
+        '--color-shadow': alpha(theme.palette.common.black, 0.3),
+    } as React.CSSProperties;
+
     return (
         <div
             className="define-xml-stylesheet"
             id="stylesheetContainer"
             style={{
+                ...stylesheetVariables,
                 display: 'flex',
                 height: '100%',
                 position: 'relative',
@@ -130,9 +154,9 @@ const StylesheetLayout: React.FC<StylesheetLayoutProps> = ({
                     maxWidth: '300px',
                     height: '100%',
                     overflow: 'auto',
-                    backgroundColor: '#FFFFFF',
-                    color: '#000000',
-                    borderRight: '1px solid #eee',
+                    backgroundColor: theme.palette.background.paper,
+                    color: theme.palette.text.primary,
+                    borderRight: `1px solid ${theme.palette.divider}`,
                     textAlign: 'left',
                     whiteSpace: 'nowrap',
                     flexShrink: 0,
@@ -154,8 +178,8 @@ const StylesheetLayout: React.FC<StylesheetLayoutProps> = ({
                 style={{
                     flexGrow: 1,
                     padding: '0 20px',
-                    backgroundColor: '#FFFFFF',
-                    color: '#000000',
+                    backgroundColor: theme.palette.background.paper,
+                    color: theme.palette.text.primary,
                     overflowX: 'auto',
                     overflowY: 'auto',
                     height: '100%',

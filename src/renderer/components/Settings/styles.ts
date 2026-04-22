@@ -1,3 +1,5 @@
+import { Theme } from '@mui/material/styles';
+
 export const styles = {
     paper: {
         height: '100%',
@@ -36,11 +38,10 @@ export const styles = {
     refreshContainer: {
         alignContent: 'center',
     },
-    tabs: {
-        background:
-            'radial-gradient(circle farthest-corner at bottom center,#eeeeee,#e5e4e4)',
+    tabs: (theme: Theme) => ({
+        background: theme.appTheme.gradients.tabStrip,
         textTransform: 'none',
-    },
+    }),
     tabPanel: {
         padding: 2,
     },
