@@ -1082,6 +1082,10 @@ class ApiService {
     public getPathForFile = (file: File): string => {
         return window.electron.pathForFile(file);
     };
+
+    public isDevelopment = (): boolean => {
+        return window.electron.isDevelopment;
+    };
 }
 
 export default ApiService;

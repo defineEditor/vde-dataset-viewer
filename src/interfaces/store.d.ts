@@ -47,6 +47,7 @@ export interface SettingsViewer {
     showTypeIcons: boolean;
     copyWithHeaders: boolean;
     showLabels: boolean;
+    enableProfiler: boolean;
 }
 
 export interface ISettings {

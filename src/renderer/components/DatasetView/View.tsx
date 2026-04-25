@@ -12,8 +12,7 @@ import {
     IconButton,
     Tooltip,
 } from '@mui/material';
-import { SxProps, Theme } from '@mui/material/styles';
-import { SystemStyleObject } from '@mui/system';
+import { Theme } from '@mui/material/styles';
 import {
     Cell as ICell,
     flexRender,
@@ -220,33 +219,6 @@ const styles = {
     },
 };
 
-const getCommonPinningStyles = (
-    column: IColumn<ITableRow, unknown>,
-    backgroundColor: string,
-    zIndex = 1,
-): ((theme: Theme) => SystemStyleObject<Theme>) => {
-    const isPinned = column.getIsPinned();
-    const isLastLeftPinnedColumn =
-        isPinned === 'left' && column.getIsLastColumn('left');
-    const isFirstRightPinnedColumn =
-        isPinned === 'right' && column.getIsFirstColumn('right');
-
-    return (theme) => ({
-        backgroundColor,
-        boxShadow: isLastLeftPinnedColumn
-            ? `-4px 0 4px -4px ${theme.vars?.palette.table.pinShadow} inset`
-            : isFirstRightPinnedColumn
-              ? `4px 0 4px -4px ${theme.vars?.palette.table.pinShadow} inset`
-              : undefined,
-        left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
-        right:
-            isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
-        opacity: isPinned ? 0.98 : 1,
-        position: isPinned ? 'sticky' : 'relative',
-        zIndex,
-    });
-};
-
 const getTypeIcon = (type: string | undefined) => {
     if (!type) {
         return null;
@@ -272,6 +244,8 @@ type HighlightedCells = {
     [columnId: string]: number[];
 };
 
+type PinningStyle = (theme: Theme) => React.CSSProperties;
+
 const DatasetHeaderCell: React.FC<{
     column: IColumn<ITableRow, unknown>;
     header: IHeader<ITableRow, unknown>;
@@ -290,6 +264,7 @@ const DatasetHeaderCell: React.FC<{
     sorting: ISortingState;
     table: ITable<ITableRow>;
     usePinningStyles?: boolean;
+    pinningStyle?: PinningStyle;
 }> = ({
     column,
     header,
@@ -303,17 +278,16 @@ const DatasetHeaderCell: React.FC<{
     sorting,
     table,
     usePinningStyles = false,
+    pinningStyle = undefined,
 }) => {
     const isRowNumber = column.id === '#';
     const isSorted = sorting.find((sort) => sort.id === header.id);
 
-    const headerCellSx: SxProps<Theme> = [
+    const headerCellSx = [
         styles.tableHeaderCell,
         { width: header.getSize() },
         isRowNumber ? styles.headerRowNumberCell : { cursor: 'pointer' },
-        usePinningStyles
-            ? getCommonPinningStyles(column, 'table.header', 4)
-            : null,
+        usePinningStyles ? pinningStyle || null : null,
         settings.denseHeader ? { height: '30px' } : null,
     ];
 
@@ -428,6 +402,7 @@ const DatasetBodyCell: React.FC<{
     visibleColumns: IColumn<ITableRow, unknown>[];
     settings: TableSettings;
     usePinningStyles?: boolean;
+    pinningStyle?: PinningStyle;
 }> = ({
     annotatedCells,
     cell,
@@ -441,6 +416,7 @@ const DatasetBodyCell: React.FC<{
     visibleColumns,
     settings,
     usePinningStyles = false,
+    pinningStyle = undefined,
 }) => {
     const isHighlighted =
         highlightedCells[cell.column.id]?.includes(rowIndex) || false;
@@ -458,19 +434,13 @@ const DatasetBodyCell: React.FC<{
     const isRowNumber = cell.column.id === '#';
     const isAnnotated = !!annotation;
 
-    const cellStyle: SxProps<Theme> = [
+    const cellStyle = [
         settings.dynamicRowHeight
             ? styles.tableCellDynamic
             : styles.tableCellFixed,
         { width: cell.column.getSize() },
         isRowNumber ? styles.rowNumberCell : null,
-        usePinningStyles
-            ? getCommonPinningStyles(
-                  cell.column,
-                  isRowNumber ? 'table.rowNumber' : 'background.paper',
-                  3,
-              )
-            : null,
+        usePinningStyles ? pinningStyle || null : null,
         isRowNumber && rowAnnotation
             ? styles.annotatedRowCell
             : isAnnotated && isHighlighted
@@ -560,6 +530,8 @@ const DatasetViewUI: React.FC<{
     ) => void;
     filteredColumns?: string[];
     containerStyle?: React.CSSProperties;
+    headerPinningStyles?: Record<string, PinningStyle>;
+    bodyPinningStyles?: Record<string, PinningStyle>;
     annotatedCells?: Map<
         string,
         { text: string | React.ReactElement; color: string }
@@ -589,6 +561,8 @@ const DatasetViewUI: React.FC<{
     handleContextMenu = (_event, _columnId, _value, _isHeader = false) => {},
     filteredColumns = [],
     containerStyle = undefined,
+    headerPinningStyles = {},
+    bodyPinningStyles = {},
     annotatedCells = null,
 }) => {
     return (
@@ -628,6 +602,9 @@ const DatasetViewUI: React.FC<{
                                         sorting={sorting}
                                         table={table}
                                         usePinningStyles
+                                        pinningStyle={
+                                            headerPinningStyles[column.id]
+                                        }
                                     />
                                 );
                             })}
@@ -663,6 +640,9 @@ const DatasetViewUI: React.FC<{
                                         settings={settings}
                                         sorting={sorting}
                                         table={table}
+                                        pinningStyle={
+                                            headerPinningStyles[column.id]
+                                        }
                                     />
                                 );
                             })}
@@ -747,6 +727,11 @@ const DatasetViewUI: React.FC<{
                                                 rowIndex={virtualRow.index}
                                                 settings={settings}
                                                 usePinningStyles
+                                                pinningStyle={
+                                                    bodyPinningStyles[
+                                                        cell.column.id
+                                                    ]
+                                                }
                                             />
                                         );
                                     })}
