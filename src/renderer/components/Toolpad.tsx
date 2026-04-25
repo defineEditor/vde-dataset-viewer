@@ -91,8 +91,8 @@ const styles = {
         ml: 1,
         fontSize: 16,
         fontWeight: 700,
-        color: theme.palette.primary.main,
-        background: theme.appTheme.gradients.logo,
+        color: 'grey.700',
+        background: theme.vars?.palette.gradients.logo,
     }),
     drawerList: {
         py: 0,
@@ -197,6 +197,9 @@ const styles = {
         mt: 1,
         mx: 1,
         borderWidth: '0 0 2px',
+    },
+    menuIcon: {
+        color: 'grey.600',
     },
 };
 
@@ -388,7 +391,11 @@ const Toolpad: React.FC<ToolpadProps> = ({
                             onClick={handleToggleNavigation}
                             size="small"
                         >
-                            {appBarExpanded ? <MenuOpenIcon /> : <MenuIcon />}
+                            {appBarExpanded ? (
+                                <MenuOpenIcon sx={styles.menuIcon} />
+                            ) : (
+                                <MenuIcon sx={styles.menuIcon} />
+                            )}
                         </IconButton>
                     </Tooltip>
                     <Box sx={styles.titleContainer}>{titleContent}</Box>

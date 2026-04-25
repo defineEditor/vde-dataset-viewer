@@ -24,7 +24,7 @@ const styles = {
     },
     tabs: (theme: Theme) => ({
         width: '100%',
-        background: theme.appTheme.gradients.tabStrip,
+        background: theme.vars?.palette.gradients.tabStrip,
         textTransform: 'none',
     }),
     fullHeight: {

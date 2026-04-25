@@ -25,7 +25,7 @@ const styles = {
         margin: '0 auto',
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: 'grey.100',
+        backgroundColor: 'background.paper',
     },
     missingValidator: {
         p: 2,
@@ -34,7 +34,7 @@ const styles = {
         margin: '0 auto',
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: 'grey.100',
+        backgroundColor: 'background.paper',
         alignItems: 'center',
         justifyContent: 'center',
         fontSize: '1.2rem',
@@ -58,7 +58,7 @@ const styles = {
     },
     tabs: (theme: Theme) => ({
         width: '100%',
-        background: theme.appTheme.gradients.tabStrip,
+        background: theme.vars?.palette.gradients.tabStrip,
         textTransform: 'none',
     }),
     actions: {
@@ -66,9 +66,7 @@ const styles = {
         justifyContent: 'flex-end',
         mt: 2,
         p: 2,
-        backgroundColor: 'grey.100',
-        borderTop: '1px solid',
-        borderColor: 'divider',
+        backgroundColor: 'background.paper',
     },
 };
 

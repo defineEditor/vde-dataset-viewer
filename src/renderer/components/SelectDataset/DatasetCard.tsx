@@ -13,16 +13,15 @@ import AppContext from 'renderer/utils/AppContext';
 import { ApiOpenedFileWithMetadata } from 'interfaces/api';
 
 const styles = {
-    card: (theme) => ({
+    card: {
         width: 200,
         height: 150,
         backgroundColor: 'grey.200',
-        transition: 'background-color 0.3s',
         '&:hover': {
-            backgroundColor: `${theme.palette.primary.main}10`,
+            backgroundColor: 'action.hover',
         },
         position: 'relative',
-    }),
+    },
     label: {
         color: 'text.secondary',
         overflow: 'hidden',

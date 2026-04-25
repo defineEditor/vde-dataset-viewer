@@ -34,8 +34,9 @@ const styles = {
     container: {
         p: 2,
         height: '100%',
-        backgroundColor: 'grey.100',
+        backgroundColor: 'background.paper',
         overflowY: 'auto',
+        userSelect: 'none',
     },
     formatSelect: {
         minWidth: 210,

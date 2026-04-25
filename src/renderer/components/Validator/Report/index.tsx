@@ -40,14 +40,14 @@ const styles = {
     },
     tabs: (theme: Theme) => ({
         width: '100%',
-        background: theme.appTheme.gradients.tabStrip,
+        background: theme.vars?.palette.gradients.tabStrip,
         textTransform: 'none',
     }),
     root: {
         display: 'flex',
         flex: '1 1 auto',
         px: 0,
-        backgroundColor: 'grey.300',
+        backgroundColor: 'background.paper',
         height: '100%',
         justifyContent: 'flex-start',
     },

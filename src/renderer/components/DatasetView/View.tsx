@@ -12,7 +12,8 @@ import {
     IconButton,
     Tooltip,
 } from '@mui/material';
-import { Theme, useTheme } from '@mui/material/styles';
+import { SxProps, Theme } from '@mui/material/styles';
+import { SystemStyleObject } from '@mui/system';
 import {
     Cell as ICell,
     flexRender,
@@ -65,13 +66,13 @@ const getLoadingStyle = (settings: TableSettings): React.CSSProperties => {
 };
 
 const styles = {
-    header: (theme: Theme) => ({
-        backgroundColor: theme.appTheme.table.header,
+    header: {
+        backgroundColor: 'table.header',
         display: 'grid',
         position: 'sticky',
         top: 0,
         zIndex: 1,
-    }),
+    },
     headerColumn: {
         display: 'flex',
         width: '100%',
@@ -92,15 +93,15 @@ const styles = {
     virtualPadding: {
         display: 'flex',
     },
-    tableHeaderCell: (theme: Theme) => ({
+    tableHeaderCell: {
         padding: 0,
         fontFamily: 'Roboto Mono',
         display: 'flex',
         position: 'relative',
         justifyContent: 'center',
         width: '100%',
-        backgroundColor: theme.appTheme.table.header,
-    }),
+        backgroundColor: 'table.header',
+    },
     tableHeaderLabel: {
         width: '100%',
         textAlign: 'center',
@@ -131,13 +132,13 @@ const styles = {
         textOverflow: 'ellipsis',
         padding: 1,
     },
-    resizer: (theme: Theme) => ({
+    resizer: {
         top: 0,
         position: 'absolute',
         height: '100%',
         right: 0,
         width: '3px',
-        background: theme.appTheme.table.resizeHandle,
+        backgroundColor: 'table.resizeHandle',
         cursor: 'col-resize',
         userSelect: 'none',
         touchAction: 'none',
@@ -146,33 +147,36 @@ const styles = {
             backgroundColor: 'primary.light',
             width: '5px',
         },
-    }),
-    highlightedCell: (theme: Theme) => ({
-        backgroundColor: theme.appTheme.table.highlightedCell,
-    }),
-    annotatedCell: (theme: Theme) => ({
-        backgroundColor: theme.appTheme.table.annotatedCell,
-        border: `1px solid ${theme.appTheme.table.annotatedBorder}`,
-    }),
-    annotatedRowCell: (theme: Theme) => ({
-        backgroundColor: theme.appTheme.table.annotatedCell,
-        border: `1px solid ${theme.appTheme.table.annotatedBorder}`,
-    }),
-    highlightedAnnotatedCell: (theme: Theme) => ({
-        backgroundColor: theme.appTheme.table.highlightedAnnotatedCell,
-        border: `1px solid ${theme.appTheme.table.highlightedAnnotatedBorder}`,
-    }),
-    headerRowNumberCell: (theme: Theme) => ({
+    },
+    highlightedCell: {
+        backgroundColor: 'table.highlightedCell',
+    },
+    annotatedCell: {
+        backgroundColor: 'table.annotatedCell',
+        border: '1px solid',
+        borderColor: 'table.annotatedBorder',
+    },
+    annotatedRowCell: {
+        backgroundColor: 'table.annotatedCell',
+        border: '1px solid',
+        borderColor: 'table.annotatedBorder',
+    },
+    highlightedAnnotatedCell: {
+        backgroundColor: 'table.highlightedAnnotatedCell',
+        border: '1px solid',
+        borderColor: 'table.highlightedAnnotatedBorder',
+    },
+    headerRowNumberCell: {
         justifyContent: 'center',
         fontSize: 'small',
-        backgroundColor: theme.appTheme.table.rowNumber,
+        backgroundColor: 'table.rowNumber',
         position: 'sticky',
         left: 0,
         zIndex: 2,
         maxHeight: '100%',
-    }),
-    rowNumberCell: (theme: Theme) => ({
-        backgroundColor: theme.appTheme.table.rowNumber,
+    },
+    rowNumberCell: {
+        backgroundColor: 'table.rowNumber',
         fontSize: 'small',
         overflow: 'visible',
         padding: 0.5,
@@ -182,7 +186,7 @@ const styles = {
         zIndex: 2,
         maxHeight: '100%',
         textAlign: 'center',
-    }),
+    },
     loading: {},
     sponsored: {
         marginTop: '10px',
@@ -219,21 +223,20 @@ const styles = {
 const getCommonPinningStyles = (
     column: IColumn<ITableRow, unknown>,
     backgroundColor: string,
-    pinShadowColor: string,
     zIndex = 1,
-): React.CSSProperties => {
+): ((theme: Theme) => SystemStyleObject<Theme>) => {
     const isPinned = column.getIsPinned();
     const isLastLeftPinnedColumn =
         isPinned === 'left' && column.getIsLastColumn('left');
     const isFirstRightPinnedColumn =
         isPinned === 'right' && column.getIsFirstColumn('right');
 
-    return {
+    return (theme) => ({
         backgroundColor,
         boxShadow: isLastLeftPinnedColumn
-            ? `-4px 0 4px -4px ${pinShadowColor} inset`
+            ? `-4px 0 4px -4px ${theme.vars?.palette.table.pinShadow} inset`
             : isFirstRightPinnedColumn
-              ? `4px 0 4px -4px ${pinShadowColor} inset`
+              ? `4px 0 4px -4px ${theme.vars?.palette.table.pinShadow} inset`
               : undefined,
         left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
         right:
@@ -241,7 +244,7 @@ const getCommonPinningStyles = (
         opacity: isPinned ? 0.98 : 1,
         position: isPinned ? 'sticky' : 'relative',
         zIndex,
-    };
+    });
 };
 
 const getTypeIcon = (type: string | undefined) => {
@@ -301,26 +304,18 @@ const DatasetHeaderCell: React.FC<{
     table,
     usePinningStyles = false,
 }) => {
-    const theme = useTheme();
     const isRowNumber = column.id === '#';
     const isSorted = sorting.find((sort) => sort.id === header.id);
 
-    const headerCellSx = {
-        ...styles.tableHeaderCell(theme),
-        width: header.getSize(),
-        ...(isRowNumber
-            ? styles.headerRowNumberCell(theme)
-            : { cursor: 'pointer' }),
-        ...(usePinningStyles
-            ? getCommonPinningStyles(
-                  column,
-                  theme.appTheme.table.header,
-                  theme.appTheme.table.pinShadow,
-                  4,
-              )
-            : {}),
-        ...(settings.denseHeader ? { height: '30px' } : {}),
-    };
+    const headerCellSx: SxProps<Theme> = [
+        styles.tableHeaderCell,
+        { width: header.getSize() },
+        isRowNumber ? styles.headerRowNumberCell : { cursor: 'pointer' },
+        usePinningStyles
+            ? getCommonPinningStyles(column, 'table.header', 4)
+            : null,
+        settings.denseHeader ? { height: '30px' } : null,
+    ];
 
     return (
         <TableCell
@@ -447,7 +442,6 @@ const DatasetBodyCell: React.FC<{
     settings,
     usePinningStyles = false,
 }) => {
-    const theme = useTheme();
     const isHighlighted =
         highlightedCells[cell.column.id]?.includes(rowIndex) || false;
 
@@ -464,52 +458,30 @@ const DatasetBodyCell: React.FC<{
     const isRowNumber = cell.column.id === '#';
     const isAnnotated = !!annotation;
 
-    let cellStyle = {
-        ...(settings.dynamicRowHeight
+    const cellStyle: SxProps<Theme> = [
+        settings.dynamicRowHeight
             ? styles.tableCellDynamic
-            : styles.tableCellFixed),
-        width: cell.column.getSize(),
-        ...(isRowNumber ? styles.rowNumberCell(theme) : {}),
-        ...(usePinningStyles
+            : styles.tableCellFixed,
+        { width: cell.column.getSize() },
+        isRowNumber ? styles.rowNumberCell : null,
+        usePinningStyles
             ? getCommonPinningStyles(
                   cell.column,
-                  isRowNumber
-                      ? theme.appTheme.table.rowNumber
-                      : theme.palette.background.paper,
-                  theme.appTheme.table.pinShadow,
+                  isRowNumber ? 'table.rowNumber' : 'background.paper',
                   3,
               )
-            : {}),
-    } as React.CSSProperties;
-
-    if (isRowNumber && rowAnnotation) {
-        cellStyle = {
-            ...cellStyle,
-            ...styles.annotatedRowCell(theme),
-        };
-    } else if (isAnnotated && isHighlighted) {
-        cellStyle = {
-            ...cellStyle,
-            ...styles.highlightedAnnotatedCell(theme),
-        };
-    } else if (isAnnotated) {
-        cellStyle = {
-            ...cellStyle,
-            ...styles.annotatedCell(theme),
-        };
-    } else if (isHighlighted) {
-        cellStyle = {
-            ...cellStyle,
-            ...styles.highlightedCell(theme),
-        };
-    }
-
-    if (cell.column.columnDef.meta?.style) {
-        cellStyle = {
-            ...cellStyle,
-            ...cell.column.columnDef.meta.style,
-        };
-    }
+            : null,
+        isRowNumber && rowAnnotation
+            ? styles.annotatedRowCell
+            : isAnnotated && isHighlighted
+              ? styles.highlightedAnnotatedCell
+              : isAnnotated
+                ? styles.annotatedCell
+                : isHighlighted
+                  ? styles.highlightedCell
+                  : null,
+        cell.column.columnDef.meta?.style || null,
+    ];
 
     const renderedCell = flexRender(
         cell.column.columnDef.cell,

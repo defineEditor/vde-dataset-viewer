@@ -2,24 +2,6 @@
 
 /* Color Variables */
 .define-xml-stylesheet {
-  --color-menu-body-bg: white;
-  --color-menu-body-fg: black;
-  --color-hmenu-text: dodgerblue;
-  --color-hmenu-bullet: darkgray;
-  --color-caption: dimgray;
-  --color-table-bg: whitesmoke;
-  --color-tr-header-back: cornflowerblue;
-  --color-tr-header: white;
-  --color-tablerow-odd: white;
-  --color-tablerow-even: whitesmoke;
-  --color-tr-vlm-back: lightgray;
-  --color-border: black;
-  --color-error: black;
-  --color-warning: black;
-  --color-link: blue;
-  --color-link-hover: orange;
-  --color-link-visited: rebeccapurple;
-  --color-shadow: gray;
   background-color: var(--color-menu-body-bg);
   font-family: Verdana, Arial, Helvetica, sans-serif;
   font-size: 62.5%;
@@ -258,7 +240,7 @@
   width: 95%;
   padding: 5px 0px;
   font-size: 0.8em;
-  color: black;
+  color: var(--color-caption);
 }
 
 .define-xml-stylesheet dl.study-metadata dt {
@@ -280,7 +262,7 @@
 /* Description text */
 .define-xml-stylesheet .description {
   margin-left: 0px;
-  color: black;
+  color: var(--color-caption);
   font-weight: normal;
   font-size: 0.85em;
 }

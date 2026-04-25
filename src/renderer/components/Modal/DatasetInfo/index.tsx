@@ -37,7 +37,7 @@ const styles = {
         flexGrow: 1,
     },
     tab: (theme: Theme) => ({
-        background: theme.appTheme.gradients.tabStrip,
+        background: theme.vars?.palette.gradients.tabStrip,
     }),
     metadataPanel: {
         height: '100%',

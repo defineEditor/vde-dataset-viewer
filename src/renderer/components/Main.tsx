@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import SelectDataset from 'renderer/components/SelectDataset';
+import { useColorScheme } from '@mui/material/styles';
 import Api from 'renderer/components/Api';
 import AppContext from 'renderer/utils/AppContext';
 import ViewFile from 'renderer/components/ViewDataset';
@@ -68,6 +69,16 @@ const Main: React.FC = () => {
     const isDataLoaded = useAppSelector(
         (state) => state.ui.currentFileId !== '',
     );
+
+    // Control color theme
+    const { setMode } = useColorScheme();
+
+    const colorMode = useAppSelector((state) => state.settings.other.colorMode);
+    useEffect(() => {
+        if (colorMode) {
+            setMode(colorMode);
+        }
+    }, [colorMode, setMode]);
 
     // Add shortcuts for routes
     useEffect(() => {

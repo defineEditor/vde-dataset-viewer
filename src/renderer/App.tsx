@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
-import { createAppTheme, resolveThemeMode } from 'renderer/utils/theme';
+import { createAppTheme } from 'renderer/utils/theme';
 import Main from 'renderer/components/Main';
 import Snackbar from 'renderer/components/Snackbar';
 import Modal from 'renderer/components/Modal';
-import { CssBaseline, useMediaQuery } from '@mui/material';
+import { CssBaseline } from '@mui/material';
 import { Provider } from 'react-redux';
 import store from 'renderer/redux/store';
 import AppContext from 'renderer/utils/AppContext';
@@ -62,26 +62,15 @@ const AppWithContext: React.FC = () => {
         (state) => state.settings.other.checkForUpdates,
     );
 
-    const colorMode = useAppSelector((state) => state.settings.other.colorMode);
-
     const disableUiAnimation = useAppSelector(
         (state) => state.settings.other.disableUiAnimation,
     );
 
-    const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)', {
-        noSsr: true,
-    });
-
     const saveStoreListenerRegistered = React.useRef(false);
 
-    const selectedTheme = React.useMemo(
-        () =>
-            createAppTheme({
-                mode: resolveThemeMode(colorMode, prefersDarkMode),
-                disableAnimation: disableUiAnimation,
-            }),
-        [colorMode, disableUiAnimation, prefersDarkMode],
-    );
+    const theme = createAppTheme({
+        disableAnimation: disableUiAnimation,
+    });
 
     useEffect(() => {
         // At app startup load the saved state
@@ -121,7 +110,7 @@ const AppWithContext: React.FC = () => {
     }, [apiService]);
 
     return (
-        <ThemeProvider theme={selectedTheme}>
+        <ThemeProvider theme={theme}>
             <CssBaseline />
             <ErrorBoundary>
                 <DragAndDrop>

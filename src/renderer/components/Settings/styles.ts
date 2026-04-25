@@ -39,7 +39,7 @@ export const styles = {
         alignContent: 'center',
     },
     tabs: (theme: Theme) => ({
-        background: theme.appTheme.gradients.tabStrip,
+        background: theme.vars?.palette.gradients.tabStrip,
         textTransform: 'none',
     }),
     tabPanel: {

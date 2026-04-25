@@ -48,7 +48,7 @@ const styles = {
         flexGrow: 1,
     },
     tab: (theme: Theme) => ({
-        background: theme.appTheme.gradients.tabStrip,
+        background: theme.vars?.palette.gradients.tabStrip,
     }),
     tabPanel: {
         height: 'calc(100% - 48px)', // Adjust height to account for tab header

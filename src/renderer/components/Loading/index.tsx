@@ -21,6 +21,7 @@ const getRandomLoadingComponent = () => {
 const Loading: React.FC = () => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const theme = useTheme();
+    const palette = theme.vars?.palette || theme.palette;
     const loadingAnimation = useAppSelector(
         (state) => state.settings.other.loadingAnimation,
     );
@@ -38,9 +39,8 @@ const Loading: React.FC = () => {
                 iframeDoc.body.style.justifyContent = 'center';
                 iframeDoc.body.style.alignItems = 'center';
                 iframeDoc.body.style.height = '100vh';
-                iframeDoc.body.style.backgroundColor =
-                    theme.palette.background.paper;
-                iframeDoc.body.style.color = theme.palette.text.primary;
+                iframeDoc.body.style.backgroundColor = palette.background.paper;
+                iframeDoc.body.style.color = palette.text.primary;
                 iframeDoc.body.style.overflow = 'hidden'; // Hide scrollbars
                 iframeDoc.body.appendChild(root);
                 const reactRoot = createRoot(root);
@@ -68,7 +68,12 @@ const Loading: React.FC = () => {
                 }
             }
         }
-    }, [loadingAnimation, theme]);
+    }, [
+        loadingAnimation,
+        theme,
+        palette.background.paper,
+        palette.text.primary,
+    ]);
 
     if (loadingAnimation === 'normal') {
         return (

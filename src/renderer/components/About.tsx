@@ -17,7 +17,7 @@ const styles = {
     root: {
         width: '100%',
         height: '100%',
-        backgroundColor: 'grey.100',
+        backgroundColor: 'background.paper',
         justifyContent: 'center',
     },
     main: {
@@ -30,13 +30,11 @@ const styles = {
         width: '95%',
         justifyContent: 'center',
     },
-    highlights: {
-        backgroundColor: 'background.paper',
-    },
     card: {
         width: '320px',
         display: 'flex',
         verticalAlign: 'top',
+        backgroundColor: 'grey.100',
     },
     cardContent: {
         flex: '1 1 auto',

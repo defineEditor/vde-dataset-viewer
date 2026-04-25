@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { alpha, useTheme } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
 import {
     DefineXmlContent,
     DefineStylesheetSection as Section,
@@ -31,6 +31,7 @@ const StylesheetLayout: React.FC<StylesheetLayoutProps> = ({
     onOpenFile,
 }) => {
     const theme = useTheme();
+    const palette = theme.vars?.palette || theme.palette;
     const dispatch = useAppDispatch();
     const currentFileId = useAppSelector(
         (state) => state.ui.define.currentFileId,
@@ -111,24 +112,24 @@ const StylesheetLayout: React.FC<StylesheetLayoutProps> = ({
     };
 
     const stylesheetVariables = {
-        '--color-menu-body-bg': theme.palette.background.paper,
-        '--color-menu-body-fg': theme.palette.text.primary,
-        '--color-hmenu-text': theme.palette.primary.main,
-        '--color-hmenu-bullet': theme.palette.text.disabled,
-        '--color-caption': theme.palette.text.secondary,
-        '--color-table-bg': theme.appTheme.surfaces.subtle,
-        '--color-tr-header-back': theme.palette.primary.main,
-        '--color-tr-header': theme.appTheme.text.onPrimary,
-        '--color-tablerow-odd': theme.palette.background.paper,
-        '--color-tablerow-even': theme.appTheme.surfaces.subtle,
-        '--color-tr-vlm-back': theme.appTheme.surfaces.chrome,
-        '--color-border': alpha(theme.palette.text.primary, 0.3),
-        '--color-error': theme.palette.error.main,
-        '--color-warning': theme.palette.warning.main,
-        '--color-link': theme.palette.primary.main,
-        '--color-link-hover': theme.palette.warning.dark,
-        '--color-link-visited': theme.palette.secondary.dark,
-        '--color-shadow': alpha(theme.palette.common.black, 0.3),
+        '--color-menu-body-bg': palette.background.paper,
+        '--color-menu-body-fg': palette.text.primary,
+        '--color-hmenu-text': palette.primary.main,
+        '--color-hmenu-bullet': palette.text.disabled,
+        '--color-caption': palette.text.secondary,
+        '--color-table-bg': palette.background.subtle,
+        '--color-tr-header-back': palette.primary.main,
+        '--color-tr-header': palette.primary.contrastText,
+        '--color-tablerow-odd': palette.background.paper,
+        '--color-tablerow-even': palette.background.subtle,
+        '--color-tr-vlm-back': palette.background.chrome,
+        '--color-border': theme.alpha(palette.text.primary, 0.3),
+        '--color-error': palette.error.main,
+        '--color-warning': palette.warning.main,
+        '--color-link': palette.primary.main,
+        '--color-link-hover': palette.warning.dark,
+        '--color-link-visited': palette.secondary.dark,
+        '--color-shadow': theme.alpha(palette.common.black, 0.3),
     } as React.CSSProperties;
 
     return (
@@ -154,9 +155,7 @@ const StylesheetLayout: React.FC<StylesheetLayoutProps> = ({
                     maxWidth: '300px',
                     height: '100%',
                     overflow: 'auto',
-                    backgroundColor: theme.palette.background.paper,
-                    color: theme.palette.text.primary,
-                    borderRight: `1px solid ${theme.palette.divider}`,
+                    borderRight: `1px solid ${palette.divider}`,
                     textAlign: 'left',
                     whiteSpace: 'nowrap',
                     flexShrink: 0,
@@ -178,8 +177,6 @@ const StylesheetLayout: React.FC<StylesheetLayoutProps> = ({
                 style={{
                     flexGrow: 1,
                     padding: '0 20px',
-                    backgroundColor: theme.palette.background.paper,
-                    color: theme.palette.text.primary,
                     overflowX: 'auto',
                     overflowY: 'auto',
                     height: '100%',

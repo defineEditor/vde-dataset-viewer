@@ -1,22 +1,35 @@
 import React, { useCallback } from 'react';
 import { Tooltip, IconButton, Stack } from '@mui/material';
 import ZoomInMapIcon from '@mui/icons-material/ZoomInMap';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness6Icon from '@mui/icons-material/Brightness6';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
 import { setZoomLevel } from 'renderer/redux/slices/ui';
+import { toggleColorMode } from 'renderer/redux/slices/settings';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 
 const styles = {
     main: {
         width: 'auto',
         justifyContent: 'flex-start',
+        pr: 1,
+    },
+    iconColor: {
+        color: 'grey.600',
     },
 };
 
 const ToolbarActions: React.FC = () => {
     const dispatch = useAppDispatch();
     const currentZoomLevel = useAppSelector((state) => state.ui.zoomLevel);
+    const colorMode = useAppSelector((state) => state.settings.other.colorMode);
 
     const handleResetZoom = useCallback(() => {
         dispatch(setZoomLevel(0));
+    }, [dispatch]);
+
+    const handleToggleTheme = useCallback(() => {
+        dispatch(toggleColorMode());
     }, [dispatch]);
 
     return (
@@ -36,6 +49,17 @@ const ToolbarActions: React.FC = () => {
                     </IconButton>
                 </Tooltip>
             )}
+            <Tooltip title="Change Color Theme" enterDelay={1000}>
+                <IconButton onClick={handleToggleTheme}>
+                    {colorMode === 'dark' ? (
+                        <Brightness7Icon sx={styles.iconColor} />
+                    ) : colorMode === 'system' ? (
+                        <Brightness6Icon sx={styles.iconColor} />
+                    ) : (
+                        <Brightness4Icon sx={styles.iconColor} />
+                    )}
+                </IconButton>
+            </Tooltip>
         </Stack>
     );
 };

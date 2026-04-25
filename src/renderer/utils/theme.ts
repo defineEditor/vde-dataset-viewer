@@ -1,17 +1,12 @@
 import {
     alpha,
     createTheme,
-    darken,
-    lighten,
+    extendTheme,
     Theme as MuiTheme,
     ThemeOptions as MuiThemeOptions,
 } from '@mui/material/styles';
-import { amber, blue, grey, red } from '@mui/material/colors';
-import {
-    ResolvedThemeMode,
-    ThemeDensity,
-    ThemeModePreference,
-} from 'interfaces/theme';
+import { grey } from '@mui/material/colors';
+import { ResolvedThemeMode, ThemeDensity } from 'interfaces/theme';
 
 interface DensityTokens {
     mode: ThemeDensity;
@@ -20,17 +15,49 @@ interface DensityTokens {
     toolbarHeight: number;
 }
 
-export interface AppThemeTokens {
-    density: DensityTokens;
+interface ThemeGradients {
+    tabStrip: string;
+    logo: string;
+}
+
+interface ThemeTablePalette {
+    header: string;
+    rowNumber: string;
+    highlightedCell: string;
+    annotatedCell: string;
+    annotatedBorder: string;
+    highlightedAnnotatedCell: string;
+    highlightedAnnotatedBorder: string;
+    pinShadow: string;
+    resizeHandle: string;
+}
+
+declare module '@mui/material/styles/createPalette' {
+    interface TypeBackground {
+        subtle: string;
+        chrome: string;
+    }
+
+    interface TypeText {
+        muted: string;
+    }
+
+    interface Palette {
+        gradients: ThemeGradients;
+        table: ThemeTablePalette;
+    }
+
+    interface PaletteOptions {
+        gradients?: Partial<ThemeGradients>;
+        table?: Partial<ThemeTablePalette>;
+    }
+}
+
+interface ThemePaletteExtras {
+    grey: Record<string, string>;
     gradients: {
         tabStrip: string;
         logo: string;
-        dragFollower: string;
-    };
-    surfaces: {
-        subtle: string;
-        chrome: string;
-        raised: string;
     };
     table: {
         header: string;
@@ -45,23 +72,16 @@ export interface AppThemeTokens {
     };
     text: {
         muted: string;
-        onPrimary: string;
+    };
+    background: {
+        subtle: string;
+        chrome: string;
     };
 }
 
-declare module '@mui/material/styles' {
-    interface Theme {
-        appTheme: AppThemeTokens;
-    }
-
-    interface ThemeOptions {
-        appTheme?: AppThemeTokens;
-    }
-}
-
 const DENSITY_TOKENS: Record<ThemeDensity, DensityTokens> = {
-    comfortable: {
-        mode: 'comfortable',
+    normal: {
+        mode: 'normal',
         spacingUnit: 8,
         tableHeaderHeight: 40,
         toolbarHeight: 64,
@@ -74,116 +94,45 @@ const DENSITY_TOKENS: Record<ThemeDensity, DensityTokens> = {
     },
 };
 
-const buildPalette = (
-    mode: ResolvedThemeMode,
-): NonNullable<MuiThemeOptions['palette']> => {
-    if (mode === 'dark') {
-        return {
-            mode,
-            primary: {
-                light: blue[200],
-                main: blue[300],
-                dark: blue[100],
-                contrastText: '#081a2c',
-            },
-            secondary: {
-                light: red[200],
-                main: red[300],
-                dark: red[100],
-                contrastText: '#2a0808',
-            },
-            info: {
-                light: blue[100],
-                main: blue[200],
-                dark: blue[300],
-            },
-            warning: {
-                light: amber[200],
-                main: amber[300],
-                dark: amber[100],
-            },
-            background: {
-                default: '#0f1722',
-                paper: '#182130',
-            },
-            text: {
-                primary: '#edf2f7',
-                secondary: 'rgba(237, 242, 247, 0.72)',
-                disabled: 'rgba(237, 242, 247, 0.42)',
-            },
-            divider: 'rgba(237, 242, 247, 0.12)',
-        };
-    }
-
-    return {
-        mode,
-        primary: {
-            light: blue[500],
-            main: blue[700],
-            dark: blue[900],
-            contrastText: '#ffffff',
-        },
-        secondary: {
-            light: red[500],
-            main: red[400],
-            dark: red[900],
-            contrastText: '#ffffff',
-        },
-        info: {
-            light: blue[200],
-            main: blue[400],
-            dark: blue[700],
-        },
-        warning: {
-            light: amber[200],
-            main: amber[500],
-            dark: amber[800],
-        },
-        background: {
-            default: grey[200],
-            paper: '#ffffff',
-        },
-        text: {
-            primary: '#222222',
-            secondary: 'rgba(34, 34, 34, 0.72)',
-            disabled: 'rgba(34, 34, 34, 0.4)',
-        },
-        divider: 'rgba(15, 23, 34, 0.12)',
-    };
-};
-
-const buildThemeTokens = (
+const buildPaletteExtras = (
     theme: MuiTheme,
     mode: ResolvedThemeMode,
-    density: DensityTokens,
-): AppThemeTokens => {
-    const subtleSurface =
-        mode === 'dark'
-            ? lighten(theme.palette.background.paper, 0.04)
-            : '#f4f4f4';
-    const chromeSurface =
-        mode === 'dark'
-            ? darken(theme.palette.background.default, 0.08)
-            : grey[100];
+): ThemePaletteExtras => {
+    // Invert grey scale for dark mode
+    const themeGrey = {} as Record<string, string>;
+    if (mode === 'dark') {
+        themeGrey[50] = grey[900];
+        themeGrey[100] = grey[800];
+        themeGrey[200] = grey[700];
+        themeGrey[300] = grey[600];
+        themeGrey[400] = grey[500];
+        themeGrey[500] = grey[400];
+        themeGrey[600] = grey[300];
+        themeGrey[700] = grey[200];
+        themeGrey[800] = grey[100];
+        themeGrey[900] = grey[50];
+        themeGrey.A100 = grey.A700;
+        themeGrey.A200 = grey.A400;
+        themeGrey.A400 = grey.A200;
+        themeGrey.A700 = grey.A100;
+    } else {
+        Object.assign(themeGrey, grey);
+    }
+
+    const subtleSurface = themeGrey[100];
+    const chromeSurface = themeGrey[200];
 
     return {
-        density,
+        grey: themeGrey,
         gradients: {
             tabStrip:
                 mode === 'dark'
-                    ? `radial-gradient(circle farthest-corner at bottom center, ${lighten(theme.palette.background.paper, 0.08)}, ${darken(theme.palette.background.default, 0.08)})`
-                    : 'radial-gradient(circle farthest-corner at bottom center,#eeeeee,#e5e4e4)',
+                    ? `radial-gradient(circle farthest-corner at bottom center, #263238, #37474f30)`
+                    : 'radial-gradient(circle farthest-corner at bottom center, #eeeeee, #e5e4e4)',
             logo:
                 mode === 'dark'
-                    ? `radial-gradient(circle farthest-corner at right, ${lighten(theme.palette.background.paper, 0.12)}, ${darken(theme.palette.background.default, 0.02)})`
+                    ? `radial-gradient(circle farthest-corner at right,#757575,#bdbdbd)`
                     : 'radial-gradient(circle farthest-corner at right,#eeeeee,#c4c4c4)',
-            dragFollower:
-                'radial-gradient(circle at 30% 30%, #ffeb3b, #ffc107, #ff9800)',
-        },
-        surfaces: {
-            subtle: subtleSurface,
-            chrome: chromeSurface,
-            raised: theme.palette.background.paper,
         },
         table: {
             header: subtleSurface,
@@ -221,7 +170,10 @@ const buildThemeTokens = (
         },
         text: {
             muted: alpha(theme.palette.text.primary, 0.55),
-            onPrimary: theme.palette.primary.contrastText,
+        },
+        background: {
+            subtle: subtleSurface,
+            chrome: chromeSurface,
         },
     };
 };
@@ -247,55 +199,50 @@ const buildComponents = (
 });
 
 export interface CreateAppThemeOptions {
-    mode: ResolvedThemeMode;
     density?: ThemeDensity;
     disableAnimation?: boolean;
 }
 
-export const resolveThemeMode = (
-    modePreference: ThemeModePreference,
-    prefersDarkMode: boolean,
-): ResolvedThemeMode => {
-    if (modePreference === 'system') {
-        return prefersDarkMode ? 'dark' : 'light';
-    }
-
-    return modePreference;
-};
-
 export const createAppTheme = ({
-    mode,
-    density = 'comfortable',
+    density = 'normal',
     disableAnimation = false,
 }: CreateAppThemeOptions) => {
     const densityTokens = DENSITY_TOKENS[density];
 
-    let theme = createTheme({
+    const baseTheme = createTheme({
+        cssVariables: {
+            colorSchemeSelector: 'class',
+        },
+        defaultColorScheme: 'light',
         spacing: densityTokens.spacingUnit,
         shape: {
             borderRadius: 8,
         },
-        palette: buildPalette(mode),
         components: buildComponents(disableAnimation),
         transitions: disableAnimation
             ? {
                   create: () => 'none',
               }
             : undefined,
+        colorSchemes: {
+            dark: true,
+        },
     });
 
-    theme = createTheme(theme, {
-        appTheme: buildThemeTokens(theme, mode, densityTokens),
+    return extendTheme(baseTheme, {
+        colorSchemes: {
+            light: {
+                palette: buildPaletteExtras(baseTheme, 'light'),
+            },
+            dark: {
+                palette: buildPaletteExtras(baseTheme, 'dark'),
+            },
+        },
     });
-
-    return theme;
 };
 
-export const theme = createAppTheme({
-    mode: 'light',
-});
+export const theme = createAppTheme({});
 
 export const themeWithoutAnimation = createAppTheme({
-    mode: 'light',
     disableAnimation: true,
 });

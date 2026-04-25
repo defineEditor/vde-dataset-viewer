@@ -17,16 +17,15 @@ import DialogTitle from '@mui/material/DialogTitle';
 import Button from '@mui/material/Button';
 
 const styles = {
-    card: (theme) => ({
+    card: {
         width: 200,
         height: 150,
         backgroundColor: 'grey.200',
-        transition: 'background-color 0.3s',
         '&:hover': {
-            backgroundColor: `${theme.palette.primary.main}10`,
+            backgroundColor: 'action.hover',
         },
         position: 'relative',
-    }),
+    },
     cardSelected: (theme) => ({
         width: 200,
         height: 150,

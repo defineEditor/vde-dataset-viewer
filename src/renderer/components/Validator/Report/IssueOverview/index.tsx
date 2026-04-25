@@ -39,7 +39,7 @@ const RotatingIcon = styled(
 const styles = {
     container: {
         p: 3,
-        backgroundColor: 'grey.300',
+        backgroundColor: 'background.paper',
         overflow: 'hidden',
     },
     controls: {

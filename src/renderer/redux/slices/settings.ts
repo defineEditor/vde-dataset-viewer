@@ -27,9 +27,14 @@ export const dataSlice = createSlice({
                 }
             });
         },
+        toggleColorMode: (state) => {
+            state.other.colorMode =
+                state.other.colorMode === 'dark' ? 'light' : 'dark';
+        },
     },
 });
 
-export const { resetSettings, setSettings } = dataSlice.actions;
+export const { resetSettings, setSettings, toggleColorMode } =
+    dataSlice.actions;
 
 export default dataSlice.reducer;
