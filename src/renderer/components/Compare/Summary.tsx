@@ -32,6 +32,7 @@ const styles = {
         flexWrap: 'wrap',
         justifyContent: 'space-around',
         alignItems: 'flex-start',
+        backgroundColor: 'background.paper',
     },
     section: {
         mb: 3,
@@ -77,6 +78,7 @@ const styles = {
         flex: 1,
         minWidth: '300px',
         overflow: 'hidden',
+        backgroundColor: 'grey.100',
     },
     columnSummary: {
         flex: 1,
@@ -85,12 +87,14 @@ const styles = {
         minWidth: '300px',
         overflow: 'auto',
         paddingBottom: '32px',
+        backgroundColor: 'grey.100',
     },
     settings: {
         mt: 2,
         p: 2,
         flex: 1,
         overflow: 'hidden',
+        backgroundColor: 'grey.100',
     },
     booleanIcon: {
         color: 'grey.700',

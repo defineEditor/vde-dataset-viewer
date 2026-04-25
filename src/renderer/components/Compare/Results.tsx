@@ -17,7 +17,7 @@ const styles = {
         display: 'flex',
         flex: '1 1 auto',
         px: 0,
-        backgroundColor: 'grey.100',
+        backgroundColor: 'background.paper',
         height: '100%',
         overflow: 'hidden',
         justifyContent: 'flex-start',
