@@ -27,7 +27,7 @@ import {
     ToggleButtonGroup,
     Tooltip,
 } from '@mui/material';
-import { useTheme, alpha, Theme } from '@mui/material/styles';
+import { useTheme, Theme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import SearchIcon from '@mui/icons-material/Search';
@@ -529,16 +529,18 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
                                                                             {
                                                                                 backgroundColor:
                                                                                     part.added
-                                                                                        ? alpha(
+                                                                                        ? theme.alpha(
                                                                                               theme
+                                                                                                  .vars!
                                                                                                   .palette
                                                                                                   .success
                                                                                                   .main,
                                                                                               0.32,
                                                                                           )
                                                                                         : part.removed
-                                                                                          ? alpha(
+                                                                                          ? theme.alpha(
                                                                                                 theme
+                                                                                                    .vars!
                                                                                                     .palette
                                                                                                     .error
                                                                                                     .main,

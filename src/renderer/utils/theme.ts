@@ -6,7 +6,11 @@ import {
     ThemeOptions as MuiThemeOptions,
 } from '@mui/material/styles';
 import { grey } from '@mui/material/colors';
-import { ResolvedThemeMode, ThemeDensity } from 'interfaces/theme';
+import {
+    ResolvedThemeMode,
+    ThemeDensity,
+    ThemePalette,
+} from 'interfaces/theme';
 
 interface DensityTokens {
     mode: ThemeDensity;
@@ -50,34 +54,14 @@ declare module '@mui/material/styles/createPalette' {
     interface PaletteOptions {
         gradients?: Partial<ThemeGradients>;
         table?: Partial<ThemeTablePalette>;
+        scrollbar?: {
+            thumb: string;
+            track: string;
+        };
     }
 }
 
-interface ThemePaletteExtras {
-    grey: Record<string, string>;
-    gradients: {
-        tabStrip: string;
-        logo: string;
-    };
-    table: {
-        header: string;
-        rowNumber: string;
-        highlightedCell: string;
-        annotatedCell: string;
-        annotatedBorder: string;
-        highlightedAnnotatedCell: string;
-        highlightedAnnotatedBorder: string;
-        pinShadow: string;
-        resizeHandle: string;
-    };
-    text: {
-        muted: string;
-    };
-    background: {
-        subtle: string;
-        chrome: string;
-    };
-}
+type AppPaletteOptions = NonNullable<MuiThemeOptions['palette']>;
 
 const DENSITY_TOKENS: Record<ThemeDensity, DensityTokens> = {
     normal: {
@@ -94,11 +78,7 @@ const DENSITY_TOKENS: Record<ThemeDensity, DensityTokens> = {
     },
 };
 
-const buildPaletteExtras = (
-    theme: MuiTheme,
-    mode: ResolvedThemeMode,
-): ThemePaletteExtras => {
-    // Invert grey scale for dark mode
+const buildDefaultGrey = (mode: ResolvedThemeMode): Record<string, string> => {
     const themeGrey = {} as Record<string, string>;
     if (mode === 'dark') {
         themeGrey[50] = grey[900];
@@ -115,9 +95,129 @@ const buildPaletteExtras = (
         themeGrey.A200 = grey.A400;
         themeGrey.A400 = grey.A200;
         themeGrey.A700 = grey.A100;
-    } else {
-        Object.assign(themeGrey, grey);
+        return themeGrey;
     }
+
+    Object.assign(themeGrey, grey);
+    return themeGrey;
+};
+
+const buildSolarizedGrey = (
+    mode: ResolvedThemeMode,
+): Record<string, string> => {
+    if (mode === 'dark') {
+        return {
+            50: '#002b36',
+            100: '#073642',
+            200: '#0f3b46',
+            300: '#184955',
+            400: '#35616d',
+            500: '#586e75',
+            600: '#657b83',
+            700: '#839496',
+            800: '#93a1a1',
+            900: '#eee8d5',
+            A100: '#2aa198',
+            A200: '#268bd2',
+            A400: '#6c71c4',
+            A700: '#859900',
+        };
+    }
+
+    return {
+        50: '#fdf6e3',
+        100: '#f5efdc',
+        200: '#eee8d5',
+        300: '#e3dcc8',
+        400: '#d0cab8',
+        500: '#b8b29f',
+        600: '#93a1a1',
+        700: '#839496',
+        800: '#657b83',
+        900: '#586e75',
+        A100: '#2aa198',
+        A200: '#268bd2',
+        A400: '#6c71c4',
+        A700: '#859900',
+    };
+};
+
+const buildPalette = (
+    theme: MuiTheme,
+    mode: ResolvedThemeMode,
+    variant: ThemePalette,
+): AppPaletteOptions => {
+    const isDarkMode = mode === 'dark';
+    if (variant === 'solarized') {
+        const themeGrey = buildSolarizedGrey(mode);
+        const primary = '#268bd2';
+        const secondary = '#2aa198';
+        const info = '#268bd2';
+        const warning = isDarkMode ? '#cb4b16' : '#b58900';
+        const success = '#859900';
+        const error = '#dc322f';
+        const textPrimary = isDarkMode ? '#93a1a1' : '#586e75';
+        const textSecondary = isDarkMode ? '#839496' : '#657b83';
+        const subtleSurface = isDarkMode ? '#0f3b46' : '#eee8d5';
+        const chromeSurface = isDarkMode ? '#184955' : '#e3dcc8';
+        const backgroundDefault = isDarkMode ? '#002b36' : '#fdf6e3';
+        const backgroundPaper = isDarkMode ? '#073642' : '#f5efdc';
+        const edgeColor = isDarkMode ? '#93a1a1' : '#586e75';
+
+        return {
+            primary: { main: primary },
+            secondary: { main: secondary },
+            info: { main: info },
+            warning: { main: warning },
+            success: { main: success },
+            error: { main: error },
+            divider: alpha(edgeColor, isDarkMode ? 0.36 : 0.24),
+            grey: themeGrey,
+            gradients: {
+                tabStrip: isDarkMode
+                    ? 'radial-gradient(circle farthest-corner at bottom center, #0f3b46, #002b36)'
+                    : 'radial-gradient(circle farthest-corner at bottom center, #fdf6e3, #eee8d5)',
+                logo: isDarkMode
+                    ? 'radial-gradient(circle farthest-corner at right, #007e9d, #073642)'
+                    : 'radial-gradient(circle farthest-corner at right, #93a1a1, #fdf6e3)',
+            },
+            table: {
+                header: subtleSurface,
+                rowNumber: subtleSurface,
+                highlightedCell: alpha(info, isDarkMode ? 0.32 : 0.22),
+                annotatedCell: alpha(warning, isDarkMode ? 0.26 : 0.18),
+                annotatedBorder: alpha(warning, isDarkMode ? 0.72 : 0.48),
+                highlightedAnnotatedCell: alpha(
+                    warning,
+                    isDarkMode ? 0.56 : 0.44,
+                ),
+                highlightedAnnotatedBorder: alpha(
+                    warning,
+                    isDarkMode ? 0.82 : 0.56,
+                ),
+                pinShadow: alpha('#001f27', isDarkMode ? 0.72 : 0.24),
+                resizeHandle: alpha(edgeColor, isDarkMode ? 0.7 : 0.45),
+            },
+            text: {
+                primary: textPrimary,
+                secondary: textSecondary,
+                muted: alpha(textPrimary, 0.55),
+            },
+            background: {
+                default: backgroundDefault,
+                paper: backgroundPaper,
+                subtle: subtleSurface,
+                chrome: chromeSurface,
+            },
+            scrollbar: {
+                thumb: alpha(edgeColor, isDarkMode ? 0.36 : 0.24),
+                track: alpha(edgeColor, isDarkMode ? 0.12 : 0.08),
+            },
+        };
+    }
+
+    // Invert grey scale for dark mode
+    const themeGrey = buildDefaultGrey(mode);
 
     const subtleSurface = themeGrey[100];
     const chromeSurface = themeGrey[200];
@@ -125,47 +225,45 @@ const buildPaletteExtras = (
     return {
         grey: themeGrey,
         gradients: {
-            tabStrip:
-                mode === 'dark'
-                    ? `radial-gradient(circle farthest-corner at bottom center, #263238, #37474f30)`
-                    : 'radial-gradient(circle farthest-corner at bottom center, #eeeeee, #e5e4e4)',
-            logo:
-                mode === 'dark'
-                    ? `radial-gradient(circle farthest-corner at right,#757575,#bdbdbd)`
-                    : 'radial-gradient(circle farthest-corner at right,#eeeeee,#c4c4c4)',
+            tabStrip: isDarkMode
+                ? `radial-gradient(circle farthest-corner at bottom center, #263238, #37474f30)`
+                : 'radial-gradient(circle farthest-corner at bottom center, #eeeeee, #e5e4e4)',
+            logo: isDarkMode
+                ? `radial-gradient(circle farthest-corner at right,#757575,#bdbdbd)`
+                : 'radial-gradient(circle farthest-corner at right,#eeeeee,#c4c4c4)',
         },
         table: {
             header: subtleSurface,
             rowNumber: subtleSurface,
             highlightedCell: alpha(
                 theme.palette.info.main,
-                mode === 'dark' ? 0.32 : 0.22,
+                isDarkMode ? 0.32 : 0.22,
             ),
             annotatedCell: alpha(
                 theme.palette.warning.main,
-                mode === 'dark' ? 0.26 : 0.18,
+                isDarkMode ? 0.26 : 0.18,
             ),
             annotatedBorder: alpha(
                 theme.palette.warning.main,
-                mode === 'dark' ? 0.72 : 0.48,
+                isDarkMode ? 0.72 : 0.48,
             ),
             highlightedAnnotatedCell: alpha(
                 theme.palette.warning.main,
-                mode === 'dark' ? 0.56 : 0.44,
+                isDarkMode ? 0.56 : 0.44,
             ),
             highlightedAnnotatedBorder: alpha(
                 theme.palette.warning.main,
-                mode === 'dark' ? 0.82 : 0.56,
+                isDarkMode ? 0.82 : 0.56,
             ),
             pinShadow: alpha(
                 theme.palette.common.black,
-                mode === 'dark' ? 0.6 : 0.25,
+                isDarkMode ? 0.6 : 0.25,
             ),
             resizeHandle: alpha(
-                mode === 'dark'
+                isDarkMode
                     ? theme.palette.common.white
                     : theme.palette.common.black,
-                mode === 'dark' ? 0.65 : 0.5,
+                isDarkMode ? 0.65 : 0.5,
             ),
         },
         text: {
@@ -174,6 +272,10 @@ const buildPaletteExtras = (
         background: {
             subtle: subtleSurface,
             chrome: chromeSurface,
+        },
+        scrollbar: {
+            thumb: alpha(theme.palette.grey[900], isDarkMode ? 0.36 : 0.24),
+            track: alpha(theme.palette.grey[50], isDarkMode ? 0.12 : 0.08),
         },
     };
 };
@@ -200,12 +302,14 @@ const buildComponents = (
 
 export interface CreateAppThemeOptions {
     density?: ThemeDensity;
-    disableAnimation?: boolean;
+    disableUiAnimation?: boolean;
+    themePalette?: ThemePalette;
 }
 
 export const createAppTheme = ({
     density = 'normal',
-    disableAnimation = false,
+    disableUiAnimation = false,
+    themePalette = 'normal',
 }: CreateAppThemeOptions) => {
     const densityTokens = DENSITY_TOKENS[density];
 
@@ -218,13 +322,14 @@ export const createAppTheme = ({
         shape: {
             borderRadius: 8,
         },
-        components: buildComponents(disableAnimation),
-        transitions: disableAnimation
+        components: buildComponents(disableUiAnimation),
+        transitions: disableUiAnimation
             ? {
                   create: () => 'none',
               }
             : undefined,
         colorSchemes: {
+            light: true,
             dark: true,
         },
     });
@@ -232,10 +337,10 @@ export const createAppTheme = ({
     return extendTheme(baseTheme, {
         colorSchemes: {
             light: {
-                palette: buildPaletteExtras(baseTheme, 'light'),
+                palette: buildPalette(baseTheme, 'light', themePalette),
             },
             dark: {
-                palette: buildPaletteExtras(baseTheme, 'dark'),
+                palette: buildPalette(baseTheme, 'dark', themePalette),
             },
         },
     });
@@ -244,5 +349,5 @@ export const createAppTheme = ({
 export const theme = createAppTheme({});
 
 export const themeWithoutAnimation = createAppTheme({
-    disableAnimation: true,
+    disableUiAnimation: true,
 });

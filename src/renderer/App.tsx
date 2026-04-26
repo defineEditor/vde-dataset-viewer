@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import { createAppTheme } from 'renderer/utils/theme';
 import Main from 'renderer/components/Main';
@@ -23,7 +23,7 @@ class ErrorBoundary extends React.Component<
     { children: React.ReactNode },
     { hasError: boolean }
 > {
-    constructor(props) {
+    constructor(props: { children: React.ReactNode }) {
         super(props);
         this.state = { hasError: false };
     }
@@ -66,11 +66,20 @@ const AppWithContext: React.FC = () => {
         (state) => state.settings.other.disableUiAnimation,
     );
 
+    const themePalette = useAppSelector(
+        (state) => state.settings.other.themePalette,
+    );
+
     const saveStoreListenerRegistered = React.useRef(false);
 
-    const theme = createAppTheme({
-        disableAnimation: disableUiAnimation,
-    });
+    const theme = useMemo(
+        () =>
+            createAppTheme({
+                disableUiAnimation,
+                themePalette,
+            }),
+        [disableUiAnimation, themePalette],
+    );
 
     useEffect(() => {
         // At app startup load the saved state

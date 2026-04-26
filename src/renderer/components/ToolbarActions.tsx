@@ -49,14 +49,18 @@ const ToolbarActions: React.FC = () => {
                     </IconButton>
                 </Tooltip>
             )}
-            <Tooltip title="Change Color Theme" enterDelay={1000}>
+            <Tooltip
+                title={`Change color mode to ${colorMode === 'dark' ? 'light' : colorMode === 'light' ? 'system' : 'dark'}`}
+                enterDelay={1000}
+                placement="left"
+            >
                 <IconButton onClick={handleToggleTheme}>
                     {colorMode === 'dark' ? (
                         <Brightness7Icon sx={styles.iconColor} />
                     ) : colorMode === 'system' ? (
-                        <Brightness6Icon sx={styles.iconColor} />
-                    ) : (
                         <Brightness4Icon sx={styles.iconColor} />
+                    ) : (
+                        <Brightness6Icon sx={styles.iconColor} />
                     )}
                 </IconButton>
             </Tooltip>

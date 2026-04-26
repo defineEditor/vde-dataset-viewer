@@ -23,8 +23,8 @@ export const Other: React.FC<OtherProps> = ({ settings, onSettingChange }) => (
     <Stack spacing={2}>
         <Typography variant="h6">Appearance</Typography>
         <TextField
-            label="Color theme"
-            helperText="Select the color theme"
+            label="Color mode"
+            helperText="Select the light or dark mode, or follow the system setting"
             name="other.colorMode"
             value={settings.other.colorMode}
             select
@@ -36,6 +36,20 @@ export const Other: React.FC<OtherProps> = ({ settings, onSettingChange }) => (
             <MenuItem value="system">System</MenuItem>
             <MenuItem value="light">Light</MenuItem>
             <MenuItem value="dark">Dark</MenuItem>
+        </TextField>
+        <TextField
+            label="Theme palette"
+            helperText="Choose the palette family applied to the current color mode"
+            name="other.themePalette"
+            value={settings.other.themePalette}
+            select
+            onChange={(event) =>
+                onSettingChange(event as React.ChangeEvent<HTMLInputElement>)
+            }
+            sx={styles.inputField}
+        >
+            <MenuItem value="normal">Default</MenuItem>
+            <MenuItem value="solarized">Solarized</MenuItem>
         </TextField>
         <Typography variant="h6">Miscellaneous Settings</Typography>
         <TextField

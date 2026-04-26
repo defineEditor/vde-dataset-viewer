@@ -13,7 +13,7 @@ import {
 import { ParsedValidationReport } from 'interfaces/core.report';
 import { modals, ModalType, AllowedPathnames } from 'misc/constants';
 import { ConversionConfig } from 'interfaces/converter';
-import { ThemeModePreference } from 'interfaces/theme';
+import { ThemeModePreference, ThemePalette } from 'interfaces/theme';
 
 export interface IMask {
     name: string;
@@ -58,6 +58,7 @@ export interface ISettings {
     other: {
         checkForUpdates: boolean;
         colorMode: ThemeModePreference;
+        themePalette: ThemePalette;
         loadingAnimation: 'santa' | 'cat' | 'dog' | 'normal' | 'random';
         inEncoding:
             | 'default'

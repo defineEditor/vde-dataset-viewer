@@ -33,18 +33,21 @@ import { VirtualItem, Virtualizer } from '@tanstack/react-virtual';
 import { ITableRow, TableRowValue, TableSettings } from 'interfaces/common';
 import Loading from 'renderer/components/Loading';
 
-const getContainerStyle = (settings: TableSettings): React.CSSProperties => {
-    const result: React.CSSProperties = {
-        overflow: 'auto',
-        position: 'relative',
-        height: settings.height ? `${settings.height}px` : '100vh',
-        userSelect: 'none',
+const getContainerStyle =
+    (settings: TableSettings) =>
+    (theme): React.CSSProperties => {
+        const result: React.CSSProperties = {
+            overflow: 'auto',
+            position: 'relative',
+            height: settings.height ? `${settings.height}px` : '100vh',
+            userSelect: 'none',
+            scrollbarColor: `${theme.vars?.palette.scrollbar.thumb} ${theme.vars?.palette.scrollbar.track}`,
+        };
+        if (settings.width) {
+            result.width = `${settings.width}px`;
+        }
+        return result;
     };
-    if (settings.width) {
-        result.width = `${settings.width}px`;
-    }
-    return result;
-};
 
 const getLoadingStyle = (settings: TableSettings): React.CSSProperties => {
     return {

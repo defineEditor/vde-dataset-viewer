@@ -28,8 +28,14 @@ export const dataSlice = createSlice({
             });
         },
         toggleColorMode: (state) => {
-            state.other.colorMode =
-                state.other.colorMode === 'dark' ? 'light' : 'dark';
+            const currentMode = state.other.colorMode;
+            if (currentMode === 'dark') {
+                state.other.colorMode = 'light';
+            } else if (currentMode === 'light') {
+                state.other.colorMode = 'system';
+            } else if (currentMode === 'system') {
+                state.other.colorMode = 'dark';
+            }
         },
     },
 });
