@@ -16,7 +16,7 @@ import {
     Stack,
     ListSubheader,
 } from '@mui/material';
-import { Theme } from '@mui/material/styles';
+import { Theme, useTheme } from '@mui/material/styles';
 import CloudIcon from '@mui/icons-material/Cloud';
 import CachedIcon from '@mui/icons-material/Cached';
 import WysiwygIcon from '@mui/icons-material/Wysiwyg';
@@ -62,7 +62,6 @@ type NavigationEntry =
       };
 
 interface ToolpadProps {
-    theme: Theme;
     title: string;
     pathname: AllowedPathnames;
     shortcutsOpen: boolean;
@@ -85,17 +84,16 @@ const styles = {
         overflow: 'auto',
         flexDirection: 'column',
     },
-    logo: {
+    logo: (theme: Theme) => ({
         width: 32,
         height: 32,
         marginTop: '3px',
         ml: 1,
         fontSize: 16,
         fontWeight: 700,
-        color: '#1976d2',
-        background:
-            'radial-gradient(circle farthest-corner at right,#eeeeee,#c4c4c4)',
-    },
+        color: 'grey.700',
+        background: theme.vars?.palette.gradients.logo,
+    }),
     drawerList: {
         py: 0,
     },
@@ -200,6 +198,9 @@ const styles = {
         mx: 1,
         borderWidth: '0 0 2px',
     },
+    menuIcon: {
+        color: 'grey.600',
+    },
 };
 
 const NAVIGATION: NavigationEntry[] = [
@@ -296,7 +297,6 @@ const Logo: React.FC = () => {
 };
 
 const Toolpad: React.FC<ToolpadProps> = ({
-    theme,
     title,
     pathname,
     shortcutsOpen,
@@ -304,6 +304,7 @@ const Toolpad: React.FC<ToolpadProps> = ({
     onCloseShortcuts,
     children,
 }) => {
+    const theme = useTheme();
     const dispatch = useAppDispatch();
     const appBarExpanded = useAppSelector((state) => state.ui.appBarExpanded);
     const isDataLoaded = useAppSelector(
@@ -390,7 +391,11 @@ const Toolpad: React.FC<ToolpadProps> = ({
                             onClick={handleToggleNavigation}
                             size="small"
                         >
-                            {appBarExpanded ? <MenuOpenIcon /> : <MenuIcon />}
+                            {appBarExpanded ? (
+                                <MenuOpenIcon sx={styles.menuIcon} />
+                            ) : (
+                                <MenuIcon sx={styles.menuIcon} />
+                            )}
                         </IconButton>
                     </Tooltip>
                     <Box sx={styles.titleContainer}>{titleContent}</Box>

@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "ignoreDeprecations": "5.0",
     "incremental": true,
     "target": "es2022",
     "module": "commonjs",

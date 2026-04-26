@@ -56,7 +56,7 @@ const styles = {
         overflow: 'auto',
     },
     pagination: {
-        backgroundColor: 'grey.200',
+        backgroundColor: 'background.paper',
         display: 'flex',
         flex: '0 1 auto',
         justifyContent: 'flex-end',
@@ -67,6 +67,7 @@ const styles = {
         borderColor: 'divider',
         borderRadius: 1,
         mb: 1,
+        backgroundColor: 'grey.200',
         '&:hover': {
             backgroundColor: 'action.hover',
         },
@@ -112,7 +113,7 @@ const styles = {
         overflowY: 'auto',
     },
     paginationPaper: {
-        backgroundColor: 'grey.200',
+        backgroundColor: 'background.paper',
         borderTop: 1,
         borderRadius: 0,
         borderColor: 'divider',

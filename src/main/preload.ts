@@ -135,6 +135,9 @@ const downloadValidationReport: ElectronApi['downloadValidationReport'] = (
 
 const isWindows: ElectronApi['isWindows'] = process.platform === 'win32';
 
+const isDevelopment: ElectronApi['isDevelopment'] =
+    process.env.NODE_ENV === 'development';
+
 const startTask: ElectronApi['startTask'] = (task) =>
     ipcRenderer.invoke('main:startTask', task);
 
@@ -224,6 +227,7 @@ contextBridge.exposeInMainWorld('electron', {
     getValidationReport,
     downloadValidationReport,
     isWindows,
+    isDevelopment,
     startTask,
     stopTask,
     onTaskProgress,

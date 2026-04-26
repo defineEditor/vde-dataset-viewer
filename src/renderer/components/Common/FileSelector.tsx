@@ -40,6 +40,10 @@ const styles = {
     },
     tableContainer: {
         flexGrow: 1,
+        backgroundColor: 'grey.100',
+    },
+    headerCell: {
+        backgroundColor: 'grey.200',
     },
 };
 
@@ -185,7 +189,7 @@ const FileSelector: React.FC<FileSelectorProps> = ({
                 <Table stickyHeader>
                     <TableHead>
                         <TableRow>
-                            <TableCell>
+                            <TableCell sx={styles.headerCell}>
                                 <TableSortLabel
                                     active={orderBy === 'folder'}
                                     direction={
@@ -196,7 +200,7 @@ const FileSelector: React.FC<FileSelectorProps> = ({
                                     Folder
                                 </TableSortLabel>
                             </TableCell>
-                            <TableCell>
+                            <TableCell sx={styles.headerCell}>
                                 <TableSortLabel
                                     active={orderBy === 'filename'}
                                     direction={
@@ -209,7 +213,7 @@ const FileSelector: React.FC<FileSelectorProps> = ({
                                     Filename
                                 </TableSortLabel>
                             </TableCell>
-                            <TableCell>
+                            <TableCell sx={styles.headerCell}>
                                 <TableSortLabel
                                     active={orderBy === 'format'}
                                     direction={
@@ -220,7 +224,7 @@ const FileSelector: React.FC<FileSelectorProps> = ({
                                     Format
                                 </TableSortLabel>
                             </TableCell>
-                            <TableCell>
+                            <TableCell sx={styles.headerCell}>
                                 <TableSortLabel
                                     active={orderBy === 'size'}
                                     direction={
@@ -231,7 +235,7 @@ const FileSelector: React.FC<FileSelectorProps> = ({
                                     Size
                                 </TableSortLabel>
                             </TableCell>
-                            <TableCell>
+                            <TableCell sx={styles.headerCell}>
                                 <TableSortLabel
                                     active={orderBy === 'lastModified'}
                                     direction={
@@ -247,7 +251,7 @@ const FileSelector: React.FC<FileSelectorProps> = ({
                                 </TableSortLabel>
                             </TableCell>
                             {showOutputName && (
-                                <TableCell>
+                                <TableCell sx={styles.headerCell}>
                                     <TableSortLabel
                                         active={orderBy === 'outputName'}
                                         direction={
@@ -263,7 +267,9 @@ const FileSelector: React.FC<FileSelectorProps> = ({
                                     </TableSortLabel>
                                 </TableCell>
                             )}
-                            <TableCell>Actions</TableCell>
+                            <TableCell sx={styles.headerCell}>
+                                Actions
+                            </TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>

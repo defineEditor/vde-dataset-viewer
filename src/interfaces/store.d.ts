@@ -13,6 +13,7 @@ import {
 import { ParsedValidationReport } from 'interfaces/core.report';
 import { modals, ModalType, AllowedPathnames } from 'misc/constants';
 import { ConversionConfig } from 'interfaces/converter';
+import { ThemeModePreference, ThemePalette } from 'interfaces/theme';
 
 export interface IMask {
     name: string;
@@ -46,6 +47,7 @@ export interface SettingsViewer {
     showTypeIcons: boolean;
     copyWithHeaders: boolean;
     showLabels: boolean;
+    enableProfiler: boolean;
 }
 
 export interface ISettings {
@@ -55,6 +57,8 @@ export interface ISettings {
     validator: SettingsValidator;
     other: {
         checkForUpdates: boolean;
+        colorMode: ThemeModePreference;
+        themePalette: ThemePalette;
         loadingAnimation: 'santa' | 'cat' | 'dog' | 'normal' | 'random';
         inEncoding:
             | 'default'

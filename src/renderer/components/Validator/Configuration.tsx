@@ -26,7 +26,8 @@ const styles = {
         p: 2,
         height: '100%',
         flex: '1 1 auto',
-        backgroundColor: 'grey.100',
+        backgroundColor: 'background.paper',
+        userSelect: 'none',
     },
     validateActions: {
         m: 2,
@@ -34,7 +35,7 @@ const styles = {
     configSection: {
         mb: 2,
         border: 0,
-        backgroundColor: 'grey.100',
+        backgroundColor: 'background.paper',
     },
     configRow: {
         direction: 'row',

@@ -45,6 +45,8 @@ const Settings: React.FC = () => {
 
     const { apiService } = React.useContext(AppContext);
 
+    const isDevelopment = apiService.isDevelopment();
+
     const handleTabChange = (
         _event: React.SyntheticEvent,
         newValue: number,
@@ -182,6 +184,7 @@ const Settings: React.FC = () => {
                         <Viewer
                             settings={newSettings}
                             onSettingChange={handleInputChange}
+                            isDevelopment={isDevelopment}
                         />
                     </Box>
                     <Box hidden={tabIndex !== 1} sx={styles.tabPanel}>

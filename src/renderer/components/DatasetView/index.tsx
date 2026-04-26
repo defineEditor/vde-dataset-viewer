@@ -1,4 +1,5 @@
 import React, {
+    Profiler,
     useState,
     useCallback,
     useEffect,
@@ -6,6 +7,7 @@ import React, {
     useRef,
 } from 'react';
 import { Box } from '@mui/material';
+import { Theme } from '@mui/material/styles';
 import {
     ITableData,
     ItemType,
@@ -31,6 +33,7 @@ import {
     SortingState as ISortingState,
     RowData,
     VisibilityState,
+    Column as IColumn,
 } from '@tanstack/react-table';
 
 const emptySelect = { row: null, column: null };
@@ -57,6 +60,8 @@ type SelectionAnchor = {
     row: number | null;
     columnId: string | null;
 };
+
+type PinningStyle = (theme: Theme) => React.CSSProperties;
 
 const styles = {
     fullHeight: {
@@ -87,6 +92,33 @@ interface DatasetViewProps {
     select?: IUiControl['select'];
     onSetSelect?: (select: Partial<IUiControl['select']>) => void;
 }
+
+const createPinningStyle = (
+    column: IColumn<ITableRow, unknown>,
+    backgroundColor: string,
+    zIndex = 1,
+): PinningStyle => {
+    const isPinned = column.getIsPinned();
+    const isLastLeftPinnedColumn =
+        isPinned === 'left' && column.getIsLastColumn('left');
+    const isFirstRightPinnedColumn =
+        isPinned === 'right' && column.getIsFirstColumn('right');
+
+    return (theme) => ({
+        backgroundColor,
+        boxShadow: isLastLeftPinnedColumn
+            ? `-4px 0 4px -4px ${theme.vars?.palette.table.pinShadow} inset`
+            : isFirstRightPinnedColumn
+              ? `4px 0 4px -4px ${theme.vars?.palette.table.pinShadow} inset`
+              : undefined,
+        left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
+        right:
+            isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
+        opacity: isPinned ? 0.98 : 1,
+        position: isPinned ? 'sticky' : 'relative',
+        zIndex,
+    });
+};
 
 const DatasetView: React.FC<DatasetViewProps> = ({
     tableData,
@@ -267,7 +299,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         columns,
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
-        debugTable: true,
+        debugTable: settings.enableProfiler,
         columnResizeMode: 'onEnd',
         state: {
             sorting,
@@ -295,6 +327,46 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         .getLeftVisibleLeafColumns()
         .filter((column) => !settings.hideRowNumbers || column.id !== '#');
     const centerColumns = table.getCenterVisibleLeafColumns();
+    const pinningLayoutKey = visibleColumns
+        .map(
+            (column) =>
+                `${column.id}:${column.getIsPinned()}:${column.getStart('left')}:${column.getAfter('right')}:${column.getSize()}:${column.getIsLastColumn('left')}:${column.getIsFirstColumn('right')}`,
+        )
+        .join('|');
+
+    const { headerPinningStyles, bodyPinningStyles } = useMemo(() => {
+        const nextHeaderPinningStyles: Record<string, PinningStyle> = {};
+        const nextBodyPinningStyles: Record<string, PinningStyle> = {};
+
+        if (!pinningLayoutKey) {
+            return {
+                headerPinningStyles: nextHeaderPinningStyles,
+                bodyPinningStyles: nextBodyPinningStyles,
+            };
+        }
+
+        visibleColumns.forEach((column) => {
+            if (!column.getIsPinned()) {
+                return;
+            }
+
+            nextHeaderPinningStyles[column.id] = createPinningStyle(
+                column,
+                'table.header',
+                4,
+            );
+            nextBodyPinningStyles[column.id] = createPinningStyle(
+                column,
+                column.id === '#' ? 'table.rowNumber' : 'background.paper',
+                3,
+            );
+        });
+
+        return {
+            headerPinningStyles: nextHeaderPinningStyles,
+            bodyPinningStyles: nextBodyPinningStyles,
+        };
+    }, [pinningLayoutKey, visibleColumns]);
 
     const scrollPositionX = useAppSelector(
         (state) =>
@@ -938,37 +1010,81 @@ const DatasetView: React.FC<DatasetViewProps> = ({
 
     const updatedSettings = { ...settings, height: tableHeight };
 
+    const handleProfileRender = useCallback(
+        (
+            id: string,
+            phase: 'mount' | 'update' | 'nested-update',
+            actualDuration: number,
+            baseDuration: number,
+            startTime: number,
+            commitTime: number,
+        ) => {
+            if (!settings.enableProfiler) {
+                return;
+            }
+
+            // eslint-disable-next-line no-console
+            console.debug(`[${id}] ${phase}`, {
+                actualDurationMs: Number(actualDuration.toFixed(2)),
+                baseDurationMs: Number(baseDuration.toFixed(2)),
+                commitDurationMs: Number((commitTime - startTime).toFixed(2)),
+                rows: rows.length,
+                visibleColumns: visibleColumns.length,
+                pinnedColumns: leftPinnedColumns.length,
+                fileId: tableData.fileId,
+            });
+        },
+        [
+            leftPinnedColumns.length,
+            rows.length,
+            tableData.fileId,
+            visibleColumns.length,
+            settings.enableProfiler,
+        ],
+    );
+
+    const renderedView = (
+        <View
+            table={table}
+            tableContainerRef={tableContainerRef}
+            visibleColumns={visibleColumns}
+            leftPinnedColumns={leftPinnedColumns}
+            centerColumns={centerColumns}
+            virtualPaddingLeft={virtualPaddingLeft}
+            virtualPaddingRight={virtualPaddingRight}
+            virtualColumns={virtualColumns}
+            virtualRows={virtualRows}
+            rows={rows}
+            highlightedCells={highlightedCells}
+            annotatedCells={filteredAnnotatedCells}
+            handleCellClick={handleCellClick}
+            handleMouseDown={handleMouseDown}
+            handleMouseOver={handleMouseOver}
+            handleContextMenu={handleContextMenu}
+            handleResizeEnd={columnVirtualizer.measure}
+            handleScroll={handleScroll}
+            isLoading={isLoading}
+            settings={updatedSettings}
+            rowVirtualizer={rowVirtualizer}
+            sorting={sorting}
+            onSortingChange={handleSetSorting}
+            filteredColumns={filteredColumns}
+            headerPinningStyles={headerPinningStyles}
+            bodyPinningStyles={bodyPinningStyles}
+        />
+    );
+
     return (
         <Box ref={viewContainerRef} style={styles.fullHeight}>
             {/* If height is not measured yet, do not render */}
-            {tableHeight !== 0 && (
-                <View
-                    table={table}
-                    tableContainerRef={tableContainerRef}
-                    visibleColumns={visibleColumns}
-                    leftPinnedColumns={leftPinnedColumns}
-                    centerColumns={centerColumns}
-                    virtualPaddingLeft={virtualPaddingLeft}
-                    virtualPaddingRight={virtualPaddingRight}
-                    virtualColumns={virtualColumns}
-                    virtualRows={virtualRows}
-                    rows={rows}
-                    highlightedCells={highlightedCells}
-                    annotatedCells={filteredAnnotatedCells}
-                    handleCellClick={handleCellClick}
-                    handleMouseDown={handleMouseDown}
-                    handleMouseOver={handleMouseOver}
-                    handleContextMenu={handleContextMenu}
-                    handleResizeEnd={columnVirtualizer.measure}
-                    handleScroll={handleScroll}
-                    isLoading={isLoading}
-                    settings={updatedSettings}
-                    rowVirtualizer={rowVirtualizer}
-                    sorting={sorting}
-                    onSortingChange={handleSetSorting}
-                    filteredColumns={filteredColumns}
-                />
-            )}
+            {tableHeight !== 0 &&
+                (settings.enableProfiler ? (
+                    <Profiler id="DatasetView" onRender={handleProfileRender}>
+                        {renderedView}
+                    </Profiler>
+                ) : (
+                    renderedView
+                ))}
         </Box>
     );
 };

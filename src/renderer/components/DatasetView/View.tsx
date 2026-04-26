@@ -12,6 +12,7 @@ import {
     IconButton,
     Tooltip,
 } from '@mui/material';
+import { Theme } from '@mui/material/styles';
 import {
     Cell as ICell,
     flexRender,
@@ -32,18 +33,21 @@ import { VirtualItem, Virtualizer } from '@tanstack/react-virtual';
 import { ITableRow, TableRowValue, TableSettings } from 'interfaces/common';
 import Loading from 'renderer/components/Loading';
 
-const getContainerStyle = (settings: TableSettings): React.CSSProperties => {
-    const result: React.CSSProperties = {
-        overflow: 'auto',
-        position: 'relative',
-        height: settings.height ? `${settings.height}px` : '100vh',
-        userSelect: 'none',
+const getContainerStyle =
+    (settings: TableSettings) =>
+    (theme): React.CSSProperties => {
+        const result: React.CSSProperties = {
+            overflow: 'auto',
+            position: 'relative',
+            height: settings.height ? `${settings.height}px` : '100vh',
+            userSelect: 'none',
+            scrollbarColor: `${theme.vars?.palette.scrollbar.thumb} ${theme.vars?.palette.scrollbar.track}`,
+        };
+        if (settings.width) {
+            result.width = `${settings.width}px`;
+        }
+        return result;
     };
-    if (settings.width) {
-        result.width = `${settings.width}px`;
-    }
-    return result;
-};
 
 const getLoadingStyle = (settings: TableSettings): React.CSSProperties => {
     return {
@@ -65,7 +69,7 @@ const getLoadingStyle = (settings: TableSettings): React.CSSProperties => {
 
 const styles = {
     header: {
-        backgroundColor: '#f4f4f4',
+        backgroundColor: 'table.header',
         display: 'grid',
         position: 'sticky',
         top: 0,
@@ -98,7 +102,7 @@ const styles = {
         position: 'relative',
         justifyContent: 'center',
         width: '100%',
-        backgroundColor: '#f4f4f4',
+        backgroundColor: 'table.header',
     },
     tableHeaderLabel: {
         width: '100%',
@@ -136,7 +140,7 @@ const styles = {
         height: '100%',
         right: 0,
         width: '3px',
-        background: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'table.resizeHandle',
         cursor: 'col-resize',
         userSelect: 'none',
         touchAction: 'none',
@@ -147,31 +151,34 @@ const styles = {
         },
     },
     highlightedCell: {
-        backgroundColor: '#bbe0ff',
+        backgroundColor: 'table.highlightedCell',
     },
     annotatedCell: {
-        backgroundColor: '#fff8e1',
-        border: '1px solid #ffe082',
+        backgroundColor: 'table.annotatedCell',
+        border: '1px solid',
+        borderColor: 'table.annotatedBorder',
     },
     annotatedRowCell: {
-        backgroundColor: '#fff8e1;',
-        border: '1px solid #ffe082;',
+        backgroundColor: 'table.annotatedCell',
+        border: '1px solid',
+        borderColor: 'table.annotatedBorder',
     },
     highlightedAnnotatedCell: {
-        backgroundColor: '#ffca28',
-        border: '1px solid #ffca2890',
+        backgroundColor: 'table.highlightedAnnotatedCell',
+        border: '1px solid',
+        borderColor: 'table.highlightedAnnotatedBorder',
     },
     headerRowNumberCell: {
         justifyContent: 'center',
         fontSize: 'small',
-        backgroundColor: '#f4f4f4',
+        backgroundColor: 'table.rowNumber',
         position: 'sticky',
         left: 0,
         zIndex: 2,
         maxHeight: '100%',
     },
     rowNumberCell: {
-        backgroundColor: '#f4f4f4',
+        backgroundColor: 'table.rowNumber',
         fontSize: 'small',
         overflow: 'visible',
         padding: 0.5,
@@ -186,7 +193,7 @@ const styles = {
     sponsored: {
         marginTop: '10px',
         fontSize: '14px',
-        color: '#888',
+        color: 'text.secondary',
         textAlign: 'center',
     },
     filterIcon: {
@@ -215,33 +222,6 @@ const styles = {
     },
 };
 
-const getCommonPinningStyles = (
-    column: IColumn<ITableRow, unknown>,
-    backgroundColor: string,
-    zIndex = 1,
-): React.CSSProperties => {
-    const isPinned = column.getIsPinned();
-    const isLastLeftPinnedColumn =
-        isPinned === 'left' && column.getIsLastColumn('left');
-    const isFirstRightPinnedColumn =
-        isPinned === 'right' && column.getIsFirstColumn('right');
-
-    return {
-        backgroundColor,
-        boxShadow: isLastLeftPinnedColumn
-            ? '-4px 0 4px -4px rgba(0, 0, 0, 0.25) inset'
-            : isFirstRightPinnedColumn
-              ? '4px 0 4px -4px rgba(0, 0, 0, 0.25) inset'
-              : undefined,
-        left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
-        right:
-            isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
-        opacity: isPinned ? 0.98 : 1,
-        position: isPinned ? 'sticky' : 'relative',
-        zIndex,
-    };
-};
-
 const getTypeIcon = (type: string | undefined) => {
     if (!type) {
         return null;
@@ -267,6 +247,8 @@ type HighlightedCells = {
     [columnId: string]: number[];
 };
 
+type PinningStyle = (theme: Theme) => React.CSSProperties;
+
 const DatasetHeaderCell: React.FC<{
     column: IColumn<ITableRow, unknown>;
     header: IHeader<ITableRow, unknown>;
@@ -285,6 +267,7 @@ const DatasetHeaderCell: React.FC<{
     sorting: ISortingState;
     table: ITable<ITableRow>;
     usePinningStyles?: boolean;
+    pinningStyle?: PinningStyle;
 }> = ({
     column,
     header,
@@ -298,19 +281,18 @@ const DatasetHeaderCell: React.FC<{
     sorting,
     table,
     usePinningStyles = false,
+    pinningStyle = undefined,
 }) => {
     const isRowNumber = column.id === '#';
     const isSorted = sorting.find((sort) => sort.id === header.id);
 
-    const headerCellSx = {
-        ...styles.tableHeaderCell,
-        width: header.getSize(),
-        ...(isRowNumber ? styles.headerRowNumberCell : { cursor: 'pointer' }),
-        ...(usePinningStyles
-            ? getCommonPinningStyles(column, '#f4f4f4', 4)
-            : {}),
-        ...(settings.denseHeader ? { height: '30px' } : {}),
-    };
+    const headerCellSx = [
+        styles.tableHeaderCell,
+        { width: header.getSize() },
+        isRowNumber ? styles.headerRowNumberCell : { cursor: 'pointer' },
+        usePinningStyles ? pinningStyle || null : null,
+        settings.denseHeader ? { height: '30px' } : null,
+    ];
 
     return (
         <TableCell
@@ -423,6 +405,7 @@ const DatasetBodyCell: React.FC<{
     visibleColumns: IColumn<ITableRow, unknown>[];
     settings: TableSettings;
     usePinningStyles?: boolean;
+    pinningStyle?: PinningStyle;
 }> = ({
     annotatedCells,
     cell,
@@ -436,6 +419,7 @@ const DatasetBodyCell: React.FC<{
     visibleColumns,
     settings,
     usePinningStyles = false,
+    pinningStyle = undefined,
 }) => {
     const isHighlighted =
         highlightedCells[cell.column.id]?.includes(rowIndex) || false;
@@ -453,49 +437,24 @@ const DatasetBodyCell: React.FC<{
     const isRowNumber = cell.column.id === '#';
     const isAnnotated = !!annotation;
 
-    let cellStyle = {
-        ...(settings.dynamicRowHeight
+    const cellStyle = [
+        settings.dynamicRowHeight
             ? styles.tableCellDynamic
-            : styles.tableCellFixed),
-        width: cell.column.getSize(),
-        ...(isRowNumber ? styles.rowNumberCell : {}),
-        ...(usePinningStyles
-            ? getCommonPinningStyles(
-                  cell.column,
-                  isRowNumber ? '#f4f4f4' : '#ffffff',
-                  3,
-              )
-            : {}),
-    } as React.CSSProperties;
-
-    if (isRowNumber && rowAnnotation) {
-        cellStyle = {
-            ...cellStyle,
-            ...styles.annotatedRowCell,
-        };
-    } else if (isAnnotated && isHighlighted) {
-        cellStyle = {
-            ...cellStyle,
-            ...styles.highlightedAnnotatedCell,
-        };
-    } else if (isAnnotated) {
-        cellStyle = {
-            ...cellStyle,
-            ...styles.annotatedCell,
-        };
-    } else if (isHighlighted) {
-        cellStyle = {
-            ...cellStyle,
-            ...styles.highlightedCell,
-        };
-    }
-
-    if (cell.column.columnDef.meta?.style) {
-        cellStyle = {
-            ...cellStyle,
-            ...cell.column.columnDef.meta.style,
-        };
-    }
+            : styles.tableCellFixed,
+        { width: cell.column.getSize() },
+        isRowNumber ? styles.rowNumberCell : null,
+        usePinningStyles ? pinningStyle || null : null,
+        isRowNumber && rowAnnotation
+            ? styles.annotatedRowCell
+            : isAnnotated && isHighlighted
+              ? styles.highlightedAnnotatedCell
+              : isAnnotated
+                ? styles.annotatedCell
+                : isHighlighted
+                  ? styles.highlightedCell
+                  : null,
+        cell.column.columnDef.meta?.style || null,
+    ];
 
     const renderedCell = flexRender(
         cell.column.columnDef.cell,
@@ -574,6 +533,8 @@ const DatasetViewUI: React.FC<{
     ) => void;
     filteredColumns?: string[];
     containerStyle?: React.CSSProperties;
+    headerPinningStyles?: Record<string, PinningStyle>;
+    bodyPinningStyles?: Record<string, PinningStyle>;
     annotatedCells?: Map<
         string,
         { text: string | React.ReactElement; color: string }
@@ -603,6 +564,8 @@ const DatasetViewUI: React.FC<{
     handleContextMenu = (_event, _columnId, _value, _isHeader = false) => {},
     filteredColumns = [],
     containerStyle = undefined,
+    headerPinningStyles = {},
+    bodyPinningStyles = {},
     annotatedCells = null,
 }) => {
     return (
@@ -642,6 +605,9 @@ const DatasetViewUI: React.FC<{
                                         sorting={sorting}
                                         table={table}
                                         usePinningStyles
+                                        pinningStyle={
+                                            headerPinningStyles[column.id]
+                                        }
                                     />
                                 );
                             })}
@@ -677,6 +643,9 @@ const DatasetViewUI: React.FC<{
                                         settings={settings}
                                         sorting={sorting}
                                         table={table}
+                                        pinningStyle={
+                                            headerPinningStyles[column.id]
+                                        }
                                     />
                                 );
                             })}
@@ -761,6 +730,11 @@ const DatasetViewUI: React.FC<{
                                                 rowIndex={virtualRow.index}
                                                 settings={settings}
                                                 usePinningStyles
+                                                pinningStyle={
+                                                    bodyPinningStyles[
+                                                        cell.column.id
+                                                    ]
+                                                }
                                             />
                                         );
                                     })}

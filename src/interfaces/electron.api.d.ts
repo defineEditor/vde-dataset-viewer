@@ -107,6 +107,7 @@ export interface ElectronApi {
     ) => Promise<DefineXmlContent | { error: string }>;
     closeDefineXml: (fileId: string) => Promise<boolean>;
     isWindows: boolean;
+    isDevelopment: boolean;
     resizeWindow: (
         position: 'top' | 'bottom' | 'left' | 'right',
     ) => Promise<void>;

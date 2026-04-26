@@ -1,29 +1,8 @@
 /* Define-XML Viewer Styles - Matching define2-1.xsl output */
 
 /* Color Variables */
-:root {
-  --color-menu-body-bg: #ffffff;
-  --color-menu-body-fg: #000000;
-  --color-hmenu-text: #004a95;
-  --color-hmenu-bullet: #aaaaaa;
-  --color-caption: #696969;
-  --color-table-bg: #eeeeee;
-  --color-tr-header-back: #6699cc;
-  --color-tr-header: #ffffff;
-  --color-tablerow-odd: #ffffff;
-  --color-tablerow-even: #eeeeee;
-  --color-tr-vlm-back: #d3d3d3;
-  --color-border: #000000;
-  --color-error: #000000;
-  --color-warning: #000000;
-  --color-link: #0000ff;
-  --color-link-hover: #ff9900;
-  --color-link-visited: #551a8b;
-}
-
-/* Global Styles */
 .define-xml-stylesheet {
-  background-color: var(--color-menu-body-background);
+  background-color: var(--color-menu-body-bg);
   font-family: Verdana, Arial, Helvetica, sans-serif;
   font-size: 62.5%;
   margin: 0;
@@ -261,7 +240,7 @@
   width: 95%;
   padding: 5px 0px;
   font-size: 0.8em;
-  color: black;
+  color: var(--color-caption);
 }
 
 .define-xml-stylesheet dl.study-metadata dt {
@@ -283,7 +262,7 @@
 /* Description text */
 .define-xml-stylesheet .description {
   margin-left: 0px;
-  color: black;
+  color: var(--color-caption);
   font-weight: normal;
   font-size: 0.85em;
 }
@@ -482,9 +461,9 @@
   width: 95%;
   border-spacing: 5px;
   border-width: 1px;
-  border-color: #000000;
+  border-color: var(--color-border);
   border-style: solid solid none solid;
-  background-color: #eeeeee;
+  background-color: var(--color-table-bg);
   font-size: 1.2em;
   line-height: 150%;
   vertical-align: top;
@@ -494,7 +473,7 @@
   padding: 10px 10px 10px 10px;
   border-spacing: 5px;
   border-width: 1px;
-  border-color: #000000;
+  border-color: var(--color-border);
   border-style: none none solid none;
 }
 
@@ -503,7 +482,7 @@
 }
 
 .define-xml-stylesheet .table.analysisresults-detail {
-  background-color: #eeeeee;
+  background-color: var(--color-table-bg);
 }
 
 .define-xml-stylesheet .arm-summary-result {
@@ -521,10 +500,10 @@
 }
 
 .define-xml-stylesheet tr.arm-analysisresult {
-  background-color: #6699cc;
-  color: #ffffff;
+  background-color: var(--color-tr-header-back);
+  color: var(--color-tr-header);
   font-weight: bold;
-  border: 1px solid #000000;
+  border: 1px solid var(--color-border);
 }
 
 .define-xml-stylesheet td.arm-label {
@@ -574,9 +553,9 @@
   -webkit-border-radius: 10px;
   -moz-border-radius: 10px;
   border-radius: 10px;
-  -webkit-box-shadow: 3px 3px 2px #888;
-  -moz-box-shadow: 3px 3px 2px #888;
-  box-shadow: 3px 3px 2px #888;
+  -webkit-box-shadow: 3px 3px 2px var(--color-shadow);
+  -moz-box-shadow: 3px 3px 2px var(--color-shadow);
+  box-shadow: 3px 3px 2px var(--color-shadow);
   padding: 4px 16px 4px 16px;
   display: block;
   cursor: pointer;

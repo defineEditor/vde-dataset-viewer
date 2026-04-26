@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { Theme } from '@mui/material/styles';
 import SelectDataset from 'renderer/components/SelectDataset';
+import { useColorScheme } from '@mui/material/styles';
 import Api from 'renderer/components/Api';
 import AppContext from 'renderer/utils/AppContext';
 import ViewFile from 'renderer/components/ViewDataset';
@@ -58,7 +58,7 @@ const renderPage = (
     return null;
 };
 
-const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
+const Main: React.FC = () => {
     const title = 'VDE Dataset Viewer';
     const dispatch = useAppDispatch();
     const { apiService } = React.useContext(AppContext);
@@ -69,6 +69,16 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
     const isDataLoaded = useAppSelector(
         (state) => state.ui.currentFileId !== '',
     );
+
+    // Control color theme
+    const { setMode } = useColorScheme();
+
+    const colorMode = useAppSelector((state) => state.settings.other.colorMode);
+    useEffect(() => {
+        if (colorMode) {
+            setMode(colorMode);
+        }
+    }, [colorMode, setMode]);
 
     // Add shortcuts for routes
     useEffect(() => {
@@ -273,7 +283,6 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
 
     return (
         <Toolpad
-            theme={theme}
             title={title}
             pathname={pathname}
             shortcutsOpen={shortcutsOpen}

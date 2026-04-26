@@ -24,6 +24,7 @@ export const settings: ISettings = {
         showTypeIcons: false,
         copyWithHeaders: false,
         showLabels: false,
+        enableProfiler: false,
     },
     converter: {
         threads: 2,
@@ -46,6 +47,8 @@ export const settings: ISettings = {
     },
     other: {
         checkForUpdates: true,
+        colorMode: 'light',
+        themePalette: 'normal',
         loadingAnimation: 'random',
         inEncoding: 'utf8',
         dragoverAnimation: true,
