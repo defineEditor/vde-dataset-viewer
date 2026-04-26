@@ -7,7 +7,7 @@ import React, {
     useRef,
 } from 'react';
 import { Box } from '@mui/material';
-import { Theme } from '@mui/material/styles';
+import { Theme, useTheme } from '@mui/material/styles';
 import {
     ITableData,
     ItemType,
@@ -15,6 +15,7 @@ import {
     TableSettings,
     IUiControl,
     TableRowValue,
+    AppTheme,
 } from 'interfaces/common';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
@@ -136,6 +137,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     onSetSelect = () => {},
 }) => {
     const dispatch = useAppDispatch();
+    const theme = useTheme();
 
     const reduxIdCols = useAppSelector(
         (state) => state.ui.control[tableData.fileId]?.idCols || [],
@@ -423,9 +425,12 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         hasRestoredScrollRef.current = false;
     }, [tableData.fileId]);
 
+    const estimatedRowHeight = (theme as AppTheme).densitySettings.table
+        .rowSize;
+
     const rowVirtualizer = useVirtualizer({
         count: rows.length,
-        estimateSize: () => 38,
+        estimateSize: () => estimatedRowHeight,
         getScrollElement: () => tableContainerRef.current,
         ...(settings.dynamicRowHeight && {
             measureElement: (element) =>

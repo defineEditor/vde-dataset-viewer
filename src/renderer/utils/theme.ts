@@ -10,14 +10,8 @@ import {
     ResolvedThemeMode,
     ThemeDensity,
     ThemePalette,
+    DensitySettings,
 } from 'interfaces/theme';
-
-interface DensityTokens {
-    mode: ThemeDensity;
-    spacingUnit: number;
-    tableHeaderHeight: number;
-    toolbarHeight: number;
-}
 
 interface ThemeGradients {
     tabStrip: string;
@@ -63,17 +57,27 @@ declare module '@mui/material/styles/createPalette' {
 
 type AppPaletteOptions = NonNullable<MuiThemeOptions['palette']>;
 
-const DENSITY_TOKENS: Record<ThemeDensity, DensityTokens> = {
+const densityConfig: Record<ThemeDensity, DensitySettings> = {
     normal: {
         mode: 'normal',
         spacingUnit: 8,
-        tableHeaderHeight: 40,
+        table: {
+            tableHeaderHeight: 40,
+            tableCellPadding: 1,
+            fontSize: 14,
+            rowSize: 38,
+        },
         toolbarHeight: 64,
     },
     compact: {
         mode: 'compact',
         spacingUnit: 6,
-        tableHeaderHeight: 32,
+        table: {
+            tableHeaderHeight: 32,
+            tableCellPadding: 0.2,
+            fontSize: 12,
+            rowSize: 22,
+        },
         toolbarHeight: 56,
     },
 };
@@ -161,7 +165,6 @@ const buildPalette = (
         const subtleSurface = isDarkMode ? '#0f3b46' : '#eee8d5';
         const chromeSurface = isDarkMode ? '#184955' : '#e3dcc8';
         const backgroundDefault = isDarkMode ? '#002b36' : '#fdf6e3';
-        const backgroundPaper = isDarkMode ? '#073642' : '#f5efdc';
         const edgeColor = isDarkMode ? '#93a1a1' : '#586e75';
 
         return {
@@ -205,7 +208,7 @@ const buildPalette = (
             },
             background: {
                 default: backgroundDefault,
-                paper: backgroundPaper,
+                paper: backgroundDefault,
                 subtle: subtleSurface,
                 chrome: chromeSurface,
             },
@@ -301,38 +304,42 @@ const buildComponents = (
 });
 
 export interface CreateAppThemeOptions {
-    density?: ThemeDensity;
+    compactMode?: boolean;
     disableUiAnimation?: boolean;
     themePalette?: ThemePalette;
 }
 
 export const createAppTheme = ({
-    density = 'normal',
+    compactMode = false,
     disableUiAnimation = false,
     themePalette = 'normal',
 }: CreateAppThemeOptions) => {
-    const densityTokens = DENSITY_TOKENS[density];
+    const density = compactMode ? 'compact' : 'normal';
+    const densitySettings = densityConfig[density];
 
-    const baseTheme = createTheme({
-        cssVariables: {
-            colorSchemeSelector: 'class',
+    const baseTheme = createTheme(
+        {
+            cssVariables: {
+                colorSchemeSelector: 'class',
+            },
+            defaultColorScheme: 'light',
+            spacing: densitySettings.spacingUnit,
+            shape: {
+                borderRadius: 8,
+            },
+            components: buildComponents(disableUiAnimation),
+            transitions: disableUiAnimation
+                ? {
+                      create: () => 'none',
+                  }
+                : undefined,
+            colorSchemes: {
+                light: true,
+                dark: true,
+            },
         },
-        defaultColorScheme: 'light',
-        spacing: densityTokens.spacingUnit,
-        shape: {
-            borderRadius: 8,
-        },
-        components: buildComponents(disableUiAnimation),
-        transitions: disableUiAnimation
-            ? {
-                  create: () => 'none',
-              }
-            : undefined,
-        colorSchemes: {
-            light: true,
-            dark: true,
-        },
-    });
+        { densitySettings },
+    );
 
     return extendTheme(baseTheme, {
         colorSchemes: {

@@ -251,7 +251,8 @@ export const Converter: React.FC<ConverterProps> = ({
             />
             <Typography variant="h6">CSV Conversion Settings</Typography>
             <Typography variant="caption">
-                Epoch used to convert date/time/datetime values.
+                Epoch used to convert date/time/datetime values when exporting
+                to CSV.
             </Typography>
             <RadioGroup
                 name="converter.csvEpoch"

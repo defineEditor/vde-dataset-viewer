@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useCallback } from 'react';
-import { Typography, Tooltip, IconButton, Stack } from '@mui/material';
+import { Typography, Tooltip, IconButton, Stack, Divider } from '@mui/material';
 import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
 import ShortcutIcon from '@mui/icons-material/Shortcut';
 import TerminalIcon from '@mui/icons-material/Terminal';
@@ -265,6 +265,9 @@ const Header: React.FC = () => {
                     case 'i':
                         handleDataSetInfoClick();
                         break;
+                    case 'p':
+                        handleIdColumnsClick();
+                        break;
                     case 'r':
                         handleReloadClick();
                         break;
@@ -273,6 +276,12 @@ const Header: React.FC = () => {
                         break;
                     case 's':
                         handleCompareClick();
+                        break;
+                    case 't':
+                        handleSortingClick();
+                        break;
+                    case 'v':
+                        handleValidateClick();
                         break;
                     case '`':
                         handleToggleSidebar();
@@ -299,6 +308,9 @@ const Header: React.FC = () => {
         handleMaskClick,
         handleReloadClick,
         handleCompareClick,
+        handleIdColumnsClick,
+        handleValidateClick,
+        handleSortingClick,
         isModalOpen,
     ]);
 
@@ -337,6 +349,24 @@ const Header: React.FC = () => {
                     />
                 </IconButton>
             </Tooltip>
+            <Tooltip title="Reload" enterDelay={1000}>
+                <IconButton
+                    onClick={handleReloadClick}
+                    id="open"
+                    size="small"
+                    disabled={currentFileMode === 'remote'}
+                >
+                    <RefreshIcon
+                        sx={{
+                            color:
+                                currentFileMode === 'remote'
+                                    ? 'grey.500'
+                                    : 'grey.600',
+                        }}
+                    />
+                </IconButton>
+            </Tooltip>
+            <Divider orientation="vertical" flexItem />
             <Tooltip title="Go to Line or Column" enterDelay={1000}>
                 <IconButton
                     onClick={handleGoToClick}
@@ -345,20 +375,6 @@ const Header: React.FC = () => {
                     disabled={pathname !== paths.VIEWFILE}
                 >
                     <ShortcutIcon
-                        sx={{
-                            color: 'grey.600',
-                        }}
-                    />
-                </IconButton>
-            </Tooltip>
-            <Tooltip title="Command Line" enterDelay={1000}>
-                <IconButton
-                    onClick={handleCommandLineClick}
-                    id="commandLine"
-                    size="small"
-                    disabled={pathname !== paths.VIEWFILE}
-                >
-                    <TerminalIcon
                         sx={{
                             color: 'grey.600',
                         }}
@@ -375,6 +391,22 @@ const Header: React.FC = () => {
                     <FilterIcon
                         sx={{
                             color: isFilterEnabled
+                                ? 'primary.main'
+                                : 'grey.600',
+                        }}
+                    />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="ID Columns" enterDelay={1000}>
+                <IconButton
+                    onClick={handleIdColumnsClick}
+                    id="idColumns"
+                    size="small"
+                    disabled={pathname !== paths.VIEWFILE}
+                >
+                    <PushPinOutlinedIcon
+                        sx={{
+                            color: isIdColumnsEnabled
                                 ? 'primary.main'
                                 : 'grey.600',
                         }}
@@ -411,22 +443,7 @@ const Header: React.FC = () => {
                     />
                 </IconButton>
             </Tooltip>
-            <Tooltip title="ID Columns" enterDelay={1000}>
-                <IconButton
-                    onClick={handleIdColumnsClick}
-                    id="idColumns"
-                    size="small"
-                    disabled={pathname !== paths.VIEWFILE}
-                >
-                    <PushPinOutlinedIcon
-                        sx={{
-                            color: isIdColumnsEnabled
-                                ? 'primary.main'
-                                : 'grey.600',
-                        }}
-                    />
-                </IconButton>
-            </Tooltip>
+            <Divider orientation="vertical" flexItem />
             <Tooltip title="Compare" enterDelay={1000}>
                 <IconButton
                     onClick={handleCompareClick}
@@ -472,19 +489,17 @@ const Header: React.FC = () => {
                     />
                 </IconButton>
             </Tooltip>
-            <Tooltip title="Reload" enterDelay={1000}>
+            <Divider orientation="vertical" flexItem />
+            <Tooltip title="Command Line" enterDelay={1000}>
                 <IconButton
-                    onClick={handleReloadClick}
-                    id="open"
+                    onClick={handleCommandLineClick}
+                    id="commandLine"
                     size="small"
-                    disabled={currentFileMode === 'remote'}
+                    disabled={pathname !== paths.VIEWFILE}
                 >
-                    <RefreshIcon
+                    <TerminalIcon
                         sx={{
-                            color:
-                                currentFileMode === 'remote'
-                                    ? 'grey.500'
-                                    : 'grey.600',
+                            color: 'grey.600',
                         }}
                     />
                 </IconButton>
