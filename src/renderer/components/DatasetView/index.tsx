@@ -7,7 +7,7 @@ import React, {
     useRef,
 } from 'react';
 import { Box } from '@mui/material';
-import { Theme, useTheme } from '@mui/material/styles';
+import { Theme } from '@mui/material/styles';
 import {
     ITableData,
     ItemType,
@@ -15,8 +15,8 @@ import {
     TableSettings,
     IUiControl,
     TableRowValue,
-    AppTheme,
 } from 'interfaces/common';
+import { useAppTheme } from 'renderer/utils/theme';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import {
@@ -137,7 +137,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     onSetSelect = () => {},
 }) => {
     const dispatch = useAppDispatch();
-    const theme = useTheme();
+    const theme = useAppTheme();
 
     const reduxIdCols = useAppSelector(
         (state) => state.ui.control[tableData.fileId]?.idCols || [],
@@ -205,13 +205,18 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             result.unshift({
                 accessorKey: '#',
                 header: '#',
-                size: 60,
+                size: theme.densitySettings.table.rowNumberWidth,
                 enableResizing: false,
                 meta: { type: 'integer' },
             });
         }
         return result;
-    }, [tableData.header, settings, reduxShowLabels]);
+    }, [
+        tableData.header,
+        settings,
+        reduxShowLabels,
+        theme.densitySettings.table.rowNumberWidth,
+    ]);
 
     // Create column visibility state based on current mask
     const columnVisibility = useMemo<VisibilityState>(() => {
@@ -425,8 +430,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         hasRestoredScrollRef.current = false;
     }, [tableData.fileId]);
 
-    const estimatedRowHeight = (theme as AppTheme).densitySettings.table
-        .rowSize;
+    const estimatedRowHeight = theme.densitySettings.table.rowSize;
 
     const rowVirtualizer = useVirtualizer({
         count: rows.length,
@@ -436,9 +440,13 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             measureElement: (element) =>
                 element?.getBoundingClientRect().height,
         }),
-        overscan: 15,
+        overscan: theme.densitySettings.table.overscanRows,
         initialOffset: scrollPositionY,
     });
+
+    useEffect(() => {
+        rowVirtualizer.measure();
+    }, [estimatedRowHeight, settings.dynamicRowHeight, rowVirtualizer]);
 
     const virtualColumns = columnVirtualizer.getVirtualItems();
     const virtualRows = rowVirtualizer.getVirtualItems();

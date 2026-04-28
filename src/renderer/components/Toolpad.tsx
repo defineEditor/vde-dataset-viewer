@@ -16,7 +16,8 @@ import {
     Stack,
     ListSubheader,
 } from '@mui/material';
-import { Theme, useTheme } from '@mui/material/styles';
+import { Theme } from '@mui/material/styles';
+import { useAppTheme } from 'renderer/utils/theme';
 import CloudIcon from '@mui/icons-material/Cloud';
 import CachedIcon from '@mui/icons-material/Cached';
 import WysiwygIcon from '@mui/icons-material/Wysiwyg';
@@ -38,9 +39,6 @@ import DefineToolbar from 'renderer/components/Toolbars/DefineToolbar';
 import CompareToolbar from 'renderer/components/Toolbars/CompareToolbar';
 import ToolbarActions from 'renderer/components/ToolbarActions';
 import Shortcuts from 'renderer/components/Shortcuts';
-
-const DRAWER_WIDTH_EXPANDED = 200;
-const DRAWER_WIDTH_COLLAPSED = 60;
 
 type NavigationEntry =
     | {
@@ -304,7 +302,7 @@ const Toolpad: React.FC<ToolpadProps> = ({
     onCloseShortcuts,
     children,
 }) => {
-    const theme = useTheme();
+    const theme = useAppTheme();
     const dispatch = useAppDispatch();
     const appBarExpanded = useAppSelector((state) => state.ui.appBarExpanded);
     const isDataLoaded = useAppSelector(
@@ -314,9 +312,13 @@ const Toolpad: React.FC<ToolpadProps> = ({
         (state) => state.ui.validationPage.currentTab,
     );
 
+    const compactMode = useAppSelector(
+        (state) => state.settings.other.compactMode,
+    );
+
     const navigationWidth = appBarExpanded
-        ? DRAWER_WIDTH_EXPANDED
-        : DRAWER_WIDTH_COLLAPSED;
+        ? theme.densitySettings.drawer.widthExpanded
+        : theme.densitySettings.drawer.widthCollapsed;
 
     const handleToggleNavigation = () => {
         dispatch(toggleAppBarExpanded());
@@ -379,7 +381,11 @@ const Toolpad: React.FC<ToolpadProps> = ({
                 elevation={0}
                 sx={styles.appBar(theme, navigationWidth)}
             >
-                <Toolbar sx={styles.toolbar} disableGutters>
+                <Toolbar
+                    sx={styles.toolbar}
+                    disableGutters
+                    variant={compactMode ? 'dense' : 'regular'}
+                >
                     <Tooltip
                         title={
                             appBarExpanded
@@ -409,7 +415,11 @@ const Toolpad: React.FC<ToolpadProps> = ({
                 variant="permanent"
                 sx={styles.drawer(theme, navigationWidth)}
             >
-                <Toolbar />
+                <Toolbar
+                    sx={styles.toolbar}
+                    disableGutters
+                    variant={compactMode ? 'dense' : 'regular'}
+                />
                 <List disablePadding sx={styles.drawerList}>
                     {NAVIGATION.map((entry) => {
                         if (entry.kind === 'divider') {
@@ -484,7 +494,11 @@ const Toolpad: React.FC<ToolpadProps> = ({
                 </List>
             </Drawer>
             <Box sx={styles.mainContainer}>
-                <Toolbar />
+                <Toolbar
+                    sx={styles.toolbar}
+                    disableGutters
+                    variant={compactMode ? 'dense' : 'regular'}
+                />
                 <Box component="main" sx={styles.main} id="main">
                     {children}
                 </Box>

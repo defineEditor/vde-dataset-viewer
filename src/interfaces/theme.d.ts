@@ -15,6 +15,14 @@ export interface DensitySettings {
         tableCellPadding: number;
         fontSize: number;
         rowSize: number;
+        rowNumberFontSize: string | number;
+        rowNumberPadding: number;
+        rowNumberWidth: number;
+        overscanRows: number;
+    };
+    drawer: {
+        widthCollapsed: number;
+        widthExpanded: number;
     };
     toolbarHeight: number;
 }

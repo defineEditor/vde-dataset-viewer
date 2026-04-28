@@ -2,6 +2,7 @@ import {
     alpha,
     createTheme,
     extendTheme,
+    useTheme,
     Theme as MuiTheme,
     ThemeOptions as MuiThemeOptions,
 } from '@mui/material/styles';
@@ -11,6 +12,7 @@ import {
     ThemeDensity,
     ThemePalette,
     DensitySettings,
+    AppTheme,
 } from 'interfaces/theme';
 
 interface ThemeGradients {
@@ -66,6 +68,14 @@ const densityConfig: Record<ThemeDensity, DensitySettings> = {
             tableCellPadding: 1,
             fontSize: 14,
             rowSize: 38,
+            rowNumberFontSize: 12,
+            rowNumberPadding: 0.5,
+            rowNumberWidth: 60,
+            overscanRows: 15,
+        },
+        drawer: {
+            widthCollapsed: 60,
+            widthExpanded: 200,
         },
         toolbarHeight: 64,
     },
@@ -77,6 +87,14 @@ const densityConfig: Record<ThemeDensity, DensitySettings> = {
             tableCellPadding: 0.2,
             fontSize: 12,
             rowSize: 22,
+            rowNumberFontSize: 10,
+            rowNumberPadding: 0.2,
+            rowNumberWidth: 40,
+            overscanRows: 25,
+        },
+        drawer: {
+            widthCollapsed: 0,
+            widthExpanded: 200,
         },
         toolbarHeight: 56,
     },
@@ -354,6 +372,8 @@ export const createAppTheme = ({
 };
 
 export const theme = createAppTheme({});
+
+export const useAppTheme = () => useTheme() as AppTheme;
 
 export const themeWithoutAnimation = createAppTheme({
     disableUiAnimation: true,
