@@ -64,7 +64,7 @@ const densityConfig: Record<ThemeDensity, DensitySettings> = {
         mode: 'normal',
         spacingUnit: 8,
         table: {
-            tableHeaderHeight: 40,
+            tableHeaderHeight: 'inherit',
             tableCellPadding: 1,
             fontSize: 14,
             rowSize: 38,
@@ -83,7 +83,7 @@ const densityConfig: Record<ThemeDensity, DensitySettings> = {
         mode: 'compact',
         spacingUnit: 6,
         table: {
-            tableHeaderHeight: 32,
+            tableHeaderHeight: '35px',
             tableCellPadding: 0.2,
             fontSize: 12,
             rowSize: 22,

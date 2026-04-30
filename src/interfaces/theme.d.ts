@@ -11,7 +11,7 @@ export interface DensitySettings {
     mode: ThemeDensity;
     spacingUnit: number;
     table: {
-        tableHeaderHeight: number;
+        tableHeaderHeight: string;
         tableCellPadding: number;
         fontSize: number;
         rowSize: number;

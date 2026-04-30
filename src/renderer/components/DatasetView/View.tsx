@@ -99,7 +99,7 @@ const styles = {
         padding: 0,
         fontFamily: 'Roboto Mono',
         fontSize: theme.densitySettings.table.fontSize,
-        height: theme.densitySettings.mode === 'compact' ? '35px' : 'inherit',
+        height: theme.densitySettings.table.tableHeaderHeight,
         display: 'flex',
         position: 'relative',
         justifyContent: 'center',
