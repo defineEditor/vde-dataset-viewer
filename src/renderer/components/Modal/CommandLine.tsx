@@ -66,6 +66,8 @@ const styles = {
     },
 };
 
+const emptyArray: unknown[] = [];
+
 const handleRenderOption = (
     props: React.HTMLAttributes<HTMLLIElement> & {
         key: React.Key;
@@ -114,10 +116,12 @@ const CommandLine: React.FC<IUiModal> = () => {
         (state) => state.data.maskData.currentMask,
     );
     const currentIdColumns = useAppSelector(
-        (state) => state.ui.control[currentFileId]?.idCols || [],
+        (state) =>
+            state.ui.control[currentFileId]?.idCols || (emptyArray as string[]),
     );
     const currentSorting = useAppSelector(
-        (state) => state.ui.control[currentFileId]?.sorting || [],
+        (state) =>
+            state.ui.control[currentFileId]?.sorting || (emptyArray as any[]),
     );
     const currentFilter = useAppSelector(
         (state) => state.data.filterData.currentFilter[currentFileId] || null,
@@ -131,7 +135,7 @@ const CommandLine: React.FC<IUiModal> = () => {
 
     const metadata = apiService.getOpenedFileMetadata(currentFileId);
     const allColumnNames = useMemo(
-        () => metadata?.columns.map((column) => column.name) || [],
+        () => metadata?.columns.map((column) => column.name) ?? [],
         [metadata],
     );
     const columnTypes = useMemo(() => {
@@ -152,7 +156,7 @@ const CommandLine: React.FC<IUiModal> = () => {
         });
         return types;
     }, [metadata]);
-    const currentVisibleColumns = currentMask?.columns || allColumnNames;
+    const currentVisibleColumns = currentMask?.columns ?? allColumnNames;
 
     const recentCommandStrings = useMemo(() => {
         return recentCommands
@@ -180,7 +184,7 @@ const CommandLine: React.FC<IUiModal> = () => {
             settings,
         });
 
-    const autocompleteOptions = commandAutocomplete?.options || [];
+    const autocompleteOptions = commandAutocomplete?.options ?? [];
 
     const [autocompleteOpen, setAutocompleteOpen] = useState(false);
 
@@ -198,8 +202,8 @@ const CommandLine: React.FC<IUiModal> = () => {
             }
             return Boolean(
                 commandAutocomplete &&
-                    (commandAutocomplete.options.length > 0 ||
-                        commandAutocomplete.loadingColumnId),
+                (commandAutocomplete.options.length > 0 ||
+                    commandAutocomplete.loadingColumnId),
             );
         });
     }, [commandAutocomplete]);

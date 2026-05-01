@@ -77,7 +77,7 @@ const Datasets: React.FC<DatasetsProps> = ({ content, onOpenFile }) => {
                                 dataset.description,
                             );
                             const itemRefs = dataset.itemRefs || {};
-                            const itemRefsOrder = dataset.itemRefsOrder || [];
+                            const itemRefsOrder = dataset.itemRefsOrder ?? [];
 
                             // Get key variable names (not OIDs)
                             const keys = itemRefsOrder

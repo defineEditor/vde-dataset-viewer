@@ -363,7 +363,7 @@ export const compareData = (
                 ) =>
                     !ignorePattern ||
                     !new RegExp(`${ignorePattern}`, 'i').test(columnObj[0]),
-            ) || [],
+            ) ?? [],
     );
     const compareCols = new Map(
         compareMeta?.columns
@@ -382,7 +382,7 @@ export const compareData = (
                 ) =>
                     !ignorePattern ||
                     !new RegExp(`${ignorePattern}`, 'i').test(columnObj[0]),
-            ) || [],
+            ) ?? [],
     );
 
     const allCols = [...baseCols.keys(), ...compareCols.keys()].filter(
@@ -395,7 +395,7 @@ export const compareData = (
 
     // Track columns that reached max diff count
     const columnDiffCounts = new Map<string, number>();
-    const maxColDiffReached: string[] = summaryInit?.maxColDiffReached || [];
+    const maxColDiffReached: string[] = summaryInit?.maxColDiffReached ?? [];
 
     // Data Comparison
     const dataDiff: DataDiff = {

@@ -548,13 +548,15 @@ const ValidationResults: React.FC<ResultsProps> = ({
                                         </Typography>
                                     }
                                     secondary={
-                                        <Stack spacing={0.5}>
+                                        <Stack component="span" spacing={0.5}>
                                             <Typography
+                                                component="span"
                                                 variant="body2"
                                                 color="text.secondary"
                                             >
                                                 {uniqueIssues === 0 ? (
                                                     <Box
+                                                        component="span"
                                                         sx={styles.noIssuesBox}
                                                     >
                                                         <CheckIcon

@@ -121,7 +121,7 @@ export const useCommandAutocomplete = ({
                     settings,
                 });
 
-                const formattedValues = (values[columnId]?.values || []).map(
+                const formattedValues = (values[columnId]?.values ?? []).map(
                     (value) =>
                         formatFilterValueOption(
                             value,
@@ -210,8 +210,8 @@ export const useCommandAutocomplete = ({
             (commandAutocomplete?.loadingColumnId &&
                 uniqueValueOptions[commandAutocomplete.loadingColumnId] ===
                     undefined) ||
-                (loadingValueColumnId &&
-                    uniqueValueOptions[loadingValueColumnId] === undefined),
+            (loadingValueColumnId &&
+                uniqueValueOptions[loadingValueColumnId] === undefined),
         ),
         resolvedCategory: context.category,
     };

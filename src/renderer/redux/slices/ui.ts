@@ -362,7 +362,7 @@ export const uiSlice = createSlice({
             if (!state.dataSettings[id]) {
                 state.dataSettings[id] = {
                     showIssues: show,
-                    filteredIssues: filteredIssues || [],
+                    filteredIssues: filteredIssues ?? [],
                     currentIssueIndex: 0,
                 };
             } else {

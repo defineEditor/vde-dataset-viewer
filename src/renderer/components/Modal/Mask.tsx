@@ -96,7 +96,7 @@ const Mask: React.FC = () => {
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
 
     const metadata = apiService.getOpenedFileMetadata(currentFileId);
-    const columnNames = metadata?.columns.map((col) => col.name) || [];
+    const columnNames = metadata?.columns.map((col) => col.name) ?? [];
 
     const savedMasks = useAppSelector(
         (state) => state.data.maskData.savedMasks,

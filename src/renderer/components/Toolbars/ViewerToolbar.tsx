@@ -60,11 +60,11 @@ const Header: React.FC = () => {
     );
 
     const isIdColumnsEnabled = useAppSelector(
-        (state) => (state.ui.control[currentFileId]?.idCols || []).length > 0,
+        (state) => (state.ui.control[currentFileId]?.idCols?.length ?? 0) > 0,
     );
 
     const isSortingEnabled = useAppSelector(
-        (state) => (state.ui.control[currentFileId]?.sorting || []).length > 0,
+        (state) => (state.ui.control[currentFileId]?.sorting?.length ?? 0) > 0,
     );
 
     const isModalOpen = useAppSelector((state) => state.ui.modals?.length > 0);

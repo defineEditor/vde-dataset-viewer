@@ -473,7 +473,7 @@ export async function getIssueSummary(filePath: string): Promise<{
     const rawCompressed = await fsPromises.readFile(filePath);
     const raw = await unzipPromise(rawCompressed);
     const report = JSON.parse(raw.toString('utf-8'));
-    const summary: IssueSummaryItem[] = report.Issue_Summary || [];
+    const summary: IssueSummaryItem[] = report.Issue_Summary ?? [];
     const uniqueIssues = summary.length;
     const totalIssues = summary.reduce(
         (acc, item) =>
@@ -656,7 +656,7 @@ process.parentPort.once(
                             date: result.date,
                             command,
                             files: getLastModified(
-                                data.validationDetails?.originalFiles || [],
+                                data.validationDetails?.originalFiles ?? [],
                             ),
                             output: result.fileName,
                             logFileName: result.logFileName,

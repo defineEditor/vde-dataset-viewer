@@ -45,7 +45,7 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
 }) => {
     const { defineVersion } = content;
     const description = getTranslatedText(dataset.description);
-    const itemRefsOrder = dataset.itemRefsOrder || [];
+    const itemRefsOrder = dataset.itemRefsOrder ?? [];
     const itemRefs = dataset.itemRefs || {};
 
     const itemDefsArray = getItemDefs(content);
@@ -276,7 +276,7 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
                                 const valueList = valueLists[valueListRef];
                                 const vlItemRefs = valueList.itemRefs || {};
                                 const vlItemRefsOrder =
-                                    valueList.itemRefsOrder || [];
+                                    valueList.itemRefsOrder ?? [];
 
                                 vlItemRefsOrder.forEach((vlRefOid) => {
                                     const vlItemRef = vlItemRefs[vlRefOid];
@@ -303,7 +303,7 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
                                     let whereClauseDisplay: React.ReactNode =
                                         '';
                                     const whereClauseRefs =
-                                        vlItemRef.whereClauseRefs || [];
+                                        vlItemRef.whereClauseRefs ?? [];
                                     if (whereClauseRefs.length > 0) {
                                         whereClauseDisplay = (
                                             <>

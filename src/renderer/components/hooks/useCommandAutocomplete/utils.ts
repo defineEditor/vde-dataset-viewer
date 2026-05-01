@@ -254,7 +254,7 @@ export const getInOperatorValueInput = (
 
 export const tokenizeQuotedText = (value: string): string[] => {
     const matches = value.match(/"([^"]*)"|'([^']*)'|(\S+)/g);
-    return matches || [];
+    return matches ?? [];
 };
 
 export const getColumnName = (

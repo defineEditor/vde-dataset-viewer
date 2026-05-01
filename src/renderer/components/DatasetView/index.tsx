@@ -39,6 +39,7 @@ import {
 
 const emptySelect = { row: null, column: null };
 const emptyGoTo = { row: null, column: null, cellSelection: false };
+const emptyArray: unknown[] = [];
 
 declare module '@tanstack/table-core' {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -140,7 +141,9 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     const theme = useAppTheme();
 
     const reduxIdCols = useAppSelector(
-        (state) => state.ui.control[tableData.fileId]?.idCols || [],
+        (state) =>
+            state.ui.control[tableData.fileId]?.idCols ||
+            (emptyArray as string[]),
     );
 
     const reduxShowLabels = useAppSelector(
@@ -251,7 +254,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
 
     // Sorting
     const reduxSorting = useAppSelector(
-        (state) => state.ui.control[tableData.fileId]?.sorting || null,
+        (state) => state.ui.control[tableData.fileId]?.sorting ?? null,
     );
 
     const [localSorting, setLocalSorting] = useState<ISortingState>([]);
@@ -377,11 +380,11 @@ const DatasetView: React.FC<DatasetViewProps> = ({
 
     const scrollPositionX = useAppSelector(
         (state) =>
-            state.ui.control[tableData.fileId]?.scrollPosition.offsetX || 0,
+            state.ui.control[tableData.fileId]?.scrollPosition?.offsetX ?? 0,
     );
     const scrollPositionY = useAppSelector(
         (state) =>
-            state.ui.control[tableData.fileId]?.scrollPosition.offsetY || 0,
+            state.ui.control[tableData.fileId]?.scrollPosition?.offsetY ?? 0,
     );
 
     // The virtualizers need to know the scrollable container element
@@ -712,13 +715,13 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                 (columnId) => visibleColumnIds.includes(columnId),
             );
             const selectedColumnIds = allColumnIds.filter(
-                (columnId) => (highlightedCells[columnId] || []).length > 0,
+                (columnId) => (highlightedCells[columnId]?.length ?? 0) > 0,
             );
 
             if (selectedColumnIds.length > 0) {
                 const rowIndexSet = new Set<number>();
                 selectedColumnIds.forEach((columnId) => {
-                    (highlightedCells[columnId] || []).forEach((rowIndex) => {
+                    highlightedCells[columnId]?.forEach((rowIndex) => {
                         rowIndexSet.add(rowIndex);
                     });
                 });

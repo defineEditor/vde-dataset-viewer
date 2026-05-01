@@ -77,7 +77,14 @@ const Metadata: React.FC = () => {
                               ? 'salmon'
                               : 'transparent',
                     };
-                    return <span style={style}>{part.value}</span>;
+                    return (
+                        <span
+                            key={`${part.value}-${part.added ? 'added' : 'removed'}`}
+                            style={style}
+                        >
+                            {part.value}
+                        </span>
+                    );
                 })}
             </span>
         );

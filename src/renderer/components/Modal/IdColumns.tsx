@@ -85,13 +85,16 @@ interface IdColumnOption {
     label: string;
 }
 
+const emptyArray: unknown[] = [];
+
 const IdColumns: React.FC = () => {
     const dispatch = useAppDispatch();
     const { apiService } = useContext(AppContext);
 
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
     const currentIdCols = useAppSelector(
-        (state) => state.ui.control[currentFileId]?.idCols || [],
+        (state) =>
+            state.ui.control[currentFileId]?.idCols || (emptyArray as string[]),
     );
     const savedSets = useAppSelector(
         (state) => state.data.idColumnData.savedSets,
@@ -102,7 +105,7 @@ const IdColumns: React.FC = () => {
         metadata?.columns.map((col) => ({
             id: col.name,
             label: col.name,
-        })) || [];
+        })) ?? [];
 
     const [idCols, setIdCols] = useState<string[]>(currentIdCols);
     const [editingSetId, setEditingSetId] = useState<string | null>(null);

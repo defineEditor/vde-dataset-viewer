@@ -67,8 +67,8 @@ export function getItemAttributes(
     if (codeListRef) {
         const codeList = codeLists[codeListRef];
         if (codeList) {
-            const codeListItems = codeList.codeListItems || [];
-            const enumeratedItems = codeList.enumeratedItems || [];
+            const codeListItems = codeList.codeListItems ?? [];
+            const enumeratedItems = codeList.enumeratedItems ?? [];
             const { externalCodeList } = codeList;
 
             if (codeListItems.length > 5 || enumeratedItems.length > 5) {
@@ -302,7 +302,7 @@ export function getOriginContent(
         event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
     ) => void,
 ): React.ReactNode {
-    const origins = itemDef.origins || [];
+    const origins = itemDef.origins ?? [];
     if (origins.length === 0) return '';
 
     return origins.map((o: Define20.Origin | Define21.Origin, originIdx) => {
@@ -367,7 +367,7 @@ export function getMethodContent(
                     </span>
                 )}
             </div>
-            {renderDocumentRefs(method.documentRefs || [], leafs, onOpenFile)}
+            {renderDocumentRefs(method.documentRefs ?? [], leafs, onOpenFile)}
         </>
     );
 }
@@ -393,7 +393,7 @@ export function getCommentContent(
     return (
         <>
             <p className="linebreakcell">{commentText}</p>
-            {renderDocumentRefs(comment.documentRefs || [], leafs, onOpenFile)}
+            {renderDocumentRefs(comment.documentRefs ?? [], leafs, onOpenFile)}
         </>
     );
 }
@@ -464,7 +464,7 @@ export function getWhereClauseText(
         const whereClauseDisplay = rangeChecks.map((rangeCheck, rangeIndex) => {
             const { itemOid } = rangeCheck;
             const comparator = rangeCheck.comparator || '';
-            const checkValues = rangeCheck.checkValues || [];
+            const checkValues = rangeCheck.checkValues ?? [];
 
             const itemDef = itemDefs[itemOid];
             const itemName = itemDef?.name || itemOid;
@@ -579,7 +579,7 @@ export function getAnalysisParameterDisplay(
                         {rangeChecks.map((rangeCheck, rangeIndex: number) => {
                             const { itemOid } = rangeCheck;
                             const comparator = rangeCheck.comparator || '';
-                            const checkValues = rangeCheck.checkValues || [];
+                            const checkValues = rangeCheck.checkValues ?? [];
 
                             const itemDef = itemDefs[itemOid];
                             const itemName = itemDef?.name || itemOid;
