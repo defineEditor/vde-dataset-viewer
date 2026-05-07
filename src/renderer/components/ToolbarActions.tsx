@@ -81,11 +81,11 @@ const ToolbarActions: React.FC = () => {
             >
                 <IconButton onClick={handleToggleTheme}>
                     {colorMode === 'dark' ? (
-                        <Brightness7Icon sx={styles.iconColor} />
-                    ) : colorMode === 'system' ? (
                         <Brightness4Icon sx={styles.iconColor} />
-                    ) : (
+                    ) : colorMode === 'system' ? (
                         <Brightness6Icon sx={styles.iconColor} />
+                    ) : (
+                        <Brightness7Icon sx={styles.iconColor} />
                     )}
                 </IconButton>
             </Tooltip>
