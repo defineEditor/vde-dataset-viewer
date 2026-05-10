@@ -93,7 +93,7 @@ const densityConfig: Record<ThemeDensity, DensitySettings> = {
             overscanRows: 25,
         },
         drawer: {
-            widthCollapsed: 0,
+            widthCollapsed: 60,
             widthExpanded: 200,
         },
         toolbarHeight: 56,
