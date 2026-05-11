@@ -332,20 +332,22 @@ const IdColumns: React.FC = () => {
                                                         }
                                                     >
                                                         <Tooltip title="Save new set (max 10)">
-                                                            <IconButton
-                                                                onClick={() =>
-                                                                    handleSaveNew()
-                                                                }
-                                                                disabled={
-                                                                    savedSets.length >=
-                                                                        10 ||
-                                                                    idCols.length ===
-                                                                        0
-                                                                }
-                                                                edge="end"
-                                                            >
-                                                                <SaveIcon />
-                                                            </IconButton>
+                                                            <span>
+                                                                <IconButton
+                                                                    onClick={() =>
+                                                                        handleSaveNew()
+                                                                    }
+                                                                    disabled={
+                                                                        savedSets.length >=
+                                                                            10 ||
+                                                                        idCols.length ===
+                                                                            0
+                                                                    }
+                                                                    edge="end"
+                                                                >
+                                                                    <SaveIcon />
+                                                                </IconButton>
+                                                            </span>
                                                         </Tooltip>
                                                     </InputAdornment>
                                                 )}

@@ -313,20 +313,22 @@ const Mask: React.FC = () => {
                                                         }
                                                     >
                                                         <Tooltip title="Save new set (max 10)">
-                                                            <IconButton
-                                                                onClick={() =>
-                                                                    handleSaveNew()
-                                                                }
-                                                                disabled={
-                                                                    savedMasks.length >=
-                                                                        10 ||
-                                                                    selectedColumns.length ===
-                                                                        0
-                                                                }
-                                                                edge="end"
-                                                            >
-                                                                <SaveIcon />
-                                                            </IconButton>
+                                                            <span>
+                                                                <IconButton
+                                                                    onClick={() =>
+                                                                        handleSaveNew()
+                                                                    }
+                                                                    disabled={
+                                                                        savedMasks.length >=
+                                                                            10 ||
+                                                                        selectedColumns.length ===
+                                                                            0
+                                                                    }
+                                                                    edge="end"
+                                                                >
+                                                                    <SaveIcon />
+                                                                </IconButton>
+                                                            </span>
                                                         </Tooltip>
                                                     </InputAdornment>
                                                 )}
@@ -405,9 +407,8 @@ const Mask: React.FC = () => {
                                         />
                                     </Box>
                                 ) : (
-                                    <>
+                                    <React.Fragment key={mask.id}>
                                         <ListItem
-                                            key={mask.id}
                                             onClick={() =>
                                                 handleSelectMask(mask)
                                             }
@@ -462,7 +463,7 @@ const Mask: React.FC = () => {
                                             />
                                         </ListItem>
                                         <Divider />
-                                    </>
+                                    </React.Fragment>
                                 ),
                             )}
                         </List>

@@ -128,6 +128,7 @@ const DatasetNavigation: React.FC = () => {
                         >
                             <Box sx={styles.label}>{file.name}</Box>
                             <IconButton
+                                component="span"
                                 onClick={(event) =>
                                     handleCloseDataset(event, file.fileId)
                                 }

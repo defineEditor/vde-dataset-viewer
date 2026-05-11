@@ -412,7 +412,7 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
                             }
 
                             return (
-                                <>
+                                <React.Fragment key={refOid}>
                                     <tr key={refOid} className={rowClass}>
                                         <td>
                                             {/* eslint-disable-next-line jsx-a11y/anchor-has-content, jsx-a11y/anchor-is-valid */}
@@ -513,7 +513,7 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
                                         <td>{originMethodCommentContent}</td>
                                     </tr>
                                     {vlmRows}
-                                </>
+                                </React.Fragment>
                             );
                         })}
                     </tbody>
