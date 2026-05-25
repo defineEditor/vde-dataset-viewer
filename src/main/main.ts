@@ -29,10 +29,12 @@ const openedWindows = new Set<BrowserWindow>();
 function parseArgs(args: string[]): {
     filePath: string | null;
     compareFiles: { path1: string; path2: string } | null;
+    disableGpu: boolean;
 } {
     const startIdx = app.isPackaged ? 1 : 2;
     let filePath: string | null = null;
     let compareFiles: { path1: string; path2: string } | null = null;
+    const disableGpu = args.includes('--disable-gpu');
 
     // Check for --compare
     const compareIndex = args.indexOf('--compare');
@@ -60,13 +62,17 @@ function parseArgs(args: string[]): {
         }
     }
 
-    return { filePath, compareFiles };
+    return { filePath, compareFiles, disableGpu };
 }
 
 // Store command line arguments for later use
 const args = parseArgs(process.argv);
 let fileToOpen = args.filePath;
-const { compareFiles } = args;
+const { compareFiles, disableGpu } = args;
+
+if (disableGpu) {
+    app.disableHardwareAcceleration();
+}
 
 // Handle file opening from "Open With" on start
 const gotTheLock = app.requestSingleInstanceLock();
