@@ -1024,7 +1024,10 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         onSetSelect,
     ]);
 
-    const updatedSettings = { ...settings, height: tableHeight };
+    const updatedSettings = {
+        ...settings,
+        height: tableHeight,
+    };
 
     const handleProfileRender = useCallback(
         (

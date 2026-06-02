@@ -99,7 +99,8 @@ const styles = {
         padding: 0,
         fontFamily: 'Roboto Mono',
         fontSize: theme.densitySettings.table.fontSize,
-        height: theme.densitySettings.table.tableHeaderHeight,
+        minHeight: theme.densitySettings.table.headerHeight,
+        lineHeight: theme.densitySettings.table.headerLineHeight,
         display: 'flex',
         position: 'relative',
         justifyContent: 'center',
@@ -127,7 +128,7 @@ const styles = {
         cursor: 'pointer',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
-        padding: theme.densitySettings.table.tableCellPadding,
+        padding: theme.densitySettings.table.cellPadding,
         maxHeight: '5em',
     }),
     tableCellFixed: (theme) => ({
@@ -139,7 +140,7 @@ const styles = {
         cursor: 'pointer',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
-        padding: theme.densitySettings.table.tableCellPadding,
+        padding: theme.densitySettings.table.cellPadding,
     }),
     resizer: {
         top: 0,
@@ -213,13 +214,14 @@ const styles = {
         color: 'grey.600',
         ml: '4px',
     },
-    squareIconButton: {
+    squareIconButton: (theme) => ({
+        height: theme.densitySettings.table.headerHeight,
         aspectRatio: '1 / 1',
         minWidth: 0,
         textAlign: 'center',
         flex: 1,
         justifyContent: 'center',
-    },
+    }),
     allSpace: {
         width: '100%',
         height: '100%',

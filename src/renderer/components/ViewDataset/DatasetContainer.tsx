@@ -290,6 +290,8 @@ const DatasetContainer: React.FC = () => {
 
         setIsLoading(true);
         const readDataset = async () => {
+            const startTime = performance.now();
+
             const newData = await getData(
                 apiService,
                 currentFileId,
@@ -299,6 +301,7 @@ const DatasetContainer: React.FC = () => {
                 undefined,
                 currentFilter === null ? undefined : currentFilter,
             );
+            const endTime = performance.now();
             if (newData !== null) {
                 newData.header = updateWidth(
                     newData,
@@ -326,10 +329,13 @@ const DatasetContainer: React.FC = () => {
                     setTotalRecords(newData.metadata.records);
                 }
                 if (currentFilter !== null) {
+                    const timeLapsed = ((endTime - startTime) / 1000).toFixed(
+                        2,
+                    );
                     dispatch(
                         openSnackbar({
                             type: 'success',
-                            message: `${newData.data.length} record${newData.data.length === 1 ? '' : 's'} filtered.`,
+                            message: `${newData.data.length} record${newData.data.length === 1 ? '' : 's'} filtered. (${timeLapsed}s)`,
                         }),
                     );
                 }
