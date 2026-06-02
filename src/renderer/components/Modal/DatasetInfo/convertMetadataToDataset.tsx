@@ -11,6 +11,7 @@ const convertMetadataToDataset = (
     onGoToClick: (column: string) => void,
     onShowInfo: (id: string) => void,
     containerWidth?: number,
+    compactMode: boolean = false,
 ): ITableData => {
     const metadata: DatasetJsonMetadata = {
         datasetJSONCreationDateTime: new Date().toISOString(),
@@ -64,6 +65,7 @@ const convertMetadataToDataset = (
             appliedFilter: null,
             fileId: '',
         },
+        compactMode,
     );
 
     // Update header with calculated widths

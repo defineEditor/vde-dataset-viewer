@@ -358,7 +358,7 @@ const InteractiveInput: React.FC<{
             } else if (reason === 'removeOption') {
                 const newCondition = updateConditionValue(
                     conditions[index],
-                    value || [],
+                    value ?? [],
                     columnTypes,
                 );
                 const newConditions = [...conditions];

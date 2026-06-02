@@ -4,9 +4,12 @@ import { ITableRow } from 'interfaces/common';
 import { CoreCell } from '@tanstack/react-table';
 
 const styles = {
-    numberButton: {
+    numberButton: (theme) => ({
+        textTransform: 'none',
         minWidth: '1px',
-    },
+        fontSize: theme.densitySettings.table.fontSize,
+        padding: theme.densitySettings.table.cellPadding,
+    }),
 };
 
 const VariableNumber: React.FC<{

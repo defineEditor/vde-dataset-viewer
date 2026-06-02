@@ -140,7 +140,7 @@ export const getFilterAutocomplete = ({
                 ];
             }
             return {
-                options: updatedUniqueValueOptions[columnId] || [],
+                options: updatedUniqueValueOptions[columnId] ?? [],
                 replaceStart: context.sourceText.length,
                 replaceEnd: context.sourceText.length,
                 insertSuffix: '',
@@ -196,7 +196,7 @@ export const getFilterAutocomplete = ({
 
         const selectedValues = new Set(valueInput.selectedValues);
         const availableOptions = (
-            updatedUniqueValueOptions[columnId] || []
+            updatedUniqueValueOptions[columnId] ?? []
         ).filter(
             (option) =>
                 option === '_show_all_values_' || !selectedValues.has(option),
@@ -223,7 +223,7 @@ export const getFilterAutocomplete = ({
     if (conditionTokens.length === 3 && !endsWithSpace) {
         return {
             options: filterOptions(
-                updatedUniqueValueOptions[columnId] || [],
+                updatedUniqueValueOptions[columnId] ?? [],
                 currentFilterPrefix,
                 true,
             ),

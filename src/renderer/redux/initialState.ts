@@ -49,6 +49,7 @@ export const settings: ISettings = {
         checkForUpdates: true,
         colorMode: 'light',
         themePalette: 'normal',
+        compactMode: false,
         loadingAnimation: 'random',
         inEncoding: 'utf8',
         dragoverAnimation: true,

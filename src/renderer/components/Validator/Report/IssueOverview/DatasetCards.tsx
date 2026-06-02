@@ -231,21 +231,23 @@ const DatasetCards: React.FC<DatasetCardsProps> = ({
                         <CardActions>
                             <Stack direction="row" sx={styles.actions}>
                                 <Tooltip title="Show issue details">
-                                    <IconButton
-                                        onClick={() =>
-                                            onUpdateFilter(
-                                                [datasetIssue.dataset],
-                                                ['dataset'],
-                                                'details',
-                                            )
-                                        }
-                                        aria-label="show issues"
-                                        disabled={
-                                            datasetIssue.totalIssues === 0
-                                        }
-                                    >
-                                        <ArrowCircleRightOutlinedIcon />
-                                    </IconButton>
+                                    <span>
+                                        <IconButton
+                                            onClick={() =>
+                                                onUpdateFilter(
+                                                    [datasetIssue.dataset],
+                                                    ['dataset'],
+                                                    'details',
+                                                )
+                                            }
+                                            aria-label="show issues"
+                                            disabled={
+                                                datasetIssue.totalIssues === 0
+                                            }
+                                        >
+                                            <ArrowCircleRightOutlinedIcon />
+                                        </IconButton>
+                                    </span>
                                 </Tooltip>
                                 <ExpandMore
                                     disabled={datasetIssue.totalIssues === 0}

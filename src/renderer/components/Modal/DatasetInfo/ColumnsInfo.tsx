@@ -22,6 +22,9 @@ const ColumnsInfo: React.FC<{
 }> = ({ metadata, onClose, searchTerm }) => {
     const dispatch = useAppDispatch();
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
+    const compactMode = useAppSelector(
+        (state) => state.settings.other.compactMode,
+    );
 
     // Get width for the table
     const containerRef = useRef<HTMLDivElement>(null);
@@ -57,6 +60,7 @@ const ColumnsInfo: React.FC<{
                 handleGoToClick,
                 handleShowInfo,
                 containerWidth - scrollbarWidth,
+                compactMode,
             ),
         );
     }, [
@@ -65,6 +69,7 @@ const ColumnsInfo: React.FC<{
         handleShowInfo,
         containerWidth,
         scrollbarWidth,
+        compactMode,
     ]);
 
     // Search update

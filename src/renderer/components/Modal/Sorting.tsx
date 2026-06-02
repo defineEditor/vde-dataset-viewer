@@ -53,6 +53,8 @@ const styles = {
     },
 };
 
+const emptyArray: unknown[] = [];
+
 interface SortingOption {
     id: string;
     label: string;
@@ -66,7 +68,8 @@ const Sorting: React.FC = () => {
 
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
     const currentSorting = useAppSelector(
-        (state) => state.ui.control[currentFileId]?.sorting || [],
+        (state) =>
+            state.ui.control[currentFileId]?.sorting || (emptyArray as any[]),
     );
 
     const metadata = apiService.getOpenedFileMetadata(currentFileId);
@@ -74,7 +77,7 @@ const Sorting: React.FC = () => {
         metadata?.columns.map((col) => ({
             id: col.name,
             label: col.name,
-        })) || [];
+        })) ?? [];
 
     const [sorting, setSorting] = useState<DatasetSorting>(currentSorting);
 

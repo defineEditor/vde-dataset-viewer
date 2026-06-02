@@ -59,6 +59,7 @@ export interface ISettings {
         checkForUpdates: boolean;
         colorMode: ThemeModePreference;
         themePalette: ThemePalette;
+        compactMode: boolean;
         loadingAnimation: 'santa' | 'cat' | 'dog' | 'normal' | 'random';
         inEncoding:
             | 'default'

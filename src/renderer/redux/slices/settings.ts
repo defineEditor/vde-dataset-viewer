@@ -37,10 +37,17 @@ export const dataSlice = createSlice({
                 state.other.colorMode = 'dark';
             }
         },
+        toggleCompactMode: (state) => {
+            state.other.compactMode = !state.other.compactMode;
+        },
     },
 });
 
-export const { resetSettings, setSettings, toggleColorMode } =
-    dataSlice.actions;
+export const {
+    resetSettings,
+    setSettings,
+    toggleColorMode,
+    toggleCompactMode,
+} = dataSlice.actions;
 
 export default dataSlice.reducer;

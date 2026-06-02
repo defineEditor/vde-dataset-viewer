@@ -49,6 +49,15 @@ const styles = {
     },
 };
 
+const defaultState: IUiValidation = {
+    status: 'not started',
+    validationProgress: 0,
+    conversionProgress: null,
+    dateCompleted: null,
+    error: null,
+    logFileName: null,
+};
+
 const ProgressContainer: React.FC<{
     validationId: string | null;
     onShowLog: () => void;
@@ -57,16 +66,10 @@ const ProgressContainer: React.FC<{
         conversionProgress,
         validationProgress,
         error = null,
-    } = useAppSelector<IUiValidation>(
-        (state) =>
-            (validationId !== null && state.ui.validation[validationId]) || {
-                status: 'not started',
-                validationProgress: 0,
-                conversionProgress: null,
-                dateCompleted: null,
-                error: null,
-                logFileName: null,
-            },
+    } = useAppSelector<IUiValidation>((state) =>
+        validationId !== null
+            ? (state.ui.validation[validationId] ?? defaultState)
+            : defaultState,
     );
 
     return (

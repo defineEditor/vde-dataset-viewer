@@ -11,6 +11,7 @@ const calculateColumnWidth = (
     widthEstimateRows?: number,
     showTypeIcons?: boolean,
     data?: ITableData,
+    compactMode: boolean = false,
 ): { [id: string]: number } => {
     let result = {};
     // First estimate width based on the content
@@ -31,8 +32,12 @@ const calculateColumnWidth = (
         );
         // Convert to px
         Object.keys(estimateWidths).forEach((key) => {
-            // 9px per character + 18px padding
-            estimateWidths[key] = estimateWidths[key] * 9 + 18;
+            if (compactMode) {
+                estimateWidths[key] = Math.ceil(estimateWidths[key] * 7.5) + 6;
+            } else {
+                // 9px per character + 18px padding
+                estimateWidths[key] = estimateWidths[key] * 9 + 18;
+            }
         });
         // Keep track of fixed width;
         const fixedWidthColumns: string[] = [];

@@ -62,6 +62,8 @@ const AppWithContext: React.FC = () => {
         (state) => state.settings.other.checkForUpdates,
     );
 
+    const saveStoreListenerRegistered = React.useRef(false);
+
     const disableUiAnimation = useAppSelector(
         (state) => state.settings.other.disableUiAnimation,
     );
@@ -70,15 +72,18 @@ const AppWithContext: React.FC = () => {
         (state) => state.settings.other.themePalette,
     );
 
-    const saveStoreListenerRegistered = React.useRef(false);
+    const compactMode = useAppSelector(
+        (state) => state.settings.other.compactMode,
+    );
 
     const theme = useMemo(
         () =>
             createAppTheme({
+                compactMode,
                 disableUiAnimation,
                 themePalette,
             }),
-        [disableUiAnimation, themePalette],
+        [disableUiAnimation, themePalette, compactMode],
     );
 
     useEffect(() => {

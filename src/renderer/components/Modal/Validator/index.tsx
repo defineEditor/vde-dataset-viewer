@@ -258,7 +258,7 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
         (state) => state.ui.dataSettings[currentFileId]?.filteredIssues,
     );
     const [filteredIssues, setFilteredIssues] = React.useState<string[]>(
-        defaultFilteredIssues || [],
+        defaultFilteredIssues ?? [],
     );
 
     const handleShowIssues = () => {

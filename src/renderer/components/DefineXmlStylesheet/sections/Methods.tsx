@@ -89,7 +89,7 @@ const Methods: React.FC<MethodsProps> = ({ content, onOpenFile }) => {
                                                 ),
                                             )}
                                         {renderDocumentRefs(
-                                            method.documentRefs || [],
+                                            method.documentRefs ?? [],
                                             leafs,
                                             onOpenFile,
                                         )}

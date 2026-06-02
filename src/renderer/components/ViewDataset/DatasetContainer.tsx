@@ -49,6 +49,7 @@ const updateWidth = (
     maxColWidth: number,
     showTypeIcons: boolean = false,
     showLabels: boolean = false,
+    compactMode: boolean = false,
 ) => {
     const widths = estimateWidth(
         data,
@@ -60,6 +61,12 @@ const updateWidth = (
     );
     // Update column style with default width
     return data.header.map((col) => {
+        if (compactMode) {
+            return {
+                ...col,
+                size: Math.ceil(widths[col.id] * 7.5) + 6,
+            };
+        }
         // 9px per character + 18px padding
         return {
             ...col,
@@ -194,6 +201,7 @@ const DatasetContainer: React.FC = () => {
                     settings.viewer.maxColWidth,
                     settings.viewer.showTypeIcons,
                     showLabels,
+                    settings.other.compactMode,
                 );
                 setTotalRecords(newData.metadata.records);
                 setTable(newData);
@@ -241,6 +249,7 @@ const DatasetContainer: React.FC = () => {
                         settings.viewer.maxColWidth,
                         settings.viewer.showTypeIcons,
                         showLabels,
+                        settings.other.compactMode,
                     );
                     setTable(newData);
                     dispatch(setPage({ fileId: currentFileId, page: newPage }));
@@ -281,6 +290,8 @@ const DatasetContainer: React.FC = () => {
 
         setIsLoading(true);
         const readDataset = async () => {
+            const startTime = performance.now();
+
             const newData = await getData(
                 apiService,
                 currentFileId,
@@ -290,6 +301,7 @@ const DatasetContainer: React.FC = () => {
                 undefined,
                 currentFilter === null ? undefined : currentFilter,
             );
+            const endTime = performance.now();
             if (newData !== null) {
                 newData.header = updateWidth(
                     newData,
@@ -297,6 +309,7 @@ const DatasetContainer: React.FC = () => {
                     settings.viewer.maxColWidth,
                     settings.viewer.showTypeIcons,
                     showLabels,
+                    settings.other.compactMode,
                 );
                 // Mark filtered columns
                 if (currentFilter !== null) {
@@ -316,10 +329,13 @@ const DatasetContainer: React.FC = () => {
                     setTotalRecords(newData.metadata.records);
                 }
                 if (currentFilter !== null) {
+                    const timeLapsed = ((endTime - startTime) / 1000).toFixed(
+                        2,
+                    );
                     dispatch(
                         openSnackbar({
                             type: 'success',
-                            message: `${newData.data.length} record${newData.data.length === 1 ? '' : 's'} filtered.`,
+                            message: `${newData.data.length} record${newData.data.length === 1 ? '' : 's'} filtered. (${timeLapsed}s)`,
                         }),
                     );
                 }

@@ -41,6 +41,7 @@ import {
     DatasetJsonMetadata,
     TableRowValue,
     BasicFilter,
+    IUiControl,
 } from 'interfaces/common';
 import AppContext from 'renderer/utils/AppContext';
 import Filter from 'js-array-filter';
@@ -60,6 +61,8 @@ const styles = {
         lineHeight: 2,
     },
 };
+
+const emptyArray: unknown[] = [];
 
 interface HeaderContextMenuProps {
     open: boolean;
@@ -85,10 +88,14 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
         (state) => state.data.filterData.currentFilter[currentFileId] || null,
     );
     const currentSorting = useAppSelector(
-        (state) => state.ui.control[currentFileId]?.sorting || [],
+        (state) =>
+            state.ui.control[currentFileId]?.sorting ??
+            (emptyArray as IUiControl['sorting']),
     );
     const currentIdColumns = useAppSelector(
-        (state) => state.ui.control[currentFileId]?.idCols || [],
+        (state) =>
+            state.ui.control[currentFileId]?.idCols ??
+            (emptyArray as IUiControl['idCols']),
     );
     const settings = useAppSelector((state) => state.settings);
     const currentShowLabels = useAppSelector((state) => {

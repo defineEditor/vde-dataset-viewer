@@ -51,6 +51,21 @@ export const Other: React.FC<OtherProps> = ({ settings, onSettingChange }) => (
             <MenuItem value="normal">Default</MenuItem>
             <MenuItem value="solarized">Solarized</MenuItem>
         </TextField>
+        <Stack spacing={0}>
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        checked={settings.other.compactMode}
+                        onChange={onSettingChange}
+                        name="other.compactMode"
+                    />
+                }
+                label="Compact mode"
+            />
+            <Typography variant="caption" sx={styles.helperText}>
+                Use a compact layout to show more information on the screen.
+            </Typography>
+        </Stack>
         <Typography variant="h6">Miscellaneous Settings</Typography>
         <TextField
             label="Input encoding"

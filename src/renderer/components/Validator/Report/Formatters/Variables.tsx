@@ -7,11 +7,12 @@ const styles = {
     container: {
         flexWrap: 'wrap',
     },
-    button: {
+    button: (theme) => ({
         textTransform: 'none',
         minWidth: '1px',
-        p: 0.5,
-    },
+        fontSize: theme.densitySettings.table.fontSize,
+        padding: theme.densitySettings.table.rowNumberPadding,
+    }),
     text: {
         p: 0.5,
         lineHeight: '1.75',
