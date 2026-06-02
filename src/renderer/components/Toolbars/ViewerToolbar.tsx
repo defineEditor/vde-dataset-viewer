@@ -352,7 +352,7 @@ const Header: React.FC = () => {
             <Tooltip title="Reload" enterDelay={1000}>
                 <IconButton
                     onClick={handleReloadClick}
-                    id="open"
+                    id="reload"
                     size="small"
                     disabled={currentFileMode === 'remote'}
                 >
@@ -447,7 +447,7 @@ const Header: React.FC = () => {
             <Tooltip title="Compare" enterDelay={1000}>
                 <IconButton
                     onClick={handleCompareClick}
-                    id="filterData"
+                    id="compare"
                     size="small"
                 >
                     <CompareArrowsIcon
