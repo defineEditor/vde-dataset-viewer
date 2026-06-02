@@ -14,11 +14,7 @@ import {
 } from 'interfaces/common';
 import deepEqual from 'renderer/utils/deepEqual';
 import getFolderName from 'renderer/utils/getFolderName';
-import {
-    closeDataset,
-    openDataset,
-    closeCompare,
-} from 'renderer/redux/slices/ui';
+import { closeDataset, closeCompare } from 'renderer/redux/slices/ui';
 
 export const dataSlice = createSlice({
     name: 'data',
@@ -148,11 +144,6 @@ export const dataSlice = createSlice({
         setConverterData: (state, action: PayloadAction<ConverterData>) => {
             state.converter = action.payload;
         },
-        // Mask related actions
-        selectMask: (state, action: PayloadAction<IMask>) => {
-            state.maskData.currentMask = action.payload;
-            return state;
-        },
         saveMask: (state, action: PayloadAction<IMask>) => {
             // Check if mask with this id already exists
             const existingIndex = state.maskData.savedMasks.findIndex(
@@ -174,10 +165,6 @@ export const dataSlice = createSlice({
             state.maskData.savedMasks = state.maskData.savedMasks.filter(
                 (mask) => mask.id !== action.payload.id,
             );
-            return state;
-        },
-        clearMask: (state) => {
-            state.maskData.currentMask = null;
             return state;
         },
         saveIdColumnSet: (state, action: PayloadAction<IIdColumnSet>) => {
@@ -315,17 +302,6 @@ export const dataSlice = createSlice({
         },
     },
     extraReducers: (builder) => {
-        builder.addCase(openDataset, (state, _action) => {
-            // If mask is not sticky, reset it
-            if (
-                state.maskData.currentMask &&
-                !state.maskData.currentMask.sticky
-            ) {
-                state.maskData.currentMask = null;
-            }
-
-            return state;
-        });
         builder.addCase(closeDataset, (state, action) => {
             // Remove file from the loaded records
             const { fileId } = action.payload;
@@ -335,13 +311,6 @@ export const dataSlice = createSlice({
             // Remove filters associated with the closed file
             if (state.filterData.currentFilter[fileId]) {
                 delete state.filterData.currentFilter[fileId];
-            }
-            // If mask is not sticky, reset it
-            if (
-                state.maskData.currentMask &&
-                !state.maskData.currentMask.sticky
-            ) {
-                state.maskData.currentMask = null;
             }
         });
         builder.addCase(closeCompare, (state, action) => {
@@ -365,10 +334,8 @@ export const {
     setLoadedRecords,
     clearLoadedRecords,
     setConverterData,
-    selectMask,
     saveMask,
     deleteMask,
-    clearMask,
     saveIdColumnSet,
     deleteIdColumnSet,
     setValidatorData,

@@ -8,6 +8,7 @@ import {
     AllowedPathnames,
     DataType,
     ModalType,
+    IMask,
     DataMode,
     IUiViewer,
     DefineTab,
@@ -231,6 +232,16 @@ export const uiSlice = createSlice({
                 return;
             }
             state.control[fileId].idCols = idCols;
+        },
+        setMask: (
+            state,
+            action: PayloadAction<{ fileId: string; mask: IMask | null }>,
+        ) => {
+            const { fileId, mask } = action.payload;
+            if (!state.control[fileId]) {
+                return;
+            }
+            state.control[fileId].mask = mask;
         },
         setDatasetShowLabels: (
             state,
@@ -594,6 +605,7 @@ export const {
     setDatasetScrollPosition,
     setDatasetSorting,
     setDatasetIdColumns,
+    setMask,
     setDatasetShowLabels,
     setBottomSection,
     setValidationModalTab,

@@ -160,6 +160,7 @@ export interface IUiControl {
         id: string;
     }[];
     idCols: string[];
+    mask: IMask | null;
     showLabels?: boolean;
 }
 
@@ -319,7 +320,6 @@ export interface IData {
         }[];
     };
     maskData: {
-        currentMask: IMask | null;
         savedMasks: IMask[];
     };
     idColumnData: {

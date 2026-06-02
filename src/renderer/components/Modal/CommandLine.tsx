@@ -25,13 +25,12 @@ import {
     openModal,
     setDatasetIdColumns,
     setDatasetSorting,
+    setMask,
     setGoTo,
 } from 'renderer/redux/slices/ui';
 import {
     addRecentCommand,
-    clearMask,
     resetFilter,
-    selectMask,
     setFilter,
 } from 'renderer/redux/slices/data';
 import { IMask, IUiModal } from 'interfaces/common';
@@ -113,7 +112,7 @@ const CommandLine: React.FC<IUiModal> = () => {
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
     const settings = useAppSelector((state) => state.settings);
     const currentMask = useAppSelector(
-        (state) => state.data.maskData.currentMask,
+        (state) => state.ui.control[currentFileId]?.mask,
     );
     const currentIdColumns = useAppSelector(
         (state) =>
@@ -121,7 +120,8 @@ const CommandLine: React.FC<IUiModal> = () => {
     );
     const currentSorting = useAppSelector(
         (state) =>
-            state.ui.control[currentFileId]?.sorting || (emptyArray as any[]),
+            state.ui.control[currentFileId]?.sorting ||
+            (emptyArray as Record<string, string>[]),
     );
     const currentFilter = useAppSelector(
         (state) => state.data.filterData.currentFilter[currentFileId] || null,
@@ -242,7 +242,7 @@ const CommandLine: React.FC<IUiModal> = () => {
         result.actions.forEach((action) => {
             switch (action.type) {
                 case 'resetAll':
-                    dispatch(clearMask());
+                    dispatch(setMask({ fileId: currentFileId, mask: null }));
                     dispatch(resetFilter({ fileId: currentFileId }));
                     dispatch(
                         setDatasetIdColumns({
@@ -274,7 +274,7 @@ const CommandLine: React.FC<IUiModal> = () => {
                     );
                     break;
                 case 'clearMask':
-                    dispatch(clearMask());
+                    dispatch(setMask({ fileId: currentFileId, mask: null }));
                     break;
                 case 'setIdColumns':
                     dispatch(
@@ -298,7 +298,9 @@ const CommandLine: React.FC<IUiModal> = () => {
                     );
 
                     if (normalizedColumns.length === allColumnNames.length) {
-                        dispatch(clearMask());
+                        dispatch(
+                            setMask({ fileId: currentFileId, mask: null }),
+                        );
                         break;
                     }
 
@@ -309,7 +311,7 @@ const CommandLine: React.FC<IUiModal> = () => {
                         columns: normalizedColumns,
                     };
 
-                    dispatch(selectMask(mask));
+                    dispatch(setMask({ fileId: currentFileId, mask }));
                     break;
                 }
                 case 'openVariableInfo':
@@ -440,6 +442,12 @@ const CommandLine: React.FC<IUiModal> = () => {
         [command, commandAutocomplete, resolvedCategory],
     );
 
+    const handleOpen = useCallback((event: React.SyntheticEvent) => {
+        if (event.type === 'click') {
+            setHistoryRequested(true);
+        }
+    }, []);
+
     const handleInputKeyDown = useCallback(
         (event: React.KeyboardEvent<HTMLInputElement>) => {
             if (event.key === 'ArrowDown' && command.trim() === '') {
@@ -503,6 +511,8 @@ const CommandLine: React.FC<IUiModal> = () => {
             <DialogContent>
                 <Autocomplete
                     freeSolo
+                    forcePopupIcon={command === ''}
+                    onOpen={command === '' ? handleOpen : undefined}
                     options={autocompleteOptions}
                     open={autocompleteOpen}
                     loading={isAutocompleteLoading}
