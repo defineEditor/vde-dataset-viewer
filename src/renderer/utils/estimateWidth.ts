@@ -85,9 +85,9 @@ export default function estimateWidth(
                 longestWord = 4;
             }
             // Id.length - label length + space for icons
-            // 2 chars for sort icon
+            // 3 chars for sort icon
             // 2 chars in case it is a formatted datetime column
-            const iconsSize = 2 + (showTypeIcons ? 3 : 0);
+            const iconsSize = 3 + (showTypeIcons ? 3 : 0);
             result[id] = Math.min(
                 Math.round(
                     skipIdLength

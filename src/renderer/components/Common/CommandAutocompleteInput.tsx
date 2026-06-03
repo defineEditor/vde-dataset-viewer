@@ -314,6 +314,7 @@ const CommandAutocompleteInput: React.FC<CommandAutocompleteInputProps> = ({
         (event: React.KeyboardEvent<HTMLInputElement>) => {
             if (event.key === 'ArrowDown' && value.trim() === '') {
                 setHistoryRequested(true);
+                setIsInitialInput(false);
                 event.preventDefault();
                 return;
             }

@@ -222,6 +222,24 @@ const DatasetContainer: React.FC = () => {
         showLabels,
     ]);
 
+    useEffect(() => {
+        // Update header widths if showLabels was toggled
+        setTable((prevTable) => {
+            if (prevTable === null) return null;
+            return {
+                ...prevTable,
+                header: updateWidth(
+                    prevTable,
+                    settings.viewer.estimateWidthRows,
+                    settings.viewer.maxColWidth,
+                    settings.viewer.showTypeIcons,
+                    showLabels,
+                    settings.other.compactMode,
+                ),
+            };
+        });
+    }, [settings, showLabels]);
+
     // Pagination
     const handleChangePage = useCallback(
         (_event, newPage: number) => {
