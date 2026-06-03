@@ -595,8 +595,9 @@ const FilterBody: React.FC<FilterBodyProps> = ({
                         <ManualInput
                             inputValue={inputValue}
                             handleSetInputValue={setInputValue}
-                            columns={metadata.columns}
                             datasetName={dataset.name}
+                            fileId={fileId}
+                            metadata={metadata}
                         />
                     )}
                     {['dataset', 'compare'].includes(filterType) && (

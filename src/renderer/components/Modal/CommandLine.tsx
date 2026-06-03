@@ -3,20 +3,14 @@ import React, {
     useContext,
     useEffect,
     useMemo,
-    useRef,
     useState,
 } from 'react';
 import {
-    Autocomplete,
-    AutocompleteInputChangeReason,
     Button,
     Dialog,
     DialogActions,
     DialogContent,
     DialogTitle,
-    TextField,
-    Typography,
-    Box,
 } from '@mui/material';
 import AppContext from 'renderer/utils/AppContext';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
@@ -36,10 +30,8 @@ import {
 import { IMask, IUiModal } from 'interfaces/common';
 import { modals } from 'misc/constants';
 import { parseDatasetCommand } from 'renderer/utils/commandLine';
-import {
-    getCommandHelperText,
-    useCommandAutocomplete,
-} from 'renderer/components/hooks/useCommandAutocomplete';
+import { getCommandHelperText } from 'renderer/components/hooks/useCommandAutocomplete';
+import CommandAutocompleteInput from 'renderer/components/Common/CommandAutocompleteInput';
 
 const styles = {
     dialog: {
@@ -55,59 +47,13 @@ const styles = {
     field: {
         mt: 1,
     },
-    showAllValuesLi: {
-        pointerEvents: 'none',
-        opacity: 1,
-        '&.MuiAutocomplete-option[aria-disabled="true"]': {
-            pointerEvents: 'none',
-            opacity: 1,
-        },
-    },
 };
 
 const emptyArray: unknown[] = [];
 
-const handleRenderOption = (
-    props: React.HTMLAttributes<HTMLLIElement> & {
-        key: React.Key;
-    },
-    option: string | React.ReactNode,
-    _state,
-    _ownerState,
-): string | React.ReactNode => {
-    const { key, ...optionProps } = props;
-    if (option === '_show_all_values_') {
-        return (
-            <Box
-                key={key}
-                component="li"
-                {...optionProps}
-                aria-disabled
-                onMouseDown={(event: React.MouseEvent<HTMLLIElement>) => {
-                    event.preventDefault();
-                }}
-                onClick={(event: React.MouseEvent<HTMLLIElement>) => {
-                    event.preventDefault();
-                }}
-                sx={styles.showAllValuesLi}
-            >
-                <Typography variant="caption" color="primary">
-                    Press Tab to show all values (max 1000)
-                </Typography>
-            </Box>
-        );
-    }
-    return (
-        <Box key={key} component="li" {...optionProps}>
-            {option}
-        </Box>
-    );
-};
-
 const CommandLine: React.FC<IUiModal> = () => {
     const dispatch = useAppDispatch();
     const { apiService } = useContext(AppContext);
-    const inputRef = useRef<HTMLInputElement | null>(null);
 
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
     const settings = useAppSelector((state) => state.settings);
@@ -167,46 +113,6 @@ const CommandLine: React.FC<IUiModal> = () => {
 
     const [command, setCommand] = useState('');
     const [helperText, setHelperText] = useState({ text: '', isError: false });
-    const [historyRequested, setHistoryRequested] = useState(false);
-    const [allValuesColumns, setAllValuesColumns] = useState<string[]>([]);
-    const showHistory = historyRequested;
-    const { commandAutocomplete, isAutocompleteLoading, resolvedCategory } =
-        useCommandAutocomplete({
-            apiService,
-            allColumnNames,
-            category: showHistory ? 'history' : undefined,
-            columnTypes,
-            allValuesColumns,
-            command,
-            currentFileId,
-            historyOptions: recentCommandStrings,
-            metadata,
-            settings,
-        });
-
-    const autocompleteOptions = commandAutocomplete?.options ?? [];
-
-    const [autocompleteOpen, setAutocompleteOpen] = useState(false);
-
-    useEffect(() => {
-        setAutocompleteOpen((prevValue) => {
-            if (
-                prevValue === false &&
-                commandAutocomplete?.tokenType === 'value' &&
-                commandAutocomplete.options.length === 1 &&
-                commandAutocomplete.replaceEnd -
-                    commandAutocomplete.replaceStart ===
-                    commandAutocomplete.options[0].length
-            ) {
-                return false;
-            }
-            return Boolean(
-                commandAutocomplete &&
-                (commandAutocomplete.options.length > 0 ||
-                    commandAutocomplete.loadingColumnId),
-            );
-        });
-    }, [commandAutocomplete]);
 
     useEffect(() => {
         setHelperText(getCommandHelperText(command));
@@ -361,140 +267,6 @@ const CommandLine: React.FC<IUiModal> = () => {
         metadata,
     ]);
 
-    const handleInputChange = useCallback(
-        (
-            _event: React.SyntheticEvent,
-            value: string,
-            reason: AutocompleteInputChangeReason,
-        ) => {
-            if (reason === 'selectOption') {
-                setAutocompleteOpen(false);
-
-                if (resolvedCategory === 'history' || !commandAutocomplete) {
-                    setCommand(value);
-                    setHistoryRequested(false);
-                    requestAnimationFrame(() => {
-                        inputRef.current?.focus();
-                        inputRef.current?.setSelectionRange(
-                            value.length,
-                            value.length,
-                        );
-                    });
-                    return;
-                }
-
-                // If a comparator function is selected, we need to transform the command to the function call;
-                let nextCommand = '';
-                if (
-                    commandAutocomplete.tokenType === 'operator' &&
-                    ['missing', 'notMissing'].includes(value)
-                ) {
-                    const commandParts = command.split(';');
-                    const updatedCommand = `${command.replace(/^(\s*\S+).*/, '$1')} ${value}(${commandAutocomplete.columnId})`;
-                    commandParts.splice(
-                        commandParts.length - 1,
-                        1,
-                        updatedCommand,
-                    );
-                    nextCommand = commandParts.join(';');
-                } else {
-                    let suffix = commandAutocomplete.insertSuffix || '';
-                    // If in or notin are used, add the opening parenthesis.
-                    if (
-                        ['in', 'notin'].includes(value.toLowerCase()) &&
-                        commandAutocomplete.tokenType === 'operator'
-                    ) {
-                        suffix += '(';
-                    }
-                    nextCommand = `${command.slice(
-                        0,
-                        commandAutocomplete.replaceStart,
-                    )}${value}${suffix}${command.slice(
-                        commandAutocomplete.replaceEnd,
-                    )}`;
-                }
-
-                setCommand(nextCommand);
-                setHistoryRequested(false);
-
-                // requestAnimationFrame(() => {
-                //     const nextCursor =
-                //         commandAutocomplete.replaceStart +
-                //         value.length +
-                //         commandAutocomplete.insertSuffix.length;
-                //     inputRef.current?.focus();
-                //     inputRef.current?.setSelectionRange(nextCursor, nextCursor);
-                // });
-                return;
-            }
-
-            if (reason === 'reset') {
-                return;
-            }
-
-            if (reason === 'clear') {
-                setAutocompleteOpen(false);
-                setHelperText({ text: '', isError: false });
-            }
-
-            setCommand(value);
-        },
-        [command, commandAutocomplete, resolvedCategory],
-    );
-
-    const handleOpen = useCallback((event: React.SyntheticEvent) => {
-        if (event.type === 'click') {
-            setHistoryRequested(true);
-        }
-    }, []);
-
-    const handleInputKeyDown = useCallback(
-        (event: React.KeyboardEvent<HTMLInputElement>) => {
-            if (event.key === 'ArrowDown' && command.trim() === '') {
-                setHistoryRequested(true);
-                event.preventDefault();
-                return;
-            }
-
-            if (event.key === 'Escape') {
-                event.preventDefault();
-                if (showHistory) {
-                    setHistoryRequested(false);
-                    return;
-                }
-                if (autocompleteOpen) {
-                    setAutocompleteOpen(false);
-                    return;
-                }
-                handleClose();
-                return;
-            }
-
-            if (event.key === 'Enter' && !autocompleteOpen) {
-                event.preventDefault();
-                handleSubmit();
-            }
-
-            if (event.key === 'Tab' && commandAutocomplete?.columnId) {
-                event.preventDefault();
-                setAllValuesColumns((prev) => {
-                    if (prev.includes(commandAutocomplete.columnId!)) {
-                        return prev;
-                    }
-                    return [...prev, commandAutocomplete.columnId!];
-                });
-            }
-        },
-        [
-            command,
-            commandAutocomplete?.columnId,
-            handleClose,
-            handleSubmit,
-            autocompleteOpen,
-            showHistory,
-        ],
-    );
-
     if (!metadata) {
         return null;
     }
@@ -509,39 +281,28 @@ const CommandLine: React.FC<IUiModal> = () => {
         >
             <DialogTitle sx={styles.title}>Command Line</DialogTitle>
             <DialogContent>
-                <Autocomplete
-                    freeSolo
-                    forcePopupIcon={command === ''}
-                    onOpen={command === '' ? handleOpen : undefined}
-                    options={autocompleteOptions}
-                    open={autocompleteOpen}
-                    loading={isAutocompleteLoading}
-                    inputValue={command}
-                    onInputChange={handleInputChange}
-                    renderOption={handleRenderOption}
-                    onClose={() => {
-                        if (showHistory) {
-                            setHistoryRequested(false);
-                        }
-                    }}
-                    filterOptions={(options) => options}
+                <CommandAutocompleteInput
+                    value={command}
+                    onValueChange={setCommand}
+                    historyOptions={recentCommandStrings}
+                    label="Command"
+                    placeholder="id USUBJID; idadd AVISIT; sort /A.*/ desc"
+                    helperText={
+                        helperText.text ||
+                        'Commands: id<add>, sort<add>, show<add>, hide<add>, filter<add>, info, go, reset. Separate multiple commands with ;'
+                    }
+                    error={helperText.isError}
+                    autoFocus
+                    onSubmit={handleSubmit}
+                    onEscape={handleClose}
                     sx={styles.field}
-                    renderInput={(params) => (
-                        <TextField
-                            {...params}
-                            autoFocus
-                            inputRef={inputRef}
-                            fullWidth
-                            label="Command"
-                            placeholder="id USUBJID; idadd AVISIT; sort /A.*/ desc"
-                            onKeyDown={handleInputKeyDown}
-                            helperText={
-                                helperText.text ||
-                                'Commands: id<add>, sort<add>, show<add>, hide<add>, filter<add>, info, go, reset. Separate multiple commands with ;'
-                            }
-                            error={helperText.isError}
-                        />
-                    )}
+                    mode="command"
+                    allColumnNames={allColumnNames}
+                    columnTypes={columnTypes}
+                    metadata={metadata}
+                    currentFileId={currentFileId}
+                    apiService={apiService}
+                    settings={settings}
                 />
             </DialogContent>
             <DialogActions sx={styles.actions}>
