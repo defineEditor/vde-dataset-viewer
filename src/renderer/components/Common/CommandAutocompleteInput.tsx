@@ -214,11 +214,12 @@ const CommandAutocompleteInput: React.FC<CommandAutocompleteInputProps> = ({
 
     const handleInputChange = useCallback(
         (
-            _event: React.SyntheticEvent,
+            event: React.SyntheticEvent,
             nextValue: string,
             reason: AutocompleteInputChangeReason,
         ) => {
             if (reason === 'selectOption') {
+                event.stopPropagation();
                 setAutocompleteOpen(false);
 
                 if (resolvedCategory === 'history' || !commandAutocomplete) {
@@ -340,6 +341,16 @@ const CommandAutocompleteInput: React.FC<CommandAutocompleteInputProps> = ({
                 onSubmit();
             }
 
+            if (
+                event.key === 'Enter' &&
+                mode === 'filter' &&
+                autocompleteOpen
+            ) {
+                // We selected a value and we do not want to validate it at this moment
+                event.preventDefault();
+                return;
+            }
+
             if (event.key === 'Tab' && commandAutocomplete?.columnId) {
                 event.preventDefault();
                 setAllValuesColumns((prev) => {
@@ -360,6 +371,7 @@ const CommandAutocompleteInput: React.FC<CommandAutocompleteInputProps> = ({
             onSubmit,
             historyRequested,
             value,
+            mode,
         ],
     );
 

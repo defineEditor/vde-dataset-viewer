@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import {
     TextField,
+    Typography,
     Button,
     Stack,
     IconButton,
@@ -24,14 +25,14 @@ import { BasicFilter, Connector, FilterCondition } from 'interfaces/common';
 
 const styles = {
     columnSelect: {
-        minWidth: '150px',
+        minWidth: '200px',
     },
     operator: {
         width: '140px',
         mt: 2,
     },
     valueSelect: {
-        minWidth: '250px',
+        minWidth: '270px',
     },
     connector: {
         width: '70px',
@@ -116,6 +117,43 @@ const updateConditionValue = (
     return newCondition;
 };
 
+const handleRenderOption = (
+    props: React.HTMLAttributes<HTMLLIElement> & {
+        key: React.Key;
+    },
+    option: string | React.ReactNode,
+    _state,
+    _ownerState,
+): string | React.ReactNode => {
+    const { key, ...optionProps } = props;
+    if (option === '_show_all_values_') {
+        return (
+            <Box
+                key={key}
+                component="li"
+                {...optionProps}
+                aria-disabled
+                onMouseDown={(event: React.MouseEvent<HTMLLIElement>) => {
+                    event.preventDefault();
+                }}
+                onClick={(event: React.MouseEvent<HTMLLIElement>) => {
+                    event.preventDefault();
+                }}
+                sx={styles.showAllValuesLi}
+            >
+                <Typography variant="caption" color="primary">
+                    Press Tab to show all values (max 1000)
+                </Typography>
+            </Box>
+        );
+    }
+    return (
+        <Box key={key} component="li" {...optionProps}>
+            {option}
+        </Box>
+    );
+};
+
 const ValueAutocomplete: React.FC<{
     condition: FilterCondition;
     columnTypes: Record<string, 'string' | 'number' | 'boolean'>;
@@ -129,6 +167,7 @@ const ValueAutocomplete: React.FC<{
     onInputChange: (
         event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => void;
+    onGetUniqueValues: (column: string, getAll?: boolean) => Promise<void>;
 }> = ({
     condition,
     columnTypes,
@@ -136,6 +175,7 @@ const ValueAutocomplete: React.FC<{
     onSelectChange,
     onInputChange,
     uniqueValues,
+    onGetUniqueValues,
 }) => {
     const columnType = columnTypes[condition.variable.toLowerCase()];
     const isMultiple = ['in', 'notin'].includes(condition.operator);
@@ -176,6 +216,15 @@ const ValueAutocomplete: React.FC<{
         (name) => name.toLowerCase() === condition.variable.toLowerCase(),
     );
 
+    const handleInputKeyDown = (
+        event: React.KeyboardEvent<HTMLInputElement>,
+    ) => {
+        if (event.key === 'Tab') {
+            onGetUniqueValues([columnName], true);
+            event.preventDefault();
+        }
+    };
+
     let valueOptions: string[] = [];
 
     if (columnName !== undefined && uniqueValues[columnName]) {
@@ -193,6 +242,7 @@ const ValueAutocomplete: React.FC<{
             options={valueOptions}
             value={textValue}
             inputValue={inputValue}
+            renderOption={handleRenderOption}
             onInputChange={(_event, newInputValue) => {
                 setInputValue(newInputValue);
             }}
@@ -223,6 +273,7 @@ const ValueAutocomplete: React.FC<{
                     fullWidth
                     margin="normal"
                     onChange={isMultiple ? () => {} : onInputChange}
+                    onKeyDown={handleInputKeyDown}
                     autoFocus
                 />
             )}
@@ -236,7 +287,15 @@ const InteractiveInput: React.FC<{
     columnNames: string[];
     columnTypes: Record<string, 'string' | 'number' | 'boolean'>;
     uniqueValues: { [key: string]: Array<string | boolean | number> };
-}> = ({ columnNames, columnTypes, filter, onChange, uniqueValues }) => {
+    onGetUniqueValues: (column: string, getAll?: boolean) => Promise<void>;
+}> = ({
+    columnNames,
+    columnTypes,
+    filter,
+    onChange,
+    uniqueValues,
+    onGetUniqueValues,
+}) => {
     let nonNullFilter: BasicFilter;
     if (filter === null || filter.conditions.length === 0) {
         nonNullFilter = {
@@ -266,7 +325,12 @@ const InteractiveInput: React.FC<{
 
     const handleRemoveCondition = (index: number) => {
         const newConditions = conditions.filter((_, i) => i !== index);
-        const newConnectors = connectors.filter((_, i) => i !== index - 1);
+        let newConnectors: typeof connectors = [];
+        if (index === 0) {
+            newConnectors = connectors.filter((_, i) => i !== 0);
+        } else {
+            newConnectors = connectors.filter((_, i) => i !== index - 1);
+        }
         const newFilter = {
             conditions: newConditions,
             connectors: newConnectors,
@@ -452,6 +516,14 @@ const InteractiveInput: React.FC<{
                         freeSolo
                         sx={styles.columnSelect}
                         options={columnNames.map((name) => name.toUpperCase())}
+                        slotProps={{
+                            popper: {
+                                placement: 'bottom-start',
+                                sx: {
+                                    minWidth: 'fit-content',
+                                },
+                            },
+                        }}
                         value={condition.variable.toUpperCase()}
                         filterOptions={(options, state) => {
                             return options.filter((option) =>
@@ -527,9 +599,10 @@ const InteractiveInput: React.FC<{
                             uniqueValues={uniqueValues}
                             onSelectChange={handleValueSelect(index)}
                             onInputChange={handleValueChange(index)}
+                            onGetUniqueValues={onGetUniqueValues}
                         />
                     )}
-                    {index > 0 && (
+                    {conditions.length > 1 && (
                         <IconButton
                             onClick={() => handleRemoveCondition(index)}
                         >

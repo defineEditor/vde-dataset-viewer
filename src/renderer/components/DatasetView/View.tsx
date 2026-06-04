@@ -42,6 +42,7 @@ const getContainerStyle =
             height: settings.height ? `${settings.height}px` : '100vh',
             userSelect: 'none',
             scrollbarColor: `${theme.vars?.palette.scrollbar.thumb} ${theme.vars?.palette.scrollbar.track}`,
+            borderRadius: '0px',
         };
         if (settings.width) {
             result.width = `${settings.width}px`;
