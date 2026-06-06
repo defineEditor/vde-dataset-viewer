@@ -185,3 +185,28 @@ export const handleTransformation = (
     }
     return updatedValue;
 };
+
+// Get safe value;
+export const getSafeValue = (
+    header: IHeaderCell,
+    rawVal: string | number | boolean | null,
+    dateFormat: ISettings['viewer']['dateFormat'],
+    isStringColumn: boolean,
+) => {
+    const val = handleTransformation(
+        header.numericDatetimeType,
+        rawVal,
+        dateFormat,
+    );
+    if (val === null) {
+        return isStringColumn ? `''` : `null`;
+    }
+    if (isStringColumn && typeof val === 'string') {
+        if (val.includes("'")) {
+            return `"${val}"`;
+        }
+
+        return `'${val}'`;
+    }
+    return val;
+};

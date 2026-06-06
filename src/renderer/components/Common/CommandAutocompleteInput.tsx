@@ -281,11 +281,10 @@ const CommandAutocompleteInput: React.FC<CommandAutocompleteInputProps> = ({
             if (isInitialInput) {
                 setIsInitialInput(false);
             }
+            const lastWord = nextValue.split(' ')?.at(-1) ?? '';
             if (
                 commandAutocomplete?.tokenType === 'operator' &&
-                ['in', 'notin'].includes(
-                    nextValue.split(' ')?.at(-1)?.toLowerCase(),
-                )
+                ['in', 'notin'].includes(lastWord.toLowerCase())
             ) {
                 // Automatically add opening parenthesis
                 onValueChange(`${nextValue} (`);

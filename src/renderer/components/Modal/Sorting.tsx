@@ -69,7 +69,8 @@ const Sorting: React.FC = () => {
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
     const currentSorting = useAppSelector(
         (state) =>
-            state.ui.control[currentFileId]?.sorting || (emptyArray as any[]),
+            state.ui.control[currentFileId]?.sorting ||
+            (emptyArray as { desc: boolean; id: string }[]),
     );
 
     const metadata = apiService.getOpenedFileMetadata(currentFileId);

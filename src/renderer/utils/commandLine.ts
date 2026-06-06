@@ -29,8 +29,10 @@ interface ParseDatasetCommandParams {
     currentVisibleColumns?: string[];
 }
 
-interface ParseSingleDatasetCommandParams
-    extends Omit<ParseDatasetCommandParams, 'commandLine'> {
+interface ParseSingleDatasetCommandParams extends Omit<
+    ParseDatasetCommandParams,
+    'commandLine'
+> {
     command: string;
 }
 

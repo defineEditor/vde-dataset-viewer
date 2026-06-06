@@ -41,6 +41,14 @@ const styles = {
     rowAlignCenter: {
         alignItems: 'center',
     },
+    showAllValuesLi: {
+        pointerEvents: 'none',
+        opacity: 1,
+        '&.MuiAutocomplete-option[aria-disabled="true"]': {
+            pointerEvents: 'none',
+            opacity: 1,
+        },
+    },
 };
 
 const updateConditionVariable = (
@@ -167,7 +175,7 @@ const ValueAutocomplete: React.FC<{
     onInputChange: (
         event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => void;
-    onGetUniqueValues: (column: string, getAll?: boolean) => Promise<void>;
+    onGetUniqueValues: (column: string[], getAll?: boolean) => Promise<void>;
 }> = ({
     condition,
     columnTypes,
@@ -219,7 +227,7 @@ const ValueAutocomplete: React.FC<{
     const handleInputKeyDown = (
         event: React.KeyboardEvent<HTMLInputElement>,
     ) => {
-        if (event.key === 'Tab') {
+        if (event.key === 'Tab' && columnName !== undefined) {
             onGetUniqueValues([columnName], true);
             event.preventDefault();
         }
@@ -248,7 +256,7 @@ const ValueAutocomplete: React.FC<{
             }}
             filterOptions={(options, state) => {
                 const filteredOptions = options.filter((option) =>
-                    option
+                    String(option)
                         .toLowerCase()
                         .includes(state.inputValue.toLowerCase()),
                 );
@@ -258,7 +266,9 @@ const ValueAutocomplete: React.FC<{
                 }
                 return filteredOptions;
             }}
-            onChange={onSelectChange}
+            onChange={(event, value, reason) =>
+                onSelectChange(event, String(value), reason)
+            }
             renderInput={(params) => (
                 <TextField
                     {...params}
@@ -287,7 +297,7 @@ const InteractiveInput: React.FC<{
     columnNames: string[];
     columnTypes: Record<string, 'string' | 'number' | 'boolean'>;
     uniqueValues: { [key: string]: Array<string | boolean | number> };
-    onGetUniqueValues: (column: string, getAll?: boolean) => Promise<void>;
+    onGetUniqueValues: (column: string[], getAll?: boolean) => Promise<void>;
 }> = ({
     columnNames,
     columnTypes,

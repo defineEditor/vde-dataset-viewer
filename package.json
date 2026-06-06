@@ -22,7 +22,7 @@
         "build:main": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.main.prod.ts",
         "build:renderer": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.renderer.prod.ts",
         "postinstall": "ts-node .erb/scripts/check-native-dep.js && electron-builder install-app-deps && npm run build:dll",
-        "lint": "cross-env NODE_ENV=development eslint . --ext .js,.jsx,.ts,.tsx",
+        "lint": "cross-env NODE_ENV=development eslint . --ext .js,.jsx,.ts,.tsx --ignore-pattern src/__tests__",
         "lint:fix": "cross-env NODE_ENV=development eslint . --ext .js,.jsx,.ts,.tsx --fix",
         "bp-linux": "npm run build && electron-builder build --linux --publish never && ts-node ./.erb/scripts/moveFiles.ts",
         "package-linux": "npm run build && electron-builder build --linux --publish never && ts-node ./.erb/scripts/moveFiles.ts",

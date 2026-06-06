@@ -20,7 +20,7 @@ import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import ChecklistIcon from '@mui/icons-material/Checklist';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutlined';
 import DisabledByDefaultSharpIcon from '@mui/icons-material/DisabledByDefaultSharp';
-import { handleTransformation } from 'renderer/utils/transformUtils';
+import { getSafeValue } from 'renderer/utils/transformUtils';
 import { resetFilter, setFilter } from 'renderer/redux/slices/data';
 import { restartCompare } from 'renderer/redux/slices/ui';
 
@@ -80,15 +80,14 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
 
     const handleFilterByValue = (exclude: boolean = false) => {
         // Filter by value
-        const updatedValue = handleTransformation(
-            header.numericDatetimeType,
+        const updatedValue = getSafeValue(
+            header,
             value,
             dateFormat,
+            isStringColumn,
         );
 
-        const condition = isStringColumn
-            ? `${header.id} ${exclude ? '!=' : '='} '${updatedValue}'`
-            : `${header.id} ${exclude ? '!=' : '='} ${updatedValue}`;
+        const condition = `${header.id} ${exclude ? '!=' : '='} ${updatedValue}`;
         const newFilter = new Filter(
             'dataset-json1.1',
             metadata.columns,
@@ -114,14 +113,13 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
                 metadata.columns,
                 currentFilter,
             );
-            const updatedValue = handleTransformation(
-                header.numericDatetimeType,
+            const updatedValue = getSafeValue(
+                header,
                 value,
                 dateFormat,
+                isStringColumn,
             );
-            const condition = isStringColumn
-                ? `${header.id} ${exclude ? '!=' : '='} '${updatedValue}'`
-                : `${header.id} ${exclude ? '!=' : '='} ${updatedValue}`;
+            const condition = `${header.id} ${exclude ? '!=' : '='} ${updatedValue}`;
             const filterString = newFilter.toString();
             newFilter.update(`${filterString} and ${condition}`);
             dispatch(

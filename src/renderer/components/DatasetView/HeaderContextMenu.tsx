@@ -34,7 +34,7 @@ import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import LabelIcon from '@mui/icons-material/Label';
 import LabelOffIcon from '@mui/icons-material/LabelOff';
 import SortIcon from '@mui/icons-material/Sort';
-import { handleTransformation } from 'renderer/utils/transformUtils';
+import { getSafeValue } from 'renderer/utils/transformUtils';
 import { modals } from 'misc/constants';
 import {
     IHeaderCell,
@@ -339,37 +339,20 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
         let condition = '';
         if (Array.isArray(value)) {
             const values = value
-                .map((rawVal) => {
-                    const val = handleTransformation(
-                        header.numericDatetimeType,
-                        rawVal,
-                        dateFormat,
-                    );
-                    if (val === null) {
-                        return isStringColumn ? `''` : `null`;
-                    }
-                    if (isStringColumn && typeof val === 'string') {
-                        if (val.includes("'")) {
-                            return `"${val}"`;
-                        }
-
-                        return `'${val}'`;
-                    }
-                    return val;
-                })
+                .map((rawVal) =>
+                    getSafeValue(header, rawVal, dateFormat, isStringColumn),
+                )
                 .join(', ');
-            condition = `${header.id} IN (${values})`;
+            condition = `${header.id} in (${values})`;
         } else if (value === null) {
             condition = `missing(${header.id})`;
         } else {
-            const updatedValue = handleTransformation(
-                header.numericDatetimeType,
+            const safeValue = getSafeValue(
+                header,
                 value,
                 dateFormat,
+                isStringColumn,
             );
-            const safeValue = isStringColumn
-                ? `'${updatedValue}'`
-                : updatedValue;
             condition = `${header.id} = ${safeValue}`;
         }
 
