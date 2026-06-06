@@ -83,7 +83,7 @@ const DatasetContainer: React.FC = () => {
     const settings = useAppSelector((state) => state.settings);
     const sidebarOpen = useAppSelector((state) => state.ui.viewer.sidebarOpen);
     const currentMask = useAppSelector<IMask | null>(
-        (state) => state.data.maskData.currentMask,
+        (state) => state.ui.control[currentFileId]?.mask ?? null,
     );
 
     const { apiService } = useContext(AppContext);
@@ -221,6 +221,24 @@ const DatasetContainer: React.FC = () => {
         table?.fileId,
         showLabels,
     ]);
+
+    useEffect(() => {
+        // Update header widths if showLabels was toggled
+        setTable((prevTable) => {
+            if (prevTable === null) return null;
+            return {
+                ...prevTable,
+                header: updateWidth(
+                    prevTable,
+                    settings.viewer.estimateWidthRows,
+                    settings.viewer.maxColWidth,
+                    settings.viewer.showTypeIcons,
+                    showLabels,
+                    settings.other.compactMode,
+                ),
+            };
+        });
+    }, [settings, showLabels]);
 
     // Pagination
     const handleChangePage = useCallback(

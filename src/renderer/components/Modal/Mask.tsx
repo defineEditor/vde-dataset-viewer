@@ -28,13 +28,8 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import AppContext from 'renderer/utils/AppContext';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { IMask } from 'interfaces/store';
-import { closeModal } from 'renderer/redux/slices/ui';
-import {
-    saveMask,
-    selectMask,
-    deleteMask,
-    clearMask,
-} from 'renderer/redux/slices/data';
+import { closeModal, setMask } from 'renderer/redux/slices/ui';
+import { saveMask, deleteMask } from 'renderer/redux/slices/data';
 import { modals } from 'misc/constants';
 
 const styles = {
@@ -102,7 +97,7 @@ const Mask: React.FC = () => {
         (state) => state.data.maskData.savedMasks,
     );
     const currentMask = useAppSelector(
-        (state) => state.data.maskData.currentMask,
+        (state) => state.ui.control[currentFileId]?.mask,
     );
 
     const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
@@ -124,10 +119,10 @@ const Mask: React.FC = () => {
                 sticky,
                 columns: selectedColumns,
             };
-            dispatch(selectMask(mask));
+            dispatch(setMask({ fileId: currentFileId, mask }));
         }
         handleClose();
-    }, [dispatch, selectedColumns, sticky, handleClose]);
+    }, [dispatch, selectedColumns, sticky, handleClose, currentFileId]);
 
     const handleSelectMask = (mask: IMask) => {
         setSelectedColumns(mask.columns);
@@ -189,7 +184,7 @@ const Mask: React.FC = () => {
     };
 
     const handleReset = () => {
-        dispatch(clearMask());
+        dispatch(setMask({ fileId: currentFileId, mask: null }));
         handleClose();
     };
 
@@ -217,7 +212,12 @@ const Mask: React.FC = () => {
                     if (savedMasks[maskIndex]) {
                         event.preventDefault();
                         handleSelectMask(savedMasks[maskIndex]);
-                        dispatch(selectMask(savedMasks[maskIndex]));
+                        dispatch(
+                            setMask({
+                                fileId: currentFileId,
+                                mask: savedMasks[maskIndex],
+                            }),
+                        );
                         handleClose();
                     }
                 } else if (event.key === 's' && editingMaskId === null) {
@@ -234,7 +234,14 @@ const Mask: React.FC = () => {
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [savedMasks, dispatch, handleClose, handleApply, editingMaskId]);
+    }, [
+        savedMasks,
+        dispatch,
+        handleClose,
+        handleApply,
+        editingMaskId,
+        currentFileId,
+    ]);
 
     return (
         <Dialog

@@ -82,6 +82,7 @@ const CompareFilter: React.FC<IUiModalFilter> = ({
             metadata={metadata}
             dataset={dataset}
             loadedRecords={loadedRecords}
+            compareFileIds={compareFileIds}
         />
     );
 };

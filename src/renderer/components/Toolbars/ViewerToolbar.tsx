@@ -56,7 +56,7 @@ const Header: React.FC = () => {
             state.data.filterData.currentFilter[currentFileId] !== undefined,
     );
     const isMaskEnabled = useAppSelector(
-        (state) => state.data.maskData.currentMask !== null,
+        (state) => state.ui.control[currentFileId]?.mask ?? false,
     );
 
     const isIdColumnsEnabled = useAppSelector(
