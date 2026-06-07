@@ -25,6 +25,7 @@ export const settings: ISettings = {
         copyWithHeaders: false,
         showLabels: false,
         enableProfiler: false,
+        autoReload: false,
     },
     converter: {
         threads: 2,
@@ -54,6 +55,7 @@ export const settings: ISettings = {
         inEncoding: 'utf8',
         dragoverAnimation: true,
         disableUiAnimation: false,
+        createLockFile: false,
     },
     validator: {
         validatorPath: '',
@@ -125,6 +127,7 @@ export const ui: IUi = {
         info: {},
         customSettings: {},
     },
+    reloadRequested: false,
 };
 
 export const converter: ConverterData = {
@@ -194,7 +197,6 @@ export const data: IData = {
         recentCommands: [],
     },
     maskData: {
-        currentMask: null,
         savedMasks: [
             {
                 id: 'mask-example-1',

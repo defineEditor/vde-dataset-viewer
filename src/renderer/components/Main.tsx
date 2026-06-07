@@ -12,8 +12,10 @@ import {
     setZoomLevel,
     setDefineFileId,
     initializeCompare,
+    openSnackbar,
+    setReloadRequested,
 } from 'renderer/redux/slices/ui';
-import { NewWindowProps } from 'interfaces/common';
+import { FileWatcherEvent, NewWindowProps } from 'interfaces/common';
 import Converter from 'renderer/components/Converter';
 import Validator from 'renderer/components/Validator';
 import Compare from 'renderer/components/Compare';
@@ -216,10 +218,11 @@ const Main: React.FC = () => {
         apiService.setZoom(currentZoom);
     }, [currentZoom, apiService]);
 
-    // Handle "Open With" file opening events from the OS
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
 
+    // Add event listeners from the main process
     useEffect(() => {
+        // Handle "Open With" file opening events from the OS
         const handleFileOpen = async (
             filePath: string,
             newWindowProps?: NewWindowProps,
@@ -275,9 +278,32 @@ const Main: React.FC = () => {
 
         apiService.onFileOpen(handleFileOpen);
 
+        const handleFileChanged = async (event: FileWatcherEvent) => {
+            const separator = window.electron.isWindows ? '\\' : '/';
+            const fileName = event.filePath.split(separator).pop() || '';
+            dispatch(
+                openSnackbar({
+                    type: event.changeType === 'updated' ? 'info' : 'error',
+                    message: `File ${fileName} has been ${
+                        event.changeType === 'updated' ? 'updated' : 'deleted'
+                    }`,
+                }),
+            );
+            if (event.changeType === 'updated') {
+                // Reload metadata
+                await apiService.reloadFile(event.fileId);
+                if (event.fileId === currentFileId) {
+                    dispatch(setReloadRequested(true));
+                }
+            }
+        };
+
+        apiService.onFileChanged(handleFileChanged);
+
         // Clean up listener on unmount
         return () => {
             apiService.removeFileOpenListener();
+            apiService.removeFileChangedListener();
         };
     }, [apiService, currentFileId, dispatch]);
 

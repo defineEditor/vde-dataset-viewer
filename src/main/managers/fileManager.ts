@@ -18,6 +18,7 @@ import fsPromises from 'fs/promises';
 import Filter from 'js-array-filter';
 import crypto from 'crypto';
 import path from 'path';
+import FileWatcher from 'main/managers/fileWatcher';
 
 const getHash = (str: string, lastModified: number): string => {
     const hash = crypto
@@ -31,6 +32,10 @@ class FileManager {
     private openedFiles: {
         [key: string]: DatasetJson | DatasetXpt | DatasetSas7bdat;
     } = {};
+
+    private fileWatcher: FileWatcher = new FileWatcher();
+
+    private lockFiles: Map<string, { lockFilePath: string }> = new Map();
 
     constructor() {
         this.openedFiles = {};
@@ -79,16 +84,25 @@ class FileManager {
     };
 
     public handleFileOpen = async (
-        _event: IpcMainInvokeEvent,
+        event: IpcMainInvokeEvent,
         mode: 'local' | 'remote',
         fileSettings: {
             encoding: BufferEncoding | 'default';
             filePath?: string;
             folderPath?: string;
             fileIdPrefix?: string;
+            autoReload?: boolean;
+            createLockFile?: boolean;
         },
     ): Promise<IOpenFile> => {
-        const { encoding, filePath, folderPath, fileIdPrefix } = fileSettings;
+        const {
+            encoding,
+            filePath,
+            folderPath,
+            fileIdPrefix,
+            autoReload,
+            createLockFile,
+        } = fileSettings;
 
         if (folderPath) {
             // Check if specified folder exists;
@@ -207,7 +221,53 @@ class FileManager {
         }
         this.openedFiles[fileId] = data;
 
+        // Create lock file if requested
+        let lockFilePath: string | null = null;
+        if (createLockFile && mode === 'local') {
+            lockFilePath = await this.createLockFile(newFile.path);
+            // Store lock file info
+            this.lockFiles.set(fileId, { lockFilePath });
+        }
+
+        // Setup file watcher if auto-reload is enabled
+        if (autoReload && mode === 'local' && event.sender) {
+            this.fileWatcher.watchFile(
+                fileId,
+                newFile.path,
+                lastModified,
+                event.sender,
+            );
+        }
+
         return { fileId, type, path: newFile.path, lastModified };
+    };
+
+    private createLockFile = async (filePath: string): Promise<string> => {
+        try {
+            const directory = path.dirname(filePath);
+            const filename = path.basename(filePath);
+            const lockFilePath = path.join(directory, `.${filename}.vde.lock`);
+
+            // Write an empty file as a lock indicator
+            await fsPromises.writeFile(lockFilePath, '');
+            return lockFilePath;
+        } catch (error) {
+            throw new Error(
+                `Failed to create lock file for ${filePath}: ${(error as Error).message}`,
+            );
+        }
+    };
+
+    private removeLockFile = async (lockFilePath: string): Promise<void> => {
+        try {
+            if (fs.existsSync(lockFilePath)) {
+                await fsPromises.unlink(lockFilePath);
+            }
+        } catch (error) {
+            throw new Error(
+                `Failed to remove lock file ${lockFilePath}: ${(error as Error).message}`,
+            );
+        }
     };
 
     public handleFileClose = async (
@@ -216,6 +276,16 @@ class FileManager {
         mode: 'local' | 'remote',
     ): Promise<boolean> => {
         if (mode === 'local') {
+            // Stop watching the file
+            this.fileWatcher.stopWatching(fileId);
+
+            // Remove lock file if exists
+            const lockFile = this.lockFiles.get(fileId);
+            if (lockFile) {
+                await this.removeLockFile(lockFile.lockFilePath);
+                this.lockFiles.delete(fileId);
+            }
+
             if (this.openedFiles[fileId]) {
                 delete this.openedFiles[fileId];
             }
@@ -234,7 +304,10 @@ class FileManager {
     public handleGetMetadata = async (
         _event: IpcMainInvokeEvent,
         fileId: string,
-    ): Promise<DatasetJsonMetadata | null> => {
+    ): Promise<{
+        metadata: DatasetJsonMetadata;
+        lastModified: number;
+    } | null> => {
         if (this.openedFiles[fileId]) {
             try {
                 let metadata: DatasetJsonMetadata;
@@ -246,7 +319,20 @@ class FileManager {
                 } else {
                     metadata = await this.openedFiles[fileId].getMetadata();
                 }
-                return metadata;
+                // Get last modified time
+                let filePath = '';
+                if (this.openedFiles[fileId] instanceof DatasetXpt) {
+                    filePath = this.openedFiles[fileId].pathToFile;
+                } else {
+                    filePath = this.openedFiles[fileId].filePath;
+                }
+                const stats = fs.statSync(filePath);
+                const currentMtime = stats.mtime.getTime();
+
+                return {
+                    metadata,
+                    lastModified: currentMtime,
+                };
             } catch (error) {
                 dialog.showErrorBox(
                     'Metadata Error',
