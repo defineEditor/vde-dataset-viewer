@@ -1,0 +1,151 @@
+import fs from 'fs';
+import { WebContents } from 'electron';
+import { FileWatcherEvent } from 'interfaces/common';
+
+interface WatchedFile {
+    fileId: string;
+    filePath: string;
+    watcher: fs.FSWatcher | null;
+    lastMtime: number;
+    sender: WebContents;
+    debounceTimer: ReturnType<typeof setTimeout> | null;
+}
+
+class FileWatcher {
+    private watchedFiles: Map<string, WatchedFile> = new Map();
+
+    // Start watching a file for changes
+    public watchFile(
+        fileId: string,
+        filePath: string,
+        currentMtime: number,
+        sender: WebContents,
+    ): void {
+        // If already watching this file, stop it first
+        if (this.watchedFiles.has(fileId)) {
+            this.stopWatching(fileId);
+        }
+
+        const watchedFile: WatchedFile = {
+            fileId,
+            filePath,
+            watcher: null,
+            lastMtime: currentMtime,
+            sender,
+            debounceTimer: null,
+        };
+
+        try {
+            watchedFile.watcher = fs.watch(filePath, () => {
+                this.handleFileChange(watchedFile);
+            });
+
+            this.watchedFiles.set(fileId, watchedFile);
+        } catch (error) {
+            throw new Error(
+                `Failed to watch file ${filePath}: ${(error as Error).message}`,
+            );
+        }
+    }
+
+    // Stop watching a file
+    public stopWatching(fileId: string): void {
+        const watchedFile = this.watchedFiles.get(fileId);
+        if (!watchedFile) {
+            return;
+        }
+
+        // Clear debounce timer if pending
+        if (watchedFile.debounceTimer) {
+            clearTimeout(watchedFile.debounceTimer);
+            watchedFile.debounceTimer = null;
+        }
+
+        // Close watcher
+        if (watchedFile.watcher) {
+            watchedFile.watcher.close();
+            watchedFile.watcher = null;
+        }
+
+        this.watchedFiles.delete(fileId);
+    }
+
+    // Stop all watchers
+    public stopAllWatchers(): void {
+        for (const fileId of Array.from(this.watchedFiles.keys())) {
+            this.stopWatching(fileId);
+        }
+    }
+
+    // Handle file change event with debouncing
+    private handleFileChange(watchedFile: WatchedFile): void {
+        // Clear existing debounce timer
+        if (watchedFile.debounceTimer) {
+            clearTimeout(watchedFile.debounceTimer);
+        }
+
+        // Set new debounce timer (500ms)
+        watchedFile.debounceTimer = setTimeout(() => {
+            this.checkFileStatus(watchedFile);
+            watchedFile.debounceTimer = null;
+        }, 500);
+    }
+
+    // Check if file still exists and has changed
+    private checkFileStatus(watchedFile: WatchedFile): void {
+        try {
+            // Check if file exists
+            if (!fs.existsSync(watchedFile.filePath)) {
+                // File was deleted
+                this.emitChange(
+                    {
+                        fileId: watchedFile.fileId,
+                        filePath: watchedFile.filePath,
+                        changeType: 'deleted',
+                    },
+                    watchedFile.sender,
+                );
+                // Remove from watched files
+                this.watchedFiles.delete(watchedFile.fileId);
+                return;
+            }
+
+            // Get current file stats
+            const stats = fs.statSync(watchedFile.filePath);
+            const currentMtime = stats.mtime.getTime();
+
+            // Check if mtime changed
+            if (currentMtime !== watchedFile.lastMtime) {
+                watchedFile.lastMtime = currentMtime;
+                this.emitChange(
+                    {
+                        fileId: watchedFile.fileId,
+                        filePath: watchedFile.filePath,
+                        changeType: 'updated',
+                    },
+                    watchedFile.sender,
+                );
+            }
+        } catch (error) {
+            throw new Error(
+                `Error checking file status for ${watchedFile.filePath}: ${
+                    (error as Error).message
+                }`,
+            );
+        }
+    }
+
+    // Emit file change event to renderer
+    private emitChange(event: FileWatcherEvent, sender: WebContents): void {
+        if (sender) {
+            sender.send('renderer:fileChanged', event);
+        }
+    }
+
+    // Get list of watched file IDs
+    public getWatchedFileIds(): string[] {
+        return Array.from(this.watchedFiles.keys());
+    }
+}
+
+export default FileWatcher;
