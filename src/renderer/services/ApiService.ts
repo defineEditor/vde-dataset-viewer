@@ -339,10 +339,9 @@ class ApiService {
         if ([200, 204].includes(requestResponse.status)) {
             const metadata =
                 requestResponse.response as unknown as DatasetJsonMetadata;
-            const lastModified =
-                new Date(metadata.datasetJSONCreationDateTime).getTime() ??
-                new Date(metadata.datasetJSONCreationDateTime).getTime() ??
-                0;
+            const lastModified = new Date(
+                metadata.datasetJSONCreationDateTime,
+            ).getTime();
             result = {
                 metadata,
                 lastModified,

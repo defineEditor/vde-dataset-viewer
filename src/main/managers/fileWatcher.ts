@@ -106,7 +106,7 @@ class FileWatcher {
                     watchedFile.sender,
                 );
                 // Remove from watched files
-                this.watchedFiles.delete(watchedFile.fileId);
+                this.stopWatching(watchedFile.fileId);
                 return;
             }
 
@@ -127,19 +127,21 @@ class FileWatcher {
                 );
             }
         } catch (error) {
-            throw new Error(
-                `Error checking file status for ${watchedFile.filePath}: ${
-                    (error as Error).message
-                }`,
+            // eslint-disable-next-line no-console
+            console.error(
+                `Error checking file status for ${watchedFile.filePath}:`,
+                error,
             );
+            this.stopWatching(watchedFile.fileId);
         }
     }
 
     // Emit file change event to renderer
     private emitChange(event: FileWatcherEvent, sender: WebContents): void {
-        if (sender) {
-            sender.send('renderer:fileChanged', event);
+        if (!sender || sender.isDestroyed()) {
+            return;
         }
+        sender.send('renderer:fileChanged', event);
     }
 
     // Get list of watched file IDs

@@ -719,9 +719,9 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                 }),
             );
         } else if (tableContainerRef?.current) {
+            // In case reload is finished, restore the scroll position
             requestAnimationFrame(() => {
                 tableContainerRef.current!.scrollTop = scrollPositionY;
-                hasRestoredScrollRef.current = true;
             });
         }
     }, [

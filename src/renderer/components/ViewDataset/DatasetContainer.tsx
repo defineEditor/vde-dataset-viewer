@@ -103,7 +103,7 @@ const readDataset = async (
     let newData: ITableData | null = null;
     const startTime = performance.now();
     const filterIsActive = currentFilter !== null;
-    // TODO: Implement loading filtered data beyound the first page. For now, only load the first page for filtered data.
+    // TODO: Implement loading filtered data beyond the first page. For now, only load the first page for filtered data.
     const start = filterIsActive ? 0 : page * pageSize;
     try {
         newData = await getData(
@@ -116,7 +116,7 @@ const readDataset = async (
             currentFilter === null ? undefined : currentFilter,
         );
     } catch (error) {
-        // Remove current fileId as something is wrong with itj
+        // Remove current fileId as something is wrong with it
         dispatch(
             closeDataset({
                 fileId: currentFileId,
@@ -141,13 +141,13 @@ const readDataset = async (
         if (requestReason === 'filterChange') {
             // Mark filtered columns
             if (currentFilter !== null) {
-                const filtertedColumns = currentFilter.conditions.map(
+                const filteredColumns = currentFilter.conditions.map(
                     (c) => c.variable,
                 );
                 newData.header = newData.header.map((col) => {
                     return {
                         ...col,
-                        isFiltered: filtertedColumns.includes(col.id),
+                        isFiltered: filteredColumns.includes(col.id),
                     };
                 });
             }
@@ -169,8 +169,8 @@ const readDataset = async (
             setTotalRecords(newData.metadata.records);
         }
         setTable(newData);
-        setIsLoading(false);
     }
+    setIsLoading(false);
 };
 
 const DatasetContainer: React.FC = () => {

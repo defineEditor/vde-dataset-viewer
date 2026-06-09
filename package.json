@@ -265,7 +265,8 @@
         },
         "linux": {
             "target": [
-                "AppImage"
+                "AppImage",
+                "deb"
             ],
             "category": "Viewer"
         },

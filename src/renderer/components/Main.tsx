@@ -291,7 +291,16 @@ const Main: React.FC = () => {
             );
             if (event.changeType === 'updated') {
                 // Reload metadata
-                await apiService.reloadFile(event.fileId);
+                try {
+                    await apiService.reloadFile(event.fileId);
+                } catch (error) {
+                    dispatch(
+                        openSnackbar({
+                            type: 'error',
+                            message: `${(error as Error).message}`,
+                        }),
+                    );
+                }
                 if (event.fileId === currentFileId) {
                     dispatch(setReloadRequested(true));
                 }
