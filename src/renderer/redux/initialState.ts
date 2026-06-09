@@ -56,6 +56,7 @@ export const settings: ISettings = {
         dragoverAnimation: true,
         disableUiAnimation: false,
         createLockFile: false,
+        lockFileFolderFilter: '',
     },
     validator: {
         validatorPath: '',

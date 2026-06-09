@@ -105,6 +105,37 @@ export const Other: React.FC<OtherProps> = ({ settings, onSettingChange }) => (
             <Typography variant="caption" sx={styles.helperText}>
                 Check for new versions of the application on startup.
             </Typography>
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        checked={settings.other.createLockFile}
+                        onChange={onSettingChange}
+                        name="other.createLockFile"
+                    />
+                }
+                label="Create Lock File"
+            />
+            <Typography variant="caption" sx={styles.helperText}>
+                Create a lock file to indicate when a dataset is being open.
+            </Typography>
+            <TextField
+                label="Lock File Folder Filter"
+                helperText="Lock files are created only in folders matching this regex. Keep blank to create lock files in all folders."
+                name="other.lockFileFolderFilter"
+                type="text"
+                value={settings.other.lockFileFolderFilter}
+                error={(() => {
+                    try {
+                        RegExp(settings.other.lockFileFolderFilter);
+                        return false;
+                    } catch {
+                        return true;
+                    }
+                })()}
+                disabled={!settings.other.createLockFile}
+                onChange={onSettingChange}
+                sx={styles.lockFileFolderFilter}
+            />
         </Stack>
         <Typography variant="h6">Animations</Typography>
         <TextField
@@ -153,19 +184,6 @@ export const Other: React.FC<OtherProps> = ({ settings, onSettingChange }) => (
                 Disable all UI animations, such as menu or modal transitions and
                 button. Can improve experience on a remote desktop or low
                 performance machines.
-            </Typography>
-            <FormControlLabel
-                control={
-                    <Checkbox
-                        checked={settings.other.createLockFile}
-                        onChange={onSettingChange}
-                        name="other.createLockFile"
-                    />
-                }
-                label="Create Lock File"
-            />
-            <Typography variant="caption" sx={styles.helperText}>
-                Create a lock file to indicate when a dataset is being accessed.
             </Typography>
         </Stack>
     </Stack>

@@ -32,36 +32,13 @@ You can download installation packages or portable version for your operating sy
 For CDISC CORE validation, the CORE executable should be installed separately.
 See [CDISC CORE](https://github.com/cdisc-org/cdisc-rules-engine) repository for details.
 
-Supported Formats:
-* [Dataset-JSON v1.1](https://github.com/cdisc-org/DataExchange-DatasetJson)
-* NDJSON representation of Dataset-JSON 1.1
-* Compressed Dataset-JSON 1.1
-* XPORT v5
-* SAS7BDAT
-
-
 ## Features
 * Reading large size datasets
+* Dataset Compare
 * Multiplatform: Windows, Linux, MacOS
-* Filtering with value autocomplete
-* Sorting
-* Row and column navigation
-* Metadata info
-* Cell selection
-* Column visibility control
-* Automatic updates
-* Automated testing
 * API access
 * Converter between formats
 * UI for [CDISC CORE](https://github.com/cdisc-org/cdisc-rules-engine)
-* Validation results view
-
-## Viewing Customization Settings
-* Numeric date format
-* Number rounding
-* Dynamic cell height
-* Automatic width estimation
-* Encoding control
 
 ## Development
 To develop the VDE Dataset Viewer, follow these steps:

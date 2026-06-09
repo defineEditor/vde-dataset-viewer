@@ -54,6 +54,10 @@ export const styles = {
     inputFieldLong: {
         maxWidth: '800px',
     },
+    lockFileFolderFilter: {
+        mt: 2,
+        maxWidth: '360px',
+    },
     helperText: {
         paddingLeft: 2,
         margin: 0,
