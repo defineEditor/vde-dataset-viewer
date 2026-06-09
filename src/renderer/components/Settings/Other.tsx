@@ -116,7 +116,7 @@ export const Other: React.FC<OtherProps> = ({ settings, onSettingChange }) => (
                 label="Create Lock File"
             />
             <Typography variant="caption" sx={styles.helperText}>
-                Create a lock file to indicate when a dataset is being open.
+                Create a lock file to indicate when a dataset is open.
             </Typography>
             <TextField
                 label="Lock File Folder Filter"
@@ -125,6 +125,9 @@ export const Other: React.FC<OtherProps> = ({ settings, onSettingChange }) => (
                 type="text"
                 value={settings.other.lockFileFolderFilter}
                 error={(() => {
+                    if (!settings.other.createLockFile) {
+                        return false;
+                    }
                     try {
                         RegExp(settings.other.lockFileFolderFilter);
                         return false;
