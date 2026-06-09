@@ -93,6 +93,7 @@ class FileManager {
             fileIdPrefix?: string;
             autoReload?: boolean;
             createLockFile?: boolean;
+            lockFileFolderFilter?: string;
         },
     ): Promise<IOpenFile> => {
         const {
@@ -102,6 +103,7 @@ class FileManager {
             fileIdPrefix,
             autoReload,
             createLockFile,
+            lockFileFolderFilter,
         } = fileSettings;
 
         if (folderPath) {
@@ -224,9 +226,31 @@ class FileManager {
         // Create lock file if requested
         let lockFilePath: string | null = null;
         if (createLockFile && mode === 'local') {
-            lockFilePath = await this.createLockFile(newFile.path);
-            // Store lock file info
-            this.lockFiles.set(fileId, { lockFilePath });
+            let shouldCreateLockFile = false;
+            if (
+                lockFileFolderFilter === '' ||
+                lockFileFolderFilter === undefined
+            ) {
+                shouldCreateLockFile = true;
+            } else {
+                try {
+                    const regex = new RegExp(lockFileFolderFilter);
+                    shouldCreateLockFile = regex.test(
+                        path.dirname(newFile.path),
+                    );
+                } catch (error) {
+                    dialog.showErrorBox(
+                        'Invalid Lock File Folder Filter',
+                        `The provided lock file folder filter is not a valid regular expression: ${(error as Error).message}`,
+                    );
+                }
+            }
+
+            if (shouldCreateLockFile) {
+                lockFilePath = await this.createLockFile(newFile.path);
+                // Store lock file info
+                this.lockFiles.set(fileId, { lockFilePath });
+            }
         }
 
         // Setup file watcher if auto-reload is enabled

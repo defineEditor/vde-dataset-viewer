@@ -200,6 +200,7 @@ class ApiService {
         const encoding = settings.other.inEncoding;
         const autoReload = settings.viewer.autoReload || false;
         const createLockFile = settings.other.createLockFile || false;
+        const lockFileFolderFilter = settings.other.lockFileFolderFilter || '';
 
         const response = await window.electron.openFile('local', {
             encoding,
@@ -208,6 +209,7 @@ class ApiService {
             fileIdPrefix: compareId || 'f',
             autoReload,
             createLockFile,
+            lockFileFolderFilter,
         });
         if (response === null) {
             return {

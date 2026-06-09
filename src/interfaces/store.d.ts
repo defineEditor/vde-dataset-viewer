@@ -73,6 +73,7 @@ export interface ISettings {
         dragoverAnimation: boolean;
         disableUiAnimation: boolean;
         createLockFile: boolean;
+        lockFileFolderFilter: string;
     };
     compare: CompareSettings;
 }
