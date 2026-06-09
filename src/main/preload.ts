@@ -4,7 +4,11 @@ import {
     IpcRendererEvent,
     webUtils,
 } from 'electron';
-import { TaskProgress, NewWindowProps } from 'interfaces/common';
+import {
+    TaskProgress,
+    NewWindowProps,
+    FileWatcherEvent,
+} from 'interfaces/common';
 import { ElectronApi, Channels } from 'interfaces/electron.api';
 
 const openFile: ElectronApi['openFile'] = (mode, fileSettings) =>
@@ -86,6 +90,20 @@ const onFileOpen: ElectronApi['onFileOpen'] = (callback) => {
 const removeFileOpenListener: ElectronApi['removeFileOpenListener'] = () => {
     ipcRenderer.removeAllListeners('renderer:openFile');
 };
+
+const onFileChanged: ElectronApi['onFileChanged'] = (callback) => {
+    ipcRenderer.on(
+        'renderer:fileChanged',
+        (_event: IpcRendererEvent, watchEvent: FileWatcherEvent) => {
+            callback(watchEvent);
+        },
+    );
+};
+
+const removeFileChangedListener: ElectronApi['removeFileChangedListener'] =
+    () => {
+        ipcRenderer.removeAllListeners('renderer:fileChanged');
+    };
 
 const pathForFile: ElectronApi['pathForFile'] = (file) =>
     webUtils.getPathForFile(file);
@@ -216,6 +234,8 @@ contextBridge.exposeInMainWorld('electron', {
     onSaveStore,
     onFileOpen,
     removeFileOpenListener,
+    onFileChanged,
+    removeFileChangedListener,
     pathForFile,
     fetch,
     openFileDialog,

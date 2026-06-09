@@ -247,6 +247,22 @@ export const Viewer: React.FC<ViewerProps> = ({
                 (inverts Ctrl + C and Ctrl + Alt + C behavior)
             </Typography>
         </Stack>
+        <Stack spacing={0}>
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        checked={settings.viewer.autoReload}
+                        onChange={onSettingChange}
+                        name="viewer.autoReload"
+                    />
+                }
+                label="Auto Reload"
+            />
+            <Typography variant="caption" sx={styles.helperText}>
+                When enabled, the table will automatically reload when changes
+                are detected
+            </Typography>
+        </Stack>
         {(isDevelopment || settings.viewer.estimateWidthRows === 31415926) && (
             <>
                 <Typography variant="h6">Developer Settings</Typography>

@@ -154,6 +154,19 @@ export const Other: React.FC<OtherProps> = ({ settings, onSettingChange }) => (
                 button. Can improve experience on a remote desktop or low
                 performance machines.
             </Typography>
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        checked={settings.other.createLockFile}
+                        onChange={onSettingChange}
+                        name="other.createLockFile"
+                    />
+                }
+                label="Create Lock File"
+            />
+            <Typography variant="caption" sx={styles.helperText}>
+                Create a lock file to indicate when a dataset is being accessed.
+            </Typography>
         </Stack>
     </Stack>
 );

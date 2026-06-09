@@ -707,6 +707,32 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         };
     }, [dispatch, tableData.fileId]);
 
+    // When reloading dataset, save the scroll position and reset it after data is loaded
+    const reloadRequested = useAppSelector((state) => state.ui.reloadRequested);
+    useEffect(() => {
+        if (reloadRequested) {
+            dispatch(
+                setDatasetScrollPosition({
+                    fileId: tableData.fileId,
+                    offsetY: scrollPosRef.current.offsetY,
+                    offsetX: scrollPosRef.current.offsetX,
+                }),
+            );
+        } else if (tableContainerRef?.current) {
+            // In case reload is finished, restore the scroll position
+            requestAnimationFrame(() => {
+                tableContainerRef.current!.scrollTop = scrollPositionY;
+            });
+        }
+    }, [
+        dispatch,
+        reloadRequested,
+        tableData.fileId,
+        scrollPosRef,
+        tableContainerRef,
+        scrollPositionY,
+    ]);
+
     const handleCopyToClipboard = useCallback(
         (withHeaders: boolean) => {
             const leftColumnIds = leftPinnedColumns.map((column) => column.id);

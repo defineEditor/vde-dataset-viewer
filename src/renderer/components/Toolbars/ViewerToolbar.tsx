@@ -14,12 +14,12 @@ import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import SortIcon from '@mui/icons-material/Sort';
 import {
     openDataset,
-    closeDataset,
     openModal,
     setPage,
     openSnackbar,
     toggleSidebar,
     setCompareFiles,
+    setReloadRequested,
 } from 'renderer/redux/slices/ui';
 import { resetFilter, addRecent } from 'renderer/redux/slices/data';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
@@ -185,58 +185,10 @@ const Header: React.FC = () => {
         dispatch(openModal({ type: modals.VALIDATOR, data: {} }));
     }, [dispatch]);
 
-    const handleCloseDataset = useCallback(
-        async (fileId: string) => {
-            dispatch(
-                closeDataset({
-                    fileId,
-                }),
-            );
-            await apiService.close(fileId);
-        },
-        [dispatch, apiService],
-    );
-
     const handleReloadClick = useCallback(async () => {
-        // Get filepath of the current file;
-        const currentFile = apiService.getOpenedFiles(currentFileId)[0];
-        if (!currentFile) {
-            dispatch(
-                openSnackbar({
-                    type: 'error',
-                    message: 'No dataset is currently opened.',
-                }),
-            );
-            return;
-        }
-        const { path, mode } = currentFile;
-        // Close the current dataset
-        await handleCloseDataset(currentFileId);
-        const newDataInfo = await openNewDataset(apiService, mode, path);
-        if (newDataInfo.errorMessage) {
-            if (newDataInfo.errorMessage !== 'cancelled') {
-                dispatch(
-                    openSnackbar({
-                        type: 'error',
-                        message: newDataInfo.errorMessage,
-                    }),
-                );
-            }
-            return;
-        }
-        dispatch(
-            openDataset({
-                fileId: newDataInfo.fileId,
-                type: newDataInfo.type,
-                name: newDataInfo.metadata.name,
-                label: newDataInfo.metadata.label,
-                mode,
-                totalRecords: newDataInfo.metadata.records,
-            }),
-        );
-        // Reset page for the new dataset
-        dispatch(setPage({ fileId: newDataInfo.fileId, page: 0 }));
-    }, [apiService, dispatch, currentFileId, handleCloseDataset]);
+        await apiService.reloadFile(currentFileId);
+        dispatch(setReloadRequested(true));
+    }, [apiService, dispatch, currentFileId]);
 
     // Add shortcuts for actions
     useEffect(() => {

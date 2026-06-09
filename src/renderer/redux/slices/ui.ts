@@ -58,6 +58,7 @@ export const uiSlice = createSlice({
                         currentPage: 0,
                         sorting: [],
                         idCols: [],
+                        mask: null,
                     };
                 }
                 // Open dataset view
@@ -586,6 +587,9 @@ export const uiSlice = createSlice({
             }
             state.compare.customSettings = {};
         },
+        setReloadRequested: (state, action: PayloadAction<boolean>) => {
+            state.reloadRequested = action.payload;
+        },
     },
 });
 
@@ -603,6 +607,7 @@ export const {
     setPage,
     setDatasetInfoTab,
     setDatasetScrollPosition,
+    setReloadRequested,
     setDatasetSorting,
     setDatasetIdColumns,
     setMask,

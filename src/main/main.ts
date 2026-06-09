@@ -141,12 +141,12 @@ app.whenReady()
                 ]);
                 console.log(`Added Extensions:  ${redux.name}, ${react.name}`);
             } catch (err) {
-                console.log('An error occurred: ', err);
+                console.error('An error occurred: ', err);
             }
         }
     })
     .catch((err) => {
-        console.log('An error occurred: ', err);
+        console.error('An error occurred: ', err);
     });
 
 const createWindow = async (
@@ -443,4 +443,4 @@ app.whenReady()
             }
         });
     })
-    .catch(console.log);
+    .catch(console.error);

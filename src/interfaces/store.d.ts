@@ -48,6 +48,7 @@ export interface SettingsViewer {
     copyWithHeaders: boolean;
     showLabels: boolean;
     enableProfiler: boolean;
+    autoReload: boolean;
 }
 
 export interface ISettings {
@@ -71,6 +72,7 @@ export interface ISettings {
             | 'ascii';
         dragoverAnimation: boolean;
         disableUiAnimation: boolean;
+        createLockFile: boolean;
     };
     compare: CompareSettings;
 }
@@ -258,6 +260,7 @@ export interface IUi {
     validationPage: IUiValidationPage;
     define: IUiDefine;
     compare: IUiCompare;
+    reloadRequested: boolean;
 }
 
 export interface IRecentFile {

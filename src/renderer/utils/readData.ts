@@ -78,9 +78,15 @@ const getData = async (
         return null;
     }
 
+    // Check if start is not after the end of the dataset
+    let safeStart = start;
+    if (start >= metadata.records) {
+        safeStart = Math.max(metadata.records - length, 0);
+    }
+
     const itemData = (await apiService.getObservations(
         fileId,
-        start,
+        safeStart,
         length,
         settings,
         filterColumns,
