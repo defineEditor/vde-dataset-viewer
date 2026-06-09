@@ -367,3 +367,9 @@ export type DeepPartial<T> = {
           ? DeepPartial<T[P]>
           : T[P];
 };
+
+export interface FileWatcherEvent {
+    fileId: string;
+    filePath: string;
+    changeType: 'updated' | 'deleted';
+}

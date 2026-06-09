@@ -21,12 +21,57 @@ interface OtherProps {
 
 export const Other: React.FC<OtherProps> = ({ settings, onSettingChange }) => (
     <Stack spacing={2}>
+        <Typography variant="h6">Appearance</Typography>
+        <TextField
+            label="Color mode"
+            helperText="Select the light or dark mode, or follow the system setting"
+            name="other.colorMode"
+            value={settings.other.colorMode}
+            select
+            onChange={(event) =>
+                onSettingChange(event as React.ChangeEvent<HTMLInputElement>)
+            }
+            sx={styles.inputField}
+        >
+            <MenuItem value="system">System</MenuItem>
+            <MenuItem value="light">Light</MenuItem>
+            <MenuItem value="dark">Dark</MenuItem>
+        </TextField>
+        <TextField
+            label="Theme palette"
+            helperText="Choose the palette family applied to the current color mode"
+            name="other.themePalette"
+            value={settings.other.themePalette}
+            select
+            onChange={(event) =>
+                onSettingChange(event as React.ChangeEvent<HTMLInputElement>)
+            }
+            sx={styles.inputField}
+        >
+            <MenuItem value="normal">Default</MenuItem>
+            <MenuItem value="solarized">Solarized</MenuItem>
+        </TextField>
+        <Stack spacing={0}>
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        checked={settings.other.compactMode}
+                        onChange={onSettingChange}
+                        name="other.compactMode"
+                    />
+                }
+                label="Compact mode"
+            />
+            <Typography variant="caption" sx={styles.helperText}>
+                Use a compact layout to show more information on the screen.
+            </Typography>
+        </Stack>
         <Typography variant="h6">Miscellaneous Settings</Typography>
         <TextField
             label="Input encoding"
             helperText={
                 settings.other.inEncoding === 'default'
-                    ? 'Ecoding used when reading files'
+                    ? 'Encoding used when reading files'
                     : 'Be sure the correct encoding is specified, in most situations you should use UTF8'
             }
             name="other.inEncoding"
@@ -60,6 +105,40 @@ export const Other: React.FC<OtherProps> = ({ settings, onSettingChange }) => (
             <Typography variant="caption" sx={styles.helperText}>
                 Check for new versions of the application on startup.
             </Typography>
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        checked={settings.other.createLockFile}
+                        onChange={onSettingChange}
+                        name="other.createLockFile"
+                    />
+                }
+                label="Create Lock File"
+            />
+            <Typography variant="caption" sx={styles.helperText}>
+                Create a lock file to indicate when a dataset is open.
+            </Typography>
+            <TextField
+                label="Lock File Folder Filter"
+                helperText="Lock files are created only in folders matching this regex. Keep blank to create lock files in all folders."
+                name="other.lockFileFolderFilter"
+                type="text"
+                value={settings.other.lockFileFolderFilter}
+                error={(() => {
+                    if (!settings.other.createLockFile) {
+                        return false;
+                    }
+                    try {
+                        RegExp(settings.other.lockFileFolderFilter);
+                        return false;
+                    } catch {
+                        return true;
+                    }
+                })()}
+                disabled={!settings.other.createLockFile}
+                onChange={onSettingChange}
+                sx={styles.lockFileFolderFilter}
+            />
         </Stack>
         <Typography variant="h6">Animations</Typography>
         <TextField

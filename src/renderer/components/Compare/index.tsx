@@ -21,7 +21,7 @@ const styles = {
     loadingContainer: {
         height: '100%',
         width: '100%',
-        backgroundColor: '#FFF',
+        backgroundColor: 'background.paper',
     },
     selectContainer: {
         display: 'flex',
@@ -29,12 +29,15 @@ const styles = {
         justifyContent: 'center',
         height: '100%',
     },
+    selectStack: {
+        alignItems: 'center',
+    },
     loading: {
         position: 'fixed',
         top: '50%',
         left: '50%',
         display: 'flex',
-        backgroundColor: '#FFF',
+        backgroundColor: 'background.paper',
         flexDirection: 'column',
         transform: 'translate(-50%, -50%)',
         zIndex: 999,
@@ -42,7 +45,7 @@ const styles = {
     sponsored: {
         marginTop: '10px',
         fontSize: '14px',
-        color: '#888',
+        color: 'text.secondary',
         textAlign: 'center',
     },
     selectButton: {
@@ -259,7 +262,7 @@ const Compare: React.FC = () => {
     if (!fileBase || !fileComp) {
         return (
             <Box sx={styles.selectContainer}>
-                <Stack direction="row" alignItems="center">
+                <Stack direction="row" sx={styles.selectStack}>
                     <Button
                         sx={styles.selectButton}
                         onClick={handleSelectFiles}

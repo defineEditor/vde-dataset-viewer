@@ -27,6 +27,7 @@ import {
     ToggleButtonGroup,
     Tooltip,
 } from '@mui/material';
+import { useTheme, Theme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import SearchIcon from '@mui/icons-material/Search';
@@ -63,46 +64,59 @@ const styles = {
         padding: 0,
         minWidth: 0,
     },
-    searchInput: {
-        color: 'white',
+    searchInput: (theme: Theme) => ({
+        color: theme.vars?.palette.grey[50],
         '& .MuiOutlinedInput-notchedOutline': {
-            borderColor: 'rgba(255, 255, 255, 0.5)',
+            borderColor: theme.alpha(theme.vars?.palette.grey[50]!, 0.5),
         },
         '&:hover .MuiOutlinedInput-notchedOutline': {
-            borderColor: 'white',
+            borderColor: theme.vars?.palette.grey[50],
         },
         '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-            borderColor: 'white',
+            borderColor: theme.vars?.palette.grey[50],
         },
         '&::placeholder': {
-            color: 'rgba(255, 255, 255, 0.7)',
+            color: theme.alpha(theme.vars?.palette.grey[50]!, 0.7),
         },
-    },
-    searchIcon: { color: 'white' },
+    }),
+    searchIcon: (theme: Theme) => ({ color: theme.vars?.palette.grey[50] }),
     rowDiffHeader: {
-        backgroundColor: '#f5f5f5',
+        backgroundColor: 'action.hover',
     },
     headerIcon: {
-        color: '#ffffff',
+        color: 'primary.contrastText',
     },
     rowIcon: {
         ml: 1,
     },
-    toggleButtonGroup: {
+    toggleButtonGroup: (theme: Theme) => ({
         height: 32,
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        color: 'rgba(255, 255, 255, 0.7)',
-        borderColor: 'rgba(255, 255, 255, 0.3)',
+        backgroundColor: theme.alpha(theme.vars?.palette.grey[50]!, 0.1),
+        color: theme.alpha(theme.vars?.palette.grey[50]!, 0.7),
+        borderColor: theme.alpha(theme.vars?.palette.grey[50]!, 0.3),
         '& .MuiToggleButton-root': {
-            color: 'rgba(255, 255, 255, 0.7)',
-            borderColor: 'rgba(255, 255, 255, 0.3)',
+            color: theme.alpha(theme.vars?.palette.grey[50]!, 0.7),
+            borderColor: theme.alpha(theme.vars?.palette.grey[50]!, 0.3),
             '&.Mui-selected': {
-                color: 'primary.light',
+                color: theme.vars?.palette.primary.main,
+                backgroundColor: theme.vars?.palette.grey[100]!,
             },
             '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                color: theme.vars?.palette.primary.light,
+                backgroundColor: theme.alpha(
+                    theme.vars?.palette.grey[100]!,
+                    0.15,
+                ),
             },
         },
+    }),
+    titleHeader: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    rowCenter: {
+        alignItems: 'center',
     },
 };
 
@@ -117,6 +131,7 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
 }) => {
     const dispatch = useAppDispatch();
     const { apiService } = useContext(AppContext);
+    const theme = useTheme();
 
     const open = useAppSelector((state) => state.ui.compare.showAllDifferences);
 
@@ -333,7 +348,9 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
     };
 
     if (!datasetDiff) {
-        dispatch(setShowAllDifferences(false));
+        if (open) {
+            dispatch(setShowAllDifferences(false));
+        }
         return null;
     }
 
@@ -344,12 +361,8 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
             slotProps={{ paper: { sx: styles.dialog } }}
         >
             <DialogTitle sx={styles.title}>
-                <Stack
-                    alignItems="center"
-                    justifyContent="space-between"
-                    direction="row"
-                >
-                    <Stack direction="row" spacing={2} alignItems="center">
+                <Stack direction="row" sx={styles.titleHeader}>
+                    <Stack direction="row" spacing={2} sx={styles.rowCenter}>
                         <Typography variant="h6">
                             Dataset Differences
                         </Typography>
@@ -374,7 +387,7 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
                             </Tooltip>
                         </ToggleButtonGroup>
                     </Stack>
-                    <Stack direction="row" spacing={2} alignItems="center">
+                    <Stack direction="row" spacing={2} sx={styles.rowCenter}>
                         <TextField
                             placeholder="Ctrl + F to search"
                             size="small"
@@ -518,11 +531,25 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
                                                                             {
                                                                                 backgroundColor:
                                                                                     part.added
-                                                                                        ? 'lightgreen'
+                                                                                        ? theme.alpha(
+                                                                                              theme
+                                                                                                  .vars!
+                                                                                                  .palette
+                                                                                                  .success
+                                                                                                  .main,
+                                                                                              0.32,
+                                                                                          )
                                                                                         : part.removed
-                                                                                          ? 'salmon'
+                                                                                          ? theme.alpha(
+                                                                                                theme
+                                                                                                    .vars!
+                                                                                                    .palette
+                                                                                                    .error
+                                                                                                    .main,
+                                                                                                0.5,
+                                                                                            )
                                                                                           : 'transparent',
-                                                                            };
+                                                                            } as React.CSSProperties;
                                                                         return (
                                                                             <span
                                                                                 key={

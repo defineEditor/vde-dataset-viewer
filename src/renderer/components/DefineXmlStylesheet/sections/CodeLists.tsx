@@ -121,7 +121,12 @@ const CodeLists: React.FC<CodeListsProps> = ({ content, onOpenFile }) => {
                                         {codeList.name}
                                         {alias &&
                                             alias.map((a) => (
-                                                <span> [{a.name}]</span>
+                                                <span
+                                                    key={`${codeList.oid}-alias-${a.name}`}
+                                                >
+                                                    {' '}
+                                                    [{a.name}]
+                                                </span>
                                             ))}
                                         {standardName && (
                                             <span>
@@ -193,7 +198,9 @@ const CodeLists: React.FC<CodeListsProps> = ({ content, onOpenFile }) => {
                                                                 {itemAlias &&
                                                                     itemAlias.map(
                                                                         (a) => (
-                                                                            <span>
+                                                                            <span
+                                                                                key={`${codeList.oid}-${item.codedValue}-alias-${a.name}`}
+                                                                            >
                                                                                 {' '}
                                                                                 [
                                                                                 {
@@ -263,7 +270,9 @@ const CodeLists: React.FC<CodeListsProps> = ({ content, onOpenFile }) => {
                                                                 {itemAlias &&
                                                                     itemAlias.map(
                                                                         (a) => (
-                                                                            <span>
+                                                                            <span
+                                                                                key={`${codeList.oid}-${item.codedValue}-alias-${a.name}`}
+                                                                            >
                                                                                 {' '}
                                                                                 [
                                                                                 {

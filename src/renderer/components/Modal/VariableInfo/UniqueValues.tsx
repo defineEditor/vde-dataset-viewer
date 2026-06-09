@@ -15,6 +15,7 @@ import {
     IHeaderCell,
     ITableData,
     DatasetJsonMetadata,
+    TableRowValue,
 } from 'interfaces/common';
 import { Typography, LinearProgress } from '@mui/material';
 import DatasetView from 'renderer/components/DatasetView';
@@ -35,12 +36,30 @@ const styles = {
             fontWeight: 'bold',
         },
     },
+    value: {
+        minWidth: '50px',
+    },
     getValues: {
         '&&': {
             mt: 1,
             mb: 1,
         },
         height: '100%',
+        alignItems: 'center',
+    },
+    frequencyStack: {
+        alignItems: 'center',
+        width: '100%',
+    },
+    centerOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 };
 
@@ -49,7 +68,7 @@ const FrequencyCell: React.FC<{ value: number; percentage: number }> = ({
     percentage,
 }) => {
     return (
-        <Stack direction="row" spacing={1} alignItems="center" width="100%">
+        <Stack direction="row" spacing={1} sx={styles.frequencyStack}>
             <Box sx={{ width: '100%', position: 'relative' }}>
                 <LinearProgress
                     variant="determinate"
@@ -63,24 +82,13 @@ const FrequencyCell: React.FC<{ value: number; percentage: number }> = ({
                         },
                     }}
                 />
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    }}
-                >
+                <Box sx={styles.centerOverlay}>
                     <Typography variant="caption" color="black">
                         {percentage.toFixed(1)}%
                     </Typography>
                 </Box>
             </Box>
-            <Typography variant="body2" minWidth="50px">
+            <Typography variant="body2" sx={styles.value}>
                 {value}
             </Typography>
         </Stack>
@@ -212,26 +220,29 @@ const UniqueValues: React.FC<{
     });
 
     const handleContextMenu = useCallback(
-        (event: React.MouseEvent, rowIndex: number, _columnIndex: number) => {
+        (
+            event: React.MouseEvent,
+            _columnId: string,
+            value: TableRowValue,
+            isHeader?: boolean,
+        ) => {
             event.preventDefault();
-            if (rowIndex === -1) return; // Ignore header row
 
-            // In case mask is used, we need to get the index of the column with mask applied
+            // We need to use the specific columnId for the unique values modal, not the one from the cell
             const cellHeader: IHeaderCell = {
                 id: columnId,
                 label: '',
             };
-            const value = data[rowIndex] ? data[rowIndex].value : '';
 
             setContextMenu({
                 position: { top: event.clientY, left: event.clientX },
                 value,
                 header: cellHeader,
                 open: true,
-                isHeader: false,
+                isHeader: isHeader || false,
             });
         },
-        [data, columnId],
+        [columnId],
     );
 
     const handleCloseContextMenu = (
@@ -249,7 +260,7 @@ const UniqueValues: React.FC<{
         ...settings,
         showTypeIcons: false,
         hideRowNumbers: true,
-        showLabel: true,
+        showLabels: true,
         width: containerWidth || undefined,
     };
 
@@ -265,12 +276,7 @@ const UniqueValues: React.FC<{
                     Unique Values {data.length > 0 ? `(${data.length})` : ''}
                 </Typography>
                 {!hasAllValues && (
-                    <Stack
-                        direction="row"
-                        alignItems="center"
-                        spacing={1}
-                        sx={styles.getValues}
-                    >
+                    <Stack direction="row" spacing={1} sx={styles.getValues}>
                         <Typography variant="caption" color="info">
                             Value list is limited to currently shown data
                         </Typography>

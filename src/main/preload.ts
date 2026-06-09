@@ -4,7 +4,11 @@ import {
     IpcRendererEvent,
     webUtils,
 } from 'electron';
-import { TaskProgress, NewWindowProps } from 'interfaces/common';
+import {
+    TaskProgress,
+    NewWindowProps,
+    FileWatcherEvent,
+} from 'interfaces/common';
 import { ElectronApi, Channels } from 'interfaces/electron.api';
 
 const openFile: ElectronApi['openFile'] = (mode, fileSettings) =>
@@ -87,6 +91,20 @@ const removeFileOpenListener: ElectronApi['removeFileOpenListener'] = () => {
     ipcRenderer.removeAllListeners('renderer:openFile');
 };
 
+const onFileChanged: ElectronApi['onFileChanged'] = (callback) => {
+    ipcRenderer.on(
+        'renderer:fileChanged',
+        (_event: IpcRendererEvent, watchEvent: FileWatcherEvent) => {
+            callback(watchEvent);
+        },
+    );
+};
+
+const removeFileChangedListener: ElectronApi['removeFileChangedListener'] =
+    () => {
+        ipcRenderer.removeAllListeners('renderer:fileChanged');
+    };
+
 const pathForFile: ElectronApi['pathForFile'] = (file) =>
     webUtils.getPathForFile(file);
 
@@ -134,6 +152,9 @@ const downloadValidationReport: ElectronApi['downloadValidationReport'] = (
     );
 
 const isWindows: ElectronApi['isWindows'] = process.platform === 'win32';
+
+const isDevelopment: ElectronApi['isDevelopment'] =
+    process.env.NODE_ENV === 'development';
 
 const startTask: ElectronApi['startTask'] = (task) =>
     ipcRenderer.invoke('main:startTask', task);
@@ -213,6 +234,8 @@ contextBridge.exposeInMainWorld('electron', {
     onSaveStore,
     onFileOpen,
     removeFileOpenListener,
+    onFileChanged,
+    removeFileChangedListener,
     pathForFile,
     fetch,
     openFileDialog,
@@ -224,6 +247,7 @@ contextBridge.exposeInMainWorld('electron', {
     getValidationReport,
     downloadValidationReport,
     isWindows,
+    isDevelopment,
     startTask,
     stopTask,
     onTaskProgress,

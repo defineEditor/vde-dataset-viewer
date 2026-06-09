@@ -192,7 +192,7 @@ const DatasetSidebar: React.FC<{
             open={open}
             onClose={onClose}
             sx={styles.drawer}
-            PaperProps={{ sx: styles.paper }}
+            slotProps={{ paper: { sx: styles.paper } }}
             anchor="left"
         >
             <TextField

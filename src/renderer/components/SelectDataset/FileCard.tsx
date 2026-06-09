@@ -5,15 +5,14 @@ import Typography from '@mui/material/Typography';
 import Tooltip from '@mui/material/Tooltip';
 
 const styles = {
-    card: (theme) => ({
+    card: {
         width: 200,
         height: 150,
         backgroundColor: 'grey.200',
-        transition: 'background-color 0.3s',
         '&:hover': {
-            backgroundColor: `${theme.palette.primary.main}10`,
+            backgroundColor: 'action.hover',
         },
-    }),
+    },
     path: {
         color: 'text.secondary',
         overflow: 'hidden',

@@ -4,10 +4,12 @@ import { BasicFilter, ITableRow, IUiValidationPage } from 'interfaces/common';
 import { CoreCell } from '@tanstack/react-table';
 
 const styles = {
-    button: {
+    button: (theme) => ({
         textTransform: 'none',
         minWidth: '1px',
-    },
+        fontSize: theme.densitySettings.table.fontSize,
+        padding: theme.densitySettings.table.cellPadding,
+    }),
 };
 
 const SummaryIssues: React.FC<{

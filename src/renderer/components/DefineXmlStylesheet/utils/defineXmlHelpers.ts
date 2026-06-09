@@ -34,14 +34,14 @@ export const getGlobalVariables = (content: DefineXmlContent) => {
 export const getItemGroupDefs = (content: DefineXmlContent) => {
     const metaDataVersion = getMetaDataVersion(content);
     const defs = metaDataVersion.itemGroupDefs || {};
-    const order = metaDataVersion.itemGroupDefsOrder || [];
+    const order = metaDataVersion.itemGroupDefsOrder ?? [];
     return order.map((oid) => defs[oid]);
 };
 
 export const getItemDefs = (content: DefineXmlContent) => {
     const metaDataVersion = getMetaDataVersion(content);
     const defs = metaDataVersion.itemDefs || {};
-    const order = metaDataVersion.itemDefsOrder || [];
+    const order = metaDataVersion.itemDefsOrder ?? [];
     return order.map((oid) => defs[oid]);
 };
 
@@ -49,35 +49,35 @@ export const getCodeLists = (content: DefineXmlContent) => {
     const metaDataVersion = getMetaDataVersion(content);
     const codeLists: Record<string, Define21.CodeList | Define20.CodeList> =
         metaDataVersion.codeLists || {};
-    const order = metaDataVersion.codeListsOrder || [];
+    const order = metaDataVersion.codeListsOrder ?? [];
     return order.map((oid) => codeLists[oid]);
 };
 
 export const getMethodDefs = (content: DefineXmlContent) => {
     const metaDataVersion = getMetaDataVersion(content);
     const defs = metaDataVersion.methodDefs || {};
-    const order = metaDataVersion.methodDefsOrder || [];
+    const order = metaDataVersion.methodDefsOrder ?? [];
     return order.map((oid) => defs[oid]);
 };
 
 export const getCommentDefs = (content: DefineXmlContent) => {
     const metaDataVersion = getMetaDataVersion(content);
     const defs = metaDataVersion.commentDefs || {};
-    const order = metaDataVersion.commentDefsOrder || [];
+    const order = metaDataVersion.commentDefsOrder ?? [];
     return order.map((oid) => defs[oid]);
 };
 
 export const getWhereClauseDefs = (content: DefineXmlContent) => {
     const metaDataVersion = getMetaDataVersion(content);
     const defs = metaDataVersion.whereClauseDefs || {};
-    const order = metaDataVersion.whereClauseDefsOrder || [];
+    const order = metaDataVersion.whereClauseDefsOrder ?? [];
     return order.map((oid) => defs[oid]);
 };
 
 export const getValueListDefs = (content: DefineXmlContent) => {
     const metaDataVersion = getMetaDataVersion(content);
     const defs = metaDataVersion.valueListDefs || {};
-    const order = metaDataVersion.valueListDefsOrder || [];
+    const order = metaDataVersion.valueListDefsOrder ?? [];
     return order.map((oid) => defs[oid]);
 };
 
@@ -88,7 +88,7 @@ export const getStandards = (content: DefineXmlContent) => {
             | Define21.MetaDataVersion
             | ArmDefine21.MetaDataVersion;
         const standards = mdv.standards || {};
-        const order = mdv.standardsOrder || [];
+        const order = mdv.standardsOrder ?? [];
         return order.map((oid) => standards[oid]);
     }
     return [];
@@ -97,7 +97,7 @@ export const getStandards = (content: DefineXmlContent) => {
 export const getLeafs = (content: DefineXmlContent) => {
     const metaDataVersion = getMetaDataVersion(content);
     const leafs = metaDataVersion.leafs || {};
-    const order = metaDataVersion.leafsOrder || [];
+    const order = metaDataVersion.leafsOrder ?? [];
     return order.map((id) => leafs[id]);
 };
 
@@ -110,12 +110,12 @@ export const getAnalysisResultDisplays = (
     if (content.defineVersion === '2.0') {
         const mdv = metaDataVersion as ArmDefine20.MetaDataVersion;
         const displays = mdv.analysisResultDisplays?.resultDisplays || {};
-        const order = mdv.analysisResultDisplays?.resultDisplayOrder || [];
+        const order = mdv.analysisResultDisplays?.resultDisplayOrder ?? [];
         return order.map((oid) => displays[oid]);
     }
     const mdv = metaDataVersion as ArmDefine21.MetaDataVersion;
     const displays = mdv.analysisResultDisplays?.resultDisplays || {};
-    const order = mdv.analysisResultDisplays?.resultDisplayOrder || [];
+    const order = mdv.analysisResultDisplays?.resultDisplayOrder ?? [];
     return order.map((oid) => displays[oid]);
 };
 

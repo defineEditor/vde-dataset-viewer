@@ -12,8 +12,11 @@ import {
     IconButton,
     Tooltip,
 } from '@mui/material';
+import { Theme } from '@mui/material/styles';
 import {
+    Cell as ICell,
     flexRender,
+    Header as IHeader,
     Table as ITable,
     Column as IColumn,
     Row as IRow,
@@ -27,21 +30,25 @@ import ExposureIcon from '@mui/icons-material/Exposure';
 import LooksOneIcon from '@mui/icons-material/LooksOne';
 import AccessTimeIcon from '@mui/icons-material/HourglassFull';
 import { VirtualItem, Virtualizer } from '@tanstack/react-virtual';
-import { ITableRow, TableSettings } from 'interfaces/common';
+import { ITableRow, TableRowValue, TableSettings } from 'interfaces/common';
 import Loading from 'renderer/components/Loading';
 
-const getContainerStyle = (settings: TableSettings): React.CSSProperties => {
-    const result: React.CSSProperties = {
-        overflow: 'auto',
-        position: 'relative',
-        height: settings.height ? `${settings.height}px` : '100vh',
-        userSelect: 'none',
+const getContainerStyle =
+    (settings: TableSettings) =>
+    (theme): React.CSSProperties => {
+        const result: React.CSSProperties = {
+            overflow: 'auto',
+            position: 'relative',
+            height: settings.height ? `${settings.height}px` : '100vh',
+            userSelect: 'none',
+            scrollbarColor: `${theme.vars?.palette.scrollbar.thumb} ${theme.vars?.palette.scrollbar.track}`,
+            borderRadius: '0px',
+        };
+        if (settings.width) {
+            result.width = `${settings.width}px`;
+        }
+        return result;
     };
-    if (settings.width) {
-        result.width = `${settings.width}px`;
-    }
-    return result;
-};
 
 const getLoadingStyle = (settings: TableSettings): React.CSSProperties => {
     return {
@@ -63,7 +70,7 @@ const getLoadingStyle = (settings: TableSettings): React.CSSProperties => {
 
 const styles = {
     header: {
-        backgroundColor: '#f4f4f4',
+        backgroundColor: 'table.header',
         display: 'grid',
         position: 'sticky',
         top: 0,
@@ -75,6 +82,7 @@ const styles = {
     },
     table: {
         display: 'grid',
+        borderCollapse: 'separate',
     },
     tbody: {
         display: 'grid',
@@ -88,50 +96,60 @@ const styles = {
     virtualPadding: {
         display: 'flex',
     },
-    tableHeaderCell: {
+    tableHeaderCell: (theme) => ({
         padding: 0,
         fontFamily: 'Roboto Mono',
+        fontSize: theme.densitySettings.table.fontSize,
+        minHeight: theme.densitySettings.table.headerHeight,
+        lineHeight: theme.densitySettings.table.headerLineHeight,
         display: 'flex',
         position: 'relative',
         justifyContent: 'center',
         width: '100%',
-    },
-    tableHeaderLabel: {
+        backgroundColor: 'table.header',
+    }),
+    tableHeaderLabel: (theme) => ({
         width: '100%',
         textAlign: 'center',
+        fontSize: theme.densitySettings.table.fontSize,
         flex: 1,
         justifyContent: 'center',
-    },
-    tableHeaderText: {
-        py: 1,
-        pl: 1,
-    },
-    tableCellDynamic: {
-        border: '1px solid rgba(224, 224, 224, 1)',
+        alignItems: 'center',
+    }),
+    tableHeaderText: (theme) => ({
+        py: theme.densitySettings.mode === 'compact' ? 0.5 : 1,
+        pl: theme.densitySettings.mode === 'compact' ? 0.5 : 1,
+    }),
+    tableCellDynamic: (theme) => ({
+        border: '1px solid',
+        borderColor: 'grey.300',
         fontFamily: 'Roboto Mono',
+        fontSize: theme.densitySettings.table.fontSize,
         whiteSpace: 'pre-wrap',
         cursor: 'pointer',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
-        padding: 1,
+        padding: theme.densitySettings.table.cellPadding,
         maxHeight: '5em',
-    },
-    tableCellFixed: {
-        border: '1px solid rgba(224, 224, 224, 1)',
+    }),
+    tableCellFixed: (theme) => ({
+        border: '1px solid',
+        borderColor: 'grey.300',
         fontFamily: 'Roboto Mono',
+        fontSize: theme.densitySettings.table.fontSize,
         whiteSpace: 'pre',
         cursor: 'pointer',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
-        padding: 1,
-    },
+        padding: theme.densitySettings.table.cellPadding,
+    }),
     resizer: {
         top: 0,
         position: 'absolute',
         height: '100%',
         right: 0,
         width: '3px',
-        background: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'table.resizeHandle',
         cursor: 'col-resize',
         userSelect: 'none',
         touchAction: 'none',
@@ -142,46 +160,49 @@ const styles = {
         },
     },
     highlightedCell: {
-        backgroundColor: '#42a5f533',
+        backgroundColor: 'table.highlightedCell',
     },
     annotatedCell: {
-        backgroundColor: '#fff8e1',
-        border: '1px solid #ffe082',
+        backgroundColor: 'table.annotatedCell',
+        border: '1px solid',
+        borderColor: 'table.annotatedBorder',
     },
     annotatedRowCell: {
-        backgroundColor: '#fff8e1;',
-        border: '1px solid #ffe082;',
+        backgroundColor: 'table.annotatedCell',
+        border: '1px solid',
+        borderColor: 'table.annotatedBorder',
     },
     highlightedAnnotatedCell: {
-        backgroundColor: '#ffca28',
-        border: '1px solid #ffca2890',
+        backgroundColor: 'table.highlightedAnnotatedCell',
+        border: '1px solid',
+        borderColor: 'table.highlightedAnnotatedBorder',
     },
     headerRowNumberCell: {
         justifyContent: 'center',
         fontSize: 'small',
-        backgroundColor: '#f4f4f4',
+        backgroundColor: 'table.rowNumber',
         position: 'sticky',
         left: 0,
         zIndex: 2,
         maxHeight: '100%',
     },
-    rowNumberCell: {
-        backgroundColor: '#f4f4f4',
-        fontSize: 'small',
+    rowNumberCell: (theme) => ({
+        backgroundColor: 'table.rowNumber',
+        fontSize: theme.densitySettings.table.rowNumberFontSize,
         overflow: 'visible',
-        padding: 0.5,
+        padding: theme.densitySettings.table.rowNumberPadding,
         justifyContent: 'center',
         position: 'sticky',
         left: 0,
         zIndex: 2,
         maxHeight: '100%',
         textAlign: 'center',
-    },
+    }),
     loading: {},
     sponsored: {
         marginTop: '10px',
         fontSize: '14px',
-        color: '#888',
+        color: 'text.secondary',
         textAlign: 'center',
     },
     filterIcon: {
@@ -194,13 +215,14 @@ const styles = {
         color: 'grey.600',
         ml: '4px',
     },
-    squareIconButton: {
+    squareIconButton: (theme) => ({
+        height: theme.densitySettings.table.headerHeight,
         aspectRatio: '1 / 1',
         minWidth: 0,
         textAlign: 'center',
         flex: 1,
         justifyContent: 'center',
-    },
+    }),
     allSpace: {
         width: '100%',
         height: '100%',
@@ -226,19 +248,286 @@ const getTypeIcon = (type: string | undefined) => {
     return <FontDownloadIcon sx={styles.typeIcon} />;
 };
 
+type AnnotationData = {
+    text: string | React.ReactElement;
+    color: string;
+};
+
+type HighlightedCells = {
+    [columnId: string]: number[];
+};
+
+type PinningStyle = (theme: Theme) => React.CSSProperties;
+
+const DatasetHeaderCell: React.FC<{
+    column: IColumn<ITableRow, unknown>;
+    header: IHeader<ITableRow, unknown>;
+    filteredColumns: string[];
+    handleContextMenu: (
+        event: React.MouseEvent<HTMLTableCellElement, MouseEvent>,
+        columnId: string,
+        value: TableRowValue,
+        isHeader?: boolean,
+    ) => void;
+    handleMouseDown: (rowIndex: number | null, columnId: string | null) => void;
+    handleMouseOver: (rowIndex: number | null, columnId: string | null) => void;
+    handleResizeEnd: () => void;
+    onSortingChange: (updater: IUpdater<ISortingState>) => void;
+    settings: TableSettings;
+    sorting: ISortingState;
+    table: ITable<ITableRow>;
+    usePinningStyles?: boolean;
+    pinningStyle?: PinningStyle;
+}> = ({
+    column,
+    header,
+    filteredColumns,
+    handleContextMenu,
+    handleMouseDown,
+    handleMouseOver,
+    handleResizeEnd,
+    onSortingChange,
+    settings,
+    sorting,
+    table,
+    usePinningStyles = false,
+    pinningStyle = undefined,
+}) => {
+    const isRowNumber = column.id === '#';
+    const isSorted = sorting.find((sort) => sort.id === header.id);
+
+    const headerCellSx = [
+        styles.tableHeaderCell,
+        { width: header.getSize() },
+        isRowNumber ? styles.headerRowNumberCell : { cursor: 'pointer' },
+        usePinningStyles ? pinningStyle || null : null,
+        settings.denseHeader ? { height: '30px' } : null,
+    ];
+
+    return (
+        <TableCell
+            key={header.id}
+            sx={headerCellSx}
+            onContextMenu={
+                isRowNumber
+                    ? undefined
+                    : (event) => handleContextMenu(event, header.id, '', true)
+            }
+        >
+            {isRowNumber ? (
+                <Tooltip title="Select All" enterDelay={1000}>
+                    <IconButton
+                        sx={styles.squareIconButton}
+                        onClick={() => {
+                            handleMouseDown(null, null);
+                        }}
+                    >
+                        <SelectAllIcon />
+                    </IconButton>
+                </Tooltip>
+            ) : (
+                <>
+                    {settings.disableSorting ? (
+                        <Stack sx={styles.tableHeaderLabel} direction="row">
+                            <Box sx={styles.tableHeaderText}>
+                                {flexRender(
+                                    header.column.columnDef.header,
+                                    header.getContext(),
+                                )}
+                            </Box>
+                            {settings.showTypeIcons &&
+                                getTypeIcon(header.column.columnDef.meta?.type)}
+                            {filteredColumns.includes(header.id) && (
+                                <FilterIcon sx={styles.filterIcon} />
+                            )}
+                        </Stack>
+                    ) : (
+                        <TableSortLabel
+                            onClick={() => {
+                                onSortingChange([
+                                    {
+                                        id: header.id,
+                                        desc: isSorted ? !isSorted.desc : false,
+                                    },
+                                ]);
+                            }}
+                            onMouseDown={(event: React.MouseEvent) => {
+                                if (event.button === 0) {
+                                    handleMouseDown(null, header.id);
+                                }
+                            }}
+                            onMouseOver={() => handleMouseOver(null, header.id)}
+                            active={!!isSorted}
+                            direction={isSorted?.desc ? 'desc' : 'asc'}
+                            sx={styles.tableHeaderLabel}
+                        >
+                            <Box sx={styles.tableHeaderText}>
+                                {flexRender(
+                                    header.column.columnDef.header,
+                                    header.getContext(),
+                                )}
+                            </Box>
+                            {settings.showTypeIcons &&
+                                getTypeIcon(header.column.columnDef.meta?.type)}
+                            {filteredColumns.includes(header.id) && (
+                                <FilterIcon sx={styles.filterIcon} />
+                            )}
+                        </TableSortLabel>
+                    )}
+                    <Box
+                        sx={styles.resizer}
+                        {...{
+                            onDoubleClick: () => header.column.resetSize(),
+                            onMouseDown: header.getResizeHandler(),
+                            onMouseUp: () => handleResizeEnd(),
+                            onTouchStart: header.getResizeHandler(),
+                            className: `resizer ${
+                                table.options.columnResizeDirection
+                            }`,
+                            style: {
+                                transform: header.column.getIsResizing()
+                                    ? `translateX(${(table.options.columnResizeDirection === 'rtl' ? -1 : 1) * (table.getState().columnSizingInfo.deltaOffset ?? 0)}px)`
+                                    : '',
+                            },
+                        }}
+                    />
+                </>
+            )}
+        </TableCell>
+    );
+};
+
+const DatasetBodyCell: React.FC<{
+    annotatedCells: Map<string, AnnotationData> | null;
+    cell: ICell<ITableRow, unknown>;
+    handleCellClick: (rowIndex: number, columnId: string) => void;
+    handleContextMenu: (
+        event: React.MouseEvent<HTMLTableCellElement, MouseEvent>,
+        columnId: string,
+        value: TableRowValue,
+        isHeader?: boolean,
+    ) => void;
+    handleMouseDown: (rowIndex: number | null, columnId: string | null) => void;
+    handleMouseOver: (rowIndex: number | null, columnId: string | null) => void;
+    highlightedCells: Record<string, number[]>;
+    rowAnnotation: AnnotationData | null;
+    rowIndex: number;
+    visibleColumns: IColumn<ITableRow, unknown>[];
+    settings: TableSettings;
+    usePinningStyles?: boolean;
+    pinningStyle?: PinningStyle;
+}> = ({
+    annotatedCells,
+    cell,
+    handleCellClick,
+    handleContextMenu,
+    handleMouseDown,
+    handleMouseOver,
+    highlightedCells,
+    rowAnnotation,
+    rowIndex,
+    visibleColumns,
+    settings,
+    usePinningStyles = false,
+    pinningStyle = undefined,
+}) => {
+    const isHighlighted =
+        highlightedCells[cell.column.id]?.includes(rowIndex) || false;
+
+    let annotation: {
+        text: string | React.ReactElement;
+        color: string;
+    } | null = null;
+    if (annotatedCells) {
+        const columnIndex = visibleColumns.findIndex(
+            (column) => column.id === cell.column.id,
+        );
+        annotation = annotatedCells?.get(`${rowIndex}#${columnIndex}`) || null;
+    }
+    const isRowNumber = cell.column.id === '#';
+    const isAnnotated = !!annotation;
+
+    const cellStyle = [
+        settings.dynamicRowHeight
+            ? styles.tableCellDynamic
+            : styles.tableCellFixed,
+        { width: cell.column.getSize() },
+        isRowNumber ? styles.rowNumberCell : null,
+        usePinningStyles ? pinningStyle || null : null,
+        isRowNumber && rowAnnotation
+            ? styles.annotatedRowCell
+            : isAnnotated && isHighlighted
+              ? styles.highlightedAnnotatedCell
+              : isAnnotated
+                ? styles.annotatedCell
+                : isHighlighted
+                  ? styles.highlightedCell
+                  : null,
+        cell.column.columnDef.meta?.style || null,
+    ];
+
+    const renderedCell = flexRender(
+        cell.column.columnDef.cell,
+        cell.getContext(),
+    );
+
+    const renderedContent =
+        isRowNumber && rowAnnotation ? (
+            <Tooltip
+                title={<Box sx={styles.preWrap}>{rowAnnotation.text}</Box>}
+                placement="top"
+            >
+                <Box sx={styles.allSpace}>{cell.getValue() as string}</Box>
+            </Tooltip>
+        ) : isAnnotated && annotation ? (
+            <Tooltip
+                title={<Box sx={styles.preWrap}>{annotation.text}</Box>}
+                placement="top"
+            >
+                <Box sx={styles.allSpace}>{cell.getValue() as string}</Box>
+            </Tooltip>
+        ) : (
+            renderedCell
+        );
+
+    return (
+        <TableCell
+            key={cell.id}
+            sx={cellStyle}
+            onClick={() => handleCellClick(rowIndex, cell.column.id)}
+            onMouseDown={() => handleMouseDown(rowIndex, cell.column.id)}
+            onMouseOver={() => handleMouseOver(rowIndex, cell.column.id)}
+            onContextMenu={
+                isRowNumber
+                    ? undefined
+                    : (event) =>
+                          handleContextMenu(
+                              event,
+                              cell.column.id,
+                              cell.getValue() as TableRowValue,
+                          )
+            }
+        >
+            {renderedContent}
+        </TableCell>
+    );
+};
+
 const DatasetViewUI: React.FC<{
     table: ITable<ITableRow>;
     tableContainerRef: React.RefObject<HTMLDivElement | null>;
     visibleColumns: IColumn<ITableRow, unknown>[];
+    leftPinnedColumns: IColumn<ITableRow, unknown>[];
+    centerColumns: IColumn<ITableRow, unknown>[];
     virtualPaddingLeft: number | undefined;
     virtualPaddingRight: number | undefined;
     virtualColumns: VirtualItem[];
     virtualRows: VirtualItem[];
     rows: IRow<ITableRow>[];
-    highlightedCells: { row: number; column: number }[];
-    handleCellClick: (rowIndex: number, columnIndex: number) => void;
-    handleMouseDown: (rowIndex: number, columnIndex: number) => void;
-    handleMouseOver: (rowIndex: number, columnIndex: number) => void;
+    highlightedCells: HighlightedCells;
+    handleCellClick: (rowIndex: number, columnId: string) => void;
+    handleMouseDown: (rowIndex: number | null, columnId: string | null) => void;
+    handleMouseOver: (rowIndex: number | null, columnId: string | null) => void;
     handleResizeEnd: () => void;
     handleScroll: (event: React.UIEvent<HTMLDivElement, UIEvent>) => void;
     isLoading: boolean;
@@ -248,11 +537,14 @@ const DatasetViewUI: React.FC<{
     settings: TableSettings;
     handleContextMenu?: (
         event: React.MouseEvent<HTMLTableCellElement, MouseEvent>,
-        rowIndex: number,
-        columnIndex: number,
+        columnId: string,
+        value: TableRowValue,
+        isHeader?: boolean,
     ) => void;
     filteredColumns?: string[];
     containerStyle?: React.CSSProperties;
+    headerPinningStyles?: Record<string, PinningStyle>;
+    bodyPinningStyles?: Record<string, PinningStyle>;
     annotatedCells?: Map<
         string,
         { text: string | React.ReactElement; color: string }
@@ -261,6 +553,8 @@ const DatasetViewUI: React.FC<{
     table,
     tableContainerRef,
     visibleColumns,
+    leftPinnedColumns,
+    centerColumns,
     virtualPaddingLeft,
     virtualPaddingRight,
     virtualColumns,
@@ -277,9 +571,11 @@ const DatasetViewUI: React.FC<{
     rowVirtualizer,
     sorting,
     onSortingChange,
-    handleContextMenu = (_event, _rowIndex, _columnIndex) => {},
+    handleContextMenu = (_event, _columnId, _value, _isHeader = false) => {},
     filteredColumns = [],
     containerStyle = undefined,
+    headerPinningStyles = {},
+    bodyPinningStyles = {},
     annotatedCells = null,
 }) => {
     return (
@@ -288,39 +584,43 @@ const DatasetViewUI: React.FC<{
             sx={containerStyle || getContainerStyle(settings)}
             onScroll={handleScroll}
         >
-            <Table sx={styles.table}>
+            <Table sx={{ ...styles.table, width: table.getTotalSize() }}>
                 <TableHead sx={styles.header}>
                     {table.getHeaderGroups().map((headerGroup) => (
                         <TableRow
                             key={headerGroup.id}
                             style={styles.headerColumn}
                         >
-                            {!settings.hideRowNumbers && (
-                                <TableCell
-                                    sx={{
-                                        ...styles.tableHeaderCell,
-                                        width: visibleColumns[0].getSize(),
-                                        ...styles.headerRowNumberCell,
-                                        ...(settings.denseHeader
-                                            ? { height: '30px' }
-                                            : {}),
-                                    }}
-                                >
-                                    <Tooltip
-                                        title="Select All"
-                                        enterDelay={1000}
-                                    >
-                                        <IconButton
-                                            sx={styles.squareIconButton}
-                                            onClick={() => {
-                                                handleMouseDown(-1, -1);
-                                            }}
-                                        >
-                                            <SelectAllIcon />
-                                        </IconButton>
-                                    </Tooltip>
-                                </TableCell>
-                            )}
+                            {leftPinnedColumns.map((column) => {
+                                const header = headerGroup.headers.find(
+                                    (headerItem) => headerItem.id === column.id,
+                                );
+
+                                if (!header) {
+                                    return null;
+                                }
+
+                                return (
+                                    <DatasetHeaderCell
+                                        key={header.id}
+                                        column={column}
+                                        header={header}
+                                        filteredColumns={filteredColumns}
+                                        handleContextMenu={handleContextMenu}
+                                        handleMouseDown={handleMouseDown}
+                                        handleMouseOver={handleMouseOver}
+                                        handleResizeEnd={handleResizeEnd}
+                                        onSortingChange={onSortingChange}
+                                        settings={settings}
+                                        sorting={sorting}
+                                        table={table}
+                                        usePinningStyles
+                                        pinningStyle={
+                                            headerPinningStyles[column.id]
+                                        }
+                                    />
+                                );
+                            })}
                             {virtualPaddingLeft ? (
                                 <TableCell
                                     sx={{
@@ -330,181 +630,33 @@ const DatasetViewUI: React.FC<{
                                 />
                             ) : null}
                             {virtualColumns.map((vc) => {
-                                const header =
-                                    headerGroup.headers[vc.index + 1]; // Adjust index
+                                const column = centerColumns[vc.index];
+                                const header = headerGroup.headers.find(
+                                    (headerItem) => headerItem.id === column.id,
+                                );
+
+                                if (!header) {
+                                    return null;
+                                }
+
                                 return (
-                                    <TableCell
+                                    <DatasetHeaderCell
                                         key={header.id}
-                                        sx={{
-                                            ...styles.tableHeaderCell,
-                                            width: header.getSize(),
-                                            cursor: 'pointer',
-                                            ...(settings.denseHeader
-                                                ? { height: '30px' }
-                                                : {}),
-                                        }}
-                                        onContextMenu={(event) =>
-                                            handleContextMenu(
-                                                event,
-                                                -1,
-                                                vc.index + 1,
-                                            )
+                                        column={column}
+                                        header={header}
+                                        filteredColumns={filteredColumns}
+                                        handleContextMenu={handleContextMenu}
+                                        handleMouseDown={handleMouseDown}
+                                        handleMouseOver={handleMouseOver}
+                                        handleResizeEnd={handleResizeEnd}
+                                        onSortingChange={onSortingChange}
+                                        settings={settings}
+                                        sorting={sorting}
+                                        table={table}
+                                        pinningStyle={
+                                            headerPinningStyles[column.id]
                                         }
-                                    >
-                                        <>
-                                            {settings.disableSorting ? (
-                                                <Stack
-                                                    sx={styles.tableHeaderLabel}
-                                                    direction="row"
-                                                    alignItems="center"
-                                                >
-                                                    <Box
-                                                        sx={
-                                                            styles.tableHeaderText
-                                                        }
-                                                    >
-                                                        {flexRender(
-                                                            header.column
-                                                                .columnDef
-                                                                .header,
-                                                            header.getContext(),
-                                                        )}
-                                                    </Box>
-                                                    {settings.showTypeIcons &&
-                                                        getTypeIcon(
-                                                            header.column
-                                                                .columnDef.meta
-                                                                ?.type,
-                                                        )}
-                                                    {filteredColumns.includes(
-                                                        header.id,
-                                                    ) && (
-                                                        <FilterIcon
-                                                            sx={
-                                                                styles.filterIcon
-                                                            }
-                                                        />
-                                                    )}
-                                                </Stack>
-                                            ) : (
-                                                <TableSortLabel
-                                                    onClick={() => {
-                                                        const isSorted =
-                                                            sorting.find(
-                                                                (sort) =>
-                                                                    sort.id ===
-                                                                    header.id,
-                                                            );
-                                                        onSortingChange([
-                                                            {
-                                                                id: header.id,
-                                                                desc: isSorted
-                                                                    ? !isSorted.desc
-                                                                    : false,
-                                                            },
-                                                        ]);
-                                                    }}
-                                                    onMouseDown={(
-                                                        event: React.MouseEvent,
-                                                    ) => {
-                                                        if (
-                                                            event.button === 0
-                                                        ) {
-                                                            handleMouseDown(
-                                                                0,
-                                                                vc.index + 1,
-                                                            );
-                                                        }
-                                                    }}
-                                                    onMouseOver={() =>
-                                                        handleMouseOver(
-                                                            0,
-                                                            vc.index + 1,
-                                                        )
-                                                    }
-                                                    active={
-                                                        !!sorting.find(
-                                                            (sort) =>
-                                                                sort.id ===
-                                                                header.id,
-                                                        )
-                                                    }
-                                                    direction={
-                                                        sorting.find(
-                                                            (sort) =>
-                                                                sort.id ===
-                                                                header.id,
-                                                        )?.desc
-                                                            ? 'desc'
-                                                            : 'asc'
-                                                    }
-                                                    sx={styles.tableHeaderLabel}
-                                                >
-                                                    <Box
-                                                        sx={
-                                                            styles.tableHeaderText
-                                                        }
-                                                    >
-                                                        {flexRender(
-                                                            header.column
-                                                                .columnDef
-                                                                .header,
-                                                            header.getContext(),
-                                                        )}
-                                                    </Box>
-                                                    {settings.showTypeIcons &&
-                                                        getTypeIcon(
-                                                            header.column
-                                                                .columnDef.meta
-                                                                ?.type,
-                                                        )}
-                                                    {filteredColumns.includes(
-                                                        header.id,
-                                                    ) && (
-                                                        <FilterIcon
-                                                            sx={
-                                                                styles.filterIcon
-                                                            }
-                                                        />
-                                                    )}
-                                                </TableSortLabel>
-                                            )}
-                                            <Box
-                                                sx={styles.resizer}
-                                                {...{
-                                                    onDoubleClick: () =>
-                                                        header.column.resetSize(),
-                                                    onMouseDown:
-                                                        header.getResizeHandler(),
-                                                    onMouseUp: () =>
-                                                        handleResizeEnd(),
-                                                    onTouchStart:
-                                                        header.getResizeHandler(),
-                                                    className: `resizer ${
-                                                        table.options
-                                                            .columnResizeDirection
-                                                    }`,
-                                                    style: {
-                                                        transform:
-                                                            header.column.getIsResizing()
-                                                                ? `translateX(${
-                                                                      (table
-                                                                          .options
-                                                                          .columnResizeDirection ===
-                                                                      'rtl'
-                                                                          ? -1
-                                                                          : 1) *
-                                                                      (table.getState()
-                                                                          .columnSizingInfo
-                                                                          .deltaOffset ??
-                                                                          0)
-                                                                  }px)`
-                                                                : '',
-                                                    },
-                                                }}
-                                            />
-                                        </>
-                                    </TableCell>
+                                    />
                                 );
                             })}
                             {virtualPaddingRight ? (
@@ -527,11 +679,17 @@ const DatasetViewUI: React.FC<{
                     {!isLoading &&
                         virtualRows.map((virtualRow) => {
                             const row = rows[virtualRow.index];
-                            const visibleCells = row.getVisibleCells();
+                            const centerCells = row.getCenterVisibleCells();
+                            const leftPinnedCells = row
+                                .getLeftVisibleCells()
+                                .filter(
+                                    (cell) =>
+                                        !settings.hideRowNumbers ||
+                                        cell.column.id !== '#',
+                                );
                             const rowAnnotation =
-                                annotatedCells !== null &&
-                                annotatedCells.get(`${virtualRow.index}`);
-                            const isRowAnnotated = !!rowAnnotation;
+                                annotatedCells?.get(`${virtualRow.index}`) ||
+                                null;
 
                             return (
                                 <TableRow
@@ -556,65 +714,40 @@ const DatasetViewUI: React.FC<{
                                         transform: `translateY(${virtualRow.start}px)`,
                                     }}
                                 >
-                                    {!settings.hideRowNumbers && (
-                                        <TableCell
-                                            sx={{
-                                                ...(settings.dynamicRowHeight
-                                                    ? styles.tableCellDynamic
-                                                    : styles.tableCellFixed),
-                                                width: visibleCells[0].column.getSize(),
-                                                ...styles.rowNumberCell,
-                                                ...(isRowAnnotated
-                                                    ? styles.annotatedRowCell
-                                                    : {}),
-                                            }}
-                                            onClick={() =>
-                                                handleCellClick(
-                                                    virtualRow.index,
-                                                    0,
-                                                )
-                                            }
-                                            onMouseDown={() =>
-                                                handleMouseDown(
-                                                    virtualRow.index,
-                                                    0,
-                                                )
-                                            }
-                                            onMouseOver={() =>
-                                                handleMouseOver(
-                                                    virtualRow.index,
-                                                    0,
-                                                )
-                                            }
-                                        >
-                                            {isRowAnnotated ? (
-                                                <Tooltip
-                                                    title={
-                                                        <Box
-                                                            sx={styles.preWrap}
-                                                        >
-                                                            {
-                                                                rowAnnotation?.text
-                                                            }
-                                                        </Box>
-                                                    }
-                                                    placement="top"
-                                                >
-                                                    <Box sx={styles.allSpace}>
-                                                        {
-                                                            visibleCells[0].getValue() as string
-                                                        }
-                                                    </Box>
-                                                </Tooltip>
-                                            ) : (
-                                                flexRender(
-                                                    visibleCells[0].column
-                                                        .columnDef.cell,
-                                                    visibleCells[0].getContext(),
-                                                )
-                                            )}
-                                        </TableCell>
-                                    )}
+                                    {leftPinnedCells.map((cell) => {
+                                        return (
+                                            <DatasetBodyCell
+                                                key={cell.id}
+                                                annotatedCells={annotatedCells}
+                                                visibleColumns={visibleColumns}
+                                                cell={cell}
+                                                handleCellClick={
+                                                    handleCellClick
+                                                }
+                                                handleContextMenu={
+                                                    handleContextMenu
+                                                }
+                                                handleMouseDown={
+                                                    handleMouseDown
+                                                }
+                                                handleMouseOver={
+                                                    handleMouseOver
+                                                }
+                                                highlightedCells={
+                                                    highlightedCells
+                                                }
+                                                rowAnnotation={rowAnnotation}
+                                                rowIndex={virtualRow.index}
+                                                settings={settings}
+                                                usePinningStyles
+                                                pinningStyle={
+                                                    bodyPinningStyles[
+                                                        cell.column.id
+                                                    ]
+                                                }
+                                            />
+                                        );
+                                    })}
                                     {virtualPaddingLeft ? (
                                         <TableCell
                                             sx={{
@@ -624,117 +757,36 @@ const DatasetViewUI: React.FC<{
                                         />
                                     ) : null}
                                     {virtualColumns.map((vc) => {
-                                        const cell = visibleCells[vc.index + 1]; // Adjust index for row number
+                                        const cell = centerCells[vc.index];
 
-                                        let cellStyle: React.CSSProperties = {
-                                            ...(settings.dynamicRowHeight
-                                                ? styles.tableCellDynamic
-                                                : styles.tableCellFixed),
-                                            width: cell.column.getSize(),
-                                        };
-
-                                        const isHighlighted =
-                                            highlightedCells.some(
-                                                (highlightedCell) =>
-                                                    highlightedCell.row ===
-                                                        virtualRow.index &&
-                                                    highlightedCell.column ===
-                                                        vc.index + 1,
-                                            );
-
-                                        const annotation =
-                                            annotatedCells !== null &&
-                                            annotatedCells.get(
-                                                `${virtualRow.index}#${vc.index + 1}`,
-                                            );
-                                        const isAnnotated = !!annotation;
-
-                                        if (isAnnotated && isHighlighted) {
-                                            cellStyle = {
-                                                ...cellStyle,
-                                                ...styles.highlightedAnnotatedCell,
-                                            };
-                                        } else if (isAnnotated) {
-                                            cellStyle = {
-                                                ...cellStyle,
-                                                ...styles.annotatedCell,
-                                            };
-                                        } else if (isHighlighted) {
-                                            cellStyle = {
-                                                ...cellStyle,
-                                                ...styles.highlightedCell,
-                                            };
+                                        if (!cell) {
+                                            return null;
                                         }
-
-                                        if (cell.column.columnDef.meta?.style) {
-                                            cellStyle = {
-                                                ...cellStyle,
-                                                ...cell.column.columnDef.meta
-                                                    .style,
-                                            };
-                                        }
-
                                         return (
-                                            <TableCell
+                                            <DatasetBodyCell
                                                 key={cell.id}
-                                                sx={cellStyle}
-                                                onClick={() =>
-                                                    handleCellClick(
-                                                        virtualRow.index,
-                                                        vc.index + 1,
-                                                    )
+                                                annotatedCells={annotatedCells}
+                                                visibleColumns={visibleColumns}
+                                                cell={cell}
+                                                handleCellClick={
+                                                    handleCellClick
                                                 }
-                                                onMouseDown={() =>
-                                                    handleMouseDown(
-                                                        virtualRow.index,
-                                                        vc.index + 1,
-                                                    )
+                                                handleContextMenu={
+                                                    handleContextMenu
                                                 }
-                                                onMouseOver={() =>
-                                                    handleMouseOver(
-                                                        virtualRow.index,
-                                                        vc.index + 1,
-                                                    )
+                                                handleMouseDown={
+                                                    handleMouseDown
                                                 }
-                                                onContextMenu={(event) =>
-                                                    handleContextMenu(
-                                                        event,
-                                                        virtualRow.index,
-                                                        vc.index + 1,
-                                                    )
+                                                handleMouseOver={
+                                                    handleMouseOver
                                                 }
-                                            >
-                                                {isAnnotated ? (
-                                                    <Tooltip
-                                                        title={
-                                                            <Box
-                                                                sx={
-                                                                    styles.preWrap
-                                                                }
-                                                            >
-                                                                {
-                                                                    annotation?.text
-                                                                }
-                                                            </Box>
-                                                        }
-                                                        placement="top"
-                                                    >
-                                                        <Box
-                                                            sx={styles.allSpace}
-                                                        >
-                                                            {
-                                                                cell.getValue() as string
-                                                            }
-                                                        </Box>
-                                                    </Tooltip>
-                                                ) : (
-                                                    flexRender(
-                                                        cell.column.columnDef
-                                                            .cell,
-                                                        cell.getContext(),
-                                                    )
-                                                )}
-                                            </TableCell>
+                                                highlightedCells={
+                                                    highlightedCells
+                                                }
+                                                rowAnnotation={null}
+                                                rowIndex={virtualRow.index}
+                                                settings={settings}
+                                            />
                                         );
                                     })}
                                     {virtualPaddingRight ? (

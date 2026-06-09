@@ -8,11 +8,13 @@ import {
     AllowedPathnames,
     DataType,
     ModalType,
+    IMask,
     DataMode,
     IUiViewer,
     DefineTab,
     IUiCompare,
     CompareSettings,
+    IUiControl,
 } from 'interfaces/common';
 import { paths } from 'misc/constants';
 
@@ -54,6 +56,9 @@ export const uiSlice = createSlice({
                             offsetX: 0,
                         },
                         currentPage: 0,
+                        sorting: [],
+                        idCols: [],
+                        mask: null,
                     };
                 }
                 // Open dataset view
@@ -203,6 +208,55 @@ export const uiSlice = createSlice({
             }
             state.control[fileId].scrollPosition = { offsetX, offsetY };
         },
+        setDatasetSorting: (
+            state,
+            action: PayloadAction<{
+                fileId: string;
+                sorting: IUiControl['sorting'];
+            }>,
+        ) => {
+            const { fileId, sorting } = action.payload;
+            if (!state.control[fileId]) {
+                return;
+            }
+            state.control[fileId].sorting = sorting;
+        },
+        setDatasetIdColumns: (
+            state,
+            action: PayloadAction<{
+                fileId: string;
+                idCols: IUiControl['idCols'];
+            }>,
+        ) => {
+            const { fileId, idCols } = action.payload;
+            if (!state.control[fileId]) {
+                return;
+            }
+            state.control[fileId].idCols = idCols;
+        },
+        setMask: (
+            state,
+            action: PayloadAction<{ fileId: string; mask: IMask | null }>,
+        ) => {
+            const { fileId, mask } = action.payload;
+            if (!state.control[fileId]) {
+                return;
+            }
+            state.control[fileId].mask = mask;
+        },
+        setDatasetShowLabels: (
+            state,
+            action: PayloadAction<{
+                fileId: string;
+                showLabels: boolean;
+            }>,
+        ) => {
+            const { fileId, showLabels } = action.payload;
+            if (!state.control[fileId]) {
+                return;
+            }
+            state.control[fileId].showLabels = showLabels;
+        },
         setBottomSection: (
             state,
             action: PayloadAction<'dataset' | 'issues'>,
@@ -220,6 +274,9 @@ export const uiSlice = createSlice({
             action: PayloadAction<'manual' | 'interactive'>,
         ) => {
             state.viewer.filterInputMode = action.payload;
+        },
+        toggleAppBarExpanded: (state) => {
+            state.appBarExpanded = !state.appBarExpanded;
         },
         toggleSidebar: (state) => {
             state.viewer.sidebarOpen = !state.viewer.sidebarOpen;
@@ -317,7 +374,7 @@ export const uiSlice = createSlice({
             if (!state.dataSettings[id]) {
                 state.dataSettings[id] = {
                     showIssues: show,
-                    filteredIssues: filteredIssues || [],
+                    filteredIssues: filteredIssues ?? [],
                     currentIssueIndex: 0,
                 };
             } else {
@@ -530,6 +587,9 @@ export const uiSlice = createSlice({
             }
             state.compare.customSettings = {};
         },
+        setReloadRequested: (state, action: PayloadAction<boolean>) => {
+            state.reloadRequested = action.payload;
+        },
     },
 });
 
@@ -547,9 +607,15 @@ export const {
     setPage,
     setDatasetInfoTab,
     setDatasetScrollPosition,
+    setReloadRequested,
+    setDatasetSorting,
+    setDatasetIdColumns,
+    setMask,
+    setDatasetShowLabels,
     setBottomSection,
     setValidationModalTab,
     setFilterInputMode,
+    toggleAppBarExpanded,
     toggleSidebar,
     updateValidation,
     setValidationReport,

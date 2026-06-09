@@ -56,7 +56,7 @@ const styles = {
         overflow: 'auto',
     },
     pagination: {
-        backgroundColor: 'grey.200',
+        backgroundColor: 'background.paper',
         display: 'flex',
         flex: '0 1 auto',
         justifyContent: 'flex-end',
@@ -67,6 +67,7 @@ const styles = {
         borderColor: 'divider',
         borderRadius: 1,
         mb: 1,
+        backgroundColor: 'grey.200',
         '&:hover': {
             backgroundColor: 'action.hover',
         },
@@ -93,9 +94,15 @@ const styles = {
     title: {
         px: 2,
         pt: 2,
+        mb: 2,
         flex: '1 1 1%',
         minHeight: 60,
         overflowY: 'auto',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    reportTitle: {
+        fontWeight: 'medium',
     },
     listContentContainer: {
         px: 2,
@@ -106,7 +113,7 @@ const styles = {
         overflowY: 'auto',
     },
     paginationPaper: {
-        backgroundColor: 'grey.200',
+        backgroundColor: 'background.paper',
         borderTop: 1,
         borderRadius: 0,
         borderColor: 'divider',
@@ -380,13 +387,7 @@ const ValidationResults: React.FC<ResultsProps> = ({
 
     return (
         <Box sx={styles.container}>
-            <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                mb={2}
-                sx={styles.title}
-            >
+            <Stack direction="row" sx={styles.title}>
                 <Typography variant="h6" gutterBottom>
                     Validation Results ({filteredReports.length})
                 </Typography>
@@ -541,19 +542,21 @@ const ValidationResults: React.FC<ResultsProps> = ({
                                     primary={
                                         <Typography
                                             variant="subtitle1"
-                                            fontWeight="medium"
+                                            sx={styles.reportTitle}
                                         >
                                             {reportTitles[report.id]}
                                         </Typography>
                                     }
                                     secondary={
-                                        <Stack spacing={0.5}>
+                                        <Stack component="span" spacing={0.5}>
                                             <Typography
+                                                component="span"
                                                 variant="body2"
                                                 color="text.secondary"
                                             >
                                                 {uniqueIssues === 0 ? (
                                                     <Box
+                                                        component="span"
                                                         sx={styles.noIssuesBox}
                                                     >
                                                         <CheckIcon

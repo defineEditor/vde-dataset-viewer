@@ -21,8 +21,6 @@ const DatasetFilter: React.FC<IUiModalFilter> = ({
 
     const currentBasicFilter = defaultFilter || stateBasicFilter || null;
 
-    const currentData = apiService.getOpenedFileData(currentFileId);
-
     const metadata = apiService.getOpenedFileMetadata(currentFileId);
 
     const openedFiles = apiService.getOpenedFiles();
@@ -53,7 +51,6 @@ const DatasetFilter: React.FC<IUiModalFilter> = ({
             type={type}
             filterType={filterType}
             currentBasicFilter={currentBasicFilter}
-            data={currentData}
             metadata={metadata}
             dataset={dataset}
             loadedRecords={loadedRecords}

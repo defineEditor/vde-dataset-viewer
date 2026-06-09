@@ -17,7 +17,7 @@ const styles = {
     container: {
         width: '100%',
         display: 'flex',
-        backgroundColor: '#FFF',
+        backgroundColor: 'background.paper',
     },
     mainStack: {
         width: '100%',
@@ -27,6 +27,8 @@ const styles = {
     leftSection: {
         maxWidth: '100%',
         flex: '1 1 auto',
+        justifyContent: 'flex-start',
+        alignItems: 'flex-start',
     },
     navigationSectionExpanded: {
         height: '100%',
@@ -102,19 +104,8 @@ const BottomToolbar: React.FC<BottomToolbarProps> = ({
 
     return (
         <Box sx={styles.container}>
-            <Stack
-                direction="row"
-                alignItems="space-between"
-                spacing={1}
-                sx={styles.mainStack}
-            >
-                <Stack
-                    direction="row"
-                    sx={styles.leftSection}
-                    justifyContent="flex-start"
-                    alignItems="flex-start"
-                    spacing={1}
-                >
+            <Stack direction="row" spacing={1} sx={styles.mainStack}>
+                <Stack direction="row" sx={styles.leftSection} spacing={1}>
                     {/* Dataset Navigation Section */}
                     <Box
                         sx={

@@ -1,20 +1,6 @@
 import React, { useEffect } from 'react';
-import { AppProvider, Navigation, Router } from '@toolpad/core/AppProvider';
-import { Theme, Stack, Avatar } from '@mui/material';
-import CloudIcon from '@mui/icons-material/Cloud';
-import CachedIcon from '@mui/icons-material/Cached';
-import WysiwygIcon from '@mui/icons-material/Wysiwyg';
-import InfoIcon from '@mui/icons-material/Info';
-import SettingsIcon from '@mui/icons-material/Settings';
-import KeyboardIcon from '@mui/icons-material/Keyboard';
-import FactCheckIcon from '@mui/icons-material/FactCheck';
-import DescriptionIcon from '@mui/icons-material/Description';
-import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
-import {
-    DashboardLayout,
-    DashboardLayoutSlots,
-} from '@toolpad/core/DashboardLayout';
 import SelectDataset from 'renderer/components/SelectDataset';
+import { useColorScheme } from '@mui/material/styles';
 import Api from 'renderer/components/Api';
 import AppContext from 'renderer/utils/AppContext';
 import ViewFile from 'renderer/components/ViewDataset';
@@ -26,111 +12,55 @@ import {
     setZoomLevel,
     setDefineFileId,
     initializeCompare,
+    openSnackbar,
+    setReloadRequested,
 } from 'renderer/redux/slices/ui';
-import { AllowedPathnames, NewWindowProps } from 'interfaces/common';
-import ViewerToolbar from 'renderer/components/Toolbars/ViewerToolbar';
-import ReportToolbar from 'renderer/components/Toolbars/ReportToolbar';
-import DefineToolbar from 'renderer/components/Toolbars/DefineToolbar';
-import CompareToolbar from 'renderer/components/Toolbars/CompareToolbar';
-import ToolbarActions from 'renderer/components/ToolbarActions';
-import Shortcuts from 'renderer/components/Shortcuts';
+import { FileWatcherEvent, NewWindowProps } from 'interfaces/common';
 import Converter from 'renderer/components/Converter';
 import Validator from 'renderer/components/Validator';
 import Compare from 'renderer/components/Compare';
 import About from 'renderer/components/About';
+import Toolpad from 'renderer/components/Toolpad';
 import { paths } from 'misc/constants';
 import { saveStore } from 'renderer/redux/stateUtils';
 import handleOpenDataset from 'renderer/utils/handleOpenDataset';
 
-const styles = {
-    main: {
-        height: '100%',
-        padding: 0,
-    },
-    logo: {
-        width: 32,
-        height: 32,
-        marginTop: '3px',
-        ml: 3,
-        fontSize: 16,
-        fontWeight: 700,
-        color: '#1976d2',
-        background:
-            'radial-gradient(circle farthest-corner at right,#eeeeee,#c4c4c4)',
-    },
+const renderPage = (
+    pathname: string,
+    isDataLoaded: boolean,
+): React.ReactElement | null => {
+    if (pathname === paths.SELECT) {
+        return <SelectDataset />;
+    }
+    if (pathname === paths.VIEWFILE && isDataLoaded) {
+        return <ViewFile />;
+    }
+    if (pathname === paths.DEFINEXML) {
+        return <DefineXml />;
+    }
+    if (pathname === paths.COMPARE) {
+        return <Compare />;
+    }
+    if (pathname === paths.SETTINGS) {
+        return <Settings />;
+    }
+    if (pathname === paths.API) {
+        return <Api />;
+    }
+    if (pathname === paths.CONVERTER) {
+        return <Converter />;
+    }
+    if (pathname === paths.VALIDATOR) {
+        return <Validator />;
+    }
+    if (pathname === paths.ABOUT) {
+        return <About />;
+    }
+
+    return null;
 };
 
-const NAVIGATION: Navigation = [
-    {
-        kind: 'header',
-        title: 'Viewer',
-    },
-    {
-        segment: 'select',
-        title: 'Viewer',
-        icon: <WysiwygIcon />,
-    },
-    {
-        segment: 'definexml',
-        title: 'Define',
-        icon: <DescriptionIcon />,
-    },
-    {
-        segment: 'api',
-        title: 'API',
-        icon: <CloudIcon />,
-    },
-    {
-        kind: 'divider',
-    },
-    {
-        kind: 'header',
-        title: 'Tools',
-    },
-    {
-        segment: 'converter',
-        title: 'Converter',
-        icon: <CachedIcon />,
-    },
-    {
-        segment: 'validator',
-        title: 'Validator',
-        icon: <FactCheckIcon />,
-    },
-    {
-        segment: 'compare',
-        title: 'Compare',
-        icon: <CompareArrowsIcon />,
-    },
-    {
-        kind: 'divider',
-    },
-    {
-        kind: 'header',
-        title: 'Miscellaneous',
-    },
-    {
-        segment: 'settings',
-        title: 'Settings',
-        icon: <SettingsIcon />,
-    },
-    {
-        segment: 'shortcuts',
-        title: 'Shortcuts',
-        icon: <KeyboardIcon />,
-    },
-    {
-        segment: 'about',
-        title: 'About',
-        icon: <InfoIcon />,
-    },
-];
-
-const Logo: React.FC = () => {
-    return <Avatar sx={styles.logo}>{'{ ; }'}</Avatar>;
-};
-
-const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
+const Main: React.FC = () => {
     const title = 'VDE Dataset Viewer';
     const dispatch = useAppDispatch();
     const { apiService } = React.useContext(AppContext);
@@ -142,26 +72,16 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
         (state) => state.ui.currentFileId !== '',
     );
 
-    const useAppRouter = (): Router => {
-        return {
-            pathname,
-            searchParams: new URLSearchParams(),
-            navigate: (path: string | URL) => {
-                // Remove basePath from the path
-                const updatedPath = String(path).replace(/^.*(\/\w+)$/, '$1');
+    // Control color theme
+    const { setMode } = useColorScheme();
 
-                if (updatedPath === '/shortcuts') {
-                    setShortcutsOpen(true);
-                } else {
-                    dispatch(
-                        setPathname({
-                            pathname: updatedPath as AllowedPathnames,
-                        }),
-                    );
-                }
-            },
-        };
-    };
+    const colorMode = useAppSelector((state) => state.settings.other.colorMode);
+    useEffect(() => {
+        if (colorMode) {
+            setMode(colorMode);
+        }
+    }, [colorMode, setMode]);
+
     // Add shortcuts for routes
     useEffect(() => {
         const handleMainKeyDown = (event: KeyboardEvent) => {
@@ -219,7 +139,6 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                     case 'F12':
                         saveStore(apiService);
                         break;
-
                     case '/':
                         event.preventDefault();
                         setShortcutsOpen(true);
@@ -299,10 +218,11 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
         apiService.setZoom(currentZoom);
     }, [currentZoom, apiService]);
 
-    // Handle "Open With" file opening events from the OS
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
 
+    // Add event listeners from the main process
     useEffect(() => {
+        // Handle "Open With" file opening events from the OS
         const handleFileOpen = async (
             filePath: string,
             newWindowProps?: NewWindowProps,
@@ -321,10 +241,10 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                     );
                     dispatch(setPathname({ pathname: paths.COMPARE }));
                 };
+
                 return handleOpenCompare(path1, path2);
             }
 
-            // Get file extension
             const extension = filePath.split('.').pop();
 
             if (extension?.toLowerCase() === 'xml') {
@@ -335,6 +255,7 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                     if (fileInfo === null) {
                         return;
                     }
+
                     dispatch(setDefineFileId(fileInfo.fileId));
                     dispatch(
                         setPathname({
@@ -342,6 +263,7 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
                         }),
                     );
                 };
+
                 return handleOpenDefine();
             }
             // Open it as dataset
@@ -356,63 +278,54 @@ const Main: React.FC<{ theme: Theme }> = ({ theme }) => {
 
         apiService.onFileOpen(handleFileOpen);
 
+        const handleFileChanged = async (event: FileWatcherEvent) => {
+            const separator = window.electron.isWindows ? '\\' : '/';
+            const fileName = event.filePath.split(separator).pop() || '';
+            dispatch(
+                openSnackbar({
+                    type: event.changeType === 'updated' ? 'info' : 'error',
+                    message: `File ${fileName} has been ${
+                        event.changeType === 'updated' ? 'updated' : 'deleted'
+                    }`,
+                }),
+            );
+            if (event.changeType === 'updated') {
+                // Reload metadata
+                try {
+                    await apiService.reloadFile(event.fileId);
+                } catch (error) {
+                    dispatch(
+                        openSnackbar({
+                            type: 'error',
+                            message: `${(error as Error).message}`,
+                        }),
+                    );
+                }
+                if (event.fileId === currentFileId) {
+                    dispatch(setReloadRequested(true));
+                }
+            }
+        };
+
+        apiService.onFileChanged(handleFileChanged);
+
         // Clean up listener on unmount
         return () => {
             apiService.removeFileOpenListener();
+            apiService.removeFileChangedListener();
         };
-    }, [apiService, dispatch, currentFileId]);
-
-    const slots: DashboardLayoutSlots = {
-        toolbarActions: ToolbarActions,
-    };
-
-    if (pathname === paths.VIEWFILE && isDataLoaded) {
-        slots.appTitle = ViewerToolbar;
-    }
-
-    const currentValidatorTab = useAppSelector(
-        (state) => state.ui.validationPage.currentTab,
-    );
-
-    if (pathname === paths.VALIDATOR && currentValidatorTab === 'report') {
-        slots.appTitle = ReportToolbar;
-    }
-
-    if (pathname === paths.DEFINEXML) {
-        slots.appTitle = DefineToolbar;
-    }
-
-    if (pathname === paths.COMPARE) {
-        slots.appTitle = CompareToolbar;
-    }
+    }, [apiService, currentFileId, dispatch]);
 
     return (
-        <AppProvider
-            navigation={NAVIGATION}
-            theme={theme}
-            router={useAppRouter()}
-            branding={{ title, logo: <Logo /> }}
+        <Toolpad
+            title={title}
+            pathname={pathname}
+            shortcutsOpen={shortcutsOpen}
+            onOpenShortcuts={() => setShortcutsOpen(true)}
+            onCloseShortcuts={() => setShortcutsOpen(false)}
         >
-            <DashboardLayout defaultSidebarCollapsed slots={slots}>
-                <Stack sx={styles.main} id="main">
-                    {pathname === paths.SELECT && <SelectDataset />}
-                    {pathname === paths.VIEWFILE && isDataLoaded && (
-                        <ViewFile />
-                    )}
-                    {pathname === paths.DEFINEXML && <DefineXml />}
-                    {pathname === paths.COMPARE && <Compare />}
-                    {pathname === paths.SETTINGS && <Settings />}
-                    {pathname === paths.API && <Api />}
-                    {pathname === paths.CONVERTER && <Converter />}
-                    {pathname === paths.VALIDATOR && <Validator />}
-                    {pathname === paths.ABOUT && <About />}
-                </Stack>
-                <Shortcuts
-                    open={shortcutsOpen}
-                    onClose={() => setShortcutsOpen(false)}
-                />
-            </DashboardLayout>
-        </AppProvider>
+            <>{renderPage(pathname, isDataLoaded)}</>
+        </Toolpad>
     );
 };
 

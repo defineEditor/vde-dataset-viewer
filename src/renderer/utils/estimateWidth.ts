@@ -7,6 +7,7 @@ export default function estimateWidth(
     maxColWidth: number,
     showTypeIcons: boolean = false,
     skipIdLength: boolean = false,
+    showLabels: boolean = false,
 ): { [id: string]: number } {
     const { header, data: tableData } = data;
     const result = {};
@@ -19,6 +20,16 @@ export default function estimateWidth(
             const columnData = dataSlice.map((row) => row[column.id]);
             let columnWidth = 0;
             let longestWord = 0;
+            let longestLabelWord = 0;
+            if (showLabels) {
+                // If labels are shown in the header, we need to calculate the longest word in the column label
+                // If label is blank, id will be used as a label
+                const labelWords = (column.label || column.id).split(' ');
+                longestLabelWord = Math.max(
+                    longestLabelWord,
+                    ...labelWords.map((word) => word.length),
+                );
+            }
             if (
                 !['integer', 'float', 'boolean', 'double', 'decimal'].includes(
                     column.type || '',
@@ -74,9 +85,9 @@ export default function estimateWidth(
                 longestWord = 4;
             }
             // Id.length - label length + space for icons
-            // 2 chars for sort icon
+            // 3 chars for sort icon
             // 2 chars in case it is a formatted datetime column
-            const iconsSize = 2 + (showTypeIcons ? 3 : 0);
+            const iconsSize = 3 + (showTypeIcons ? 3 : 0);
             result[id] = Math.min(
                 Math.round(
                     skipIdLength
@@ -84,7 +95,9 @@ export default function estimateWidth(
                         : Math.max(
                               columnWidth,
                               longestWord,
-                              id.length * 1.3 + iconsSize,
+                              (showLabels
+                                  ? longestLabelWord * 1.1
+                                  : id.length * 1.3) + iconsSize,
                           ),
                 ),
                 maxColWidth,

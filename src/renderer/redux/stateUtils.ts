@@ -66,6 +66,7 @@ export const dehydrateState = (state: IStore): IStore => {
     // Keep zoom level between sessions
     const newUi: IUi = {
         ...ui,
+        appBarExpanded: state.ui.appBarExpanded,
         validation: {},
         validationPage: {
             ...state.ui.validationPage,

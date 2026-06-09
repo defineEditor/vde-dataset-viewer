@@ -1,5 +1,12 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, {
+    useState,
+    useEffect,
+    useCallback,
+    useMemo,
+    useContext,
+} from 'react';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
+import AppContext from 'renderer/utils/AppContext';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import Box from '@mui/material/Box';
@@ -26,7 +33,6 @@ import {
     DatasetJsonMetadata,
     BasicFilter as IBasicFilter,
     IUiModalFilter,
-    ITableRow,
 } from 'interfaces/common';
 import {
     Stack,
@@ -41,7 +47,6 @@ import {
     Tooltip,
 } from '@mui/material';
 import InteractiveInput from 'renderer/components/Modal/Filter/InteractiveInput';
-import RefreshIcon from '@mui/icons-material/Refresh';
 import EditIcon from '@mui/icons-material/Edit';
 import { getHeader } from 'renderer/utils/readData';
 import { handleTransformation } from 'renderer/utils/transformUtils';
@@ -86,6 +91,9 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
     },
+    rowAlignCenter: {
+        alignItems: 'center',
+    },
 };
 
 // Create dummy filter for conversion and validation purposes;
@@ -93,28 +101,36 @@ const filterForConversion = new Filter('dataset-json1.1', [], '', {
     caseInsensitiveColNames: true,
 });
 
-interface FilterBodyProps extends IUiModalFilter {
+interface FilterBodyProps {
+    type: IUiModalFilter['type'];
+    filterType: IUiModalFilter['filterType'];
     fileId: string;
-    data: ITableRow[];
     metadata: DatasetJsonMetadata;
     dataset: { name: string; label: string };
     loadedRecords: number;
     currentBasicFilter: IBasicFilter | null;
     reportTab?: 'details' | 'summary' | 'rules';
+    compareFileIds?: string[] | null;
 }
 
 const FilterBody: React.FC<FilterBodyProps> = ({
     fileId,
     type,
     filterType,
-    data,
     dataset,
     metadata,
     loadedRecords,
     currentBasicFilter,
     reportTab = 'summary',
+    compareFileIds = null,
 }: FilterBodyProps) => {
     const dispatch = useAppDispatch();
+
+    const { apiService } = useContext(AppContext);
+
+    const [allValuesLoaded, setAllValuesLoaded] = useState<
+        Record<string, boolean>
+    >({});
 
     const columnNames = metadata.columns
         .map((column) => column.name)
@@ -212,26 +228,110 @@ const FilterBody: React.FC<FilterBodyProps> = ({
     }>({});
 
     const getUniqueValues = useCallback(
-        (columns: string[]) => {
-            const newValues = {};
-            columns.forEach((column) => {
+        async (columns: string[], getAll: boolean = false) => {
+            try {
+                if (!metadata) {
+                    return;
+                }
+                let values;
                 if (
-                    data.length > 0 &&
-                    Object.prototype.hasOwnProperty.call(data[0], column)
+                    filterType === 'compare' &&
+                    compareFileIds &&
+                    compareFileIds.length === 2
                 ) {
-                    const columnValues = [
-                        ...new Set(data.map((row) => row[column])),
-                    ];
-                    newValues[column] = columnValues;
+                    const valuesBase = await apiService.getUniqueValues({
+                        fileId: compareFileIds[0],
+                        columnIds: columns,
+                        limit: getAll ? 1000 : 100,
+                        addCount: false,
+                        getAllValues: getAll,
+                        metadata,
+                        settings,
+                    });
+                    const valuesCompare = await apiService.getUniqueValues({
+                        fileId: compareFileIds[1],
+                        columnIds: columns,
+                        limit: getAll ? 1000 : 100,
+                        addCount: false,
+                        getAllValues: getAll,
+                        metadata,
+                        settings,
+                    });
+                    // Merge values from both compare files
+                    values = {};
+                    Object.keys(valuesBase).forEach((column) => {
+                        values[column] = {
+                            values: Array.from(
+                                new Set([
+                                    ...valuesBase[column].values,
+                                    ...valuesCompare[column].values,
+                                ]),
+                            ),
+                        };
+                    });
+                } else {
+                    values = await apiService.getUniqueValues({
+                        fileId,
+                        columnIds: columns,
+                        limit: getAll ? 1000 : 100,
+                        addCount: false,
+                        getAllValues: getAll,
+                        metadata,
+                        settings,
+                    });
+                }
+
+                const newValues = {};
+
+                Object.keys(values).forEach((column) => {
+                    newValues[column] = values[column].values;
+                    // Add show all values text
+                    newValues[column].unshift('_show_all_values_');
+                });
+                setUniqueValues((prev) => ({
+                    ...prev,
+                    ...newValues,
+                }));
+            } catch (_error) {
+                const newValues = {};
+                columns.forEach((column) => {
+                    newValues[column] = [];
+                });
+                setUniqueValues((prev) => ({
+                    ...prev,
+                    ...newValues,
+                }));
+            } finally {
+                if (getAll) {
+                    const newFlags = {};
+                    columns.forEach((column) => {
+                        newFlags[column] = true;
+                    });
+                    setAllValuesLoaded((prev) => ({
+                        ...prev,
+                        ...newFlags,
+                    }));
+                }
+            }
+        },
+        [metadata, settings, apiService, fileId, filterType, compareFileIds],
+    );
+
+    useEffect(() => {
+        setUniqueValues((prev) => {
+            // Remove _show_all_values_ option where all values were already loaded
+            const newValues = { ...prev };
+            Object.keys(newValues).forEach((column) => {
+                if (
+                    allValuesLoaded[column] &&
+                    prev[column][0] === '_show_all_values_'
+                ) {
+                    newValues[column] = prev[column].slice(1);
                 }
             });
-            setUniqueValues((prev) => ({
-                ...prev,
-                ...newValues,
-            }));
-        },
-        [data],
-    );
+            return newValues;
+        });
+    }, [allValuesLoaded]);
 
     const filterColumns = interactiveFilter
         ? Object.values(interactiveFilter.conditions)
@@ -444,19 +544,6 @@ const FilterBody: React.FC<FilterBodyProps> = ({
         ],
     );
 
-    const handleReloadData = () => {
-        if (filterType === 'dataset') {
-            dispatch(resetFilter({ fileId }));
-        } else if (filterType === 'compare') {
-            // For compare it is difficult to reset the filter, so close it for now
-            dispatch(resetFilter({ fileId }));
-            dispatch(restartCompare({ compareId: fileId }));
-            handleClose();
-        } else if (filterType === 'report') {
-            dispatch(resetReportFilter());
-        }
-    };
-
     const handleSelectFilter = useCallback(
         (filter: IBasicFilter) => {
             if (inputType === 'interactive') {
@@ -555,28 +642,6 @@ const FilterBody: React.FC<FilterBodyProps> = ({
                             }
                             label="Case Insensitive"
                         />
-                        {['dataset', 'compare'].includes(filterType) &&
-                            currentBasicFilter !== null &&
-                            inputType === 'interactive' && (
-                                <Stack
-                                    direction="row"
-                                    alignItems="center"
-                                    spacing={1}
-                                >
-                                    <Typography variant="caption" color="info">
-                                        Value selection is limited to filtered
-                                        data
-                                    </Typography>
-                                    <IconButton
-                                        size="small"
-                                        onClick={handleReloadData}
-                                        color="primary"
-                                        aria-label="refresh-data"
-                                    >
-                                        <RefreshIcon />
-                                    </IconButton>
-                                </Stack>
-                            )}
                     </Stack>
                     {inputType === 'interactive' ? (
                         <InteractiveInput
@@ -585,13 +650,15 @@ const FilterBody: React.FC<FilterBodyProps> = ({
                             columnNames={columnNames}
                             columnTypes={columnTypes}
                             uniqueValues={uniqueValues}
+                            onGetUniqueValues={getUniqueValues}
                         />
                     ) : (
                         <ManualInput
                             inputValue={inputValue}
                             handleSetInputValue={setInputValue}
-                            columns={metadata.columns}
                             datasetName={dataset.name}
+                            fileId={fileId}
+                            metadata={metadata}
                         />
                     )}
                     {['dataset', 'compare'].includes(filterType) && (

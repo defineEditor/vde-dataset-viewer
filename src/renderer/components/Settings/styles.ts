@@ -1,3 +1,5 @@
+import { Theme } from '@mui/material/styles';
+
 export const styles = {
     paper: {
         height: '100%',
@@ -8,6 +10,7 @@ export const styles = {
         borderRadius: 0,
     },
     contentContainer: {
+        userSelect: 'none',
         display: 'flex',
         flexDirection: 'column',
         flex: 1,
@@ -35,11 +38,10 @@ export const styles = {
     refreshContainer: {
         alignContent: 'center',
     },
-    tabs: {
-        background:
-            'radial-gradient(circle farthest-corner at bottom center,#eeeeee,#e5e4e4)',
+    tabs: (theme: Theme) => ({
+        background: theme.vars?.palette.gradients.tabStrip,
         textTransform: 'none',
-    },
+    }),
     tabPanel: {
         padding: 2,
     },
@@ -52,6 +54,10 @@ export const styles = {
     inputFieldLong: {
         maxWidth: '800px',
     },
+    lockFileFolderFilter: {
+        mt: 2,
+        maxWidth: '360px',
+    },
     helperText: {
         paddingLeft: 2,
         margin: 0,
@@ -62,6 +68,10 @@ export const styles = {
         fontSize: 24,
         mb: 0.5,
         ml: 1,
+    },
+    rowAlignCenter: {
+        display: 'flex',
+        alignItems: 'center',
     },
     typeIcon: {
         fontSize: 16,

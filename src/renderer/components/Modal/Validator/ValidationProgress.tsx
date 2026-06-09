@@ -19,6 +19,7 @@ const styles = {
         p: 2,
         minHeight: '100%',
         backgroundColor: 'grey.100',
+        alignItems: 'flex-start',
     },
     progressContainer: {
         width: '100%',
@@ -43,7 +44,18 @@ const styles = {
     },
     error: {
         mt: 0.5,
+        alignItems: 'center',
+        justifyContent: 'flex-start',
     },
+};
+
+const defaultState: IUiValidation = {
+    status: 'not started',
+    validationProgress: 0,
+    conversionProgress: null,
+    dateCompleted: null,
+    error: null,
+    logFileName: null,
 };
 
 const ProgressContainer: React.FC<{
@@ -54,16 +66,10 @@ const ProgressContainer: React.FC<{
         conversionProgress,
         validationProgress,
         error = null,
-    } = useAppSelector<IUiValidation>(
-        (state) =>
-            (validationId !== null && state.ui.validation[validationId]) || {
-                status: 'not started',
-                validationProgress: 0,
-                conversionProgress: null,
-                dateCompleted: null,
-                error: null,
-                logFileName: null,
-            },
+    } = useAppSelector<IUiValidation>((state) =>
+        validationId !== null
+            ? (state.ui.validation[validationId] ?? defaultState)
+            : defaultState,
     );
 
     return (
@@ -96,13 +102,7 @@ const ProgressContainer: React.FC<{
                         sx={styles.progressBar}
                     />
                     {error !== null ? (
-                        <Stack
-                            spacing={1}
-                            alignItems="center"
-                            direction="row"
-                            justifyContent="flex-start"
-                            sx={styles.error}
-                        >
+                        <Stack spacing={1} direction="row" sx={styles.error}>
                             <Typography variant="caption" color="error.main">
                                 {error}
                             </Typography>
@@ -160,7 +160,7 @@ const ValidationProgress: React.FC<{
     );
 
     return (
-        <Stack spacing={2} sx={styles.container} alignItems="flex-start">
+        <Stack spacing={2} sx={styles.container}>
             <Typography variant="h6">Processing</Typography>
             <ProgressContainer
                 validationId={validationId}

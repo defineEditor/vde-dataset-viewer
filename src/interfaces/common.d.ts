@@ -7,4 +7,6 @@ export * from 'interfaces/main';
 export * from 'interfaces/converter';
 export * from 'interfaces/core.report';
 export * from 'interfaces/defineXml';
+export * from 'interfaces/useCommandAutocomplete';
+export * from 'interfaces/theme';
 export { ModalType, AllowedPathnames } from 'misc/constants';

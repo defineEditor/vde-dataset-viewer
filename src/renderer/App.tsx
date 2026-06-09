@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
-import { theme, themeWithoutAnimation } from 'renderer/utils/theme';
+import { createAppTheme } from 'renderer/utils/theme';
 import Main from 'renderer/components/Main';
 import Snackbar from 'renderer/components/Snackbar';
 import Modal from 'renderer/components/Modal';
@@ -23,7 +23,7 @@ class ErrorBoundary extends React.Component<
     { children: React.ReactNode },
     { hasError: boolean }
 > {
-    constructor(props) {
+    constructor(props: { children: React.ReactNode }) {
         super(props);
         this.state = { hasError: false };
     }
@@ -62,14 +62,29 @@ const AppWithContext: React.FC = () => {
         (state) => state.settings.other.checkForUpdates,
     );
 
+    const saveStoreListenerRegistered = React.useRef(false);
+
     const disableUiAnimation = useAppSelector(
         (state) => state.settings.other.disableUiAnimation,
     );
 
-    let selectedTheme = theme;
-    if (disableUiAnimation) {
-        selectedTheme = themeWithoutAnimation;
-    }
+    const themePalette = useAppSelector(
+        (state) => state.settings.other.themePalette,
+    );
+
+    const compactMode = useAppSelector(
+        (state) => state.settings.other.compactMode,
+    );
+
+    const theme = useMemo(
+        () =>
+            createAppTheme({
+                compactMode,
+                disableUiAnimation,
+                themePalette,
+            }),
+        [disableUiAnimation, themePalette, compactMode],
+    );
 
     useEffect(() => {
         // At app startup load the saved state
@@ -94,20 +109,26 @@ const AppWithContext: React.FC = () => {
         }
     }, [apiService, dispatch, checkForUpdates]);
 
-    // Add listener to save the store when the app is closed
-    window.electron.onSaveStore(async () => {
-        const state = dehydrateState(store.getState());
-        if (state) {
-            await apiService.saveLocalStore({ reduxStore: state });
+    useEffect(() => {
+        if (saveStoreListenerRegistered.current) {
+            return;
         }
-    });
+
+        saveStoreListenerRegistered.current = true;
+        window.electron.onSaveStore(async () => {
+            const state = dehydrateState(store.getState());
+            if (state) {
+                await apiService.saveLocalStore({ reduxStore: state });
+            }
+        });
+    }, [apiService]);
 
     return (
-        <ThemeProvider theme={selectedTheme}>
+        <ThemeProvider theme={theme}>
             <CssBaseline />
             <ErrorBoundary>
                 <DragAndDrop>
-                    <Main theme={selectedTheme} />
+                    <Main />
                     <Snackbar />
                     <Modal />
                 </DragAndDrop>

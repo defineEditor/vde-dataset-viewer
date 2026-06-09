@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAppSelector } from 'renderer/redux/hooks';
+import CommandLine from 'renderer/components/Modal/CommandLine';
 import GoTo from 'renderer/components/Modal/GoTo';
 import DatasetInfo from 'renderer/components/Modal/DatasetInfo';
 import VariableInfo from 'renderer/components/Modal/VariableInfo';
@@ -7,13 +8,16 @@ import Filter from 'renderer/components/Modal/Filter';
 import AppUpdate from 'renderer/components/Modal/AppUpdate';
 import EditApi from 'renderer/components/Modal/EditApi';
 import ErrorModal from 'renderer/components/Modal/ErrorModal';
+import IdColumns from 'renderer/components/Modal/IdColumns';
 import Mask from 'renderer/components/Modal/Mask';
+import Sorting from 'renderer/components/Modal/Sorting';
 import Validator from 'renderer/components/Modal/Validator';
 import SelectCompare from 'renderer/components/Modal/SelectCompare';
 import { modals as modalNames } from 'misc/constants';
 import { IUiModal } from 'interfaces/store';
 
 const MODAL_COMPONENTS = {
+    [modalNames.COMMANDLINE]: CommandLine,
     [modalNames.GOTO]: GoTo,
     [modalNames.DATASETINFO]: DatasetInfo,
     [modalNames.FILTER]: Filter,
@@ -21,7 +25,9 @@ const MODAL_COMPONENTS = {
     [modalNames.EDITAPI]: EditApi,
     [modalNames.ERROR]: ErrorModal,
     [modalNames.VARIABLEINFO]: VariableInfo,
+    [modalNames.IDCOLUMNS]: IdColumns,
     [modalNames.MASK]: Mask,
+    [modalNames.SORTING]: Sorting,
     [modalNames.VALIDATOR]: Validator,
     [modalNames.SELECTCOMPARE]: SelectCompare,
 };

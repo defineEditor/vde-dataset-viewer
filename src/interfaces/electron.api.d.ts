@@ -5,6 +5,7 @@ import {
     BasicFilter,
     ColumnMetadata,
     ILocalStore,
+    FileWatcherEvent,
     ICheckUpdateResult,
     IFetchResponse,
     FileInfo,
@@ -28,6 +29,9 @@ export interface ElectronApi {
             filePath?: string;
             folderPath?: string;
             fileIdPrefix?: string;
+            autoReload?: boolean;
+            createLockFile?: boolean;
+            lockFileFolderFilter?: string;
         },
     ) => Promise<{
         fileId: string;
@@ -36,7 +40,10 @@ export interface ElectronApi {
         lastModified: number;
     } | null>;
     closeFile: (fileId: string, mode: 'local' | 'remote') => Promise<boolean>;
-    getMetadata: (fileId: string) => Promise<DatasetJsonMetadata | null>;
+    getMetadata: (fileId: string) => Promise<{
+        metadata: DatasetJsonMetadata;
+        lastModified: number;
+    } | null>;
     getData: (
         fileId: string,
         start: number,
@@ -68,6 +75,8 @@ export interface ElectronApi {
         callback: (filePath: string, props?: NewWindowProps) => void,
     ) => void;
     removeFileOpenListener: () => void;
+    onFileChanged: (callback: (event: FileWatcherEvent) => void) => void;
+    removeFileChangedListener: () => void;
     checkForUpdates: () => Promise<ICheckUpdateResult>;
     downloadUpdate: () => Promise<boolean>;
     writeToClipboard: (text: string) => Promise<boolean>;
@@ -107,6 +116,7 @@ export interface ElectronApi {
     ) => Promise<DefineXmlContent | { error: string }>;
     closeDefineXml: (fileId: string) => Promise<boolean>;
     isWindows: boolean;
+    isDevelopment: boolean;
     resizeWindow: (
         position: 'top' | 'bottom' | 'left' | 'right',
     ) => Promise<void>;

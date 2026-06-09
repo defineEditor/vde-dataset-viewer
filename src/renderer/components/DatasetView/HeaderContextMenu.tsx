@@ -12,7 +12,14 @@ import {
     Typography,
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
-import { openModal, openSnackbar, setSelect } from 'renderer/redux/slices/ui';
+import {
+    openModal,
+    openSnackbar,
+    setDatasetIdColumns,
+    setDatasetSorting,
+    setSelect,
+    setDatasetShowLabels,
+} from 'renderer/redux/slices/ui';
 import { resetFilter, setFilter } from 'renderer/redux/slices/data';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -20,16 +27,21 @@ import InfoIcon from '@mui/icons-material/Info';
 import FilterIcon from '@mui/icons-material/FilterAlt';
 import SelectAllIcon from '@mui/icons-material/SelectAll';
 import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutlined';
 import ChecklistIcon from '@mui/icons-material/Checklist';
-import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
-import { handleTransformation } from 'renderer/utils/transformUtils';
+import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutlined';
+import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
+import LabelIcon from '@mui/icons-material/Label';
+import LabelOffIcon from '@mui/icons-material/LabelOff';
+import SortIcon from '@mui/icons-material/Sort';
+import { getSafeValue } from 'renderer/utils/transformUtils';
 import { modals } from 'misc/constants';
 import {
     IHeaderCell,
     DatasetJsonMetadata,
     TableRowValue,
     BasicFilter,
+    IUiControl,
 } from 'interfaces/common';
 import AppContext from 'renderer/utils/AppContext';
 import Filter from 'js-array-filter';
@@ -49,6 +61,8 @@ const styles = {
         lineHeight: 2,
     },
 };
+
+const emptyArray: unknown[] = [];
 
 interface HeaderContextMenuProps {
     open: boolean;
@@ -73,7 +87,23 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
     const currentFilter = useAppSelector(
         (state) => state.data.filterData.currentFilter[currentFileId] || null,
     );
+    const currentSorting = useAppSelector(
+        (state) =>
+            state.ui.control[currentFileId]?.sorting ??
+            (emptyArray as IUiControl['sorting']),
+    );
+    const currentIdColumns = useAppSelector(
+        (state) =>
+            state.ui.control[currentFileId]?.idCols ??
+            (emptyArray as IUiControl['idCols']),
+    );
     const settings = useAppSelector((state) => state.settings);
+    const currentShowLabels = useAppSelector((state) => {
+        return (
+            state.ui.control[currentFileId]?.showLabels ??
+            state.settings.viewer.showLabels
+        );
+    });
     const dateFormat = useAppSelector(
         (state) => state.settings.viewer.dateFormat,
     );
@@ -124,6 +154,21 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
             : currentFilter.conditions
                   .map((condition) => condition.variable)
                   .includes(header.id);
+    const isPinned = currentIdColumns.includes(header.id);
+    const isInSorting = currentSorting.some((item) => item.id === header.id);
+
+    const handleClose = () => {
+        setFilterMenuAnchor(null);
+        setIsLoadingValues(false);
+        setGetAllValues(false);
+        setFilterValues([]);
+        if (currentFilterValues.length > 0) {
+            setSelectedItems(currentFilterValues);
+        } else {
+            setSelectedItems([]);
+        }
+        onClose({}, 'action');
+    };
 
     const handleShowInfo = () => {
         dispatch(
@@ -132,10 +177,60 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
                 data: { columnId: header.id },
             }),
         );
+        handleClose();
+    };
+
+    const handleShowLabels = () => {
+        dispatch(
+            setDatasetShowLabels({
+                fileId: currentFileId,
+                showLabels: !currentShowLabels,
+            }),
+        );
+        handleClose();
     };
 
     const handleSelect = () => {
         dispatch(setSelect({ fileId: currentFileId, column: header.id }));
+        handleClose();
+    };
+
+    const handleTogglePin = () => {
+        const idCols = isPinned
+            ? currentIdColumns.filter((columnId) => columnId !== header.id)
+            : [...currentIdColumns, header.id];
+
+        dispatch(
+            setDatasetIdColumns({
+                fileId: currentFileId,
+                idCols,
+            }),
+        );
+        handleClose();
+    };
+
+    const handleAddToSorting = () => {
+        if (isInSorting) {
+            return;
+        }
+
+        dispatch(
+            setDatasetSorting({
+                fileId: currentFileId,
+                sorting: [...currentSorting, { id: header.id, desc: false }],
+            }),
+        );
+        handleClose();
+    };
+
+    const handleRemoveFromSorting = () => {
+        dispatch(
+            setDatasetSorting({
+                fileId: currentFileId,
+                sorting: currentSorting.filter((item) => item.id !== header.id),
+            }),
+        );
+        handleClose();
     };
 
     const getValues = async (getAll: boolean) => {
@@ -172,19 +267,6 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
         setFilterByValueType(type);
         setFilterMenuAnchor(event.currentTarget);
         await getValues(false);
-    };
-
-    const handleClose = () => {
-        setFilterMenuAnchor(null);
-        setIsLoadingValues(false);
-        setGetAllValues(false);
-        setFilterValues([]);
-        if (currentFilterValues.length > 0) {
-            setSelectedItems(currentFilterValues);
-        } else {
-            setSelectedItems([]);
-        }
-        onClose({}, 'action');
     };
 
     const handleRemoveFromFilter = () => {
@@ -257,37 +339,20 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
         let condition = '';
         if (Array.isArray(value)) {
             const values = value
-                .map((rawVal) => {
-                    const val = handleTransformation(
-                        header.numericDatetimeType,
-                        rawVal,
-                        dateFormat,
-                    );
-                    if (val === null) {
-                        return isStringColumn ? `''` : `null`;
-                    }
-                    if (isStringColumn && typeof val === 'string') {
-                        if (val.includes("'")) {
-                            return `"${val}"`;
-                        }
-
-                        return `'${val}'`;
-                    }
-                    return val;
-                })
+                .map((rawVal) =>
+                    getSafeValue(header, rawVal, dateFormat, isStringColumn),
+                )
                 .join(', ');
-            condition = `${header.id} IN (${values})`;
+            condition = `${header.id} in (${values})`;
         } else if (value === null) {
             condition = `missing(${header.id})`;
         } else {
-            const updatedValue = handleTransformation(
-                header.numericDatetimeType,
+            const safeValue = getSafeValue(
+                header,
                 value,
                 dateFormat,
+                isStringColumn,
             );
-            const safeValue = isStringColumn
-                ? `'${updatedValue}'`
-                : updatedValue;
             condition = `${header.id} = ${safeValue}`;
         }
 
@@ -348,7 +413,6 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
                 <MenuItem
                     onClick={() => {
                         handleShowInfo();
-                        handleClose();
                     }}
                 >
                     <ListItemIcon>
@@ -358,8 +422,24 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
                 </MenuItem>
                 <MenuItem
                     onClick={() => {
+                        handleShowLabels();
+                    }}
+                >
+                    <ListItemIcon>
+                        {currentShowLabels ? (
+                            <LabelOffIcon fontSize="small" />
+                        ) : (
+                            <LabelIcon fontSize="small" />
+                        )}
+                    </ListItemIcon>
+                    <ListItemText>
+                        {currentShowLabels ? 'Show Names' : 'Show Labels'}
+                    </ListItemText>
+                </MenuItem>
+                <Divider />
+                <MenuItem
+                    onClick={() => {
                         handleSelect();
-                        handleClose();
                     }}
                 >
                     <ListItemIcon>
@@ -367,6 +447,33 @@ const HeaderCellContextMenu: React.FC<HeaderContextMenuProps> = ({
                     </ListItemIcon>
                     <ListItemText>Select Column</ListItemText>
                 </MenuItem>
+                <MenuItem onClick={handleTogglePin}>
+                    <ListItemIcon>
+                        {isPinned ? (
+                            <RemoveCircleOutlineIcon fontSize="small" />
+                        ) : (
+                            <PushPinOutlinedIcon fontSize="small" />
+                        )}
+                    </ListItemIcon>
+                    <ListItemText>
+                        {isPinned ? 'Unpin Column' : 'Pin Column'}
+                    </ListItemText>
+                </MenuItem>
+                {isInSorting ? (
+                    <MenuItem onClick={handleRemoveFromSorting}>
+                        <ListItemIcon>
+                            <RemoveCircleOutlineIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Remove from Sorting</ListItemText>
+                    </MenuItem>
+                ) : (
+                    <MenuItem onClick={handleAddToSorting}>
+                        <ListItemIcon>
+                            <SortIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Add to Sorting</ListItemText>
+                    </MenuItem>
+                )}
                 <Divider />
                 <MenuItem
                     onClick={() => {

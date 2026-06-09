@@ -21,25 +21,29 @@ const styles = {
     },
     subContainer: {
         flex: 1,
-        backgroundColor: 'grey.300',
+        backgroundColor: 'background.paper',
     },
     card: {
         flex: 1,
-        backgroundColor: 'grey.200',
+        backgroundColor: 'grey.100',
     },
-    command: {
+    command: (theme) => ({
         display: '-webkit-box',
         WebkitLineClamp: 3,
         WebkitBoxOrient: 'vertical',
         overflow: 'auto',
         textOverflow: 'ellipsis',
         wordBreak: 'break-word',
-    },
+        scrollbarColor: `${theme.vars?.palette.grey[100]} ${theme.vars?.palette.grey[300]}`,
+    }),
     copyIcon: {
         color: 'primary.main',
         width: 24,
         height: 24,
         m: 1,
+    },
+    commandStack: {
+        alignItems: 'center',
     },
 };
 
@@ -48,7 +52,7 @@ const Command: React.FC<{
     onCopyToClipboard: (text: string) => void;
 }> = ({ command, onCopyToClipboard }) => {
     return (
-        <Stack direction="row" alignItems="center">
+        <Stack direction="row" sx={styles.commandStack}>
             <Typography variant="caption" sx={styles.command}>
                 {command}
             </Typography>

@@ -11,7 +11,7 @@ import {
     Tooltip,
 } from '@mui/material';
 import { ISettings } from 'interfaces/common';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
 import FontDownloadIcon from '@mui/icons-material/FontDownload';
 import LooksOneIcon from '@mui/icons-material/LooksOne';
 import AccessTimeIcon from '@mui/icons-material/HourglassFull';
@@ -25,11 +25,13 @@ interface ViewerProps {
             HTMLInputElement | { name?: string; value: unknown }
         >,
     ) => void;
+    isDevelopment?: boolean;
 }
 
 export const Viewer: React.FC<ViewerProps> = ({
     settings,
     onSettingChange,
+    isDevelopment = false,
 }) => (
     <Stack spacing={2}>
         <Typography variant="h6">Table Loading Settings</Typography>
@@ -177,7 +179,7 @@ export const Viewer: React.FC<ViewerProps> = ({
                     />
                 }
                 label={
-                    <Stack direction="row" alignItems="center">
+                    <Stack direction="row" sx={styles.rowAlignCenter}>
                         <Box>Show Type Icons</Box>
                         <Tooltip
                             title={
@@ -217,6 +219,22 @@ export const Viewer: React.FC<ViewerProps> = ({
             <FormControlLabel
                 control={
                     <Checkbox
+                        checked={settings.viewer.showLabels}
+                        onChange={onSettingChange}
+                        name="viewer.showLabels"
+                    />
+                }
+                label="Show Labels"
+            />
+            <Typography variant="caption" sx={styles.helperText}>
+                When enabled, column labels are shown in the header of the table
+                instead of names
+            </Typography>
+        </Stack>
+        <Stack spacing={0}>
+            <FormControlLabel
+                control={
+                    <Checkbox
                         checked={settings.viewer.copyWithHeaders}
                         onChange={onSettingChange}
                         name="viewer.copyWithHeaders"
@@ -229,5 +247,42 @@ export const Viewer: React.FC<ViewerProps> = ({
                 (inverts Ctrl + C and Ctrl + Alt + C behavior)
             </Typography>
         </Stack>
+        <Stack spacing={0}>
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        checked={settings.viewer.autoReload}
+                        onChange={onSettingChange}
+                        name="viewer.autoReload"
+                    />
+                }
+                label="Auto Reload"
+            />
+            <Typography variant="caption" sx={styles.helperText}>
+                When enabled, the table will automatically reload when changes
+                are detected
+            </Typography>
+        </Stack>
+        {(isDevelopment || settings.viewer.estimateWidthRows === 31415926) && (
+            <>
+                <Typography variant="h6">Developer Settings</Typography>
+                <Stack spacing={0}>
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={settings.viewer.enableProfiler}
+                                onChange={onSettingChange}
+                                name="viewer.enableProfiler"
+                            />
+                        }
+                        label="Enable Profiler"
+                    />
+                    <Typography variant="caption" sx={styles.helperText}>
+                        When enabled, the table profiler is active, see Console
+                        -&gt; All Levels
+                    </Typography>
+                </Stack>
+            </>
+        )}
     </Stack>
 );

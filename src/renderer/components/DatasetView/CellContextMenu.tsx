@@ -15,10 +15,12 @@ import {
     IHeaderCell,
 } from 'interfaces/common';
 import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutlined';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import ChecklistIcon from '@mui/icons-material/Checklist';
-import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
-import { handleTransformation } from 'renderer/utils/transformUtils';
+import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutlined';
+import DisabledByDefaultSharpIcon from '@mui/icons-material/DisabledByDefaultSharp';
+import { getSafeValue } from 'renderer/utils/transformUtils';
 import { resetFilter, setFilter } from 'renderer/redux/slices/data';
 import { restartCompare } from 'renderer/redux/slices/ui';
 
@@ -76,17 +78,16 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
                   .map((condition) => condition.variable)
                   .includes(header.id);
 
-    const handleFilterByValue = () => {
+    const handleFilterByValue = (exclude: boolean = false) => {
         // Filter by value
-        const updatedValue = handleTransformation(
-            header.numericDatetimeType,
+        const updatedValue = getSafeValue(
+            header,
             value,
             dateFormat,
+            isStringColumn,
         );
 
-        const condition = isStringColumn
-            ? `${header.id} = '${updatedValue}'`
-            : `${header.id} = ${updatedValue}`;
+        const condition = `${header.id} ${exclude ? '!=' : '='} ${updatedValue}`;
         const newFilter = new Filter(
             'dataset-json1.1',
             metadata.columns,
@@ -104,7 +105,7 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
         }
     };
 
-    const hadnleAddToFilter = () => {
+    const hadnleAddToFilter = (exclude: boolean = false) => {
         // Add to filter
         if (currentFilter !== null) {
             const newFilter = new Filter(
@@ -112,14 +113,13 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
                 metadata.columns,
                 currentFilter,
             );
-            const updatedValue = handleTransformation(
-                header.numericDatetimeType,
+            const updatedValue = getSafeValue(
+                header,
                 value,
                 dateFormat,
+                isStringColumn,
             );
-            const condition = isStringColumn
-                ? `${header.id} = '${updatedValue}'`
-                : `${header.id} = ${updatedValue}`;
+            const condition = `${header.id} ${exclude ? '!=' : '='} ${updatedValue}`;
             const filterString = newFilter.toString();
             newFilter.update(`${filterString} and ${condition}`);
             dispatch(
@@ -133,7 +133,7 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
                 dispatch(restartCompare({ compareId: currentFileId }));
             }
         } else {
-            handleFilterByValue();
+            handleFilterByValue(exclude);
         }
     };
 
@@ -203,7 +203,7 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
             anchorReference="anchorPosition"
             anchorPosition={anchorPosition}
         >
-            <ListSubheader>Filter</ListSubheader>
+            <ListSubheader>New Filter</ListSubheader>
             <Divider />
             <MenuItem
                 onClick={() => {
@@ -216,18 +216,44 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
                 </ListItemIcon>
                 <ListItemText>Filter by value</ListItemText>
             </MenuItem>
+            <MenuItem
+                onClick={() => {
+                    handleFilterByValue(true);
+                    onClose({}, 'action');
+                }}
+            >
+                <ListItemIcon>
+                    <RadioButtonUncheckedIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>Exclude value</ListItemText>
+            </MenuItem>
             {currentFilter !== null && (
-                <MenuItem
-                    onClick={() => {
-                        hadnleAddToFilter();
-                        onClose({}, 'action');
-                    }}
-                >
-                    <ListItemIcon>
-                        <AddCircleOutlineIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>Add to filter</ListItemText>
-                </MenuItem>
+                <>
+                    <ListSubheader>Update Filter</ListSubheader>
+                    <Divider />
+                    <MenuItem
+                        onClick={() => {
+                            hadnleAddToFilter();
+                            onClose({}, 'action');
+                        }}
+                    >
+                        <ListItemIcon>
+                            <AddCircleOutlineIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Add value</ListItemText>
+                    </MenuItem>
+                    <MenuItem
+                        onClick={() => {
+                            hadnleAddToFilter(true);
+                            onClose({}, 'action');
+                        }}
+                    >
+                        <ListItemIcon>
+                            <RemoveCircleOutlineIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Exclude value</ListItemText>
+                    </MenuItem>
+                </>
             )}
             {isColumnsInCurrentFilter && (
                 <MenuItem
@@ -237,9 +263,9 @@ const CellContextMenu: React.FC<ContextMenuProps> = ({
                     }}
                 >
                     <ListItemIcon>
-                        <RemoveCircleOutlineIcon fontSize="small" />
+                        <DisabledByDefaultSharpIcon fontSize="small" />
                     </ListItemIcon>
-                    <ListItemText>Remove from filter</ListItemText>
+                    <ListItemText>Remove variable</ListItemText>
                 </MenuItem>
             )}
             {currentFilter !== null && (

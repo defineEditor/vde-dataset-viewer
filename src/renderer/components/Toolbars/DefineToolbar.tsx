@@ -29,6 +29,7 @@ const styles = {
     main: {
         width: '100%',
         paddingLeft: 2,
+        justifyContent: 'flex-start',
     },
     searchInput: {},
 };
@@ -109,12 +110,7 @@ const DefineToolbar: React.FC = () => {
     }, []);
 
     return (
-        <Stack
-            sx={styles.main}
-            direction="row"
-            justifyContent="flex-start"
-            spacing={1}
-        >
+        <Stack sx={styles.main} direction="row" spacing={1}>
             <Tooltip title="Open Define-XML" enterDelay={1000}>
                 <IconButton
                     onClick={handleOpenClick}

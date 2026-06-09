@@ -1,7 +1,8 @@
 import React, { useContext, useEffect, useCallback } from 'react';
-import { Typography, Tooltip, IconButton, Stack } from '@mui/material';
+import { Typography, Tooltip, IconButton, Stack, Divider } from '@mui/material';
 import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
 import ShortcutIcon from '@mui/icons-material/Shortcut';
+import TerminalIcon from '@mui/icons-material/Terminal';
 import InfoIcon from '@mui/icons-material/Info';
 import FilterIcon from '@mui/icons-material/FilterAlt';
 import NextPlanOutlinedIcon from '@mui/icons-material/NextPlan';
@@ -9,14 +10,16 @@ import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
+import SortIcon from '@mui/icons-material/Sort';
 import {
     openDataset,
-    closeDataset,
     openModal,
     setPage,
     openSnackbar,
     toggleSidebar,
     setCompareFiles,
+    setReloadRequested,
 } from 'renderer/redux/slices/ui';
 import { resetFilter, addRecent } from 'renderer/redux/slices/data';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
@@ -28,6 +31,7 @@ const styles = {
     main: {
         width: '100%',
         paddingLeft: 2,
+        justifyContent: 'flex-start',
     },
     dataset: {
         color: 'grey.800',
@@ -52,7 +56,15 @@ const Header: React.FC = () => {
             state.data.filterData.currentFilter[currentFileId] !== undefined,
     );
     const isMaskEnabled = useAppSelector(
-        (state) => state.data.maskData.currentMask !== null,
+        (state) => state.ui.control[currentFileId]?.mask ?? false,
+    );
+
+    const isIdColumnsEnabled = useAppSelector(
+        (state) => (state.ui.control[currentFileId]?.idCols?.length ?? 0) > 0,
+    );
+
+    const isSortingEnabled = useAppSelector(
+        (state) => (state.ui.control[currentFileId]?.sorting?.length ?? 0) > 0,
     );
 
     const isModalOpen = useAppSelector((state) => state.ui.modals?.length > 0);
@@ -109,6 +121,10 @@ const Header: React.FC = () => {
         dispatch(openModal({ type: modals.GOTO, data: {} }));
     }, [dispatch]);
 
+    const handleCommandLineClick = useCallback(() => {
+        dispatch(openModal({ type: modals.COMMANDLINE, data: {} }));
+    }, [dispatch]);
+
     const handleFilterClick = useCallback(() => {
         dispatch(
             openModal({ type: modals.FILTER, filterType: 'dataset', data: {} }),
@@ -125,6 +141,14 @@ const Header: React.FC = () => {
 
     const handleMaskClick = useCallback(() => {
         dispatch(openModal({ type: modals.MASK, data: {} }));
+    }, [dispatch]);
+
+    const handleSortingClick = useCallback(() => {
+        dispatch(openModal({ type: modals.SORTING, data: {} }));
+    }, [dispatch]);
+
+    const handleIdColumnsClick = useCallback(() => {
+        dispatch(openModal({ type: modals.IDCOLUMNS, data: {} }));
     }, [dispatch]);
 
     const handleCompareClick = useCallback(() => {
@@ -161,58 +185,10 @@ const Header: React.FC = () => {
         dispatch(openModal({ type: modals.VALIDATOR, data: {} }));
     }, [dispatch]);
 
-    const handleCloseDataset = useCallback(
-        async (fileId: string) => {
-            dispatch(
-                closeDataset({
-                    fileId,
-                }),
-            );
-            await apiService.close(fileId);
-        },
-        [dispatch, apiService],
-    );
-
     const handleReloadClick = useCallback(async () => {
-        // Get filepath of the current file;
-        const currentFile = apiService.getOpenedFiles(currentFileId)[0];
-        if (!currentFile) {
-            dispatch(
-                openSnackbar({
-                    type: 'error',
-                    message: 'No dataset is currently opened.',
-                }),
-            );
-            return;
-        }
-        const { path, mode } = currentFile;
-        // Close the current dataset
-        await handleCloseDataset(currentFileId);
-        const newDataInfo = await openNewDataset(apiService, mode, path);
-        if (newDataInfo.errorMessage) {
-            if (newDataInfo.errorMessage !== 'cancelled') {
-                dispatch(
-                    openSnackbar({
-                        type: 'error',
-                        message: newDataInfo.errorMessage,
-                    }),
-                );
-            }
-            return;
-        }
-        dispatch(
-            openDataset({
-                fileId: newDataInfo.fileId,
-                type: newDataInfo.type,
-                name: newDataInfo.metadata.name,
-                label: newDataInfo.metadata.label,
-                mode,
-                totalRecords: newDataInfo.metadata.records,
-            }),
-        );
-        // Reset page for the new dataset
-        dispatch(setPage({ fileId: newDataInfo.fileId, page: 0 }));
-    }, [apiService, dispatch, currentFileId, handleCloseDataset]);
+        await apiService.reloadFile(currentFileId);
+        dispatch(setReloadRequested(true));
+    }, [apiService, dispatch, currentFileId]);
 
     // Add shortcuts for actions
     useEffect(() => {
@@ -224,6 +200,9 @@ const Header: React.FC = () => {
                 switch (event.key) {
                     case 'g':
                         handleGoToClick();
+                        break;
+                    case 'l':
+                        handleCommandLineClick();
                         break;
                     case 'o':
                         handleOpenClick();
@@ -238,6 +217,9 @@ const Header: React.FC = () => {
                     case 'i':
                         handleDataSetInfoClick();
                         break;
+                    case 'p':
+                        handleIdColumnsClick();
+                        break;
                     case 'r':
                         handleReloadClick();
                         break;
@@ -246,6 +228,12 @@ const Header: React.FC = () => {
                         break;
                     case 's':
                         handleCompareClick();
+                        break;
+                    case 't':
+                        handleSortingClick();
+                        break;
+                    case 'v':
+                        handleValidateClick();
                         break;
                     case '`':
                         handleToggleSidebar();
@@ -263,6 +251,7 @@ const Header: React.FC = () => {
         };
     }, [
         handleGoToClick,
+        handleCommandLineClick,
         handleOpenClick,
         handleFilterClick,
         handleDataSetInfoClick,
@@ -271,16 +260,14 @@ const Header: React.FC = () => {
         handleMaskClick,
         handleReloadClick,
         handleCompareClick,
+        handleIdColumnsClick,
+        handleValidateClick,
+        handleSortingClick,
         isModalOpen,
     ]);
 
     return (
-        <Stack
-            sx={styles.main}
-            direction="row"
-            justifyContent="flex-start"
-            spacing={1}
-        >
+        <Stack sx={styles.main} direction="row" spacing={1}>
             <Typography variant="h6" sx={styles.dataset}>
                 {dsName}
             </Typography>
@@ -314,6 +301,24 @@ const Header: React.FC = () => {
                     />
                 </IconButton>
             </Tooltip>
+            <Tooltip title="Reload" enterDelay={1000}>
+                <IconButton
+                    onClick={handleReloadClick}
+                    id="reload"
+                    size="small"
+                    disabled={currentFileMode === 'remote'}
+                >
+                    <RefreshIcon
+                        sx={{
+                            color:
+                                currentFileMode === 'remote'
+                                    ? 'grey.500'
+                                    : 'grey.600',
+                        }}
+                    />
+                </IconButton>
+            </Tooltip>
+            <Divider orientation="vertical" flexItem />
             <Tooltip title="Go to Line or Column" enterDelay={1000}>
                 <IconButton
                     onClick={handleGoToClick}
@@ -344,6 +349,22 @@ const Header: React.FC = () => {
                     />
                 </IconButton>
             </Tooltip>
+            <Tooltip title="ID Columns" enterDelay={1000}>
+                <IconButton
+                    onClick={handleIdColumnsClick}
+                    id="idColumns"
+                    size="small"
+                    disabled={pathname !== paths.VIEWFILE}
+                >
+                    <PushPinOutlinedIcon
+                        sx={{
+                            color: isIdColumnsEnabled
+                                ? 'primary.main'
+                                : 'grey.600',
+                        }}
+                    />
+                </IconButton>
+            </Tooltip>
             <Tooltip title="Column Visibility" enterDelay={1000}>
                 <IconButton
                     onClick={handleMaskClick}
@@ -358,10 +379,27 @@ const Header: React.FC = () => {
                     />
                 </IconButton>
             </Tooltip>
+            <Tooltip title="Sort" enterDelay={1000}>
+                <IconButton
+                    onClick={handleSortingClick}
+                    id="sort"
+                    size="small"
+                    disabled={pathname !== paths.VIEWFILE}
+                >
+                    <SortIcon
+                        sx={{
+                            color: isSortingEnabled
+                                ? 'primary.main'
+                                : 'grey.600',
+                        }}
+                    />
+                </IconButton>
+            </Tooltip>
+            <Divider orientation="vertical" flexItem />
             <Tooltip title="Compare" enterDelay={1000}>
                 <IconButton
                     onClick={handleCompareClick}
-                    id="filterData"
+                    id="compare"
                     size="small"
                 >
                     <CompareArrowsIcon
@@ -403,19 +441,17 @@ const Header: React.FC = () => {
                     />
                 </IconButton>
             </Tooltip>
-            <Tooltip title="Reload" enterDelay={1000}>
+            <Divider orientation="vertical" flexItem />
+            <Tooltip title="Command Line" enterDelay={1000}>
                 <IconButton
-                    onClick={handleReloadClick}
-                    id="open"
+                    onClick={handleCommandLineClick}
+                    id="commandLine"
                     size="small"
-                    disabled={currentFileMode === 'remote'}
+                    disabled={pathname !== paths.VIEWFILE}
                 >
-                    <RefreshIcon
+                    <TerminalIcon
                         sx={{
-                            color:
-                                currentFileMode === 'remote'
-                                    ? 'grey.500'
-                                    : 'grey.600',
+                            color: 'grey.600',
                         }}
                     />
                 </IconButton>

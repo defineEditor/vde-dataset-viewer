@@ -7,13 +7,15 @@ const styles = {
     container: {
         width: '100%',
         display: 'flex',
-        backgroundColor: '#FFF',
+        backgroundColor: 'background.paper',
         flex: '1 1 auto',
     },
     mainStack: {
         width: '100%',
         overflow: 'hidden',
         height: 52,
+        alignItems: 'center',
+        justifyContent: 'space-between',
     },
     leftSection: {
         maxWidth: '100%',
@@ -80,13 +82,7 @@ const BottomToolbar: React.FC<BottomToolbarProps> = ({
 }) => {
     return (
         <Box sx={styles.container}>
-            <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-                spacing={1}
-                sx={styles.mainStack}
-            >
+            <Stack direction="row" spacing={1} sx={styles.mainStack}>
                 <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
                     <DiffNavigation diffs={diffs} onSetGoTo={onSetGoTo} />
                 </Box>

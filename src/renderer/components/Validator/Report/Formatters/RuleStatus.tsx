@@ -4,10 +4,12 @@ import { ITableRow } from 'interfaces/common';
 import { CoreCell } from '@tanstack/react-table';
 
 const styles = {
-    alert: {
+    alert: (theme) => ({
         textTransform: 'none',
         height: '100%',
-    },
+        fontSize: theme.densitySettings.table.fontSize,
+        padding: theme.densitySettings.table.cellPadding,
+    }),
 };
 
 const RuleStatus: React.FC<{

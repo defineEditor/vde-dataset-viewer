@@ -1,11 +1,15 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import {
-    TextField,
-    Autocomplete,
-    AutocompleteInputChangeReason,
-} from '@mui/material';
-import Filter, { ColumnMetadata } from 'js-array-filter';
+import React, {
+    useState,
+    useMemo,
+    useEffect,
+    useCallback,
+    useContext,
+} from 'react';
+import Filter from 'js-array-filter';
 import { useAppSelector } from 'renderer/redux/hooks';
+import AppContext from 'renderer/utils/AppContext';
+import CommandAutocompleteInput from 'renderer/components/Common/CommandAutocompleteInput';
+import type { DatasetJsonMetadata } from 'interfaces/common';
 
 const styles = {
     input: {
@@ -15,16 +19,19 @@ const styles = {
 
 const ManualInput: React.FC<{
     inputValue: string;
-    columns: ColumnMetadata[];
     handleSetInputValue: (_value: string) => void;
     datasetName: string;
-}> = ({ inputValue, handleSetInputValue, datasetName, columns }) => {
+    fileId: string;
+    metadata: DatasetJsonMetadata;
+}> = ({ inputValue, handleSetInputValue, datasetName, fileId, metadata }) => {
+    const { apiService } = useContext(AppContext);
     const [error, setError] = useState(false);
     const [warning, setWarning] = useState(false);
+    const settings = useAppSelector((state) => state.settings);
 
     const filterForValidation = useMemo(() => {
-        return new Filter('dataset-json1.1', columns, '');
-    }, [columns]);
+        return new Filter('dataset-json1.1', metadata.columns, '');
+    }, [metadata.columns]);
 
     const recentFilters = useAppSelector(
         (state) => state.data.filterData.recentFilters,
@@ -43,14 +50,6 @@ const ManualInput: React.FC<{
         return result;
     }, [recentFilters, datasetName, filterForValidation]);
 
-    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const { value } = event.target;
-        if (error) {
-            setError(false);
-        }
-        handleSetInputValue(value);
-    };
-
     // Check filter on change
     useEffect(() => {
         if (filterForValidation.validateFilterString(inputValue)) {
@@ -60,43 +59,44 @@ const ManualInput: React.FC<{
         }
     }, [inputValue, filterForValidation]);
 
+    const allColumnNames = useMemo(
+        () => metadata.columns.map((column) => column.name),
+        [metadata.columns],
+    );
+
+    const columnTypes = useMemo(() => {
+        const types: Record<string, 'numeric' | 'string' | 'boolean'> = {};
+        metadata.columns.forEach((column) => {
+            if (
+                ['integer', 'float', 'double', 'number'].includes(
+                    column.dataType,
+                )
+            ) {
+                types[column.name] = 'numeric';
+            } else if (['boolean'].includes(column.dataType)) {
+                types[column.name] = 'boolean';
+            } else {
+                types[column.name] = 'string';
+            }
+        });
+        return types;
+    }, [metadata.columns]);
+
+    const handleInputChange = useCallback(
+        (value: string) => {
+            if (error) {
+                setError(false);
+            }
+            handleSetInputValue(value);
+        },
+        [error, handleSetInputValue],
+    );
+
     const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
             if (warning) {
                 setError(true);
             }
-        }
-    };
-
-    const handleRecentFilterChange = (
-        event: React.SyntheticEvent,
-        value: string | null,
-        reason: AutocompleteInputChangeReason,
-    ) => {
-        if (reason === 'selectOption') {
-            handleSetInputValue(value || '');
-            // Check if the selected filter is valid
-            if (value && !filterForValidation.validateFilterString(value)) {
-                setWarning(true);
-            } else if (warning) {
-                setWarning(false);
-            }
-            // It can be both error and warning, so check error separately
-            if (error) {
-                setError(false);
-            }
-            // Prevent the Enter from activating the filter
-            event.stopPropagation();
-        } else if (reason === 'clear') {
-            if (error) {
-                setError(false);
-            }
-            if (warning) {
-                setWarning(false);
-            }
-        }
-        if (value || value === '') {
-            handleSetInputValue(value);
         }
     };
 
@@ -110,27 +110,29 @@ const ManualInput: React.FC<{
     }
 
     return (
-        <Autocomplete
-            freeSolo
-            options={recentFilterStrings}
+        <CommandAutocompleteInput
             value={inputValue}
-            onInputChange={handleRecentFilterChange}
+            onValueChange={handleInputChange}
+            historyOptions={recentFilterStrings}
+            category="filter"
+            mode="filter"
+            label="Filter"
+            helperText={error ? 'Invalid filter' : ''}
+            error={error}
+            autoFocus
+            onInputKeyDown={handleKeyDown}
             sx={styles.input}
-            renderInput={(params) => (
-                <TextField
-                    {...params}
-                    label="Filter"
-                    autoFocus
-                    margin="dense"
-                    color={color}
-                    size="small"
-                    value={inputValue}
-                    onChange={handleInputChange}
-                    onKeyDown={handleKeyDown}
-                    error={error}
-                    helperText={error ? 'Invalid filter' : ''}
-                />
-            )}
+            textFieldProps={{
+                margin: 'dense',
+                color,
+                size: 'small',
+            }}
+            allColumnNames={allColumnNames}
+            columnTypes={columnTypes}
+            metadata={metadata}
+            currentFileId={fileId}
+            apiService={apiService}
+            settings={settings}
         />
     );
 };

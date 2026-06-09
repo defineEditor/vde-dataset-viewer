@@ -7,17 +7,14 @@ import {
     ValidationRunReport,
     ParsedValidationReport,
     IMask,
+    IIdColumnSet,
     IUiValidationPage,
     ValidatorData,
     DatasetDiff,
 } from 'interfaces/common';
 import deepEqual from 'renderer/utils/deepEqual';
 import getFolderName from 'renderer/utils/getFolderName';
-import {
-    closeDataset,
-    openDataset,
-    closeCompare,
-} from 'renderer/redux/slices/ui';
+import { closeDataset, closeCompare } from 'renderer/redux/slices/ui';
 
 export const dataSlice = createSlice({
     name: 'data',
@@ -96,6 +93,32 @@ export const dataSlice = createSlice({
             };
             return newState;
         },
+        addRecentCommand: (
+            state,
+            action: PayloadAction<{
+                command: string;
+            }>,
+        ) => {
+            const newRecentCommands = state.filterData.recentCommands.slice();
+            const index = newRecentCommands.findIndex(
+                (recentCommand) =>
+                    recentCommand.command === action.payload.command,
+            );
+
+            if (index !== -1) {
+                newRecentCommands.splice(index, 1);
+            } else if (newRecentCommands.length >= 100) {
+                newRecentCommands.pop();
+            }
+
+            newRecentCommands.unshift({
+                command: action.payload.command,
+                date: Date.now(),
+            });
+
+            state.filterData.recentCommands = newRecentCommands;
+            return state;
+        },
         resetFilter: (state, action: PayloadAction<{ fileId: string }>) => {
             if (state.filterData.currentFilter[action.payload.fileId]) {
                 delete state.filterData.currentFilter[action.payload.fileId];
@@ -121,11 +144,6 @@ export const dataSlice = createSlice({
         setConverterData: (state, action: PayloadAction<ConverterData>) => {
             state.converter = action.payload;
         },
-        // Mask related actions
-        selectMask: (state, action: PayloadAction<IMask>) => {
-            state.maskData.currentMask = action.payload;
-            return state;
-        },
         saveMask: (state, action: PayloadAction<IMask>) => {
             // Check if mask with this id already exists
             const existingIndex = state.maskData.savedMasks.findIndex(
@@ -149,8 +167,23 @@ export const dataSlice = createSlice({
             );
             return state;
         },
-        clearMask: (state) => {
-            state.maskData.currentMask = null;
+        saveIdColumnSet: (state, action: PayloadAction<IIdColumnSet>) => {
+            const existingIndex = state.idColumnData.savedSets.findIndex(
+                (savedSet) => savedSet.id === action.payload.id,
+            );
+
+            if (existingIndex !== -1) {
+                state.idColumnData.savedSets[existingIndex] = action.payload;
+            } else {
+                state.idColumnData.savedSets.push(action.payload);
+            }
+
+            return state;
+        },
+        deleteIdColumnSet: (state, action: PayloadAction<IIdColumnSet>) => {
+            state.idColumnData.savedSets = state.idColumnData.savedSets.filter(
+                (savedSet) => savedSet.id !== action.payload.id,
+            );
             return state;
         },
         setValidatorData: (
@@ -269,17 +302,6 @@ export const dataSlice = createSlice({
         },
     },
     extraReducers: (builder) => {
-        builder.addCase(openDataset, (state, _action) => {
-            // If mask is not sticky, reset it
-            if (
-                state.maskData.currentMask &&
-                !state.maskData.currentMask.sticky
-            ) {
-                state.maskData.currentMask = null;
-            }
-
-            return state;
-        });
         builder.addCase(closeDataset, (state, action) => {
             // Remove file from the loaded records
             const { fileId } = action.payload;
@@ -289,13 +311,6 @@ export const dataSlice = createSlice({
             // Remove filters associated with the closed file
             if (state.filterData.currentFilter[fileId]) {
                 delete state.filterData.currentFilter[fileId];
-            }
-            // If mask is not sticky, reset it
-            if (
-                state.maskData.currentMask &&
-                !state.maskData.currentMask.sticky
-            ) {
-                state.maskData.currentMask = null;
             }
         });
         builder.addCase(closeCompare, (state, action) => {
@@ -314,14 +329,15 @@ export const dataSlice = createSlice({
 export const {
     addRecent,
     setFilter,
+    addRecentCommand,
     resetFilter,
     setLoadedRecords,
     clearLoadedRecords,
     setConverterData,
-    selectMask,
     saveMask,
     deleteMask,
-    clearMask,
+    saveIdColumnSet,
+    deleteIdColumnSet,
     setValidatorData,
     resetValidatorInfo,
     addValidationReport,

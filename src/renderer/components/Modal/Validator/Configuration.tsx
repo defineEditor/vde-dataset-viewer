@@ -64,6 +64,9 @@ const styles = {
         p: 1,
     },
     defineXmlPath: { width: 300, flex: '1 1 auto' },
+    rowSpaceBetween: {
+        justifyContent: 'space-between',
+    },
 };
 
 const Configuration: React.FC<{
@@ -216,11 +219,7 @@ const Configuration: React.FC<{
                     Standard Options
                 </Typography>
 
-                <Stack
-                    direction="row"
-                    spacing={2}
-                    justifyContent="space-between"
-                >
+                <Stack direction="row" spacing={2} sx={styles.rowSpaceBetween}>
                     <TextField
                         select
                         name="standard"

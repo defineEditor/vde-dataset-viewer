@@ -21,6 +21,7 @@ const styles = {
         flexDirection: 'column',
         overflow: 'auto',
         p: 2,
+        backgroundColor: 'background.paper',
     },
     section: {
         mb: 4,
@@ -32,8 +33,13 @@ const styles = {
         textAlign: 'center',
         width: '100%',
     },
+    header: {
+        backgroundColor: 'grey.200',
+    },
     tableContainer: {
-        border: '1px solid #e0e0e0',
+        border: '1px solid',
+        borderColor: 'divider',
+        backgroundColor: 'grey.100',
     },
     successMessage: {
         display: 'flex',
@@ -71,7 +77,14 @@ const Metadata: React.FC = () => {
                               ? 'salmon'
                               : 'transparent',
                     };
-                    return <span style={style}>{part.value}</span>;
+                    return (
+                        <span
+                            key={`${part.value}-${part.added ? 'added' : 'removed'}`}
+                            style={style}
+                        >
+                            {part.value}
+                        </span>
+                    );
                 })}
             </span>
         );
@@ -162,7 +175,7 @@ const Metadata: React.FC = () => {
                         sx={styles.tableContainer}
                     >
                         <Table size="small">
-                            <TableHead>
+                            <TableHead sx={styles.header}>
                                 <TableRow>
                                     <TableCell>Attribute</TableCell>
                                     <TableCell>Base</TableCell>

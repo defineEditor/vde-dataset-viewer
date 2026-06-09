@@ -105,7 +105,7 @@ const AnalysisResults: React.FC<AnalysisResultsProps> = ({
                                     </th>
                                     <th scope="col">
                                         {renderDocumentRefs(
-                                            display.documents || [],
+                                            display.documents ?? [],
                                             leafs,
                                             onOpenFile,
                                         )}{' '}

@@ -7,12 +7,16 @@ import React, {
 } from 'react';
 import Stack from '@mui/material/Stack';
 import Paper from '@mui/material/Paper';
+import Filter from 'js-array-filter';
 import {
     IHeaderCell,
     ITableData,
     IMask,
     ParsedValidationReport,
     IUiControl,
+    TableRowValue,
+    ISettings,
+    BasicFilter,
 } from 'interfaces/common';
 import DatasetView from 'renderer/components/DatasetView';
 import ContextMenu from 'renderer/components/DatasetView/ContextMenu';
@@ -25,13 +29,16 @@ import {
     toggleSidebar,
     setGoTo,
     setSelect,
+    setReloadRequested,
 } from 'renderer/redux/slices/ui';
+import { resetFilter } from 'renderer/redux/slices/data';
 import { getData } from 'renderer/utils/readData';
 import estimateWidth from 'renderer/utils/estimateWidth';
 import deepEqual from 'renderer/utils/deepEqual';
 import DatasetSidebar from 'renderer/components/DatasetView/Sidebar';
 import getIssueAnnotations from 'renderer/utils/getIssueAnnotations';
 import BottomToolbar from 'renderer/components/ViewDataset/BottomToolbar';
+import ApiService from 'renderer/services/ApiService';
 
 const styles = {
     main: {
@@ -47,21 +54,123 @@ const updateWidth = (
     estimateWidthRows: number,
     maxColWidth: number,
     showTypeIcons: boolean = false,
+    showLabels: boolean = false,
+    compactMode: boolean = false,
 ) => {
     const widths = estimateWidth(
         data,
         estimateWidthRows,
         maxColWidth,
         showTypeIcons,
+        false,
+        showLabels,
     );
     // Update column style with default width
     return data.header.map((col) => {
+        if (compactMode) {
+            return {
+                ...col,
+                size: Math.ceil(widths[col.id] * 7.5) + 6,
+            };
+        }
         // 9px per character + 18px padding
         return {
             ...col,
             size: widths[col.id] * 9 + 18,
         };
     });
+};
+
+const readDataset = async (
+    apiService: ApiService,
+    currentFileId: string,
+    page: number,
+    pageSize: number,
+    settings: ISettings,
+    currentFilter: BasicFilter | null,
+    showLabels: boolean,
+    requestReason: 'initial' | 'filterChange' | 'reload',
+    setTable: React.Dispatch<React.SetStateAction<ITableData | null>>,
+    setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
+    setTotalRecords: React.Dispatch<React.SetStateAction<number>>,
+    dispatch: ReturnType<typeof useAppDispatch>,
+) => {
+    if (currentFileId === '' || apiService === null) {
+        setTable(null);
+        return;
+    }
+    setIsLoading(true);
+    let newData: ITableData | null = null;
+    const startTime = performance.now();
+    const filterIsActive = currentFilter !== null;
+    // TODO: Implement loading filtered data beyond the first page. For now, only load the first page for filtered data.
+    const start = filterIsActive ? 0 : page * pageSize;
+    try {
+        newData = await getData(
+            apiService,
+            currentFileId,
+            start,
+            pageSize,
+            settings,
+            undefined,
+            currentFilter === null ? undefined : currentFilter,
+        );
+    } catch (error) {
+        // Remove current fileId as something is wrong with it
+        dispatch(
+            closeDataset({
+                fileId: currentFileId,
+            }),
+        );
+        dispatch(
+            openSnackbar({
+                type: 'error',
+                message: (error as Error).message,
+            }),
+        );
+    }
+    if (newData !== null) {
+        newData.header = updateWidth(
+            newData,
+            settings.viewer.estimateWidthRows,
+            settings.viewer.maxColWidth,
+            settings.viewer.showTypeIcons,
+            showLabels,
+            settings.other.compactMode,
+        );
+        if (requestReason === 'filterChange') {
+            // Mark filtered columns
+            if (currentFilter !== null) {
+                const filteredColumns = currentFilter.conditions.map(
+                    (c) => c.variable,
+                );
+                newData.header = newData.header.map((col) => {
+                    return {
+                        ...col,
+                        isFiltered: filteredColumns.includes(col.id),
+                    };
+                });
+            }
+            if (currentFilter !== null && newData.data.length < pageSize) {
+                setTotalRecords(newData.data.length);
+            } else {
+                setTotalRecords(newData.metadata.records);
+            }
+        }
+        const endTime = performance.now();
+        const timeLapsed = ((endTime - startTime) / 1000).toFixed(2);
+        dispatch(
+            openSnackbar({
+                type: 'success',
+                message: `${newData.data.length} record${newData.data.length === 1 ? '' : 's'} ${requestReason === 'filterChange' ? 'filtered' : 'loaded'}. (${timeLapsed}s)`,
+            }),
+        );
+        if (['reload', 'initial'].includes(requestReason)) {
+            setTotalRecords(newData.metadata.records);
+        }
+        setTable(newData);
+    }
+    setIsLoading(false);
 };
 
 const DatasetContainer: React.FC = () => {
@@ -72,7 +181,7 @@ const DatasetContainer: React.FC = () => {
     const settings = useAppSelector((state) => state.settings);
     const sidebarOpen = useAppSelector((state) => state.ui.viewer.sidebarOpen);
     const currentMask = useAppSelector<IMask | null>(
-        (state) => state.data.maskData.currentMask,
+        (state) => state.ui.control[currentFileId]?.mask ?? null,
     );
 
     const { apiService } = useContext(AppContext);
@@ -100,47 +209,28 @@ const DatasetContainer: React.FC = () => {
     });
 
     const handleContextMenu = useCallback(
-        (event: React.MouseEvent, rowIndex: number, columnIndex: number) => {
+        (
+            event: React.MouseEvent,
+            columnId: string,
+            value: TableRowValue,
+            isHeader?: boolean,
+        ) => {
             event.preventDefault();
-            if (columnIndex === 0 || !table) return; // Ignore row number column
+            if (columnId === '#' || !table?.header) return; // Ignore row number column
 
-            const rows = table.data;
-            // In case mask is used, we need to get the index of the column with mask applied
-            let updatedColumnIndex = columnIndex;
-            if (
-                currentMask !== null &&
-                currentMask.columns.length > 0 &&
-                currentMask.columns.length >= columnIndex
-            ) {
-                // Find id with the mask applied
-                const allIds = table.header.map((header) => header.id);
-                // Mask order can be different from original dataset
-                const maskOrderedColumns = currentMask.columns
-                    .slice()
-                    .sort((a, b) => {
-                        return allIds.indexOf(a) - allIds.indexOf(b);
-                    });
-                // Mask might contain variables not in the dataset
-                const originalId = maskOrderedColumns.filter((id) =>
-                    allIds.includes(id),
-                )[columnIndex - 1];
-                updatedColumnIndex =
-                    table.header.findIndex((item) => item.id === originalId) +
-                    1;
-            }
+            const header = table.header.find((col) => col.id === columnId);
 
-            const header = table.header[updatedColumnIndex - 1];
-            const value = rowIndex === -1 ? '' : rows[rowIndex][header.id];
+            if (!header) return;
 
             setContextMenu({
                 position: { top: event.clientY, left: event.clientX },
                 value,
                 header,
                 open: true,
-                isHeader: rowIndex === -1,
+                isHeader: isHeader || false,
             });
         },
-        [table, currentMask],
+        [table?.header],
     );
 
     const handleCloseContextMenu = () => {
@@ -157,59 +247,33 @@ const DatasetContainer: React.FC = () => {
             : 0,
     );
 
+    const showLabels = useAppSelector(
+        (state) =>
+            state.ui.control[currentFileId]?.showLabels ??
+            state.settings.viewer.showLabels,
+    );
+
     // Load initial data
     useEffect(() => {
         if (table?.fileId === currentFileId) {
             // If table is already loaded for the current fileId, do not reload
             return;
         }
-        const readDataset = async () => {
-            if (currentFileId === '' || apiService === null) {
-                setTable(null);
-                return;
-            }
 
-            setIsLoading(true);
-            let newData: ITableData | null = null;
-            try {
-                newData = await getData(
-                    apiService,
-                    currentFileId,
-                    page * pageSize,
-                    pageSize,
-                    settings,
-                    undefined,
-                    currentFilter === null ? undefined : currentFilter,
-                );
-            } catch (error) {
-                // Remove current fileId as something is wrong with itj
-                dispatch(
-                    closeDataset({
-                        fileId: currentFileId,
-                    }),
-                );
-                dispatch(
-                    openSnackbar({
-                        type: 'error',
-                        message: (error as Error).message,
-                    }),
-                );
-            }
-            // Get width estimation for columns
-            if (newData !== null) {
-                newData.header = updateWidth(
-                    newData,
-                    settings.viewer.estimateWidthRows,
-                    settings.viewer.maxColWidth,
-                    settings.viewer.showTypeIcons,
-                );
-                setTotalRecords(newData.metadata.records);
-                setTable(newData);
-                setIsLoading(false);
-            }
-        };
-
-        readDataset();
+        readDataset(
+            apiService,
+            currentFileId,
+            page,
+            pageSize,
+            settings,
+            currentFilter,
+            showLabels,
+            'initial',
+            setTable,
+            setIsLoading,
+            setTotalRecords,
+            dispatch,
+        );
     }, [
         dispatch,
         currentFileId,
@@ -219,7 +283,113 @@ const DatasetContainer: React.FC = () => {
         settings,
         currentFilter,
         table?.fileId,
+        showLabels,
     ]);
+
+    const reloadRequested = useAppSelector((state) => state.ui.reloadRequested);
+    // Reload data when reloadRequested is toggled
+    useEffect(() => {
+        const reloadData = async () => {
+            if (!reloadRequested) {
+                return;
+            }
+            // If validateFilters is true, we need to check the filter is valid before loading the data;
+            if (currentFilter !== null) {
+                const fullMetadata =
+                    await apiService.getMetadata(currentFileId);
+                let isFilterValid = false;
+                if (!fullMetadata) {
+                    dispatch(
+                        openSnackbar({
+                            type: 'error',
+                            message:
+                                'Failed to reload dataset: unable to retrieve metadata.',
+                        }),
+                    );
+                    return;
+                }
+                try {
+                    const existingFilter = new Filter(
+                        'dataset-json1.1',
+                        fullMetadata.columns,
+                        currentFilter,
+                    );
+                    const filterString = existingFilter.toString();
+                    const filterForValidation = new Filter(
+                        'dataset-json1.1',
+                        fullMetadata.columns,
+                        '',
+                    );
+                    isFilterValid =
+                        filterForValidation.validateFilterString(filterString);
+                } catch (error) {
+                    isFilterValid = false;
+                }
+
+                if (!isFilterValid) {
+                    // The reload of data will be done by filter branch
+                    dispatch(setReloadRequested(false));
+                    // We need to disable filter as it is not valid for the new data
+                    dispatch(resetFilter({ fileId: currentFileId }));
+                    dispatch(
+                        openSnackbar({
+                            type: 'error',
+                            message:
+                                'Filter cannot be applied to the new dataset.',
+                        }),
+                    );
+                    return;
+                }
+            }
+
+            await readDataset(
+                apiService,
+                currentFileId,
+                page,
+                pageSize,
+                settings,
+                currentFilter,
+                showLabels,
+                'reload',
+                setTable,
+                setIsLoading,
+                setTotalRecords,
+                dispatch,
+            );
+
+            dispatch(setReloadRequested(false));
+        };
+        reloadData();
+    }, [
+        dispatch,
+        currentFileId,
+        page,
+        pageSize,
+        apiService,
+        settings,
+        currentFilter,
+        table?.fileId,
+        showLabels,
+        reloadRequested,
+    ]);
+
+    useEffect(() => {
+        // Update header widths if showLabels was toggled
+        setTable((prevTable) => {
+            if (prevTable === null) return null;
+            return {
+                ...prevTable,
+                header: updateWidth(
+                    prevTable,
+                    settings.viewer.estimateWidthRows,
+                    settings.viewer.maxColWidth,
+                    settings.viewer.showTypeIcons,
+                    showLabels,
+                    settings.other.compactMode,
+                ),
+            };
+        });
+    }, [settings, showLabels]);
 
     // Pagination
     const handleChangePage = useCallback(
@@ -247,6 +417,8 @@ const DatasetContainer: React.FC = () => {
                         settings.viewer.estimateWidthRows,
                         settings.viewer.maxColWidth,
                         settings.viewer.showTypeIcons,
+                        showLabels,
+                        settings.other.compactMode,
                     );
                     setTable(newData);
                     dispatch(setPage({ fileId: currentFileId, page: newPage }));
@@ -256,7 +428,15 @@ const DatasetContainer: React.FC = () => {
 
             readNext((newPage as number) * pageSize);
         },
-        [currentFileId, pageSize, table, dispatch, apiService, settings],
+        [
+            currentFileId,
+            pageSize,
+            table,
+            dispatch,
+            apiService,
+            settings,
+            showLabels,
+        ],
     );
 
     // Filter change
@@ -275,56 +455,22 @@ const DatasetContainer: React.FC = () => {
         // Reset page to 0 when filter changes
         if (page !== 0) {
             dispatch(setPage({ fileId: currentFileId, page: 0 }));
-        }
-
-        setIsLoading(true);
-        const readDataset = async () => {
-            const newData = await getData(
+        } else {
+            readDataset(
                 apiService,
                 currentFileId,
                 0,
                 pageSize,
                 settings,
-                undefined,
-                currentFilter === null ? undefined : currentFilter,
+                currentFilter,
+                showLabels,
+                'filterChange',
+                setTable,
+                setIsLoading,
+                setTotalRecords,
+                dispatch,
             );
-            if (newData !== null) {
-                newData.header = updateWidth(
-                    newData,
-                    settings.viewer.estimateWidthRows,
-                    settings.viewer.maxColWidth,
-                    settings.viewer.showTypeIcons,
-                );
-                // Mark filtered columns
-                if (currentFilter !== null) {
-                    const filtertedColumns = currentFilter.conditions.map(
-                        (c) => c.variable,
-                    );
-                    newData.header = newData.header.map((col) => {
-                        return {
-                            ...col,
-                            isFiltered: filtertedColumns.includes(col.id),
-                        };
-                    });
-                }
-                if (currentFilter !== null && newData.data.length < pageSize) {
-                    setTotalRecords(newData.data.length);
-                } else {
-                    setTotalRecords(newData.metadata.records);
-                }
-                if (currentFilter !== null) {
-                    dispatch(
-                        openSnackbar({
-                            type: 'success',
-                            message: `${newData.data.length} record${newData.data.length === 1 ? '' : 's'} filtered.`,
-                        }),
-                    );
-                }
-                setTable(newData);
-                setIsLoading(false);
-            }
-        };
-        readDataset();
+        }
     }, [
         dispatch,
         currentFileId,
@@ -334,6 +480,7 @@ const DatasetContainer: React.FC = () => {
         page,
         apiService,
         settings,
+        showLabels,
     ]);
 
     // GoTo control

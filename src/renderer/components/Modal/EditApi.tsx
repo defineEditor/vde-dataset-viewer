@@ -97,6 +97,7 @@ const EditApi: React.FC<IUiModalEditApi> = ({ type, data }) => {
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.ctrlKey && event.key === 's') {
+                event.preventDefault();
                 handleAddApi();
             } else if (event.key === 'Escape') {
                 handleClose();
@@ -113,7 +114,7 @@ const EditApi: React.FC<IUiModalEditApi> = ({ type, data }) => {
         <Dialog
             open
             onClose={handleClose}
-            PaperProps={{ sx: { ...styles.dialog } }}
+            slotProps={{ paper: { sx: { ...styles.dialog } } }}
         >
             <DialogTitle sx={styles.title}>API Record</DialogTitle>
             <DialogContent>

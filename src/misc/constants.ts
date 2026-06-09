@@ -1,5 +1,6 @@
 export const modals = {
     GOTO: 'GOTO',
+    COMMANDLINE: 'COMMANDLINE',
     DATASETINFO: 'DATASETINFO',
     FILTER: 'FILTER',
     APPUPDATE: 'APPUPDATE',
@@ -7,6 +8,8 @@ export const modals = {
     ERROR: 'ERROR',
     VARIABLEINFO: 'VARIABLEINFO',
     MASK: 'MASK',
+    SORTING: 'SORTING',
+    IDCOLUMNS: 'IDCOLUMNS',
     VALIDATOR: 'VALIDATOR',
     SELECTCOMPARE: 'SELECTCOMPARE',
 } as const;

@@ -57,16 +57,22 @@ const shortcuts = {
     },
     Viewer: {
         'Ctrl + O': 'Open a new file',
+        'Ctrl + `': 'Toggle opened dataset selection',
+        'Ctrl + R': 'Reload dataset',
         'Ctrl + G': 'Go to line or column',
         'Ctrl + F': 'Filter data',
-        'Ctrl + Alt + F': 'Reset Filter',
-        'Ctrl + E': 'Column Visibility',
+        'Ctrl + Alt + F': 'Reset filter',
+        'Ctrl + P': 'Pin columns',
+        'Ctrl + E': 'Column visibility',
+        'Ctrl + T': 'Sort columns',
         'Ctrl + S': 'Select files to compare',
-        'Ctrl + I': 'Dataset Information',
+        'Ctrl + V': 'Validate dataset',
+        'Ctrl + I': 'Dataset information',
+        'Ctrl + L': 'Open command line',
         'Ctrl + C': 'Copy selected cells',
         'Ctrl + Alt + C': 'Copy selected cells with headers',
-        'Ctrl + `': 'Toggle opened dataset selection',
         'Ctrl + Arrows': 'Navigate to edges of table',
+        'Ctrl/Shift + Dataset Name': 'Split screen horizontally/vertically',
     },
     Compare: {
         'Ctrl + S': 'Select files to compare',
@@ -86,7 +92,7 @@ const Shortcuts: React.FC<{
             open={open}
             onClose={onClose}
             sx={styles.drawer}
-            PaperProps={{ sx: styles.paper }}
+            slotProps={{ paper: { sx: styles.paper } }}
             anchor="right"
         >
             <Box tabIndex={0} role="button">

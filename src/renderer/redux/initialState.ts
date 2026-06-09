@@ -23,6 +23,9 @@ export const settings: ISettings = {
         applyDateFormat: true,
         showTypeIcons: false,
         copyWithHeaders: false,
+        showLabels: false,
+        enableProfiler: false,
+        autoReload: false,
     },
     converter: {
         threads: 2,
@@ -45,10 +48,15 @@ export const settings: ISettings = {
     },
     other: {
         checkForUpdates: true,
+        colorMode: 'light',
+        themePalette: 'normal',
+        compactMode: false,
         loadingAnimation: 'random',
         inEncoding: 'utf8',
         dragoverAnimation: true,
         disableUiAnimation: false,
+        createLockFile: false,
+        lockFileFolderFilter: '',
     },
     validator: {
         validatorPath: '',
@@ -76,6 +84,7 @@ export const ui: IUi = {
     pathname: paths.SELECT,
     currentFileId: '',
     zoomLevel: 0,
+    appBarExpanded: false,
     viewer: {
         datasetInfoTab: 0,
         validatorTab: 'validation',
@@ -119,6 +128,7 @@ export const ui: IUi = {
         info: {},
         customSettings: {},
     },
+    reloadRequested: false,
 };
 
 export const converter: ConverterData = {
@@ -185,14 +195,23 @@ export const data: IData = {
         recentFilters: [],
         lastOptions: { caseInsensitive: true },
         lastType: 'manual',
+        recentCommands: [],
     },
     maskData: {
-        currentMask: null,
         savedMasks: [
             {
                 id: 'mask-example-1',
                 name: 'Subject Identifiers',
                 columns: ['STUDYID', 'SUBJID', 'USUBJID'],
+            },
+        ],
+    },
+    idColumnData: {
+        savedSets: [
+            {
+                id: 'id-columns-example-1',
+                name: 'BDS Identifiers',
+                columns: ['USUBJID', 'PARAMCD', 'AVISIT'],
             },
         ],
     },

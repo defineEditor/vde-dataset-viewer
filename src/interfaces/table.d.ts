@@ -64,7 +64,6 @@ export interface ITableData {
 
 export interface TableSettings extends SettingsViewer {
     hideRowNumbers?: boolean;
-    showLabel?: boolean;
     height?: number;
     width?: number;
     denseHeader?: boolean;

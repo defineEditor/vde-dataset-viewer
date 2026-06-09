@@ -39,12 +39,14 @@ const RotatingIcon = styled(
 const styles = {
     container: {
         p: 3,
-        backgroundColor: 'grey.300',
+        backgroundColor: 'background.paper',
         overflow: 'hidden',
     },
     controls: {
         pb: 2,
         overflow: 'auto',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
     },
     reportType: {
         width: 80,
@@ -106,13 +108,7 @@ const IssueOverview: React.FC<IssueOverviewProps> = ({ parsedReport }) => {
 
     return (
         <Box sx={styles.container}>
-            <Stack
-                justifyContent="flex-start"
-                alignItems="center"
-                spacing={2}
-                direction="row"
-                sx={styles.controls}
-            >
+            <Stack spacing={2} direction="row" sx={styles.controls}>
                 <Typography variant="h5" sx={styles.reportType}>
                     {reportSummaryType === 'datasets' ? 'Datasets' : 'Issues'}
                 </Typography>

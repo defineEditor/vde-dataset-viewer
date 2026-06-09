@@ -26,6 +26,7 @@ import {
     FileInfo,
     DefineFileInfo,
     DefineXmlContent,
+    FileWatcherEvent,
 } from 'interfaces/common';
 import store from 'renderer/redux/store';
 import transformData from 'renderer/services/transformData';
@@ -194,13 +195,21 @@ class ApiService {
         folderPath?: string,
         compareId?: string,
     ): Promise<IOpenFile> => {
-        // Read encoding from state
-        const encoding = store.getState().settings.other.inEncoding;
+        // Read settings from state
+        const { settings } = store.getState();
+        const encoding = settings.other.inEncoding;
+        const autoReload = settings.viewer.autoReload || false;
+        const createLockFile = settings.other.createLockFile || false;
+        const lockFileFolderFilter = settings.other.lockFileFolderFilter || '';
+
         const response = await window.electron.openFile('local', {
             encoding,
             filePath,
             folderPath,
             fileIdPrefix: compareId || 'f',
+            autoReload,
+            createLockFile,
+            lockFileFolderFilter,
         });
         if (response === null) {
             return {
@@ -257,15 +266,20 @@ class ApiService {
         if (this.openedFilesMetadata[fileId] !== undefined) {
             return this.openedFilesMetadata[fileId];
         }
-        let metadata: DatasetJsonMetadata | null;
+        let result: {
+            metadata: DatasetJsonMetadata;
+            lastModified: number;
+        } | null;
         if (file.mode === 'remote') {
-            metadata = await this.getMetadataRemote(fileId);
+            result = await this.getMetadataRemote(fileId);
         } else {
-            metadata = await this.getMetadataLocal(fileId);
+            result = await this.getMetadataLocal(fileId);
         }
-        if (metadata === null) {
+        if (result === null) {
             return null;
         }
+
+        let { metadata } = result;
 
         // If filterColumns is specified filter metadata columns
         if (filterColumns !== undefined && filterColumns.length > 0) {
@@ -281,21 +295,32 @@ class ApiService {
 
         // Save metadata
         this.openedFilesMetadata[fileId] = metadata;
+        // Update last modified time
+        file.lastModified = result.lastModified;
 
         return metadata;
     };
 
     private getMetadataLocal = async (
         fileId: string,
-    ): Promise<DatasetJsonMetadata | null> => {
+    ): Promise<{
+        metadata: DatasetJsonMetadata;
+        lastModified: number;
+    } | null> => {
         const result = await window.electron.getMetadata(fileId);
         return result;
     };
 
     private getMetadataRemote = async (
         fileId: string,
-    ): Promise<DatasetJsonMetadata | null> => {
-        let result: DatasetJsonMetadata | null;
+    ): Promise<{
+        metadata: DatasetJsonMetadata;
+        lastModified: number;
+    } | null> => {
+        let result: {
+            metadata: DatasetJsonMetadata;
+            lastModified: number;
+        } | null;
         const file = this.openedFiles.find((item) => item.fileId === fileId);
 
         if (file === undefined) {
@@ -314,10 +339,19 @@ class ApiService {
         );
 
         if ([200, 204].includes(requestResponse.status)) {
-            result = requestResponse.response as unknown as DatasetJsonMetadata;
+            const metadata =
+                requestResponse.response as unknown as DatasetJsonMetadata;
+            const lastModified = new Date(
+                metadata.datasetJSONCreationDateTime,
+            ).getTime();
+            result = {
+                metadata,
+                lastModified,
+            };
         } else {
             result = null;
         }
+
         return result;
     };
 
@@ -685,6 +719,41 @@ class ApiService {
         return false;
     };
 
+    // Reload file
+    public reloadFile = async (
+        fileId: string,
+    ): Promise<IOpenFileWithMetadata | null> => {
+        // Check if file is opened;
+        const file = this.openedFiles.find(
+            (fileItem) => fileItem.fileId === fileId,
+        );
+        if (file === undefined) {
+            throw new Error('Trying to reload file which is not opened');
+        }
+
+        // Clean loaded content for the file;
+        if (this.openedFilesMetadata[fileId] !== undefined) {
+            delete this.openedFilesMetadata[fileId];
+        }
+        if (this.openedFilesData[fileId] !== undefined) {
+            // Delete the current data. Request to reload it will come from the render
+            delete this.openedFilesData[fileId];
+        }
+        // Reload file
+        const newMetadata = await this.getMetadata(fileId);
+        if (newMetadata === null) {
+            throw new Error('Failed to reload file metadata');
+        } else {
+            this.openedFilesMetadata[fileId] = newMetadata;
+        }
+        // getMetadata updates last modified time
+        return {
+            ...file,
+            lastModified: file.lastModified || 0,
+            metadata: newMetadata,
+        };
+    };
+
     // Get all opened files
     public getOpenedFiles = (fileId?: string): ApiOpenedFileWithMetadata[] => {
         // If fileId is not specified return all opened files
@@ -986,6 +1055,14 @@ class ApiService {
         window.electron.removeFileOpenListener();
     };
 
+    public onFileChanged = (callback: (event: FileWatcherEvent) => void) => {
+        window.electron.onFileChanged(callback);
+    };
+
+    public removeFileChangedListener = () => {
+        window.electron.removeFileChangedListener();
+    };
+
     public writeToClipboard = (text: string) => {
         window.electron.writeToClipboard(text);
     };
@@ -1081,6 +1158,10 @@ class ApiService {
     // Miscellaneous
     public getPathForFile = (file: File): string => {
         return window.electron.pathForFile(file);
+    };
+
+    public isDevelopment = (): boolean => {
+        return window.electron.isDevelopment;
     };
 }
 

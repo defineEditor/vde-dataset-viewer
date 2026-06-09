@@ -28,13 +28,8 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import AppContext from 'renderer/utils/AppContext';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { IMask } from 'interfaces/store';
-import { closeModal } from 'renderer/redux/slices/ui';
-import {
-    saveMask,
-    selectMask,
-    deleteMask,
-    clearMask,
-} from 'renderer/redux/slices/data';
+import { closeModal, setMask } from 'renderer/redux/slices/ui';
+import { saveMask, deleteMask } from 'renderer/redux/slices/data';
 import { modals } from 'misc/constants';
 
 const styles = {
@@ -51,10 +46,11 @@ const styles = {
     },
     existingColumn: {
         backgroundColor: 'primary.main',
-        color: '#ffffff',
+        color: 'primary.contrastText',
     },
     nonExistingColumn: {
         backgroundColor: 'secondary.main',
+        color: 'secondary.contrastText',
     },
     editingListItem: {
         padding: '8px 16px',
@@ -95,13 +91,13 @@ const Mask: React.FC = () => {
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
 
     const metadata = apiService.getOpenedFileMetadata(currentFileId);
-    const columnNames = metadata?.columns.map((col) => col.name) || [];
+    const columnNames = metadata?.columns.map((col) => col.name) ?? [];
 
     const savedMasks = useAppSelector(
         (state) => state.data.maskData.savedMasks,
     );
     const currentMask = useAppSelector(
-        (state) => state.data.maskData.currentMask,
+        (state) => state.ui.control[currentFileId]?.mask,
     );
 
     const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
@@ -123,10 +119,10 @@ const Mask: React.FC = () => {
                 sticky,
                 columns: selectedColumns,
             };
-            dispatch(selectMask(mask));
+            dispatch(setMask({ fileId: currentFileId, mask }));
         }
         handleClose();
-    }, [dispatch, selectedColumns, sticky, handleClose]);
+    }, [dispatch, selectedColumns, sticky, handleClose, currentFileId]);
 
     const handleSelectMask = (mask: IMask) => {
         setSelectedColumns(mask.columns);
@@ -188,7 +184,7 @@ const Mask: React.FC = () => {
     };
 
     const handleReset = () => {
-        dispatch(clearMask());
+        dispatch(setMask({ fileId: currentFileId, mask: null }));
         handleClose();
     };
 
@@ -216,10 +212,16 @@ const Mask: React.FC = () => {
                     if (savedMasks[maskIndex]) {
                         event.preventDefault();
                         handleSelectMask(savedMasks[maskIndex]);
-                        dispatch(selectMask(savedMasks[maskIndex]));
+                        dispatch(
+                            setMask({
+                                fileId: currentFileId,
+                                mask: savedMasks[maskIndex],
+                            }),
+                        );
                         handleClose();
                     }
                 } else if (event.key === 's' && editingMaskId === null) {
+                    event.preventDefault();
                     handleApply();
                 }
             }
@@ -232,7 +234,14 @@ const Mask: React.FC = () => {
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [savedMasks, dispatch, handleClose, handleApply, editingMaskId]);
+    }, [
+        savedMasks,
+        dispatch,
+        handleClose,
+        handleApply,
+        editingMaskId,
+        currentFileId,
+    ]);
 
     return (
         <Dialog
@@ -240,7 +249,7 @@ const Mask: React.FC = () => {
             onClose={handleClose}
             maxWidth="md"
             fullWidth
-            PaperProps={{ sx: { ...styles.dialog } }}
+            slotProps={{ paper: { sx: { ...styles.dialog } } }}
         >
             <DialogTitle sx={styles.title}>Column Visibility</DialogTitle>
             <DialogContent>
@@ -264,11 +273,11 @@ const Mask: React.FC = () => {
                         options={columnNames}
                         value={selectedColumns}
                         onChange={(_, newValue) => setSelectedColumns(newValue)}
-                        renderTags={(value, getTagProps) =>
+                        renderValue={(value, getItemProps) =>
                             value.map((option, index) => (
                                 <Chip
                                     label={option}
-                                    {...getTagProps({ index })}
+                                    {...getItemProps({ index })}
                                     sx={
                                         columnNames.includes(option)
                                             ? styles.existingColumn
@@ -293,36 +302,46 @@ const Mask: React.FC = () => {
                                 }
                                 placeholder="Select columns to display"
                                 fullWidth
-                                InputProps={{
-                                    ...params.InputProps,
-                                    endAdornment: (
-                                        <>
-                                            {params.InputProps?.endAdornment}
-                                            {editingMaskId === null && (
-                                                <InputAdornment
-                                                    position="end"
-                                                    sx={styles.saveNewButton}
-                                                >
-                                                    <Tooltip title="Save new set (max 10)">
-                                                        <IconButton
-                                                            onClick={() =>
-                                                                handleSaveNew()
-                                                            }
-                                                            disabled={
-                                                                savedMasks.length >=
-                                                                    10 ||
-                                                                selectedColumns.length ===
-                                                                    0
-                                                            }
-                                                            edge="end"
-                                                        >
-                                                            <SaveIcon />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                </InputAdornment>
-                                            )}
-                                        </>
-                                    ),
+                                slotProps={{
+                                    ...(params.slotProps ?? {}),
+                                    input: {
+                                        ...(params.slotProps?.input ?? {}),
+                                        endAdornment: (
+                                            <>
+                                                {
+                                                    params.slotProps?.input
+                                                        ?.endAdornment
+                                                }
+                                                {editingMaskId === null && (
+                                                    <InputAdornment
+                                                        position="end"
+                                                        sx={
+                                                            styles.saveNewButton
+                                                        }
+                                                    >
+                                                        <Tooltip title="Save new set (max 10)">
+                                                            <span>
+                                                                <IconButton
+                                                                    onClick={() =>
+                                                                        handleSaveNew()
+                                                                    }
+                                                                    disabled={
+                                                                        savedMasks.length >=
+                                                                            10 ||
+                                                                        selectedColumns.length ===
+                                                                            0
+                                                                    }
+                                                                    edge="end"
+                                                                >
+                                                                    <SaveIcon />
+                                                                </IconButton>
+                                                            </span>
+                                                        </Tooltip>
+                                                    </InputAdornment>
+                                                )}
+                                            </>
+                                        ),
+                                    },
                                 }}
                             />
                         )}
@@ -395,9 +414,8 @@ const Mask: React.FC = () => {
                                         />
                                     </Box>
                                 ) : (
-                                    <>
+                                    <React.Fragment key={mask.id}>
                                         <ListItem
-                                            key={mask.id}
                                             onClick={() =>
                                                 handleSelectMask(mask)
                                             }
@@ -452,7 +470,7 @@ const Mask: React.FC = () => {
                                             />
                                         </ListItem>
                                         <Divider />
-                                    </>
+                                    </React.Fragment>
                                 ),
                             )}
                         </List>

@@ -16,14 +16,14 @@ const styles = {
     container: {
         height: '100%',
         width: '100%',
-        backgroundColor: '#FFF',
+        backgroundColor: 'background.paper',
     },
     loading: {
         position: 'fixed',
         top: '50%',
         left: '50%',
         display: 'flex',
-        backgroundColor: '#FFF',
+        backgroundColor: 'background.paper',
         flexDirection: 'column',
         transform: 'translate(-50%, -50%)',
         zIndex: 999,
@@ -31,7 +31,7 @@ const styles = {
     sponsored: {
         marginTop: '10px',
         fontSize: '14px',
-        color: '#888',
+        color: 'text.secondary',
         textAlign: 'center',
     },
     openButton: {
@@ -40,6 +40,15 @@ const styles = {
         marginRight: '4px',
         minWidth: 'auto',
         lineHeight: 1,
+    },
+    emptyCenter: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%',
+    },
+    rowAlignCenter: {
+        alignItems: 'center',
     },
 };
 
@@ -166,13 +175,8 @@ const DefineXml: React.FC = () => {
             );
         }
         return (
-            <Box
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                height="100%"
-            >
-                <Stack direction="row" alignItems="center">
+            <Box sx={styles.emptyCenter}>
+                <Stack direction="row" sx={styles.rowAlignCenter}>
                     <Button sx={styles.openButton} onClick={handleOpenDefine}>
                         Open file
                     </Button>

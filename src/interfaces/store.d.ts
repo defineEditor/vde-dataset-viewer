@@ -13,12 +13,19 @@ import {
 import { ParsedValidationReport } from 'interfaces/core.report';
 import { modals, ModalType, AllowedPathnames } from 'misc/constants';
 import { ConversionConfig } from 'interfaces/converter';
+import { ThemeModePreference, ThemePalette } from 'interfaces/theme';
 
 export interface IMask {
     name: string;
     id: string;
     columns: string[];
     sticky?: boolean;
+}
+
+export interface IIdColumnSet {
+    name: string;
+    id: string;
+    columns: string[];
 }
 
 export type ClipboardCopyFormat = 'tab' | 'csv' | 'json';
@@ -39,6 +46,9 @@ export interface SettingsViewer {
     copyFormat: ClipboardCopyFormat;
     showTypeIcons: boolean;
     copyWithHeaders: boolean;
+    showLabels: boolean;
+    enableProfiler: boolean;
+    autoReload: boolean;
 }
 
 export interface ISettings {
@@ -48,6 +58,9 @@ export interface ISettings {
     validator: SettingsValidator;
     other: {
         checkForUpdates: boolean;
+        colorMode: ThemeModePreference;
+        themePalette: ThemePalette;
+        compactMode: boolean;
         loadingAnimation: 'santa' | 'cat' | 'dog' | 'normal' | 'random';
         inEncoding:
             | 'default'
@@ -59,6 +72,8 @@ export interface ISettings {
             | 'ascii';
         dragoverAnimation: boolean;
         disableUiAnimation: boolean;
+        createLockFile: boolean;
+        lockFileFolderFilter: string;
     };
     compare: CompareSettings;
 }
@@ -74,11 +89,14 @@ export interface IUiModalAppUpdate extends IUiModalBase {
 
 export interface IUiModalGeneral extends IUiModalBase {
     type:
+        | typeof modals.COMMANDLINE
         | typeof modals.GOTO
         | typeof modals.DATASETINFO
         | typeof modals.FILTER
         | typeof modals.VARIABLEINFO
         | typeof modals.MASK
+        | typeof modals.SORTING
+        | typeof modals.IDCOLUMNS
         | typeof modals.VALIDATOR
         | typeof modals.SELECTCOMPARE;
     data: {};
@@ -140,6 +158,13 @@ export interface IUiControl {
         offsetX: number;
     };
     currentPage: number;
+    sorting: {
+        desc: boolean;
+        id: string;
+    }[];
+    idCols: string[];
+    mask: IMask | null;
+    showLabels?: boolean;
 }
 
 export interface IUiViewer {
@@ -220,6 +245,7 @@ export interface IUi {
     pathname: AllowedPathnames;
     currentFileId: string;
     zoomLevel: number;
+    appBarExpanded: boolean;
     viewer: IUiViewer;
     modals: IUiModal[];
     snackbar: IUiSnackbar;
@@ -235,6 +261,7 @@ export interface IUi {
     validationPage: IUiValidationPage;
     define: IUiDefine;
     compare: IUiCompare;
+    reloadRequested: boolean;
 }
 
 export interface IRecentFile {
@@ -291,10 +318,16 @@ export interface IData {
         }[];
         lastOptions: BasicFilter['options'];
         lastType: 'manual' | 'ui';
+        recentCommands: {
+            command: string;
+            date: number;
+        }[];
     };
     maskData: {
-        currentMask: IMask | null;
         savedMasks: IMask[];
+    };
+    idColumnData: {
+        savedSets: IIdColumnSet[];
     };
     converter: ConverterData;
     validator: ValidatorData;

@@ -19,12 +19,15 @@ const DatasetContainer: React.FC<{
     type: 'summary' | 'details' | 'rules';
 }> = ({ data = undefined, type }) => {
     const settings = useAppSelector((state) => state.settings.viewer);
+    const compactMode = useAppSelector(
+        (state) => state.settings.other.compactMode,
+    );
     const updatedSettings = {
         ...settings,
         showTypeIcons: false,
         dynamicRowHeight: true,
         hideRowNumbers: false,
-        showLabel: true,
+        showLabels: true,
     };
 
     // Measure width of the table
@@ -45,6 +48,7 @@ const DatasetContainer: React.FC<{
         1000,
         false,
         data,
+        compactMode,
     );
 
     // Update header with calculated widths

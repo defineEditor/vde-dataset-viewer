@@ -13,16 +13,15 @@ import AppContext from 'renderer/utils/AppContext';
 import { ApiOpenedFileWithMetadata } from 'interfaces/api';
 
 const styles = {
-    card: (theme) => ({
+    card: {
         width: 200,
         height: 150,
         backgroundColor: 'grey.200',
-        transition: 'background-color 0.3s',
         '&:hover': {
-            backgroundColor: `${theme.palette.primary.main}10`,
+            backgroundColor: 'action.hover',
         },
         position: 'relative',
-    }),
+    },
     label: {
         color: 'text.secondary',
         overflow: 'hidden',
@@ -70,6 +69,10 @@ const styles = {
         bottom: 24,
         right: 5,
     },
+    rowSpaceBetweenCenter: {
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
 };
 
 const DatasetCard: React.FC<{
@@ -115,11 +118,7 @@ const DatasetCard: React.FC<{
                 <Typography gutterBottom sx={styles.label}>
                     {label}
                 </Typography>
-                <Stack
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="center"
-                >
+                <Stack direction="row" sx={styles.rowSpaceBetweenCenter}>
                     <Typography variant="h5" component="div" sx={styles.name}>
                         {name}
                     </Typography>

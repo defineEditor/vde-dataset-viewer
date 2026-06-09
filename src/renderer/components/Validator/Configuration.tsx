@@ -26,7 +26,8 @@ const styles = {
         p: 2,
         height: '100%',
         flex: '1 1 auto',
-        backgroundColor: 'grey.100',
+        backgroundColor: 'background.paper',
+        userSelect: 'none',
     },
     validateActions: {
         m: 2,
@@ -34,7 +35,7 @@ const styles = {
     configSection: {
         mb: 2,
         border: 0,
-        backgroundColor: 'grey.100',
+        backgroundColor: 'background.paper',
     },
     configRow: {
         direction: 'row',
@@ -257,12 +258,7 @@ const ValidatorConfiguration: React.FC<ValidatorConfigurationProps> = ({
                 <Typography variant="h6" gutterBottom>
                     Standard Options
                 </Typography>
-                <Stack
-                    sx={styles.configRow}
-                    direction="row"
-                    spacing={2}
-                    alignItems="center"
-                >
+                <Stack sx={styles.configRow} direction="row" spacing={2}>
                     <TextField
                         select
                         name="standard"

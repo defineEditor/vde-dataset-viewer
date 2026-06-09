@@ -6,7 +6,8 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 const styles = {
     container: {
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
+        justifyContent: 'flex-start',
     },
     carousel: {
         display: 'flex',
@@ -50,13 +51,7 @@ const Carousel: React.FC<{
     };
 
     return (
-        <Stack
-            spacing={2}
-            direction="row"
-            alignItems="flex-start"
-            justifyContent="flex-start"
-            sx={styles.container}
-        >
+        <Stack spacing={2} direction="row" sx={styles.container}>
             {childrenArray.length > elementsToShow && (
                 <Button
                     sx={styles.slideButton}
