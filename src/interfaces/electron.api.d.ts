@@ -40,7 +40,10 @@ export interface ElectronApi {
         lastModified: number;
     } | null>;
     closeFile: (fileId: string, mode: 'local' | 'remote') => Promise<boolean>;
-    getMetadata: (fileId: string) => Promise<{
+    getMetadata: (
+        fileId: string,
+        forceReload?: boolean,
+    ) => Promise<{
         metadata: DatasetJsonMetadata;
         lastModified: number;
     } | null>;

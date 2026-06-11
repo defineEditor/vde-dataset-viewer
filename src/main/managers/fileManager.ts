@@ -328,6 +328,7 @@ class FileManager {
     public handleGetMetadata = async (
         _event: IpcMainInvokeEvent,
         fileId: string,
+        forceReload?: boolean,
     ): Promise<{
         metadata: DatasetJsonMetadata;
         lastModified: number;
@@ -341,7 +342,8 @@ class FileManager {
                             'dataset-json1.1',
                         );
                 } else {
-                    metadata = await this.openedFiles[fileId].getMetadata();
+                    metadata =
+                        await this.openedFiles[fileId].getMetadata(forceReload);
                 }
                 // Get last modified time
                 let filePath = '';

@@ -20,8 +20,8 @@ const writeToClipboard: ElectronApi['writeToClipboard'] = (text) =>
 const closeFile: ElectronApi['closeFile'] = (fileId, mode) =>
     ipcRenderer.invoke('main:closeFile', fileId, mode);
 
-const getMetadata: ElectronApi['getMetadata'] = (fileId) =>
-    ipcRenderer.invoke('read:getMetadata', fileId);
+const getMetadata: ElectronApi['getMetadata'] = (fileId, forceReload) =>
+    ipcRenderer.invoke('read:getMetadata', fileId, forceReload);
 
 const getData: ElectronApi['getData'] = (
     fileId,

@@ -253,6 +253,7 @@ class ApiService {
     public getMetadata = async (
         fileId: string,
         filterColumns?: string[],
+        forceReload?: boolean,
     ): Promise<DatasetJsonMetadata | null> => {
         const file = this.openedFiles.find(
             (fileItem) => fileItem.fileId === fileId,
@@ -273,7 +274,7 @@ class ApiService {
         if (file.mode === 'remote') {
             result = await this.getMetadataRemote(fileId);
         } else {
-            result = await this.getMetadataLocal(fileId);
+            result = await this.getMetadataLocal(fileId, forceReload);
         }
         if (result === null) {
             return null;
@@ -303,11 +304,12 @@ class ApiService {
 
     private getMetadataLocal = async (
         fileId: string,
+        forceReload?: boolean,
     ): Promise<{
         metadata: DatasetJsonMetadata;
         lastModified: number;
     } | null> => {
-        const result = await window.electron.getMetadata(fileId);
+        const result = await window.electron.getMetadata(fileId, forceReload);
         return result;
     };
 
@@ -740,7 +742,7 @@ class ApiService {
             delete this.openedFilesData[fileId];
         }
         // Reload file
-        const newMetadata = await this.getMetadata(fileId);
+        const newMetadata = await this.getMetadata(fileId, undefined, true);
         if (newMetadata === null) {
             throw new Error('Failed to reload file metadata');
         } else {

@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { WebContents } from 'electron';
+import { WebContents, dialog } from 'electron';
 import { FileWatcherEvent } from 'interfaces/common';
 
 interface WatchedFile {
@@ -38,6 +38,15 @@ class FileWatcher {
         try {
             watchedFile.watcher = fs.watch(filePath, () => {
                 this.handleFileChange(watchedFile);
+            });
+
+            // Handle watcher errors (file deleted, permission denied, etc.)
+            watchedFile.watcher.on('error', (error: NodeJS.ErrnoException) => {
+                dialog.showErrorBox(
+                    'File Watcher Error',
+                    `File watcher error for ${filePath}: ${error.message}`,
+                );
+                this.stopWatching(fileId);
             });
 
             this.watchedFiles.set(fileId, watchedFile);
