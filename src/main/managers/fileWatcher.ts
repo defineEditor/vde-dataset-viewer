@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { WebContents } from 'electron';
+import { WebContents, dialog } from 'electron';
 import { FileWatcherEvent } from 'interfaces/common';
 
 interface WatchedFile {
@@ -20,6 +20,7 @@ class FileWatcher {
         filePath: string,
         currentMtime: number,
         sender: WebContents,
+        debug?: boolean,
     ): void {
         // If already watching this file, stop it first
         if (this.watchedFiles.has(fileId)) {
@@ -38,6 +39,17 @@ class FileWatcher {
         try {
             watchedFile.watcher = fs.watch(filePath, () => {
                 this.handleFileChange(watchedFile);
+            });
+
+            // Handle watcher errors (file deleted, permission denied, etc.)
+            watchedFile.watcher.on('error', (error: NodeJS.ErrnoException) => {
+                if (debug) {
+                    dialog.showErrorBox(
+                        'File Watcher Error',
+                        `File watcher error for ${filePath}: ${error.message}`,
+                    );
+                }
+                this.stopWatching(fileId);
             });
 
             this.watchedFiles.set(fileId, watchedFile);

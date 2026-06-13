@@ -93,7 +93,8 @@ class FileManager {
             fileIdPrefix?: string;
             autoReload?: boolean;
             createLockFile?: boolean;
-            lockFileFolderFilter?: string;
+            lockFilePathFilter?: string;
+            debug?: boolean;
         },
     ): Promise<IOpenFile> => {
         const {
@@ -103,7 +104,8 @@ class FileManager {
             fileIdPrefix,
             autoReload,
             createLockFile,
-            lockFileFolderFilter,
+            lockFilePathFilter,
+            debug,
         } = fileSettings;
 
         if (folderPath) {
@@ -227,21 +229,16 @@ class FileManager {
         let lockFilePath: string | null = null;
         if (createLockFile && mode === 'local') {
             let shouldCreateLockFile = false;
-            if (
-                lockFileFolderFilter === '' ||
-                lockFileFolderFilter === undefined
-            ) {
+            if (lockFilePathFilter === '' || lockFilePathFilter === undefined) {
                 shouldCreateLockFile = true;
             } else {
                 try {
-                    const regex = new RegExp(lockFileFolderFilter);
-                    shouldCreateLockFile = regex.test(
-                        path.dirname(newFile.path),
-                    );
+                    const regex = new RegExp(lockFilePathFilter);
+                    shouldCreateLockFile = regex.test(newFile.path);
                 } catch (error) {
                     dialog.showErrorBox(
-                        'Invalid Lock File Folder Filter',
-                        `The provided lock file folder filter is not a valid regular expression: ${(error as Error).message}`,
+                        'Invalid Lock File Path Filter',
+                        `The provided lock file path filter is not a valid regular expression: ${(error as Error).message}`,
                     );
                 }
             }
@@ -260,6 +257,7 @@ class FileManager {
                 newFile.path,
                 lastModified,
                 event.sender,
+                debug,
             );
         }
 
@@ -328,6 +326,7 @@ class FileManager {
     public handleGetMetadata = async (
         _event: IpcMainInvokeEvent,
         fileId: string,
+        forceReload?: boolean,
     ): Promise<{
         metadata: DatasetJsonMetadata;
         lastModified: number;
@@ -341,7 +340,8 @@ class FileManager {
                             'dataset-json1.1',
                         );
                 } else {
-                    metadata = await this.openedFiles[fileId].getMetadata();
+                    metadata =
+                        await this.openedFiles[fileId].getMetadata(forceReload);
                 }
                 // Get last modified time
                 let filePath = '';

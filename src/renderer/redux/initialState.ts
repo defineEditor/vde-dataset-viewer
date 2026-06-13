@@ -24,7 +24,7 @@ export const settings: ISettings = {
         showTypeIcons: false,
         copyWithHeaders: false,
         showLabels: false,
-        enableProfiler: false,
+        debug: false,
         autoReload: false,
     },
     converter: {
@@ -56,7 +56,7 @@ export const settings: ISettings = {
         dragoverAnimation: true,
         disableUiAnimation: false,
         createLockFile: false,
-        lockFileFolderFilter: '',
+        lockFilePathFilter: '',
     },
     validator: {
         validatorPath: '',

@@ -309,7 +309,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         columns,
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
-        debugTable: settings.enableProfiler,
+        debugTable: settings.debug,
         columnResizeMode: 'onEnd',
         state: {
             sorting,
@@ -1064,7 +1064,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             startTime: number,
             commitTime: number,
         ) => {
-            if (!settings.enableProfiler) {
+            if (!settings.debug) {
                 return;
             }
 
@@ -1084,7 +1084,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             rows.length,
             tableData.fileId,
             visibleColumns.length,
-            settings.enableProfiler,
+            settings.debug,
         ],
     );
 
@@ -1123,7 +1123,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         <Box ref={viewContainerRef} style={styles.fullHeight}>
             {/* If height is not measured yet, do not render */}
             {tableHeight !== 0 &&
-                (settings.enableProfiler ? (
+                (settings.debug ? (
                     <Profiler id="DatasetView" onRender={handleProfileRender}>
                         {renderedView}
                     </Profiler>
