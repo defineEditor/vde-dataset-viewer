@@ -50,6 +50,9 @@ export const Other: React.FC<OtherProps> = ({ settings, onSettingChange }) => (
         >
             <MenuItem value="normal">Default</MenuItem>
             <MenuItem value="solarized">Solarized</MenuItem>
+            <MenuItem value="github">GitHub</MenuItem>
+            <MenuItem value="oneDark">One Dark</MenuItem>
+            <MenuItem value="dracula">Dracula</MenuItem>
         </TextField>
         <Stack spacing={0}>
             <FormControlLabel

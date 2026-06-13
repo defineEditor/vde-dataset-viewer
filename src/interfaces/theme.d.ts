@@ -1,7 +1,12 @@
 import { Theme } from '@mui/material/styles';
 
 export type ThemeModePreference = 'system' | 'light' | 'dark';
-export type ThemePalette = 'normal' | 'solarized';
+export type ThemePalette =
+    | 'normal'
+    | 'solarized'
+    | 'github'
+    | 'oneDark'
+    | 'dracula';
 
 export type ResolvedThemeMode = Exclude<ThemeModePreference, 'system'>;
 

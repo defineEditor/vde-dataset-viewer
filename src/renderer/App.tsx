@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
-import { createAppTheme } from 'renderer/utils/theme';
+import { createAppTheme } from 'renderer/theme/theme';
 import Main from 'renderer/components/Main';
 import Snackbar from 'renderer/components/Snackbar';
 import Modal from 'renderer/components/Modal';
