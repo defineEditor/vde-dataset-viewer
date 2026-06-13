@@ -270,16 +270,15 @@ export const Viewer: React.FC<ViewerProps> = ({
                     <FormControlLabel
                         control={
                             <Checkbox
-                                checked={settings.viewer.enableProfiler}
+                                checked={settings.viewer.debug}
                                 onChange={onSettingChange}
-                                name="viewer.enableProfiler"
+                                name="viewer.debug"
                             />
                         }
-                        label="Enable Profiler"
+                        label="Enable Debug Mode"
                     />
                     <Typography variant="caption" sx={styles.helperText}>
-                        When enabled, the table profiler is active, see Console
-                        -&gt; All Levels
+                        When enabled, debug mode is active with more messages
                     </Typography>
                 </Stack>
             </>

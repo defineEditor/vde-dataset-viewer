@@ -54,7 +54,7 @@ export const styles = {
     inputFieldLong: {
         maxWidth: '800px',
     },
-    lockFileFolderFilter: {
+    lockFilePathFilter: {
         mt: 2,
         maxWidth: '360px',
     },

@@ -20,6 +20,7 @@ class FileWatcher {
         filePath: string,
         currentMtime: number,
         sender: WebContents,
+        debug?: boolean,
     ): void {
         // If already watching this file, stop it first
         if (this.watchedFiles.has(fileId)) {
@@ -42,10 +43,12 @@ class FileWatcher {
 
             // Handle watcher errors (file deleted, permission denied, etc.)
             watchedFile.watcher.on('error', (error: NodeJS.ErrnoException) => {
-                dialog.showErrorBox(
-                    'File Watcher Error',
-                    `File watcher error for ${filePath}: ${error.message}`,
-                );
+                if (debug) {
+                    dialog.showErrorBox(
+                        'File Watcher Error',
+                        `File watcher error for ${filePath}: ${error.message}`,
+                    );
+                }
                 this.stopWatching(fileId);
             });
 

@@ -47,7 +47,7 @@ export interface SettingsViewer {
     showTypeIcons: boolean;
     copyWithHeaders: boolean;
     showLabels: boolean;
-    enableProfiler: boolean;
+    debug: boolean;
     autoReload: boolean;
 }
 
@@ -73,7 +73,7 @@ export interface ISettings {
         dragoverAnimation: boolean;
         disableUiAnimation: boolean;
         createLockFile: boolean;
-        lockFileFolderFilter: string;
+        lockFilePathFilter: string;
     };
     compare: CompareSettings;
 }
