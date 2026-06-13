@@ -8,6 +8,8 @@ import {
     WebContents,
 } from 'electron';
 import path from 'path';
+import FileManager from 'main/managers/fileManager';
+import getMemoryInfo from 'renderer/utils/getMemoryInfo';
 
 const resolveHtmlPath = (htmlFileName: string) => {
     if (process.env.NODE_ENV === 'development') {
@@ -88,4 +90,12 @@ const resizeWindow = (
     });
 };
 
-export { writeToClipboard, resolveHtmlPath, resizeWindow };
+const getDeveloperInfo = async (fileManager: FileManager) => {
+    // Get main process memory usage info
+    const mainInfo = await getMemoryInfo('main');
+    // Watchers info
+    const watchersInfo = fileManager.getWatcherStats();
+    return { ...mainInfo, ...watchersInfo };
+};
+
+export { writeToClipboard, resolveHtmlPath, resizeWindow, getDeveloperInfo };
