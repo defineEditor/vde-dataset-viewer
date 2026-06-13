@@ -21,16 +21,10 @@ import AppContext from 'renderer/utils/AppContext';
 import { useAppDispatch } from 'renderer/redux/hooks';
 import { openSnackbar } from 'renderer/redux/slices/ui';
 import { ConvertedFileInfo, FileInfo } from 'interfaces/common';
+import getHumanReadableSize from 'renderer/utils/getHumanReadableSize';
 
 const getFormattedDate = (timestamp: number): string => {
     return new Date(timestamp).toISOString().split('.')[0].replace('T', ' ');
-};
-
-const getHumanReadableSize = (bytes: number): string => {
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-    if (bytes === 0) return '0 B';
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return `${Math.round(bytes / 1024 ** i)} ${sizes[i]}`;
 };
 
 const styles = {

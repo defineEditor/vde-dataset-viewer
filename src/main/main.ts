@@ -8,7 +8,12 @@ import {
     IpcMainInvokeEvent,
 } from 'electron';
 import StoreManager from 'main/managers/storeManager';
-import { resolveHtmlPath, writeToClipboard, resizeWindow } from 'main/util';
+import {
+    resolveHtmlPath,
+    writeToClipboard,
+    resizeWindow,
+    getDeveloperInfo,
+} from 'main/utils';
 import {
     installExtension,
     REDUX_DEVTOOLS,
@@ -425,6 +430,10 @@ app.whenReady()
             if (_event.sender) {
                 _event.sender.stopFindInPage('clearSelection');
             }
+        });
+        ipcMain.handle('main:getDeveloperInfo', async () => {
+            const developerInfo = await getDeveloperInfo(fileManager);
+            return developerInfo;
         });
         mainWindow = await createWindow(
             fileToOpen,

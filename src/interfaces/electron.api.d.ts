@@ -121,6 +121,7 @@ export interface ElectronApi {
     closeDefineXml: (fileId: string) => Promise<boolean>;
     isWindows: boolean;
     isDevelopment: boolean;
+    getDeveloperInfo: () => Promise<{ [key: string]: string | number }>;
     resizeWindow: (
         position: 'top' | 'bottom' | 'left' | 'right',
     ) => Promise<void>;

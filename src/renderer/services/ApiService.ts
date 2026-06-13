@@ -1167,6 +1167,13 @@ class ApiService {
     public isDevelopment = (): boolean => {
         return window.electron.isDevelopment;
     };
+
+    public getDeveloperInfo = async (): Promise<{
+        [key: string]: string | number;
+    }> => {
+        const result = await window.electron.getDeveloperInfo();
+        return result;
+    };
 }
 
 export default ApiService;

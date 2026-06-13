@@ -12,6 +12,7 @@ export const modals = {
     IDCOLUMNS: 'IDCOLUMNS',
     VALIDATOR: 'VALIDATOR',
     SELECTCOMPARE: 'SELECTCOMPARE',
+    DEVELOPER: 'DEVELOPER',
 } as const;
 
 export const paths = {
