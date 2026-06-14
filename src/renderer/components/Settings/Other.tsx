@@ -53,6 +53,8 @@ export const Other: React.FC<OtherProps> = ({ settings, onSettingChange }) => (
             <MenuItem value="github">GitHub</MenuItem>
             <MenuItem value="oneDark">One Dark</MenuItem>
             <MenuItem value="dracula">Dracula</MenuItem>
+            <MenuItem value="matcha">Matcha</MenuItem>
+            <MenuItem value="catppuccin">Catppuccin</MenuItem>
         </TextField>
         <Stack spacing={0}>
             <FormControlLabel

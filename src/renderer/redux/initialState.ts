@@ -129,6 +129,7 @@ export const ui: IUi = {
         customSettings: {},
     },
     reloadRequested: false,
+    settingsTab: 0,
 };
 
 export const converter: ConverterData = {

@@ -17,7 +17,7 @@ import {
     ListSubheader,
 } from '@mui/material';
 import { Theme } from '@mui/material/styles';
-import { useAppTheme } from 'renderer/theme/theme';
+import { useAppTheme } from 'renderer/theme';
 import CloudIcon from '@mui/icons-material/Cloud';
 import CachedIcon from '@mui/icons-material/Cached';
 import WysiwygIcon from '@mui/icons-material/Wysiwyg';

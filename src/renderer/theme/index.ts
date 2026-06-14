@@ -11,58 +11,15 @@ import {
     ThemePalette,
     DensitySettings,
     AppTheme,
+    AppPaletteOptions,
 } from 'interfaces/theme';
 import { buildDefaultPalette } from 'renderer/theme/themes/defaultTheme';
 import { buildSolarizedPalette } from 'renderer/theme/themes/solarizedTheme';
 import { buildGitHubPalette } from 'renderer/theme/themes/githubTheme';
 import { buildoneDarkPalette } from 'renderer/theme/themes/oneDarkTheme';
 import { buildDraculaPalette } from 'renderer/theme/themes/draculaTheme';
-
-interface ThemeGradients {
-    tabStrip: string;
-    logo: string;
-}
-
-interface ThemeTablePalette {
-    header: string;
-    headerTextColor: string;
-    rowNumber: string;
-    highlightedCell: string;
-    annotatedCell: string;
-    annotatedBorder: string;
-    highlightedAnnotatedCell: string;
-    highlightedAnnotatedBorder: string;
-    pinShadow: string;
-    resizeHandle: string;
-}
-
-declare module '@mui/material/styles/createPalette' {
-    interface TypeBackground {
-        subtle: string;
-        chrome: string;
-        toolbar: string;
-    }
-
-    interface TypeText {
-        muted: string;
-    }
-
-    interface Palette {
-        gradients: ThemeGradients;
-        table: ThemeTablePalette;
-    }
-
-    interface PaletteOptions {
-        gradients?: Partial<ThemeGradients>;
-        table?: Partial<ThemeTablePalette>;
-        scrollbar?: {
-            thumb: string;
-            track: string;
-        };
-    }
-}
-
-type AppPaletteOptions = NonNullable<MuiThemeOptions['palette']>;
+import { buildMatchaPalette } from 'renderer/theme/themes/matchaTheme';
+import { buildCatppuccinPalette } from 'renderer/theme/themes/catppuccinTheme';
 
 const densityConfig: Record<ThemeDensity, DensitySettings> = {
     normal: {
@@ -116,6 +73,8 @@ const paletteBuilders: Record<
     github: buildGitHubPalette,
     oneDark: buildoneDarkPalette,
     dracula: buildDraculaPalette,
+    matcha: buildMatchaPalette,
+    catppuccin: buildCatppuccinPalette,
 };
 
 const buildPalette = (
@@ -166,7 +125,7 @@ export const createAppTheme = ({
             cssVariables: {
                 colorSchemeSelector: 'class',
             },
-            defaultColorScheme: 'dark',
+            defaultColorScheme: 'light',
             spacing: densitySettings.spacingUnit,
             shape: {
                 borderRadius: 8,

@@ -16,7 +16,7 @@ import {
     IUiControl,
     TableRowValue,
 } from 'interfaces/common';
-import { useAppTheme } from 'renderer/theme/theme';
+import { useAppTheme } from 'renderer/theme';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import {

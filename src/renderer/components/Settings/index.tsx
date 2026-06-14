@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { resetSettings, setSettings } from 'renderer/redux/slices/settings';
-import { openSnackbar } from 'renderer/redux/slices/ui';
+import { openSnackbar, setSettingsTab } from 'renderer/redux/slices/ui';
 import {
     resetValidatorInfo,
     setValidatorData,
@@ -31,7 +31,7 @@ import { Compare } from 'renderer/components/Settings/Compare';
 import { Other } from 'renderer/components/Settings/Other';
 
 const Settings: React.FC = () => {
-    const [tabIndex, setTabIndex] = useState(0);
+    const tabIndex = useAppSelector((state) => state.ui.settingsTab);
     const initialSettings = useAppSelector((state) => state.settings);
     const initialValidatorInfo = useAppSelector(
         (state) => state.data.validator.info,
@@ -51,7 +51,7 @@ const Settings: React.FC = () => {
         _event: React.SyntheticEvent,
         newValue: number,
     ) => {
-        setTabIndex(newValue);
+        dispatch(setSettingsTab(newValue));
     };
 
     const handleSave = React.useCallback(() => {

@@ -165,6 +165,9 @@ const styles = {
     highlightedCell: {
         backgroundColor: 'table.highlightedCell',
     },
+    highlightedPinnedCell: {
+        backgroundColor: 'table.highlightedPinnedCell',
+    },
     annotatedCell: {
         backgroundColor: 'table.annotatedCell',
         border: '1px solid',
@@ -463,9 +466,11 @@ const DatasetBodyCell: React.FC<{
               ? styles.highlightedAnnotatedCell
               : isAnnotated
                 ? styles.annotatedCell
-                : isHighlighted
-                  ? styles.highlightedCell
-                  : null,
+                : isHighlighted && (usePinningStyles || isRowNumber)
+                  ? styles.highlightedPinnedCell
+                  : isHighlighted
+                    ? styles.highlightedCell
+                    : null,
         cell.column.columnDef.meta?.style || null,
     ];
 

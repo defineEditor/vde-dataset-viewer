@@ -1,10 +1,36 @@
 import { alpha } from '@mui/material/styles';
+import { grey } from '@mui/material/colors';
 import type {
     Theme as MuiTheme,
     ThemeOptions as MuiThemeOptions,
 } from '@mui/material/styles';
 import { ResolvedThemeMode } from 'interfaces/theme';
-import { buildDefaultGrey } from './common';
+import { compositeOverBackground } from 'renderer/theme/themes/utils';
+
+const buildDefaultGrey = (mode: ResolvedThemeMode): Record<string, string> => {
+    const themeGrey = {} as Record<string, string>;
+
+    if (mode === 'dark') {
+        themeGrey[50] = grey[900];
+        themeGrey[100] = grey[800];
+        themeGrey[200] = grey[700];
+        themeGrey[300] = grey[600];
+        themeGrey[400] = grey[500];
+        themeGrey[500] = grey[400];
+        themeGrey[600] = grey[300];
+        themeGrey[700] = grey[200];
+        themeGrey[800] = grey[100];
+        themeGrey[900] = grey[50];
+        themeGrey.A100 = grey.A700;
+        themeGrey.A200 = grey.A400;
+        themeGrey.A400 = grey.A200;
+        themeGrey.A700 = grey.A100;
+        return themeGrey;
+    }
+
+    Object.assign(themeGrey, grey);
+    return themeGrey;
+};
 
 const createDefaultPalette = (
     theme: MuiTheme,
@@ -29,6 +55,11 @@ const createDefaultPalette = (
             highlightedCell: alpha(
                 theme.palette.info.main,
                 isDarkMode ? 0.32 : 0.22,
+            ),
+            highlightedPinnedCell: compositeOverBackground(
+                theme.palette.info.main,
+                isDarkMode ? 0.32 : 0.22,
+                theme.palette.background.default,
             ),
             annotatedCell: alpha(
                 theme.palette.warning.main,
@@ -63,7 +94,7 @@ const createDefaultPalette = (
         background: {
             subtle: subtleSurface,
             chrome: chromeSurface,
-            toolbar: theme.palette.background.paper,
+            toolbar: theme.vars?.palette.background.paper,
         },
         scrollbar: {
             thumb: alpha(theme.palette.grey[900], isDarkMode ? 0.36 : 0.24),

@@ -1,4 +1,4 @@
-import { Theme } from '@mui/material/styles';
+import { Theme, ThemeOptions } from '@mui/material/styles';
 
 export type ThemeModePreference = 'system' | 'light' | 'dark';
 export type ThemePalette =
@@ -6,7 +6,9 @@ export type ThemePalette =
     | 'solarized'
     | 'github'
     | 'oneDark'
-    | 'dracula';
+    | 'dracula'
+    | 'matcha'
+    | 'catppuccin';
 
 export type ResolvedThemeMode = Exclude<ThemeModePreference, 'system'>;
 
@@ -35,4 +37,50 @@ export interface DensitySettings {
 
 export interface AppTheme extends Theme {
     densitySettings: DensitySettings;
+}
+
+export interface ThemeGradients {
+    tabStrip: string;
+}
+
+export interface ThemeTablePalette {
+    header: string;
+    headerTextColor: string;
+    rowNumber: string;
+    highlightedCell: string;
+    highlightedPinnedCell: string;
+    annotatedCell: string;
+    annotatedBorder: string;
+    highlightedAnnotatedCell: string;
+    highlightedAnnotatedBorder: string;
+    pinShadow: string;
+    resizeHandle: string;
+}
+
+export type AppPaletteOptions = NonNullable<ThemeOptions['palette']>;
+
+declare module '@mui/material/styles/createPalette' {
+    interface TypeBackground {
+        subtle: string;
+        chrome: string;
+        toolbar: string;
+    }
+
+    interface TypeText {
+        muted: string;
+    }
+
+    interface Palette {
+        gradients: ThemeGradients;
+        table: ThemeTablePalette;
+    }
+
+    interface PaletteOptions {
+        gradients?: Partial<ThemeGradients>;
+        table?: Partial<ThemeTablePalette>;
+        scrollbar?: {
+            thumb: string;
+            track: string;
+        };
+    }
 }
