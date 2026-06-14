@@ -161,7 +161,7 @@ const getDeveloperInfo: ElectronApi['getDeveloperInfo'] = async () => {
     const renderInfo = await getMemoryInfo('renderer');
     const mainInfo = await ipcRenderer.invoke('main:getDeveloperInfo');
     const rendererInfo = {
-        isDev: isDevelopment,
+        isDev: String(isDevelopment),
         ...renderInfo,
     };
     return { ...rendererInfo, ...mainInfo };
