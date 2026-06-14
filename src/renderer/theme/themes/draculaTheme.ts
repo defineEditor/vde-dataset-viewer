@@ -4,7 +4,7 @@ import type {
     ThemeOptions as MuiThemeOptions,
 } from '@mui/material/styles';
 import { ResolvedThemeMode } from 'interfaces/theme';
-import { buildDefaultGrey } from './common';
+import { buildDefaultGrey } from 'renderer/theme/themes/common';
 
 const createDraculaPalette = (
     mode: ResolvedThemeMode,
@@ -21,6 +21,7 @@ const createDraculaPalette = (
     const textSecondary = isDarkMode ? '#6272a4' : '#44475a';
     const subtleSurface = isDarkMode ? '#343746' : '#f5f5f7';
     const chromeSurface = isDarkMode ? '#21222c' : '#ececf2';
+    const toolbarSurface = isDarkMode ? '#2e2b40' : '#ffffff';
     const backgroundDefault = isDarkMode ? '#282a36' : '#ffffff';
     const edgeColor = isDarkMode ? '#44475a' : '#d5d7df';
 
@@ -37,12 +38,10 @@ const createDraculaPalette = (
             tabStrip: isDarkMode
                 ? 'radial-gradient(circle farthest-corner at bottom center, #343746, #282a36)'
                 : 'radial-gradient(circle farthest-corner at bottom center, #f5f5f7, #ffffff)',
-            logo: isDarkMode
-                ? 'radial-gradient(circle farthest-corner at right, #bd93f9, #21222c)'
-                : 'radial-gradient(circle farthest-corner at right, #6f42c1, #ffffff)',
         },
         table: {
             header: subtleSurface,
+            headerTextColor: primary,
             rowNumber: subtleSurface,
             highlightedCell: alpha(info, isDarkMode ? 0.22 : 0.14),
             annotatedCell: alpha(warning, isDarkMode ? 0.24 : 0.14),
@@ -62,6 +61,7 @@ const createDraculaPalette = (
             paper: backgroundDefault,
             subtle: subtleSurface,
             chrome: chromeSurface,
+            toolbar: toolbarSurface,
         },
         scrollbar: {
             thumb: alpha(edgeColor, isDarkMode ? 0.28 : 0.14),

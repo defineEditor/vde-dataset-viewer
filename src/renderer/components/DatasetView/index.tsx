@@ -76,7 +76,7 @@ interface DatasetViewProps {
     settings: TableSettings;
     isLoading?: boolean;
     handleContextMenu?: (
-        event: React.MouseEvent<HTMLTableCellElement, MouseEvent>,
+        event: React.MouseEvent<HTMLElement, MouseEvent>,
         columnId: string,
         value: TableRowValue,
         isHeader?: boolean,
@@ -101,22 +101,12 @@ const createPinningStyle = (
     zIndex = 1,
 ): PinningStyle => {
     const isPinned = column.getIsPinned();
-    const isLastLeftPinnedColumn =
-        isPinned === 'left' && column.getIsLastColumn('left');
-    const isFirstRightPinnedColumn =
-        isPinned === 'right' && column.getIsFirstColumn('right');
 
-    return (theme) => ({
+    return () => ({
         backgroundColor,
-        boxShadow: isLastLeftPinnedColumn
-            ? `-4px 0 4px -4px ${theme.vars?.palette.table.pinShadow} inset`
-            : isFirstRightPinnedColumn
-              ? `4px 0 4px -4px ${theme.vars?.palette.table.pinShadow} inset`
-              : undefined,
         left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
         right:
             isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
-        opacity: isPinned ? 0.98 : 1,
         position: isPinned ? 'sticky' : 'relative',
         zIndex,
     });

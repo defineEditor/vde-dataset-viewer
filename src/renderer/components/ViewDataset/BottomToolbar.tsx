@@ -17,7 +17,7 @@ const styles = {
     container: {
         width: '100%',
         display: 'flex',
-        backgroundColor: 'background.paper',
+        backgroundColor: 'background.toolbar',
     },
     mainStack: {
         width: '100%',

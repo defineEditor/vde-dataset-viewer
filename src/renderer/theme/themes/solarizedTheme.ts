@@ -37,12 +37,10 @@ const createSolarizedPalette = (
             tabStrip: isDarkMode
                 ? 'radial-gradient(circle farthest-corner at bottom center, #0f3b46, #002b36)'
                 : 'radial-gradient(circle farthest-corner at bottom center, #fdf6e3, #eee8d5)',
-            logo: isDarkMode
-                ? 'radial-gradient(circle farthest-corner at right, #007e9d, #073642)'
-                : 'radial-gradient(circle farthest-corner at right, #93a1a1, #fdf6e3)',
         },
         table: {
             header: subtleSurface,
+            headerTextColor: textPrimary,
             rowNumber: subtleSurface,
             highlightedCell: alpha(info, isDarkMode ? 0.32 : 0.22),
             annotatedCell: alpha(warning, isDarkMode ? 0.26 : 0.18),
@@ -65,6 +63,7 @@ const createSolarizedPalette = (
             paper: backgroundDefault,
             subtle: subtleSurface,
             chrome: chromeSurface,
+            toolbar: backgroundDefault,
         },
         scrollbar: {
             thumb: alpha(edgeColor, isDarkMode ? 0.36 : 0.24),

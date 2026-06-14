@@ -25,6 +25,7 @@ interface ThemeGradients {
 
 interface ThemeTablePalette {
     header: string;
+    headerTextColor: string;
     rowNumber: string;
     highlightedCell: string;
     annotatedCell: string;
@@ -39,6 +40,7 @@ declare module '@mui/material/styles/createPalette' {
     interface TypeBackground {
         subtle: string;
         chrome: string;
+        toolbar: string;
     }
 
     interface TypeText {

@@ -37,12 +37,10 @@ const createoneDarkPalette = (
             tabStrip: isDarkMode
                 ? 'radial-gradient(circle farthest-corner at bottom center, #2c313a, #282c34)'
                 : 'radial-gradient(circle farthest-corner at bottom center, #f3f5f7, #fafbfc)',
-            logo: isDarkMode
-                ? 'radial-gradient(circle farthest-corner at right, #61afef, #21252b)'
-                : 'radial-gradient(circle farthest-corner at right, #2c6dd8, #fafbfc)',
         },
         table: {
             header: subtleSurface,
+            headerTextColor: textPrimary,
             rowNumber: subtleSurface,
             highlightedCell: alpha(info, isDarkMode ? 0.28 : 0.18),
             annotatedCell: alpha(warning, isDarkMode ? 0.24 : 0.14),
@@ -62,6 +60,7 @@ const createoneDarkPalette = (
             paper: backgroundDefault,
             subtle: subtleSurface,
             chrome: chromeSurface,
+            toolbar: backgroundDefault,
         },
         scrollbar: {
             thumb: alpha(edgeColor, isDarkMode ? 0.28 : 0.14),

@@ -43,6 +43,8 @@ const getContainerStyle =
             userSelect: 'none',
             scrollbarColor: `${theme.vars?.palette.scrollbar.thumb} ${theme.vars?.palette.scrollbar.track}`,
             borderRadius: '0px',
+            contain: 'layout style paint',
+            willChange: 'transform',
         };
         if (settings.width) {
             result.width = `${settings.width}px`;
@@ -107,6 +109,7 @@ const styles = {
         justifyContent: 'center',
         width: '100%',
         backgroundColor: 'table.header',
+        color: 'table.headerTextColor',
     }),
     tableHeaderLabel: (theme) => ({
         width: '100%',

@@ -21,12 +21,10 @@ const createDefaultPalette = (
             tabStrip: isDarkMode
                 ? 'radial-gradient(circle farthest-corner at bottom center, #263238, #37474f30)'
                 : 'radial-gradient(circle farthest-corner at bottom center, #eeeeee, #e5e4e4)',
-            logo: isDarkMode
-                ? 'radial-gradient(circle farthest-corner at right,#757575,#bdbdbd)'
-                : 'radial-gradient(circle farthest-corner at right,#eeeeee,#c4c4c4)',
         },
         table: {
             header: subtleSurface,
+            headerTextColor: theme.palette.text.primary,
             rowNumber: subtleSurface,
             highlightedCell: alpha(
                 theme.palette.info.main,
@@ -65,6 +63,7 @@ const createDefaultPalette = (
         background: {
             subtle: subtleSurface,
             chrome: chromeSurface,
+            toolbar: theme.palette.background.paper,
         },
         scrollbar: {
             thumb: alpha(theme.palette.grey[900], isDarkMode ? 0.36 : 0.24),

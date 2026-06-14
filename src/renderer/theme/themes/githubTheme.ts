@@ -37,12 +37,10 @@ const createGitHubPalette = (
             tabStrip: isDarkMode
                 ? 'radial-gradient(circle farthest-corner at bottom center, #161b22, #0d1117)'
                 : 'radial-gradient(circle farthest-corner at bottom center, #f6f8fa, #ffffff)',
-            logo: isDarkMode
-                ? 'radial-gradient(circle farthest-corner at right, #58a6ff, #0d1117)'
-                : 'radial-gradient(circle farthest-corner at right, #0969da, #ffffff)',
         },
         table: {
             header: subtleSurface,
+            headerTextColor: textPrimary,
             rowNumber: subtleSurface,
             highlightedCell: alpha(info, isDarkMode ? 0.28 : 0.18),
             annotatedCell: alpha(warning, isDarkMode ? 0.26 : 0.16),
@@ -65,6 +63,7 @@ const createGitHubPalette = (
             paper: backgroundDefault,
             subtle: subtleSurface,
             chrome: chromeSurface,
+            toolbar: backgroundDefault,
         },
         scrollbar: {
             thumb: alpha(edgeColor, isDarkMode ? 0.32 : 0.18),
