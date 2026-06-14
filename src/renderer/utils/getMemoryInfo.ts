@@ -6,7 +6,7 @@ const getMemoryInfo = async (id: string) => {
     // Get renderer process memory usage info for each opened window
     const memInfo = await process.getProcessMemoryInfo();
     // Convert heap sizes to human-readable format
-    const developerInfo = {};
+    const developerInfo: Record<string, string> = {};
     Object.keys(heapInfo).forEach((key) => {
         if (Object.prototype.hasOwnProperty.call(heapInfo, key)) {
             developerInfo[`${id}-${key}`] = getHumanReadableSize(

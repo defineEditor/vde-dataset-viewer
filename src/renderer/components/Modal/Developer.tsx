@@ -103,8 +103,8 @@ const getDeveloperInfo = async (
         datasetJSONCreationDateTime: new Date().toISOString(),
         datasetJSONVersion: '1.1',
         records: data.length,
-        name: `unique_values`,
-        label: 'Unique values',
+        name: `developer_info`,
+        label: 'Developer Information',
         columns: [
             {
                 itemOID: 'name',
@@ -125,12 +125,12 @@ const getDeveloperInfo = async (
         {
             id: 'name',
             label: 'Name',
-            size: 200,
+            size: 300,
         },
         {
             id: 'value',
             label: 'Value',
-            size: containerWidth - 200 - scrollbarWidth,
+            size: Math.max(100, containerWidth - 300 - scrollbarWidth),
         },
     ];
 
@@ -187,7 +187,7 @@ const Developer: React.FC<IUiModal> = (props: IUiModal) => {
             <DialogTitle sx={styles.title}>
                 <Stack direction="row" sx={styles.titleStack}>
                     <Typography variant="h6" sx={styles.label}>
-                        Dataset Information
+                        Developer Information
                     </Typography>
                 </Stack>
             </DialogTitle>
