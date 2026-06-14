@@ -1,7 +1,6 @@
 import React from 'react';
 import {
     AppBar,
-    Avatar,
     Box,
     Divider,
     Drawer,
@@ -10,6 +9,7 @@ import {
     ListItemButton,
     ListItemIcon,
     ListItemText,
+    SvgIcon,
     Toolbar,
     Tooltip,
     Typography,
@@ -17,7 +17,7 @@ import {
     ListSubheader,
 } from '@mui/material';
 import { Theme } from '@mui/material/styles';
-import { useAppTheme } from 'renderer/utils/theme';
+import { useAppTheme } from 'renderer/theme';
 import CloudIcon from '@mui/icons-material/Cloud';
 import CachedIcon from '@mui/icons-material/Cached';
 import WysiwygIcon from '@mui/icons-material/Wysiwyg';
@@ -82,16 +82,15 @@ const styles = {
         overflow: 'auto',
         flexDirection: 'column',
     },
-    logo: (theme: Theme) => ({
+    logo: {
         width: 32,
         height: 32,
         marginTop: '3px',
         ml: 1,
-        fontSize: 16,
-        fontWeight: 700,
         color: 'grey.700',
-        background: theme.vars?.palette.gradients.logo,
-    }),
+        borderRadius: 1,
+        p: 0.5,
+    },
     drawerList: {
         py: 0,
     },
@@ -117,7 +116,7 @@ const styles = {
     appBar: (theme: Theme, navigationWidth: number) => ({
         width: '100%',
         ml: `${navigationWidth}px`,
-        backgroundColor: 'background.paper',
+        backgroundColor: 'background.toolbar',
         color: 'text.primary',
         borderBottom: '1px solid',
         borderColor: 'divider',
@@ -150,7 +149,7 @@ const styles = {
             width: navigationWidth,
             boxSizing: 'border-box',
             overflowX: 'hidden',
-            backgroundColor: 'background.paper',
+            backgroundColor: 'background.toolbar',
             borderRight: '1px solid',
             borderColor: 'divider',
             transition: theme.transitions.create('width', {
@@ -291,7 +290,35 @@ const NAVIGATION: NavigationEntry[] = [
 ];
 
 const Logo: React.FC = () => {
-    return <Avatar sx={styles.logo}>{'{ ; }'}</Avatar>;
+    return (
+        <SvgIcon sx={styles.logo}>
+            <path
+                d="M 8 4.5 C 5.5 4.5 5.5 8 5.5 9.5 C 5.5 11 4 12 4 12 C 4 12 5.5 13 5.5 14.5 C 5.5 16 5.5 19.5 8 19.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+            <path
+                d="M 16 4.5 C 18.5 4.5 18.5 8 18.5 9.5 C 18.5 11 20 12 20 12 C 20 12 18.5 13 18.5 14.5 C 18.5 16 18.5 19.5 16 19.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+            <circle cx="12" cy="7.5" r="1.25" fill="currentColor" />
+            <rect
+                x="10.75"
+                y="11"
+                width="2.5"
+                height="5"
+                rx="1"
+                fill="currentColor"
+            />
+        </SvgIcon>
+    );
 };
 
 const Toolpad: React.FC<ToolpadProps> = ({

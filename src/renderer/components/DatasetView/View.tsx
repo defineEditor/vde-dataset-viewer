@@ -43,6 +43,8 @@ const getContainerStyle =
             userSelect: 'none',
             scrollbarColor: `${theme.vars?.palette.scrollbar.thumb} ${theme.vars?.palette.scrollbar.track}`,
             borderRadius: '0px',
+            contain: 'layout style paint',
+            willChange: 'transform',
         };
         if (settings.width) {
             result.width = `${settings.width}px`;
@@ -107,6 +109,7 @@ const styles = {
         justifyContent: 'center',
         width: '100%',
         backgroundColor: 'table.header',
+        color: 'table.headerTextColor',
     }),
     tableHeaderLabel: (theme) => ({
         width: '100%',
@@ -162,6 +165,9 @@ const styles = {
     highlightedCell: {
         backgroundColor: 'table.highlightedCell',
     },
+    highlightedPinnedCell: {
+        backgroundColor: 'table.highlightedPinnedCell',
+    },
     annotatedCell: {
         backgroundColor: 'table.annotatedCell',
         border: '1px solid',
@@ -214,6 +220,9 @@ const styles = {
         fontSize: '16px',
         color: 'grey.600',
         ml: '4px',
+    },
+    selectAllIcon: {
+        color: 'grey.600',
     },
     squareIconButton: (theme) => ({
         height: theme.densitySettings.table.headerHeight,
@@ -322,7 +331,7 @@ const DatasetHeaderCell: React.FC<{
                             handleMouseDown(null, null);
                         }}
                     >
-                        <SelectAllIcon />
+                        <SelectAllIcon sx={styles.selectAllIcon} />
                     </IconButton>
                 </Tooltip>
             ) : (
@@ -460,9 +469,11 @@ const DatasetBodyCell: React.FC<{
               ? styles.highlightedAnnotatedCell
               : isAnnotated
                 ? styles.annotatedCell
-                : isHighlighted
-                  ? styles.highlightedCell
-                  : null,
+                : isHighlighted && (usePinningStyles || isRowNumber)
+                  ? styles.highlightedPinnedCell
+                  : isHighlighted
+                    ? styles.highlightedCell
+                    : null,
         cell.column.columnDef.meta?.style || null,
     ];
 

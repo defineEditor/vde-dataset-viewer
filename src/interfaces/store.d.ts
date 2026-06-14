@@ -263,6 +263,7 @@ export interface IUi {
     define: IUiDefine;
     compare: IUiCompare;
     reloadRequested: boolean;
+    settingsTab: number;
 }
 
 export interface IRecentFile {
