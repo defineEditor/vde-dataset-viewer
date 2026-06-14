@@ -10,6 +10,7 @@ import {
     FileWatcherEvent,
 } from 'interfaces/common';
 import { ElectronApi, Channels } from 'interfaces/electron.api';
+import getMemoryInfo from 'renderer/utils/getMemoryInfo';
 
 const openFile: ElectronApi['openFile'] = (mode, fileSettings) =>
     ipcRenderer.invoke('main:openFile', mode, fileSettings);
@@ -156,6 +157,16 @@ const isWindows: ElectronApi['isWindows'] = process.platform === 'win32';
 const isDevelopment: ElectronApi['isDevelopment'] =
     process.env.NODE_ENV === 'development';
 
+const getDeveloperInfo: ElectronApi['getDeveloperInfo'] = async () => {
+    const renderInfo = await getMemoryInfo('renderer');
+    const mainInfo = await ipcRenderer.invoke('main:getDeveloperInfo');
+    const rendererInfo = {
+        isDev: isDevelopment,
+        ...renderInfo,
+    };
+    return { ...rendererInfo, ...mainInfo };
+};
+
 const startTask: ElectronApi['startTask'] = (task) =>
     ipcRenderer.invoke('main:startTask', task);
 
@@ -248,6 +259,7 @@ contextBridge.exposeInMainWorld('electron', {
     downloadValidationReport,
     isWindows,
     isDevelopment,
+    getDeveloperInfo,
     startTask,
     stopTask,
     onTaskProgress,

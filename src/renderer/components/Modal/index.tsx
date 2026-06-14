@@ -3,6 +3,7 @@ import { useAppSelector } from 'renderer/redux/hooks';
 import CommandLine from 'renderer/components/Modal/CommandLine';
 import GoTo from 'renderer/components/Modal/GoTo';
 import DatasetInfo from 'renderer/components/Modal/DatasetInfo';
+import Developer from 'renderer/components/Modal/Developer';
 import VariableInfo from 'renderer/components/Modal/VariableInfo';
 import Filter from 'renderer/components/Modal/Filter';
 import AppUpdate from 'renderer/components/Modal/AppUpdate';
@@ -30,6 +31,7 @@ const MODAL_COMPONENTS = {
     [modalNames.SORTING]: Sorting,
     [modalNames.VALIDATOR]: Validator,
     [modalNames.SELECTCOMPARE]: SelectCompare,
+    [modalNames.DEVELOPER]: Developer,
 };
 
 const ModalRoot: React.FC = () => {

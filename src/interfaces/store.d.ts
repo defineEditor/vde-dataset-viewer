@@ -98,7 +98,8 @@ export interface IUiModalGeneral extends IUiModalBase {
         | typeof modals.SORTING
         | typeof modals.IDCOLUMNS
         | typeof modals.VALIDATOR
-        | typeof modals.SELECTCOMPARE;
+        | typeof modals.SELECTCOMPARE
+        | typeof modals.DEVELOPER;
     data: {};
 }
 

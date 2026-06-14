@@ -128,8 +128,7 @@ const UniqueValues: React.FC<{
     // Transform counts object into array for table
     const data = useMemo(() => {
         const entries = Object.entries(counts);
-        let result = entries.map(([value, count], index) => ({
-            '#': index + 1,
+        let result = entries.map(([value, count]) => ({
             value,
             count,
             percentage: (count / totalRecords) * 100,

@@ -160,6 +160,13 @@ class FileWatcher {
     public getWatchedFileIds(): string[] {
         return Array.from(this.watchedFiles.keys());
     }
+
+    // Get list of watched file paths
+    public getWatchedFilePaths(): string[] {
+        return Array.from(this.watchedFiles.values()).map(
+            (watchedFile) => watchedFile.filePath,
+        );
+    }
 }
 
 export default FileWatcher;

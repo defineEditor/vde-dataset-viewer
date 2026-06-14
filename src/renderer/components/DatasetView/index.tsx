@@ -73,14 +73,14 @@ const styles = {
 
 interface DatasetViewProps {
     tableData: ITableData;
-    isLoading: boolean;
-    handleContextMenu: (
+    settings: TableSettings;
+    isLoading?: boolean;
+    handleContextMenu?: (
         event: React.MouseEvent<HTMLTableCellElement, MouseEvent>,
         columnId: string,
         value: TableRowValue,
         isHeader?: boolean,
     ) => void;
-    settings: TableSettings;
     currentPage?: number;
     currentMask?: IMask | null;
     annotatedCells?: Map<
@@ -124,8 +124,8 @@ const createPinningStyle = (
 
 const DatasetView: React.FC<DatasetViewProps> = ({
     tableData,
-    isLoading,
-    handleContextMenu,
+    isLoading = false,
+    handleContextMenu = () => {},
     settings,
     currentPage = 0,
     currentMask = null,
@@ -204,7 +204,10 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             return headerCell;
         });
         // Add row number column if not present
-        if (!result.find((col) => col.accessorKey === '#')) {
+        if (
+            !settings.hideRowNumbers &&
+            !result.find((col) => col.accessorKey === '#')
+        ) {
             result.unshift({
                 accessorKey: '#',
                 header: '#',

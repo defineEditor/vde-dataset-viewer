@@ -600,6 +600,17 @@ class FileManager {
         const filesInfo = await Promise.all(filesInfoPromises);
         return filesInfo;
     };
+
+    public getWatcherStats(): { [key: string]: string } {
+        const watchedFilePaths = this.fileWatcher.getWatchedFilePaths();
+        const stats: { [key: string]: string } = {
+            totalWatchedFiles: watchedFilePaths.length.toString(),
+        };
+        watchedFilePaths.forEach((filePath, index) => {
+            stats[`watchedFile_${index}`] = filePath;
+        });
+        return stats;
+    }
 }
 
 export default FileManager;
