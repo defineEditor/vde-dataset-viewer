@@ -60,7 +60,7 @@ const createGitHubPalette = (
     const subtleSurface = isDarkMode ? themeGrey[200] : themeGrey[100];
     const chromeSurface = themeGrey[200];
     const backgroundDefault = themeGrey[50];
-    const edgeColor = themeGrey[300];
+    const edgeColor = themeGrey[400];
 
     return {
         primary: { main: primary },
@@ -109,8 +109,8 @@ const createGitHubPalette = (
             toolbar: backgroundDefault,
         },
         scrollbar: {
-            thumb: alpha(edgeColor, isDarkMode ? 0.32 : 0.18),
-            track: alpha(edgeColor, isDarkMode ? 0.12 : 0.06),
+            thumb: alpha(themeGrey[400], isDarkMode ? 0.92 : 0.88),
+            track: alpha(edgeColor, isDarkMode ? 0.26 : 0.16),
         },
     };
 };

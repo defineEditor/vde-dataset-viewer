@@ -109,7 +109,7 @@ const createMatchaPalette = (
             toolbar: backgroundDefault,
         },
         scrollbar: {
-            thumb: alpha(edgeColor, isDarkMode ? 0.36 : 0.24),
+            thumb: alpha(edgeColor, isDarkMode ? 0.76 : 0.74),
             track: alpha(edgeColor, isDarkMode ? 0.12 : 0.08),
         },
     };

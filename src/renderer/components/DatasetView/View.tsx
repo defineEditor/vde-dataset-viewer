@@ -221,6 +221,9 @@ const styles = {
         color: 'grey.600',
         ml: '4px',
     },
+    selectAllIcon: {
+        color: 'grey.600',
+    },
     squareIconButton: (theme) => ({
         height: theme.densitySettings.table.headerHeight,
         aspectRatio: '1 / 1',
@@ -328,7 +331,7 @@ const DatasetHeaderCell: React.FC<{
                             handleMouseDown(null, null);
                         }}
                     >
-                        <SelectAllIcon />
+                        <SelectAllIcon sx={styles.selectAllIcon} />
                     </IconButton>
                 </Tooltip>
             ) : (

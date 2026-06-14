@@ -107,8 +107,8 @@ const createDraculaPalette = (
             toolbar: toolbarSurface,
         },
         scrollbar: {
-            thumb: alpha(edgeColor, isDarkMode ? 0.28 : 0.14),
-            track: alpha(edgeColor, isDarkMode ? 0.1 : 0.04),
+            thumb: alpha(themeGrey[400], isDarkMode ? 0.78 : 0.79),
+            track: alpha(edgeColor, isDarkMode ? 0.2 : 0.24),
         },
     };
 };
