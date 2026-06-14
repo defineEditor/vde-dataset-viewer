@@ -70,6 +70,8 @@ const Header: React.FC = () => {
 
     const isModalOpen = useAppSelector((state) => state.ui.modals?.length > 0);
 
+    const isDebugMode = useAppSelector((state) => state.settings.viewer.debug);
+
     const openFiles = apiService.getOpenedFiles(currentFileId);
 
     const dataset = openFiles.length === 1 ? openFiles[0] : null;
@@ -461,20 +463,22 @@ const Header: React.FC = () => {
                     />
                 </IconButton>
             </Tooltip>
-            <Tooltip title="Developer" enterDelay={1000}>
-                <IconButton
-                    onClick={handleDeveloperClick}
-                    id="developer"
-                    size="small"
-                    disabled={pathname !== paths.VIEWFILE}
-                >
-                    <DeveloperBoardIcon
-                        sx={{
-                            color: 'grey.600',
-                        }}
-                    />
-                </IconButton>
-            </Tooltip>
+            {isDebugMode && (
+                <Tooltip title="Developer" enterDelay={1000}>
+                    <IconButton
+                        onClick={handleDeveloperClick}
+                        id="developer"
+                        size="small"
+                        disabled={pathname !== paths.VIEWFILE}
+                    >
+                        <DeveloperBoardIcon
+                            sx={{
+                                color: 'grey.600',
+                            }}
+                        />
+                    </IconButton>
+                </Tooltip>
+            )}
         </Stack>
     );
 };
