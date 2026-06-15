@@ -48,7 +48,6 @@ export interface ThemeTablePalette {
     headerTextColor: string;
     rowNumber: string;
     highlightedCell: string;
-    highlightedPinnedCell: string;
     annotatedCell: string;
     annotatedBorder: string;
     highlightedAnnotatedCell: string;

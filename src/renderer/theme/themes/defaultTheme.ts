@@ -52,30 +52,30 @@ const createDefaultPalette = (
             header: subtleSurface,
             headerTextColor: theme.palette.text.primary,
             rowNumber: subtleSurface,
-            highlightedCell: alpha(
-                theme.palette.info.main,
-                isDarkMode ? 0.32 : 0.22,
-            ),
-            highlightedPinnedCell: compositeOverBackground(
+            highlightedCell: compositeOverBackground(
                 theme.palette.info.main,
                 isDarkMode ? 0.32 : 0.22,
                 theme.palette.background.default,
             ),
-            annotatedCell: alpha(
+            annotatedCell: compositeOverBackground(
                 theme.palette.warning.main,
                 isDarkMode ? 0.26 : 0.18,
+                theme.palette.background.default,
             ),
-            annotatedBorder: alpha(
+            annotatedBorder: compositeOverBackground(
                 theme.palette.warning.main,
                 isDarkMode ? 0.72 : 0.48,
+                theme.palette.background.default,
             ),
-            highlightedAnnotatedCell: alpha(
+            highlightedAnnotatedCell: compositeOverBackground(
                 theme.palette.warning.main,
                 isDarkMode ? 0.56 : 0.44,
+                theme.palette.background.default,
             ),
-            highlightedAnnotatedBorder: alpha(
+            highlightedAnnotatedBorder: compositeOverBackground(
                 theme.palette.warning.main,
                 isDarkMode ? 0.82 : 0.56,
+                theme.palette.background.default,
             ),
             pinShadow: alpha(
                 theme.palette.common.black,
