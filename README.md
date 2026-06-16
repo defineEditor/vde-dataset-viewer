@@ -11,6 +11,8 @@ Supported Formats:
 * Compressed Dataset-JSON 1.1
 * XPORT v5
 * SAS7BDAT
+* SPSS SAV
+* Stata DTA
 
 
 API Specification: [DataExchange-DatasetJson-API](https://github.com/cdisc-org/DataExchange-DatasetJson-API)
