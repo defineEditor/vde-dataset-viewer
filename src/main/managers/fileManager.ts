@@ -1,6 +1,6 @@
 import { dialog, IpcMainInvokeEvent } from 'electron';
 import DatasetJson from 'js-stream-dataset-json';
-import DatasetSas7bdat from 'js-stream-sas7bdat';
+import { DatasetReadStat } from 'js-stream-sas7bdat';
 import DatasetXpt from 'xport-js';
 import {
     DataType,
@@ -30,7 +30,7 @@ const getHash = (str: string, lastModified: number): string => {
 
 class FileManager {
     private openedFiles: {
-        [key: string]: DatasetJson | DatasetXpt | DatasetSas7bdat;
+        [key: string]: DatasetJson | DatasetXpt | DatasetReadStat;
     } = {};
 
     private fileWatcher: FileWatcher = new FileWatcher();
@@ -51,7 +51,7 @@ class FileManager {
             const file = this.openedFiles[fileId];
             if (
                 file instanceof DatasetJson ||
-                file instanceof DatasetSas7bdat
+                file instanceof DatasetReadStat
             ) {
                 return (
                     file.filePath === pathToFile &&
@@ -186,6 +186,12 @@ class FileManager {
             case 'sas7bdat':
                 type = 'sas7bdat';
                 break;
+            case 'sav':
+                type = 'sav';
+                break;
+            case 'dta':
+                type = 'dta';
+                break;
             case 'dsjc':
                 type = 'json';
                 break;
@@ -201,12 +207,12 @@ class FileManager {
                     lastModified: 0,
                 };
         }
-        let data: DatasetJson | DatasetXpt | DatasetSas7bdat;
+        let data: DatasetJson | DatasetXpt | DatasetReadStat;
         try {
             if (type === 'xpt') {
                 data = new DatasetXpt(newFile.path);
-            } else if (type === 'sas7bdat') {
-                data = new DatasetSas7bdat(newFile.path);
+            } else if (['sas7bdat', 'sav', 'dta'].includes(type)) {
+                data = new DatasetReadStat(newFile.path);
             } else {
                 const updatedEncoding: BufferEncoding =
                     encoding === 'default' ? 'utf8' : encoding;
@@ -571,6 +577,10 @@ class FileManager {
                         format = 'json';
                     } else if (parsedPath.ext.toLowerCase() === '.sas7bdat') {
                         format = 'sas7bdat';
+                    } else if (parsedPath.ext.toLowerCase() === '.sav') {
+                        format = 'sav';
+                    } else if (parsedPath.ext.toLowerCase() === '.dta') {
+                        format = 'dta';
                     } else if (parsedPath.ext.toLowerCase() === '.ndjson') {
                         format = 'ndjson';
                     } else if (parsedPath.ext.toLowerCase() === '.dsjc') {

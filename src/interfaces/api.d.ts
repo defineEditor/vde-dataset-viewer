@@ -15,7 +15,7 @@ export {
     ColumnMetadata,
 } from 'js-array-filter';
 
-export type DataType = 'json' | 'xpt' | 'sas7bdat';
+export type DataType = 'json' | 'xpt' | 'sas7bdat' | 'sav' | 'dta';
 export type DataMode = 'local' | 'remote';
 
 export interface ApiOpenedFile {

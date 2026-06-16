@@ -15,7 +15,7 @@ import {
 } from 'interfaces/common';
 import Filter from 'js-array-filter';
 import DatasetJson from 'js-stream-dataset-json';
-import DatasetSas7bdat from 'js-stream-sas7bdat';
+import { DatasetReadStat } from 'js-stream-sas7bdat';
 import DatasetXpt from 'xport-js';
 
 const transformData = (
@@ -619,12 +619,12 @@ export const compareData = (
 
 const openFile = (filePath: string, encoding: BufferEncoding | 'default') => {
     const extension = filePath.split('.').pop()?.toLowerCase();
-    let data: DatasetJson | DatasetXpt | DatasetSas7bdat;
+    let data: DatasetJson | DatasetXpt | DatasetReadStat;
     try {
         if (extension === 'xpt') {
             data = new DatasetXpt(filePath);
-        } else if (extension === 'sas7bdat') {
-            data = new DatasetSas7bdat(filePath);
+        } else if (['sas7bdat', 'sav', 'dta'].includes(extension || '')) {
+            data = new DatasetReadStat(filePath);
         } else {
             const updatedEncoding: BufferEncoding =
                 encoding === 'default' ? 'utf8' : encoding;
@@ -641,7 +641,7 @@ const openFile = (filePath: string, encoding: BufferEncoding | 'default') => {
 };
 
 const getMetadata = async (
-    file: DatasetJson | DatasetXpt | DatasetSas7bdat,
+    file: DatasetJson | DatasetXpt | DatasetReadStat,
 ): Promise<DatasetJsonMetadata> => {
     if (file instanceof DatasetXpt) {
         return file.getMetadata('dataset-json1.1');
@@ -650,7 +650,7 @@ const getMetadata = async (
 };
 
 const getData = async (
-    file: DatasetJson | DatasetXpt | DatasetSas7bdat,
+    file: DatasetJson | DatasetXpt | DatasetReadStat,
     start: number,
     length: number,
     columns: ColumnMetadata[],
@@ -709,15 +709,19 @@ process.parentPort.once(
             const baseFile = openFile(fileBase, encoding);
             const compFile = openFile(fileComp, encoding);
 
-            // If XPT/SAS7BDAT is compared to JSON:
+            // If XPT/SAS7BDAT/SPSS/STATA is compared to JSON:
             // 1 - Convert datetime variable to their integer representation
             // 2 - null and missing values are treated as equal
             const baseExtension = fileBase.split('.').pop()?.toLowerCase();
             const compExtension = fileComp.split('.').pop()?.toLowerCase();
-            const baseType = ['xpt', 'sas7bdat'].includes(baseExtension || '')
+            const baseType = ['xpt', 'sas7bdat', 'sav', 'dta'].includes(
+                baseExtension || '',
+            )
                 ? 'sas'
                 : 'json';
-            const compType = ['xpt', 'sas7bdat'].includes(compExtension || '')
+            const compType = ['xpt', 'sas7bdat', 'sav', 'dta'].includes(
+                compExtension || '',
+            )
                 ? 'sas'
                 : 'json';
             const differentTypes = baseType !== compType;

@@ -35,6 +35,8 @@ export type OutputFileExtension = 'json' | 'ndjson' | 'dsjc' | 'csv';
 export type InputFileExtension =
     | 'xpt'
     | 'sas7bdat'
+    | 'sav'
+    | 'dta'
     | 'json'
     | 'ndjson'
     | 'dsjc';
