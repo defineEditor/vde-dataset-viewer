@@ -267,7 +267,7 @@ const ValueAutocomplete: React.FC<{
                 return filteredOptions;
             }}
             onChange={(event, value, reason) =>
-                onSelectChange(event, String(value), reason)
+                onSelectChange(event, value as string[] | string | null, reason)
             }
             renderInput={(params) => (
                 <TextField
