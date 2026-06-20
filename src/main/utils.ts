@@ -98,4 +98,67 @@ const getDeveloperInfo = async (fileManager: FileManager) => {
     return { ...mainInfo, ...watchersInfo };
 };
 
-export { writeToClipboard, resolveHtmlPath, resizeWindow, getDeveloperInfo };
+// Parse command line arguments
+const parseArgs = (
+    args: string[],
+    isPackaged: boolean,
+): {
+    filePath: string | null;
+    compareFiles: { path1: string; path2: string } | null;
+    disableGpu: boolean;
+    userDataDir: string | null;
+} => {
+    const startIdx = isPackaged ? 1 : 2;
+    let filePath: string | null = null;
+    let compareFiles: { path1: string; path2: string } | null = null;
+    let userDataDir: string | null = null;
+    const disableGpu = args.includes('--disable-gpu');
+
+    // Check for --user-data-dir
+    const userDataIdx = args.findIndex((a) => a.startsWith('--user-data-dir'));
+    if (userDataIdx !== -1) {
+        const arg = args[userDataIdx];
+        const eqIdx = arg.indexOf('=');
+        if (eqIdx !== -1) {
+            userDataDir = arg.slice(eqIdx + 1);
+        } else if (args.length > userDataIdx + 1) {
+            userDataDir = args[userDataIdx + 1];
+        }
+    }
+
+    // Check for --compare
+    const compareIndex = args.indexOf('--compare');
+    if (compareIndex !== -1 && args.length > compareIndex + 2) {
+        // Skip parameter arguments
+        for (
+            let i = compareIndex + 1;
+            i < args.length && compareFiles === null;
+            i++
+        ) {
+            // Skip parameter arguments
+            if (!args[i].startsWith('-') && args[i + 1]) {
+                compareFiles = {
+                    path1: args[i],
+                    path2: args[i + 1],
+                };
+            }
+        }
+    } else if (args.length > startIdx) {
+        for (let i = startIdx; i < args.length && filePath === null; i++) {
+            // Skip parameter arguments
+            if (!args[i].startsWith('-')) {
+                filePath = args[i];
+            }
+        }
+    }
+
+    return { filePath, compareFiles, disableGpu, userDataDir };
+};
+
+export {
+    writeToClipboard,
+    resolveHtmlPath,
+    resizeWindow,
+    getDeveloperInfo,
+    parseArgs,
+};
