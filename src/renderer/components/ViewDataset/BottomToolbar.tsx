@@ -155,7 +155,7 @@ const BottomToolbar: React.FC<BottomToolbarProps> = ({
                 </Stack>
 
                 {/* Pagination */}
-                {pageSize < records && (
+                {records > 0 && (
                     <Box sx={styles.pagination}>
                         <TablePagination
                             component="div"

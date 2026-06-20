@@ -62,7 +62,15 @@ const FileSelector: React.FC<FileSelectorProps> = ({
     fileFilters = [
         {
             name: 'All supported formats',
-            extensions: ['xpt', 'json', 'ndjson', 'dsjc', 'sas7bdat'],
+            extensions: [
+                'xpt',
+                'json',
+                'ndjson',
+                'dsjc',
+                'sas7bdat',
+                'sav',
+                'dta',
+            ],
         },
         {
             name: 'JSON',
@@ -83,6 +91,14 @@ const FileSelector: React.FC<FileSelectorProps> = ({
         {
             name: 'SAS',
             extensions: ['sas7bdat'],
+        },
+        {
+            name: 'SPSS',
+            extensions: ['sav'],
+        },
+        {
+            name: 'Stata',
+            extensions: ['dta'],
         },
     ],
     initialFolder = '',

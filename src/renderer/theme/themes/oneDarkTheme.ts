@@ -80,16 +80,31 @@ const createoneDarkPalette = (
             header: subtleSurface,
             headerTextColor: textPrimary,
             rowNumber: subtleSurface,
-            highlightedCell: alpha(info, isDarkMode ? 0.28 : 0.18),
-            highlightedPinnedCell: compositeOverBackground(
+            highlightedCell: compositeOverBackground(
                 info,
                 isDarkMode ? 0.28 : 0.18,
                 backgroundDefault,
             ),
-            annotatedCell: alpha(warning, isDarkMode ? 0.24 : 0.14),
-            annotatedBorder: alpha(warning, isDarkMode ? 0.6 : 0.4),
-            highlightedAnnotatedCell: alpha(warning, isDarkMode ? 0.44 : 0.32),
-            highlightedAnnotatedBorder: alpha(warning, isDarkMode ? 0.7 : 0.5),
+            annotatedCell: compositeOverBackground(
+                warning,
+                isDarkMode ? 0.24 : 0.14,
+                backgroundDefault,
+            ),
+            annotatedBorder: compositeOverBackground(
+                warning,
+                isDarkMode ? 0.6 : 0.4,
+                backgroundDefault,
+            ),
+            highlightedAnnotatedCell: compositeOverBackground(
+                warning,
+                isDarkMode ? 0.44 : 0.32,
+                backgroundDefault,
+            ),
+            highlightedAnnotatedBorder: compositeOverBackground(
+                warning,
+                isDarkMode ? 0.7 : 0.5,
+                backgroundDefault,
+            ),
             pinShadow: alpha('#1e2127', isDarkMode ? 0.68 : 0.18),
             resizeHandle: alpha(edgeColor, isDarkMode ? 0.65 : 0.42),
         },

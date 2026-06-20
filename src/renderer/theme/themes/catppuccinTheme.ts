@@ -82,18 +82,30 @@ const createCatppuccinPalette = (
             header: subtleSurface,
             headerTextColor: primary,
             rowNumber: subtleSurface,
-            highlightedCell: alpha(info, isDarkMode ? 0.32 : 0.22),
-            highlightedPinnedCell: compositeOverBackground(
+            highlightedCell: compositeOverBackground(
                 info,
                 isDarkMode ? 0.32 : 0.22,
                 backgroundDefault,
             ),
-            annotatedCell: alpha(warning, isDarkMode ? 0.26 : 0.18),
-            annotatedBorder: alpha(warning, isDarkMode ? 0.72 : 0.48),
-            highlightedAnnotatedCell: alpha(warning, isDarkMode ? 0.56 : 0.44),
-            highlightedAnnotatedBorder: alpha(
+            annotatedCell: compositeOverBackground(
+                warning,
+                isDarkMode ? 0.26 : 0.18,
+                backgroundDefault,
+            ),
+            annotatedBorder: compositeOverBackground(
+                warning,
+                isDarkMode ? 0.72 : 0.48,
+                backgroundDefault,
+            ),
+            highlightedAnnotatedCell: compositeOverBackground(
+                warning,
+                isDarkMode ? 0.56 : 0.44,
+                backgroundDefault,
+            ),
+            highlightedAnnotatedBorder: compositeOverBackground(
                 warning,
                 isDarkMode ? 0.82 : 0.56,
+                backgroundDefault,
             ),
             pinShadow: alpha('#0f0f17', isDarkMode ? 0.72 : 0.24),
             resizeHandle: alpha(edgeColor, isDarkMode ? 0.7 : 0.45),

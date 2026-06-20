@@ -47,6 +47,11 @@ export const dehydrateState = (state: IStore): IStore => {
     newData.loadedRecords = data.loadedRecords;
     // Remove filter if it was applied
     newData.filterData = { ...newData.filterData, currentFilter: {} };
+    // Reset compare data, keep only recent compares
+    newData.compare = {
+        ...data.compare,
+        recentCompares: newData.compare.recentCompares,
+    };
     // Remove validation filter and current report
     newData.validator = {
         ...newData.validator,

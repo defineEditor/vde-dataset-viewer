@@ -5,7 +5,7 @@ import {
 } from 'interfaces/main';
 import DatasetXpt from 'xport-js';
 import DatasetJson, { ItemDataArray } from 'js-stream-dataset-json';
-import DatasetSas7bdat from 'js-stream-sas7bdat';
+import { DatasetReadStat } from 'js-stream-sas7bdat';
 import path from 'path';
 import fs from 'fs';
 import { tmpdir } from 'os';
@@ -15,7 +15,7 @@ const processSasMetadata = (
     metadata: DatasetJsonMetadata,
     options: ConvertTask['options'],
     outputName: string,
-    inputFormat: 'XPT' | 'SAS7BDAT',
+    inputFormat: 'XPT' | 'SAS7BDAT' | 'DTA' | 'SAV',
 ): DatasetJsonMetadata => {
     const newColumns = metadata.columns.map((column) => {
         const newColumn = { ...column };
@@ -551,7 +551,7 @@ const convertJson = async (
     }
 };
 
-const convertSas7bdat = async (
+const convertReadStat = async (
     file: ConvertedFileInfo,
     options: ConvertTask['options'],
     sendMessage: (progress: number) => void,
@@ -559,7 +559,7 @@ const convertSas7bdat = async (
     try {
         const { destinationDir, prettyPrint } = options;
         const { outputName, fullPath } = file;
-        const datasetSas7bdat = new DatasetSas7bdat(fullPath);
+        const datasetReadStat = new DatasetReadStat(fullPath);
 
         if (options.outputFormat === 'CSV') {
             // Direct conversion to CSV
@@ -571,7 +571,7 @@ const convertSas7bdat = async (
                         : options.outEncoding,
             });
 
-            const metadata = await datasetSas7bdat.getMetadata();
+            const metadata = await datasetReadStat.getMetadata();
             const { columns } = metadata;
 
             // Write header row
@@ -582,7 +582,7 @@ const convertSas7bdat = async (
             const totalRecords = metadata.records || 0;
 
             // Process records using readRecords instead of read
-            for await (const obs of datasetSas7bdat.readRecords({
+            for await (const obs of datasetReadStat.readRecords({
                 bufferLength: 10000,
             })) {
                 const row = obs as ItemDataArray;
@@ -631,12 +631,12 @@ const convertSas7bdat = async (
             );
 
             // Get and process metadata
-            const metadata = await datasetSas7bdat.getMetadata();
+            const metadata = await datasetReadStat.getMetadata();
             let updatedMetadata = processSasMetadata(
                 metadata,
                 options,
                 outputName,
-                'SAS7BDAT',
+                file.format.toUpperCase() as 'SAS7BDAT' | 'DTA' | 'SAV',
             );
 
             // Set Dataset-JSON version
@@ -679,7 +679,7 @@ const convertSas7bdat = async (
 
             let buffer: ItemDataArray[] = [];
             // Read and process in blocks using readRecords instead of read
-            for await (const obs of datasetSas7bdat.readRecords({
+            for await (const obs of datasetReadStat.readRecords({
                 bufferLength: 10000,
                 type: 'array',
             })) {
@@ -757,8 +757,8 @@ process.parentPort.once(
             await convertXpt(file, options, sendMessage);
         } else if (file.format === 'json' || file.format === 'ndjson') {
             await convertJson(file, options, sendMessage);
-        } else if (file.format === 'sas7bdat') {
-            await convertSas7bdat(file, options, sendMessage);
+        } else if (['sas7bdat', 'sav', 'dta'].includes(file.format)) {
+            await convertReadStat(file, options, sendMessage);
         }
         // Exit the process after a short delay to ensure all messages are sent
         setTimeout(() => {

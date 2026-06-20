@@ -10,7 +10,15 @@ const openFile = async (
         filters: filters || [
             {
                 name: 'Datasets',
-                extensions: ['json', 'ndjson', 'xpt', 'dsjc', 'sas7bdat'],
+                extensions: [
+                    'json',
+                    'ndjson',
+                    'xpt',
+                    'dsjc',
+                    'sas7bdat',
+                    'sav',
+                    'dta',
+                ],
             },
             {
                 name: 'JSON',
@@ -31,6 +39,14 @@ const openFile = async (
             {
                 name: 'DSJC',
                 extensions: ['dsjc'],
+            },
+            {
+                name: 'SPSS',
+                extensions: ['sav'],
+            },
+            {
+                name: 'Stata',
+                extensions: ['dta'],
             },
             {
                 name: 'All Files',

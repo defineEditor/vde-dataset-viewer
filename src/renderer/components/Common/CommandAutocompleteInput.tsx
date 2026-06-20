@@ -291,10 +291,10 @@ const CommandAutocompleteInput: React.FC<CommandAutocompleteInputProps> = ({
             } else if (
                 commandAutocomplete?.tokenType === 'value' &&
                 commandAutocomplete.insertSuffix === ', ' &&
-                nextValue.endsWith('", )')
+                /["\d], \)$/.test(nextValue)
             ) {
                 // Automatically remove extra comma when user adds closing parenthesis
-                onValueChange(`${nextValue.slice(0, -4)}")`);
+                onValueChange(`${nextValue.slice(0, -3)})`);
             } else {
                 onValueChange(nextValue);
             }

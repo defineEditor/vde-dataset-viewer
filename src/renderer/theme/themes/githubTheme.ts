@@ -80,18 +80,30 @@ const createGitHubPalette = (
             header: subtleSurface,
             headerTextColor: textPrimary,
             rowNumber: subtleSurface,
-            highlightedCell: alpha(info, isDarkMode ? 0.28 : 0.18),
-            highlightedPinnedCell: compositeOverBackground(
+            highlightedCell: compositeOverBackground(
                 info,
                 isDarkMode ? 0.28 : 0.18,
                 backgroundDefault,
             ),
-            annotatedCell: alpha(warning, isDarkMode ? 0.26 : 0.16),
-            annotatedBorder: alpha(warning, isDarkMode ? 0.62 : 0.42),
-            highlightedAnnotatedCell: alpha(warning, isDarkMode ? 0.48 : 0.32),
-            highlightedAnnotatedBorder: alpha(
+            annotatedCell: compositeOverBackground(
+                warning,
+                isDarkMode ? 0.26 : 0.16,
+                backgroundDefault,
+            ),
+            annotatedBorder: compositeOverBackground(
+                warning,
+                isDarkMode ? 0.62 : 0.42,
+                backgroundDefault,
+            ),
+            highlightedAnnotatedCell: compositeOverBackground(
+                warning,
+                isDarkMode ? 0.48 : 0.32,
+                backgroundDefault,
+            ),
+            highlightedAnnotatedBorder: compositeOverBackground(
                 warning,
                 isDarkMode ? 0.72 : 0.52,
+                backgroundDefault,
             ),
             pinShadow: alpha('#1c2128', isDarkMode ? 0.65 : 0.18),
             resizeHandle: alpha(edgeColor, isDarkMode ? 0.7 : 0.45),

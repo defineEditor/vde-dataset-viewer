@@ -81,16 +81,31 @@ const createDraculaPalette = (
             header: subtleSurface,
             headerTextColor: primary,
             rowNumber: subtleSurface,
-            highlightedCell: alpha(info, isDarkMode ? 0.22 : 0.14),
-            highlightedPinnedCell: compositeOverBackground(
+            highlightedCell: compositeOverBackground(
                 info,
                 isDarkMode ? 0.22 : 0.14,
                 backgroundDefault,
             ),
-            annotatedCell: alpha(warning, isDarkMode ? 0.24 : 0.14),
-            annotatedBorder: alpha(warning, isDarkMode ? 0.6 : 0.38),
-            highlightedAnnotatedCell: alpha(warning, isDarkMode ? 0.46 : 0.3),
-            highlightedAnnotatedBorder: alpha(warning, isDarkMode ? 0.7 : 0.45),
+            annotatedCell: compositeOverBackground(
+                warning,
+                isDarkMode ? 0.24 : 0.14,
+                backgroundDefault,
+            ),
+            annotatedBorder: compositeOverBackground(
+                warning,
+                isDarkMode ? 0.6 : 0.38,
+                backgroundDefault,
+            ),
+            highlightedAnnotatedCell: compositeOverBackground(
+                warning,
+                isDarkMode ? 0.46 : 0.3,
+                backgroundDefault,
+            ),
+            highlightedAnnotatedBorder: compositeOverBackground(
+                warning,
+                isDarkMode ? 0.7 : 0.45,
+                backgroundDefault,
+            ),
             pinShadow: alpha('#191a21', isDarkMode ? 0.62 : 0.16),
             resizeHandle: alpha(edgeColor, isDarkMode ? 0.62 : 0.4),
         },

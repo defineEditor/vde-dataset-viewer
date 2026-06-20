@@ -71,6 +71,8 @@ const DragAndDrop: React.FC<Props> = ({ children }) => {
                         fileExtension === 'json' ||
                         fileExtension === 'ndjson' ||
                         fileExtension === 'sas7bdat' ||
+                        fileExtension === 'sav' ||
+                        fileExtension === 'dta' ||
                         fileExtension === 'dsjc'
                     ) {
                         const newDataInfo = await openNewDataset(
