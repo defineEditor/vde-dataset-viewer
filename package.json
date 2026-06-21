@@ -35,7 +35,7 @@
         "start:main": "concurrently -k \"cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --watch --config ./.erb/configs/webpack.config.main.dev.ts\" \"electronmon .\"",
         "start:preload": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.preload.dev.ts",
         "start:renderer": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack serve --config ./.erb/configs/webpack.config.renderer.dev.ts",
-        "test": "jest"
+        "test": "jest --maxWorkers=3"
     },
     "browserslist": [],
     "prettier": {
@@ -105,13 +105,13 @@
         "electron-log": "^4.4.8",
         "electron-updater": "^6.1.9",
         "js-array-filter": "^0.2.2",
-        "js-stream-dataset-json": "^0.8.0",
+        "js-stream-dataset-json": "^0.8.1",
         "parse-define-xml": "^0.1.7",
         "react": "^19.2.7",
         "react-dom": "^19.2.7",
         "react-redux": "^9.3.0",
         "redux": "^5.0.1",
-        "xport-js": "^0.4.0"
+        "xport-js": "^0.5.0"
     },
     "devDependencies": {
         "@electron/rebuild": "^3.3.1",

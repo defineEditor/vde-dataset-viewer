@@ -105,23 +105,35 @@ const parseArgs = (
 ): {
     filePath: string | null;
     compareFiles: { path1: string; path2: string } | null;
-    disableGpu: boolean;
+    disableGpu: boolean | null;
     userDataDir: string | null;
 } => {
     const startIdx = isPackaged ? 1 : 2;
+    const optionArgIdxs: number[] = [];
     let filePath: string | null = null;
     let compareFiles: { path1: string; path2: string } | null = null;
     let userDataDir: string | null = null;
-    const disableGpu = args.includes('--disable-gpu');
+    let disableGpu: boolean | null = null;
+
+    // Check for --disable-gpu
+    const disableGpuIdx = args.indexOf('--disable-gpu');
+    if (disableGpuIdx !== -1) {
+        optionArgIdxs.push(disableGpuIdx);
+        disableGpu = true;
+    }
 
     // Check for --user-data-dir
-    const userDataIdx = args.findIndex((a) => a.startsWith('--user-data-dir'));
+    const userDataIdx = args.findIndex(
+        (a) => a.startsWith('--user-data-dir=') || a === '--user-data-dir',
+    );
     if (userDataIdx !== -1) {
+        optionArgIdxs.push(userDataIdx);
         const arg = args[userDataIdx];
         const eqIdx = arg.indexOf('=');
         if (eqIdx !== -1) {
             userDataDir = arg.slice(eqIdx + 1);
         } else if (args.length > userDataIdx + 1) {
+            optionArgIdxs.push(userDataIdx + 1);
             userDataDir = args[userDataIdx + 1];
         }
     }
@@ -129,6 +141,7 @@ const parseArgs = (
     // Check for --compare
     const compareIndex = args.indexOf('--compare');
     if (compareIndex !== -1 && args.length > compareIndex + 2) {
+        optionArgIdxs.push(compareIndex);
         // Skip parameter arguments
         for (
             let i = compareIndex + 1;
@@ -136,7 +149,13 @@ const parseArgs = (
             i++
         ) {
             // Skip parameter arguments
-            if (!args[i].startsWith('-') && args[i + 1]) {
+            if (
+                !args[i].startsWith('-') &&
+                args[i + 1] &&
+                !args[i + 1].startsWith('-') &&
+                !optionArgIdxs.includes(i) &&
+                !optionArgIdxs.includes(i + 1)
+            ) {
                 compareFiles = {
                     path1: args[i],
                     path2: args[i + 1],
@@ -146,7 +165,7 @@ const parseArgs = (
     } else if (args.length > startIdx) {
         for (let i = startIdx; i < args.length && filePath === null; i++) {
             // Skip parameter arguments
-            if (!args[i].startsWith('-')) {
+            if (!args[i].startsWith('-') && !optionArgIdxs.includes(i)) {
                 filePath = args[i];
             }
         }
