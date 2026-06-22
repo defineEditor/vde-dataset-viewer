@@ -49,7 +49,7 @@ class FileWatcher {
                         `File watcher error for ${filePath}: ${error.message}`,
                     );
                 }
-                this.stopWatching(fileId);
+                this.restartWatching(fileId);
             });
 
             this.watchedFiles.set(fileId, watchedFile);
@@ -80,6 +80,44 @@ class FileWatcher {
         }
 
         this.watchedFiles.delete(fileId);
+    }
+
+    public restartWatching(fileId: string): void {
+        const watchedFile = this.watchedFiles.get(fileId);
+        if (!watchedFile) {
+            return;
+        }
+
+        // Stop current watcher
+        this.stopWatching(fileId);
+
+        // Get current mtime
+        let currentMtime = watchedFile.lastMtime;
+        try {
+            const stats = fs.statSync(watchedFile.filePath);
+            currentMtime = stats.mtime.getTime();
+        } catch (error) {
+            // If file doesn't exist, emit deleted event and return
+            this.emitChange(
+                {
+                    fileId: watchedFile.fileId,
+                    filePath: watchedFile.filePath,
+                    changeType: 'deleted',
+                },
+                watchedFile.sender,
+            );
+            return;
+        }
+
+        // Start watching again with updated mtime after 1 second delay
+        setTimeout(() => {
+            this.watchFile(
+                watchedFile.fileId,
+                watchedFile.filePath,
+                currentMtime,
+                watchedFile.sender,
+            );
+        }, 1000);
     }
 
     // Stop all watchers
