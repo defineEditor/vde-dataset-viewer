@@ -49,28 +49,16 @@ class FileManager {
         // Check if the file is already opened
         const foundFileIds = Object.keys(this.openedFiles).filter((fileId) => {
             const file = this.openedFiles[fileId];
-            if (
-                file instanceof DatasetJson ||
-                file instanceof DatasetReadStat
-            ) {
-                return (
-                    file.filePath === pathToFile &&
-                    (!fileIdPrefix || fileId.startsWith(fileIdPrefix))
-                );
-            }
-            if (file instanceof DatasetXpt) {
-                return (
-                    file.pathToFile === pathToFile &&
-                    (!fileIdPrefix || fileId.startsWith(fileIdPrefix))
-                );
-            }
-            return false;
+            return (
+                file.filePath === pathToFile &&
+                (!fileIdPrefix || fileId.startsWith(fileIdPrefix))
+            );
         });
 
         if (foundFileIds.length > 0) {
             return foundFileIds[0];
         }
-        // Craete a new ID
+        // Create a new ID
         const allIds = Object.keys(this.openedFiles);
         let hash: string;
         do {
@@ -94,7 +82,6 @@ class FileManager {
             autoReload?: boolean;
             createLockFile?: boolean;
             lockFilePathFilter?: string;
-            debug?: boolean;
         },
     ): Promise<IOpenFile> => {
         const {
@@ -105,7 +92,6 @@ class FileManager {
             autoReload,
             createLockFile,
             lockFilePathFilter,
-            debug,
         } = fileSettings;
 
         if (folderPath) {
@@ -263,7 +249,6 @@ class FileManager {
                 newFile.path,
                 lastModified,
                 event.sender,
-                debug,
             );
         }
 
@@ -351,11 +336,7 @@ class FileManager {
                 }
                 // Get last modified time
                 let filePath = '';
-                if (this.openedFiles[fileId] instanceof DatasetXpt) {
-                    filePath = this.openedFiles[fileId].pathToFile;
-                } else {
-                    filePath = this.openedFiles[fileId].filePath;
-                }
+                filePath = this.openedFiles[fileId].filePath;
                 const stats = fs.statSync(filePath);
                 const currentMtime = stats.mtime.getTime();
 

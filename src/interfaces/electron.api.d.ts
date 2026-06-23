@@ -32,7 +32,6 @@ export interface ElectronApi {
             autoReload?: boolean;
             createLockFile?: boolean;
             lockFilePathFilter?: string;
-            debug?: boolean;
         },
     ) => Promise<{
         fileId: string;

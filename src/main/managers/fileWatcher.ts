@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { WebContents, dialog } from 'electron';
+import { WebContents } from 'electron';
 import { FileWatcherEvent } from 'interfaces/common';
 
 interface WatchedFile {
@@ -14,13 +14,15 @@ interface WatchedFile {
 class FileWatcher {
     private watchedFiles: Map<string, WatchedFile> = new Map();
 
+    private watcherErrors: Map<string, { count: number; time: string }> =
+        new Map();
+
     // Start watching a file for changes
     public watchFile(
         fileId: string,
         filePath: string,
         currentMtime: number,
         sender: WebContents,
-        debug?: boolean,
     ): void {
         // If already watching this file, stop it first
         if (this.watchedFiles.has(fileId)) {
@@ -42,14 +44,21 @@ class FileWatcher {
             });
 
             // Handle watcher errors (file deleted, permission denied, etc.)
-            watchedFile.watcher.on('error', (error: NodeJS.ErrnoException) => {
-                if (debug) {
-                    dialog.showErrorBox(
-                        'File Watcher Error',
-                        `File watcher error for ${filePath}: ${error.message}`,
-                    );
+            watchedFile.watcher.on('error', (_error: NodeJS.ErrnoException) => {
+                // Update error tracking
+                const now = new Date().toISOString();
+                const errorInfo = this.watcherErrors.get(fileId) || {
+                    count: 0,
+                    time: now,
+                };
+                errorInfo.count += 1;
+                errorInfo.time = now;
+                this.watcherErrors.set(fileId, errorInfo);
+
+                // Hard limit to prevent infinite restart loops
+                if (errorInfo.count <= 1000) {
+                    this.restartWatching(fileId);
                 }
-                this.restartWatching(fileId);
             });
 
             this.watchedFiles.set(fileId, watchedFile);
@@ -82,7 +91,10 @@ class FileWatcher {
         this.watchedFiles.delete(fileId);
     }
 
-    public restartWatching(fileId: string): void {
+    public async restartWatching(
+        fileId: string,
+        delay?: number,
+    ): Promise<void> {
         const watchedFile = this.watchedFiles.get(fileId);
         if (!watchedFile) {
             return;
@@ -91,6 +103,11 @@ class FileWatcher {
         // Stop current watcher
         this.stopWatching(fileId);
 
+        // Restart watching after a delay (default 1 second)
+        await new Promise((resolve) => {
+            setTimeout(resolve, delay ?? 1000);
+        });
+
         // Get current mtime
         let currentMtime = watchedFile.lastMtime;
         try {
@@ -98,26 +115,35 @@ class FileWatcher {
             currentMtime = stats.mtime.getTime();
         } catch (error) {
             // If file doesn't exist, emit deleted event and return
-            this.emitChange(
-                {
-                    fileId: watchedFile.fileId,
-                    filePath: watchedFile.filePath,
-                    changeType: 'deleted',
-                },
-                watchedFile.sender,
-            );
-            return;
+            // Check if file exists
+            if (!fs.existsSync(watchedFile.filePath)) {
+                const now = new Date().toISOString();
+                const errorInfo = this.watcherErrors.get(fileId) || {
+                    count: 0,
+                    time: now,
+                };
+                errorInfo.count += 1;
+                errorInfo.time = `${now} (file not found)`;
+                this.watcherErrors.set(fileId, errorInfo);
+                this.emitChange(
+                    {
+                        fileId: watchedFile.fileId,
+                        filePath: watchedFile.filePath,
+                        changeType: 'deleted',
+                    },
+                    watchedFile.sender,
+                );
+                return;
+            }
         }
 
-        // Start watching again with updated mtime after 1 second delay
-        setTimeout(() => {
-            this.watchFile(
-                watchedFile.fileId,
-                watchedFile.filePath,
-                currentMtime,
-                watchedFile.sender,
-            );
-        }, 1000);
+        // Start watching again
+        this.watchFile(
+            watchedFile.fileId,
+            watchedFile.filePath,
+            currentMtime,
+            watchedFile.sender,
+        );
     }
 
     // Stop all watchers
@@ -204,6 +230,11 @@ class FileWatcher {
         return Array.from(this.watchedFiles.values()).map(
             (watchedFile) => watchedFile.filePath,
         );
+    }
+
+    // Get watcher error info for all files
+    public getWatcherErrors(): Map<string, { count: number; time: string }> {
+        return new Map(this.watcherErrors);
     }
 }
 
