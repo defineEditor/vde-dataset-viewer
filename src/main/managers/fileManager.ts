@@ -600,6 +600,14 @@ class FileManager {
         watchedFilePaths.forEach((filePath, index) => {
             stats[`watchedFile_${index}`] = filePath;
         });
+        // Get errors info
+        const watcherErrors = this.fileWatcher.getWatcherErrors();
+        let errorIndex = 1;
+        watcherErrors.forEach((errorInfo, fileId) => {
+            stats[`watcherError_${errorIndex}`] =
+                `File: ${fileId} Count: ${errorInfo.count}, Error Times: ${errorInfo.time.join(', ')}`;
+            errorIndex++;
+        });
         return stats;
     }
 }

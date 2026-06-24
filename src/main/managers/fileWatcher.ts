@@ -14,7 +14,7 @@ interface WatchedFile {
 class FileWatcher {
     private watchedFiles: Map<string, WatchedFile> = new Map();
 
-    private watcherErrors: Map<string, { count: number; time: string }> =
+    private watcherErrors: Map<string, { count: number; time: string[] }> =
         new Map();
 
     // Start watching a file for changes
@@ -49,10 +49,10 @@ class FileWatcher {
                 const now = new Date().toISOString();
                 const errorInfo = this.watcherErrors.get(fileId) || {
                     count: 0,
-                    time: now,
+                    time: [],
                 };
                 errorInfo.count += 1;
-                errorInfo.time = now;
+                errorInfo.time.push(now);
                 this.watcherErrors.set(fileId, errorInfo);
 
                 // Hard limit to prevent infinite restart loops
@@ -120,10 +120,10 @@ class FileWatcher {
                 const now = new Date().toISOString();
                 const errorInfo = this.watcherErrors.get(fileId) || {
                     count: 0,
-                    time: now,
+                    time: [],
                 };
                 errorInfo.count += 1;
-                errorInfo.time = `${now} (file not found)`;
+                errorInfo.time.push(`${now} (file not found)`);
                 this.watcherErrors.set(fileId, errorInfo);
                 this.emitChange(
                     {
@@ -233,7 +233,7 @@ class FileWatcher {
     }
 
     // Get watcher error info for all files
-    public getWatcherErrors(): Map<string, { count: number; time: string }> {
+    public getWatcherErrors(): Map<string, { count: number; time: string[] }> {
         return new Map(this.watcherErrors);
     }
 }
