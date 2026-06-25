@@ -17,6 +17,7 @@ import {
     NewWindowProps,
     DefineFileInfo,
     DefineXmlContent,
+    IUiSnackbar,
 } from 'interfaces/common';
 
 export type Channels = 'ipc-vde';
@@ -74,6 +75,7 @@ export interface ElectronApi {
     saveLocalStore: (localStore: ILocalStore) => void;
     loadLocalStore: () => Promise<ILocalStore>;
     onSaveStore: (callback: () => Promise<void>) => void;
+    onSnackbarMessage: (callback: (data: IUiSnackbar) => void) => void;
     onFileOpen: (
         callback: (filePath: string, props?: NewWindowProps) => void,
     ) => void;

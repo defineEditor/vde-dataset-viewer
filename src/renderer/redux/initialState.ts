@@ -26,6 +26,7 @@ export const settings: ISettings = {
         showLabels: false,
         debug: false,
         autoReload: false,
+        reloadAttempts: 0,
     },
     converter: {
         threads: 2,

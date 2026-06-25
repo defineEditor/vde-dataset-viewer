@@ -49,6 +49,7 @@ export interface SettingsViewer {
     showLabels: boolean;
     debug: boolean;
     autoReload: boolean;
+    reloadAttempts: number;
 }
 
 export interface ISettings {

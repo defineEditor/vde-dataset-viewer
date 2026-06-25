@@ -71,6 +71,7 @@ const getData = async (
     settings: ISettings,
     filterColumns?: string[],
     filterData?: BasicFilter,
+    requestReason?: 'initial' | 'filterChange' | 'reload',
     keepOpenedData: boolean = false,
 ): Promise<ITableData | null> => {
     let metadata = await apiService.getMetadata(fileId, filterColumns);
@@ -91,6 +92,7 @@ const getData = async (
         settings,
         filterColumns,
         filterData,
+        requestReason,
         keepOpenedData,
     )) as ITableRow[];
 

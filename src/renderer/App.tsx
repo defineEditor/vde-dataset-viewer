@@ -15,9 +15,11 @@ import {
     closeAllModals,
     openModal,
     setPathname,
+    openSnackbar,
 } from 'renderer/redux/slices/ui';
 import { modals, paths } from 'misc/constants';
 import DragAndDrop from 'renderer/components/DragAndDrop';
+import { IUiSnackbar } from 'interfaces/common';
 
 class ErrorBoundary extends React.Component<
     { children: React.ReactNode },
@@ -62,7 +64,10 @@ const AppWithContext: React.FC = () => {
         (state) => state.settings.other.checkForUpdates,
     );
 
-    const saveStoreListenerRegistered = React.useRef(false);
+    const listenersRegistered = React.useRef({
+        saveStore: false,
+        snackbar: false,
+    });
 
     const disableUiAnimation = useAppSelector(
         (state) => state.settings.other.disableUiAnimation,
@@ -109,12 +114,13 @@ const AppWithContext: React.FC = () => {
         }
     }, [apiService, dispatch, checkForUpdates]);
 
+    // Register the save store listener
     useEffect(() => {
-        if (saveStoreListenerRegistered.current) {
+        if (listenersRegistered.current.saveStore) {
             return;
         }
 
-        saveStoreListenerRegistered.current = true;
+        listenersRegistered.current.saveStore = true;
         window.electron.onSaveStore(async () => {
             const state = dehydrateState(store.getState());
             if (state) {
@@ -122,6 +128,18 @@ const AppWithContext: React.FC = () => {
             }
         });
     }, [apiService]);
+
+    // Register snackbar listener, for reporting errors from the main process
+    useEffect(() => {
+        if (listenersRegistered.current.snackbar) {
+            return;
+        }
+
+        listenersRegistered.current.snackbar = true;
+        window.electron.onSnackbarMessage((data: IUiSnackbar) => {
+            dispatch(openSnackbar(data));
+        });
+    }, [dispatch]);
 
     return (
         <ThemeProvider theme={theme}>

@@ -63,9 +63,10 @@ class FileWatcher {
 
             this.watchedFiles.set(fileId, watchedFile);
         } catch (error) {
-            throw new Error(
-                `Failed to watch file ${filePath}: ${(error as Error).message}`,
-            );
+            sender.send('renderer:snackbarMessage', {
+                type: 'error',
+                message: `Failed to watch file ${filePath}: ${(error as Error).message}`,
+            });
         }
     }
 

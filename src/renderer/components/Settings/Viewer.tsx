@@ -263,7 +263,24 @@ export const Viewer: React.FC<ViewerProps> = ({
                 are detected
             </Typography>
         </Stack>
-        {(isDevelopment || settings.viewer.estimateWidthRows === 31415926) && (
+        <TextField
+            label="Reload Attempts"
+            helperText="Number of reload attempts when auto reload fails"
+            name="viewer.reloadAttempts"
+            type="number"
+            value={settings.viewer.reloadAttempts}
+            onChange={onSettingChange}
+            sx={styles.inputField}
+            slotProps={{ htmlInput: { min: 0 } }}
+        />
+        <Typography variant="caption" sx={styles.helperText}>
+            In case you are overwriting the file while it is reloaded, you can
+            set the number of reload attempts to avoid errors. Set to 0 to
+            disable (suggested if there are no errors).
+        </Typography>
+        {(isDevelopment ||
+            settings.viewer.estimateWidthRows === 31415926 ||
+            settings.viewer.debug) && (
             <>
                 <Typography variant="h6">Developer Settings</Typography>
                 <Stack spacing={0}>
