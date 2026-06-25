@@ -27,6 +27,7 @@ import {
     DefineFileInfo,
     DefineXmlContent,
     FileWatcherEvent,
+    RequestReason,
 } from 'interfaces/common';
 import store from 'renderer/redux/store';
 import transformData from 'renderer/services/transformData';
@@ -365,9 +366,8 @@ class ApiService {
         settings: ISettings,
         filterColumns?: string[],
         filterData?: BasicFilter,
-        requestReason?: 'initial' | 'filterChange' | 'reload',
+        _requestReason?: RequestReason,
         keepOpenedData: boolean = false,
-        attempt: number = 1,
     ): Promise<ITableRow[]> => {
         const file = this.openedFiles.find(
             (fileItem) => fileItem.fileId === fileId,
@@ -377,8 +377,6 @@ class ApiService {
                 'Trying to read metadata from the file which is not opened',
             );
         }
-
-        const reloadAttempts = settings.viewer.reloadAttempts || 0;
 
         // Get metadata
         const metadata = await this.getMetadata(fileId);
@@ -411,24 +409,6 @@ class ApiService {
         }
 
         if (result === null) {
-            // Data was not loaded, try to load it again
-            if (requestReason === 'reload' && attempt < reloadAttempts) {
-                // Retry after 5 seconds
-                await new Promise((resolve) => {
-                    setTimeout(resolve, 5000);
-                });
-                return this.getObservations(
-                    fileId,
-                    start,
-                    length,
-                    settings,
-                    filterColumns,
-                    filterData,
-                    requestReason,
-                    keepOpenedData,
-                    attempt + 1,
-                );
-            }
             return [];
         }
 
@@ -746,10 +726,7 @@ class ApiService {
     // Reload file
     public reloadFile = async (
         fileId: string,
-        attempt: number = 0,
     ): Promise<IOpenFileWithMetadata | null> => {
-        const { settings } = store.getState();
-        const { reloadAttempts } = settings.viewer;
         // Check if file is opened;
         const file = this.openedFiles.find(
             (fileItem) => fileItem.fileId === fileId,
@@ -769,13 +746,6 @@ class ApiService {
         // Reload file
         const newMetadata = await this.getMetadata(fileId, undefined, true);
         if (newMetadata === null) {
-            if (attempt < reloadAttempts) {
-                // Retry after 1 second
-                await new Promise((resolve) => {
-                    setTimeout(resolve, 3000);
-                });
-                return this.reloadFile(fileId, attempt + 1);
-            }
             throw new Error('Failed to reload file metadata');
         } else {
             this.openedFilesMetadata[fileId] = newMetadata;
