@@ -345,9 +345,10 @@ class FileManager {
                     lastModified: currentMtime,
                 };
             } catch (error) {
+                const filePath = this.openedFiles[fileId].filePath || '';
                 dialog.showErrorBox(
                     'Metadata Error',
-                    `An error occurred while retrieving metadata: ${(error as Error).message}`,
+                    `An error occurred while retrieving metadata for ${filePath}: ${(error as Error).message}`,
                 );
                 return null;
             }
