@@ -23,10 +23,12 @@ const styles = {
         width: '100%',
         overflow: 'hidden',
         height: 52,
+        justifyContent: 'space-between',
     },
     leftSection: {
         maxWidth: '100%',
         flex: '1 1 auto',
+        minWidth: 0,
         justifyContent: 'flex-start',
         alignItems: 'flex-start',
     },
@@ -45,8 +47,12 @@ const styles = {
         alignItems: 'center',
     },
     pagination: {
+        userSelect: 'none',
         display: 'flex',
         justifyContent: 'flex-end',
+        alignItems: 'center',
+        flexShrink: 0,
+        overflow: 'visible',
     },
     iconButton: {
         color: 'grey.600',
