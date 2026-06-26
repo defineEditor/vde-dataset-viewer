@@ -55,27 +55,27 @@ const createDefaultPalette = (
             highlightedCell: compositeOverBackground(
                 theme.palette.info.main,
                 isDarkMode ? 0.32 : 0.22,
-                theme.palette.background.default,
+                themeGrey[50],
             ),
             annotatedCell: compositeOverBackground(
                 theme.palette.warning.main,
                 isDarkMode ? 0.26 : 0.18,
-                theme.palette.background.default,
+                themeGrey[50],
             ),
             annotatedBorder: compositeOverBackground(
                 theme.palette.warning.main,
                 isDarkMode ? 0.72 : 0.48,
-                theme.palette.background.default,
+                themeGrey[50],
             ),
             highlightedAnnotatedCell: compositeOverBackground(
                 theme.palette.warning.main,
                 isDarkMode ? 0.56 : 0.44,
-                theme.palette.background.default,
+                themeGrey[50],
             ),
             highlightedAnnotatedBorder: compositeOverBackground(
                 theme.palette.warning.main,
                 isDarkMode ? 0.82 : 0.56,
-                theme.palette.background.default,
+                themeGrey[50],
             ),
             pinShadow: alpha(
                 theme.palette.common.black,
