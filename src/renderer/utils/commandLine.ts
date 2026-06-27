@@ -144,12 +144,7 @@ const splitCommandLine = (value: string): string[] => {
                 inRegexCharClass = false;
             }
             currentCommand += character;
-        } else if (
-            character === ';' &&
-            !inSingleQuote &&
-            !inDoubleQuote &&
-            !inRegex
-        ) {
+        } else if (character === ';' && !inSingleQuote && !inDoubleQuote) {
             const trimmedCommand = currentCommand.trim();
             if (trimmedCommand !== '') {
                 commands.push(trimmedCommand);

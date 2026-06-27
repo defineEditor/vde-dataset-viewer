@@ -80,25 +80,17 @@ const Validator: React.FC = () => {
     );
 
     const validationId = 'globalvalidation';
+
     const validationStatus = useAppSelector<IUiValidation['status']>(
-        (state) =>
-            (validationId !== null &&
-                state.ui.validation[validationId]?.status) ||
-            'not started',
+        (state) => state.ui.validation[validationId]?.status || 'not started',
     );
 
     const validationError = useAppSelector<string | null>(
-        (state) =>
-            (validationId !== null &&
-                state.ui.validation[validationId]?.error) ||
-            null,
+        (state) => state.ui.validation[validationId]?.error || null,
     );
 
     const validationLogFileName = useAppSelector<string | null>(
-        (state) =>
-            (validationId !== null &&
-                state.ui.validation[validationId]?.logFileName) ||
-            null,
+        (state) => state.ui.validation[validationId]?.logFileName || null,
     );
 
     const dispatch = useAppDispatch();
@@ -137,7 +129,7 @@ const Validator: React.FC = () => {
             files,
             configuration: config,
             settings,
-            validationId: 'globalvalidation',
+            validationId,
         });
     };
 
@@ -152,7 +144,7 @@ const Validator: React.FC = () => {
     const handleReset = () => {
         dispatch(
             updateValidation({
-                validationId: 'globalvalidation',
+                validationId,
                 validation: {
                     status: 'not started',
                     validationProgress: 0,
