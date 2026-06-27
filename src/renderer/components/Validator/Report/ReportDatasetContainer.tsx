@@ -16,7 +16,7 @@ const styles = {
     },
 };
 
-const DatasetContainer: React.FC<{
+const ReportDatasetContainer: React.FC<{
     data?: ITableData;
     type: 'summary' | 'details' | 'rules';
 }> = ({ data = undefined, type }) => {
@@ -81,4 +81,4 @@ const DatasetContainer: React.FC<{
     );
 };
 
-export default DatasetContainer;
+export default ReportDatasetContainer;

@@ -87,7 +87,7 @@ export const Viewer: React.FC<ViewerProps> = ({
                 label="Wrap Values"
             />
             <Typography variant="caption" sx={styles.helperText}>
-                When selected, long cell values are wrapper
+                When selected, long cell values are wrapped
             </Typography>
         </Stack>
         <Stack spacing={0}>
