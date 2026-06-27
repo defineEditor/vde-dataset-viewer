@@ -121,7 +121,7 @@ const createoneDarkPalette = (
             toolbar: backgroundDefault,
         },
         scrollbar: {
-            thumb: alpha(themeGrey[500], isDarkMode ? 0.88 : 0.84),
+            thumb: alpha(themeGrey[600], isDarkMode ? 0.88 : 0.84),
             track: alpha(edgeColor, isDarkMode ? 0.2 : 0.24),
         },
     };

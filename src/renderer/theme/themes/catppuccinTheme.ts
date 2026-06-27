@@ -51,7 +51,7 @@ const createCatppuccinPalette = (
 ): NonNullable<MuiThemeOptions['palette']> => {
     const isDarkMode = mode === 'dark';
     const themeGrey = buildCatppuccinGrey(mode);
-    const primary = isDarkMode ? '#89b4fa' : '#b7a0d4';
+    const primary = isDarkMode ? '#89b4fa' : '#946ec3';
     const secondary = isDarkMode ? '#cba6f7' : '#7287fd';
     const info = isDarkMode ? '#89dceb' : '#04a5e5';
     const warning = isDarkMode ? '#fab387' : '#fe640b';

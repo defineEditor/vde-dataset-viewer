@@ -97,7 +97,7 @@ const createDefaultPalette = (
             toolbar: theme.vars?.palette.background.paper,
         },
         scrollbar: {
-            thumb: alpha(theme.palette.grey[900], isDarkMode ? 0.36 : 0.24),
+            thumb: alpha(theme.palette.grey[500], isDarkMode ? 0.36 : 0.54),
             track: alpha(theme.palette.grey[50], isDarkMode ? 0.12 : 0.08),
         },
     };

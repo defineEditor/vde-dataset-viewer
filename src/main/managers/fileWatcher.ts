@@ -56,13 +56,18 @@ class FileWatcher {
                 this.watcherErrors.set(fileId, errorInfo);
 
                 // Hard limit to prevent infinite restart loops
-                if (errorInfo.count <= 1000) {
+                if (errorInfo.count <= 100) {
                     this.restartWatching(fileId);
+                } else {
+                    this.stopWatching(fileId);
                 }
             });
 
             this.watchedFiles.set(fileId, watchedFile);
         } catch (error) {
+            if (!sender || sender.isDestroyed()) {
+                return;
+            }
             sender.send('renderer:snackbarMessage', {
                 type: 'error',
                 message: `Failed to watch file ${filePath}: ${(error as Error).message}`,

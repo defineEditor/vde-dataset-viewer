@@ -243,7 +243,7 @@ class FileManager {
                 } catch (error) {
                     event.sender.send('renderer:snackbarMessage', {
                         type: 'error',
-                        message: `Error while creating lock file for ${lockFilePath}: ${(error as Error).message}`,
+                        message: `Error while creating lock file for ${filePath}: ${(error as Error).message}`,
                     });
                 }
             }
