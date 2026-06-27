@@ -27,6 +27,7 @@ import {
     DefineFileInfo,
     DefineXmlContent,
     FileWatcherEvent,
+    RequestReason,
 } from 'interfaces/common';
 import store from 'renderer/redux/store';
 import transformData from 'renderer/services/transformData';
@@ -200,7 +201,6 @@ class ApiService {
         const encoding = settings.other.inEncoding;
         const autoReload = settings.viewer.autoReload || false;
         const createLockFile = settings.other.createLockFile || false;
-        const debug = settings.viewer.debug || false;
         const lockFilePathFilter = settings.other.lockFilePathFilter || '';
 
         const response = await window.electron.openFile('local', {
@@ -211,7 +211,6 @@ class ApiService {
             autoReload,
             createLockFile,
             lockFilePathFilter,
-            debug,
         });
         if (response === null) {
             return {
@@ -367,6 +366,7 @@ class ApiService {
         settings: ISettings,
         filterColumns?: string[],
         filterData?: BasicFilter,
+        _requestReason?: RequestReason,
         keepOpenedData: boolean = false,
     ): Promise<ITableRow[]> => {
         const file = this.openedFiles.find(

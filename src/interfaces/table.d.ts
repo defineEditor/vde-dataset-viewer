@@ -69,3 +69,9 @@ export interface TableSettings extends SettingsViewer {
     denseHeader?: boolean;
     disableSorting?: boolean;
 }
+
+export type RequestReason =
+    | 'initial'
+    | 'filterChange'
+    | 'reload'
+    | 'pagination';

@@ -6,6 +6,7 @@ import {
     IOpenFileWithMetadata,
     ISettings,
     ITableRow,
+    RequestReason,
 } from 'interfaces/common';
 import ApiService from 'renderer/services/ApiService';
 
@@ -71,6 +72,7 @@ const getData = async (
     settings: ISettings,
     filterColumns?: string[],
     filterData?: BasicFilter,
+    requestReason?: RequestReason,
     keepOpenedData: boolean = false,
 ): Promise<ITableData | null> => {
     let metadata = await apiService.getMetadata(fileId, filterColumns);
@@ -91,6 +93,7 @@ const getData = async (
         settings,
         filterColumns,
         filterData,
+        requestReason,
         keepOpenedData,
     )) as ITableRow[];
 

@@ -17,6 +17,7 @@ import {
     TableRowValue,
     ISettings,
     BasicFilter,
+    RequestReason,
 } from 'interfaces/common';
 import DatasetView from 'renderer/components/DatasetView';
 import ContextMenu from 'renderer/components/DatasetView/ContextMenu';
@@ -89,7 +90,7 @@ const readDataset = async (
     settings: ISettings,
     currentFilter: BasicFilter | null,
     showLabels: boolean,
-    requestReason: 'initial' | 'filterChange' | 'reload',
+    requestReason: RequestReason,
     setTable: React.Dispatch<React.SetStateAction<ITableData | null>>,
     setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
     setTotalRecords: React.Dispatch<React.SetStateAction<number>>,
@@ -114,6 +115,7 @@ const readDataset = async (
             settings,
             undefined,
             currentFilter === null ? undefined : currentFilter,
+            requestReason,
         );
     } catch (error) {
         // Remove current fileId as something is wrong with it

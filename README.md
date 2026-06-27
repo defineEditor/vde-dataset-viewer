@@ -34,6 +34,14 @@ You can download installation packages or portable version for your operating sy
 For CDISC CORE validation, the CORE executable should be installed separately.
 See [CDISC CORE](https://github.com/cdisc-org/cdisc-rules-engine) repository for details.
 
+## Command Line Arguments
+You can start the application with the following optional arguments:
+
+- `path/to/file` — Open a dataset or file when the app starts.
+- `--compare path1 path2` — Start a dataset comparison between two files.
+- `--disable-gpu` — Disable hardware acceleration.
+- `--user-data-dir path` — Override the application user-data directory.
+
 ## Features
 * Reading large size datasets
 * Dataset Compare

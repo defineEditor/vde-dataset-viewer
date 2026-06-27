@@ -142,7 +142,7 @@ const IssueNavigation: React.FC<{
             return;
         }
 
-        let newIndex = currentIssueIndex;
+        let newIndex: number;
         if (direction === 'previous') {
             newIndex =
                 currentIssueIndex > 0 ? currentIssueIndex - 1 : totalIssues - 1;

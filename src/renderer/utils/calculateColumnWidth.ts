@@ -80,11 +80,7 @@ const calculateColumnWidth = (
         );
 
         // Scale if required to fit on page
-        if (
-            fitInContainer &&
-            ['expand', 'fit'].includes(fitInContainer) &&
-            containerWidth
-        ) {
+        if (fitInContainer && ['expand', 'fit'].includes(fitInContainer)) {
             const scaleFactor =
                 (containerWidth - totalFixedWidth) /
                 (totalWidth - totalFixedWidth);

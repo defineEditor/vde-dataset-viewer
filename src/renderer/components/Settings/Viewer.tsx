@@ -87,7 +87,7 @@ export const Viewer: React.FC<ViewerProps> = ({
                 label="Wrap Values"
             />
             <Typography variant="caption" sx={styles.helperText}>
-                When selected, long cell values are wrapper
+                When selected, long cell values are wrapped
             </Typography>
         </Stack>
         <Stack spacing={0}>
@@ -263,7 +263,9 @@ export const Viewer: React.FC<ViewerProps> = ({
                 are detected
             </Typography>
         </Stack>
-        {(isDevelopment || settings.viewer.estimateWidthRows === 31415926) && (
+        {(isDevelopment ||
+            settings.viewer.estimateWidthRows === 31415926 ||
+            settings.viewer.debug) && (
             <>
                 <Typography variant="h6">Developer Settings</Typography>
                 <Stack spacing={0}>

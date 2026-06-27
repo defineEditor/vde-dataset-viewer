@@ -8,6 +8,7 @@ import {
     TaskProgress,
     NewWindowProps,
     FileWatcherEvent,
+    IUiSnackbar,
 } from 'interfaces/common';
 import { ElectronApi, Channels } from 'interfaces/electron.api';
 import getMemoryInfo from 'renderer/utils/getMemoryInfo';
@@ -73,6 +74,15 @@ const onSaveStore: ElectronApi['onSaveStore'] = (callback) => {
         await callback();
         ipcRenderer.send('main:storeSaved');
     });
+};
+
+const onSnackbarMessage: ElectronApi['onSnackbarMessage'] = (callback) => {
+    ipcRenderer.on(
+        'renderer:snackbarMessage',
+        (_event: IpcRendererEvent, data: IUiSnackbar) => {
+            callback(data);
+        },
+    );
 };
 
 const onFileOpen: ElectronApi['onFileOpen'] = (callback) => {
@@ -243,6 +253,7 @@ contextBridge.exposeInMainWorld('electron', {
     checkForUpdates,
     downloadUpdate,
     onSaveStore,
+    onSnackbarMessage,
     onFileOpen,
     removeFileOpenListener,
     onFileChanged,
