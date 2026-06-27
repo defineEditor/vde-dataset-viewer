@@ -50,6 +50,11 @@ export const Other: React.FC<OtherProps> = ({ settings, onSettingChange }) => (
         >
             <MenuItem value="normal">Default</MenuItem>
             <MenuItem value="solarized">Solarized</MenuItem>
+            <MenuItem value="github">GitHub</MenuItem>
+            <MenuItem value="oneDark">One Dark</MenuItem>
+            <MenuItem value="dracula">Dracula</MenuItem>
+            <MenuItem value="matcha">Matcha</MenuItem>
+            <MenuItem value="catppuccin">Catppuccin</MenuItem>
         </TextField>
         <Stack spacing={0}>
             <FormControlLabel
@@ -119,17 +124,17 @@ export const Other: React.FC<OtherProps> = ({ settings, onSettingChange }) => (
                 Create a lock file to indicate when a dataset is open.
             </Typography>
             <TextField
-                label="Lock File Folder Filter"
-                helperText="Lock files are created only in folders matching this regex. Keep blank to create lock files in all folders."
-                name="other.lockFileFolderFilter"
+                label="Lock File Path Filter"
+                helperText="Lock files are created for paths matching this regex. Keep blank to create lock files for all paths."
+                name="other.lockFilePathFilter"
                 type="text"
-                value={settings.other.lockFileFolderFilter}
+                value={settings.other.lockFilePathFilter}
                 error={(() => {
                     if (!settings.other.createLockFile) {
                         return false;
                     }
                     try {
-                        RegExp(settings.other.lockFileFolderFilter);
+                        RegExp(settings.other.lockFilePathFilter);
                         return false;
                     } catch {
                         return true;
@@ -137,7 +142,7 @@ export const Other: React.FC<OtherProps> = ({ settings, onSettingChange }) => (
                 })()}
                 disabled={!settings.other.createLockFile}
                 onChange={onSettingChange}
-                sx={styles.lockFileFolderFilter}
+                sx={styles.lockFilePathFilter}
             />
         </Stack>
         <Typography variant="h6">Animations</Typography>

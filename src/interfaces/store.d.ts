@@ -47,7 +47,7 @@ export interface SettingsViewer {
     showTypeIcons: boolean;
     copyWithHeaders: boolean;
     showLabels: boolean;
-    enableProfiler: boolean;
+    debug: boolean;
     autoReload: boolean;
 }
 
@@ -73,7 +73,7 @@ export interface ISettings {
         dragoverAnimation: boolean;
         disableUiAnimation: boolean;
         createLockFile: boolean;
-        lockFileFolderFilter: string;
+        lockFilePathFilter: string;
     };
     compare: CompareSettings;
 }
@@ -98,7 +98,8 @@ export interface IUiModalGeneral extends IUiModalBase {
         | typeof modals.SORTING
         | typeof modals.IDCOLUMNS
         | typeof modals.VALIDATOR
-        | typeof modals.SELECTCOMPARE;
+        | typeof modals.SELECTCOMPARE
+        | typeof modals.DEVELOPER;
     data: {};
 }
 
@@ -262,6 +263,7 @@ export interface IUi {
     define: IUiDefine;
     compare: IUiCompare;
     reloadRequested: boolean;
+    settingsTab: number;
 }
 
 export interface IRecentFile {

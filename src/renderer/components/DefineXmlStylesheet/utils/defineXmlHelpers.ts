@@ -170,7 +170,7 @@ export const displayStandard = (
 
     return React.createElement(
         'span',
-        { className: 'standard-refeference' },
+        { className: 'standard-reference' },
         `[${parts.join(' ')}]`,
     );
 };
@@ -188,7 +188,7 @@ export const displayNonStandard = (
 
     return React.createElement(
         'span',
-        { className: 'standard-refeference' },
+        { className: 'standard-reference' },
         '[Non Standard]',
     );
 };

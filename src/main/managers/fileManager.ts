@@ -1,6 +1,6 @@
 import { dialog, IpcMainInvokeEvent } from 'electron';
 import DatasetJson from 'js-stream-dataset-json';
-import DatasetSas7bdat from 'js-stream-sas7bdat';
+import { DatasetReadStat } from 'js-stream-sas7bdat';
 import DatasetXpt from 'xport-js';
 import {
     DataType,
@@ -30,7 +30,7 @@ const getHash = (str: string, lastModified: number): string => {
 
 class FileManager {
     private openedFiles: {
-        [key: string]: DatasetJson | DatasetXpt | DatasetSas7bdat;
+        [key: string]: DatasetJson | DatasetXpt | DatasetReadStat;
     } = {};
 
     private fileWatcher: FileWatcher = new FileWatcher();
@@ -49,28 +49,16 @@ class FileManager {
         // Check if the file is already opened
         const foundFileIds = Object.keys(this.openedFiles).filter((fileId) => {
             const file = this.openedFiles[fileId];
-            if (
-                file instanceof DatasetJson ||
-                file instanceof DatasetSas7bdat
-            ) {
-                return (
-                    file.filePath === pathToFile &&
-                    (!fileIdPrefix || fileId.startsWith(fileIdPrefix))
-                );
-            }
-            if (file instanceof DatasetXpt) {
-                return (
-                    file.pathToFile === pathToFile &&
-                    (!fileIdPrefix || fileId.startsWith(fileIdPrefix))
-                );
-            }
-            return false;
+            return (
+                file.filePath === pathToFile &&
+                (!fileIdPrefix || fileId.startsWith(fileIdPrefix))
+            );
         });
 
         if (foundFileIds.length > 0) {
             return foundFileIds[0];
         }
-        // Craete a new ID
+        // Create a new ID
         const allIds = Object.keys(this.openedFiles);
         let hash: string;
         do {
@@ -93,7 +81,7 @@ class FileManager {
             fileIdPrefix?: string;
             autoReload?: boolean;
             createLockFile?: boolean;
-            lockFileFolderFilter?: string;
+            lockFilePathFilter?: string;
         },
     ): Promise<IOpenFile> => {
         const {
@@ -103,7 +91,7 @@ class FileManager {
             fileIdPrefix,
             autoReload,
             createLockFile,
-            lockFileFolderFilter,
+            lockFilePathFilter,
         } = fileSettings;
 
         if (folderPath) {
@@ -184,6 +172,12 @@ class FileManager {
             case 'sas7bdat':
                 type = 'sas7bdat';
                 break;
+            case 'sav':
+                type = 'sav';
+                break;
+            case 'dta':
+                type = 'dta';
+                break;
             case 'dsjc':
                 type = 'json';
                 break;
@@ -199,12 +193,12 @@ class FileManager {
                     lastModified: 0,
                 };
         }
-        let data: DatasetJson | DatasetXpt | DatasetSas7bdat;
+        let data: DatasetJson | DatasetXpt | DatasetReadStat;
         try {
             if (type === 'xpt') {
                 data = new DatasetXpt(newFile.path);
-            } else if (type === 'sas7bdat') {
-                data = new DatasetSas7bdat(newFile.path);
+            } else if (['sas7bdat', 'sav', 'dta'].includes(type)) {
+                data = new DatasetReadStat(newFile.path);
             } else {
                 const updatedEncoding: BufferEncoding =
                     encoding === 'default' ? 'utf8' : encoding;
@@ -227,29 +221,31 @@ class FileManager {
         let lockFilePath: string | null = null;
         if (createLockFile && mode === 'local') {
             let shouldCreateLockFile = false;
-            if (
-                lockFileFolderFilter === '' ||
-                lockFileFolderFilter === undefined
-            ) {
+            if (lockFilePathFilter === '' || lockFilePathFilter === undefined) {
                 shouldCreateLockFile = true;
             } else {
                 try {
-                    const regex = new RegExp(lockFileFolderFilter);
-                    shouldCreateLockFile = regex.test(
-                        path.dirname(newFile.path),
-                    );
+                    const regex = new RegExp(lockFilePathFilter);
+                    shouldCreateLockFile = regex.test(newFile.path);
                 } catch (error) {
                     dialog.showErrorBox(
-                        'Invalid Lock File Folder Filter',
-                        `The provided lock file folder filter is not a valid regular expression: ${(error as Error).message}`,
+                        'Invalid Lock File Path Filter',
+                        `The provided lock file path filter is not a valid regular expression: ${(error as Error).message}`,
                     );
                 }
             }
 
             if (shouldCreateLockFile) {
-                lockFilePath = await this.createLockFile(newFile.path);
-                // Store lock file info
-                this.lockFiles.set(fileId, { lockFilePath });
+                try {
+                    lockFilePath = await this.createLockFile(newFile.path);
+                    // Store lock file info
+                    this.lockFiles.set(fileId, { lockFilePath });
+                } catch (error) {
+                    event.sender.send('renderer:snackbarMessage', {
+                        type: 'error',
+                        message: `Error while creating lock file for ${filePath}: ${(error as Error).message}`,
+                    });
+                }
             }
         }
 
@@ -295,7 +291,7 @@ class FileManager {
     };
 
     public handleFileClose = async (
-        _event: IpcMainInvokeEvent,
+        event: IpcMainInvokeEvent,
         fileId: string,
         mode: 'local' | 'remote',
     ): Promise<boolean> => {
@@ -306,8 +302,16 @@ class FileManager {
             // Remove lock file if exists
             const lockFile = this.lockFiles.get(fileId);
             if (lockFile) {
-                await this.removeLockFile(lockFile.lockFilePath);
-                this.lockFiles.delete(fileId);
+                try {
+                    await this.removeLockFile(lockFile.lockFilePath);
+                    this.lockFiles.delete(fileId);
+                } catch (error) {
+                    const filePath = lockFile.lockFilePath || '';
+                    event.sender.send('renderer:snackbarMessage', {
+                        type: 'error',
+                        message: `Error while removing lock file for ${filePath}: ${(error as Error).message}`,
+                    });
+                }
             }
 
             if (this.openedFiles[fileId]) {
@@ -326,8 +330,9 @@ class FileManager {
     };
 
     public handleGetMetadata = async (
-        _event: IpcMainInvokeEvent,
+        event: IpcMainInvokeEvent,
         fileId: string,
+        forceReload?: boolean,
     ): Promise<{
         metadata: DatasetJsonMetadata;
         lastModified: number;
@@ -341,15 +346,12 @@ class FileManager {
                             'dataset-json1.1',
                         );
                 } else {
-                    metadata = await this.openedFiles[fileId].getMetadata();
+                    metadata =
+                        await this.openedFiles[fileId].getMetadata(forceReload);
                 }
                 // Get last modified time
                 let filePath = '';
-                if (this.openedFiles[fileId] instanceof DatasetXpt) {
-                    filePath = this.openedFiles[fileId].pathToFile;
-                } else {
-                    filePath = this.openedFiles[fileId].filePath;
-                }
+                filePath = this.openedFiles[fileId].filePath;
                 const stats = fs.statSync(filePath);
                 const currentMtime = stats.mtime.getTime();
 
@@ -358,10 +360,11 @@ class FileManager {
                     lastModified: currentMtime,
                 };
             } catch (error) {
-                dialog.showErrorBox(
-                    'Metadata Error',
-                    `An error occurred while retrieving metadata: ${(error as Error).message}`,
-                );
+                const filePath = this.openedFiles[fileId].filePath || '';
+                event.sender.send('renderer:snackbarMessage', {
+                    type: 'error',
+                    message: `Error while retrieving metadata for ${filePath}: ${(error as Error).message}`,
+                });
                 return null;
             }
         }
@@ -369,7 +372,7 @@ class FileManager {
     };
 
     public handleGetObservations = async (
-        _event: IpcMainInvokeEvent,
+        event: IpcMainInvokeEvent,
         fileId: string,
         start: number,
         length: number,
@@ -417,10 +420,11 @@ class FileManager {
                 });
                 return result.data as ItemDataArray[];
             } catch (error) {
-                dialog.showErrorBox(
-                    'Data Error',
-                    `An error occurred while retrieving data: ${(error as Error).message}`,
-                );
+                const filePath = this.openedFiles[fileId].filePath || '';
+                event.sender.send('renderer:snackbarMessage', {
+                    type: 'error',
+                    message: `Error while retrieving data for ${filePath}: ${(error as Error).message}`,
+                });
                 return null;
             }
         }
@@ -428,7 +432,7 @@ class FileManager {
     };
 
     public handleGetUniqueValues = async (
-        _event: IpcMainInvokeEvent,
+        event: IpcMainInvokeEvent,
         fileId: string,
         columns: string[],
         limit?: number,
@@ -442,10 +446,11 @@ class FileManager {
                     addCount,
                 });
             } catch (error) {
-                dialog.showErrorBox(
-                    'Data Error',
-                    `An error occurred while retrieving unique values: ${(error as Error).message}`,
-                );
+                const filePath = this.openedFiles[fileId].filePath || '';
+                event.sender.send('renderer:snackbarMessage', {
+                    type: 'error',
+                    message: `Error while retrieving unique values for ${filePath}: ${(error as Error).message}`,
+                });
                 return null;
             }
         }
@@ -571,6 +576,10 @@ class FileManager {
                         format = 'json';
                     } else if (parsedPath.ext.toLowerCase() === '.sas7bdat') {
                         format = 'sas7bdat';
+                    } else if (parsedPath.ext.toLowerCase() === '.sav') {
+                        format = 'sav';
+                    } else if (parsedPath.ext.toLowerCase() === '.dta') {
+                        format = 'dta';
                     } else if (parsedPath.ext.toLowerCase() === '.ndjson') {
                         format = 'ndjson';
                     } else if (parsedPath.ext.toLowerCase() === '.dsjc') {
@@ -600,6 +609,25 @@ class FileManager {
         const filesInfo = await Promise.all(filesInfoPromises);
         return filesInfo;
     };
+
+    public getWatcherStats(): { [key: string]: string } {
+        const watchedFilePaths = this.fileWatcher.getWatchedFilePaths();
+        const stats: { [key: string]: string } = {
+            totalWatchedFiles: watchedFilePaths.length.toString(),
+        };
+        watchedFilePaths.forEach((filePath, index) => {
+            stats[`watchedFile_${index}`] = filePath;
+        });
+        // Get errors info
+        const watcherErrors = this.fileWatcher.getWatcherErrors();
+        let errorIndex = 1;
+        watcherErrors.forEach((errorInfo, fileId) => {
+            stats[`watcherError_${errorIndex}`] =
+                `File: ${fileId} Count: ${errorInfo.count}, Error Times: ${errorInfo.time.join(', ')}`;
+            errorIndex++;
+        });
+        return stats;
+    }
 }
 
 export default FileManager;

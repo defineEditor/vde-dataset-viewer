@@ -82,31 +82,19 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
 
     // Get validation state from Redux
     const validationStatus = useAppSelector<IUiValidation['status']>(
-        (state) =>
-            (validationId !== null &&
-                state.ui.validation[validationId]?.status) ||
-            'not started',
+        (state) => state.ui.validation[validationId]?.status || 'not started',
     );
 
     const validationDateCompleted = useAppSelector<number | null>(
-        (state) =>
-            (validationId !== null &&
-                state.ui.validation[validationId]?.dateCompleted) ||
-            null,
+        (state) => state.ui.validation[validationId]?.dateCompleted || null,
     );
 
     const validationError = useAppSelector<string | null>(
-        (state) =>
-            (validationId !== null &&
-                state.ui.validation[validationId]?.error) ||
-            null,
+        (state) => state.ui.validation[validationId]?.error || null,
     );
 
     const validationLogFileName = useAppSelector<string | null>(
-        (state) =>
-            (validationId !== null &&
-                state.ui.validation[validationId]?.logFileName) ||
-            null,
+        (state) => state.ui.validation[validationId]?.logFileName || null,
     );
 
     const { apiService } = useContext(AppContext);

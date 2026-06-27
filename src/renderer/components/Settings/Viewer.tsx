@@ -87,7 +87,7 @@ export const Viewer: React.FC<ViewerProps> = ({
                 label="Wrap Values"
             />
             <Typography variant="caption" sx={styles.helperText}>
-                When selected, long cell values are wrapper
+                When selected, long cell values are wrapped
             </Typography>
         </Stack>
         <Stack spacing={0}>
@@ -263,23 +263,24 @@ export const Viewer: React.FC<ViewerProps> = ({
                 are detected
             </Typography>
         </Stack>
-        {(isDevelopment || settings.viewer.estimateWidthRows === 31415926) && (
+        {(isDevelopment ||
+            settings.viewer.estimateWidthRows === 31415926 ||
+            settings.viewer.debug) && (
             <>
                 <Typography variant="h6">Developer Settings</Typography>
                 <Stack spacing={0}>
                     <FormControlLabel
                         control={
                             <Checkbox
-                                checked={settings.viewer.enableProfiler}
+                                checked={settings.viewer.debug}
                                 onChange={onSettingChange}
-                                name="viewer.enableProfiler"
+                                name="viewer.debug"
                             />
                         }
-                        label="Enable Profiler"
+                        label="Enable Debug Mode"
                     />
                     <Typography variant="caption" sx={styles.helperText}>
-                        When enabled, the table profiler is active, see Console
-                        -&gt; All Levels
+                        When enabled, debug mode is active with more messages
                     </Typography>
                 </Stack>
             </>

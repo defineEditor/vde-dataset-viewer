@@ -8,8 +8,10 @@ import {
     TaskProgress,
     NewWindowProps,
     FileWatcherEvent,
+    IUiSnackbar,
 } from 'interfaces/common';
 import { ElectronApi, Channels } from 'interfaces/electron.api';
+import getMemoryInfo from 'renderer/utils/getMemoryInfo';
 
 const openFile: ElectronApi['openFile'] = (mode, fileSettings) =>
     ipcRenderer.invoke('main:openFile', mode, fileSettings);
@@ -20,8 +22,8 @@ const writeToClipboard: ElectronApi['writeToClipboard'] = (text) =>
 const closeFile: ElectronApi['closeFile'] = (fileId, mode) =>
     ipcRenderer.invoke('main:closeFile', fileId, mode);
 
-const getMetadata: ElectronApi['getMetadata'] = (fileId) =>
-    ipcRenderer.invoke('read:getMetadata', fileId);
+const getMetadata: ElectronApi['getMetadata'] = (fileId, forceReload) =>
+    ipcRenderer.invoke('read:getMetadata', fileId, forceReload);
 
 const getData: ElectronApi['getData'] = (
     fileId,
@@ -72,6 +74,15 @@ const onSaveStore: ElectronApi['onSaveStore'] = (callback) => {
         await callback();
         ipcRenderer.send('main:storeSaved');
     });
+};
+
+const onSnackbarMessage: ElectronApi['onSnackbarMessage'] = (callback) => {
+    ipcRenderer.on(
+        'renderer:snackbarMessage',
+        (_event: IpcRendererEvent, data: IUiSnackbar) => {
+            callback(data);
+        },
+    );
 };
 
 const onFileOpen: ElectronApi['onFileOpen'] = (callback) => {
@@ -156,6 +167,16 @@ const isWindows: ElectronApi['isWindows'] = process.platform === 'win32';
 const isDevelopment: ElectronApi['isDevelopment'] =
     process.env.NODE_ENV === 'development';
 
+const getDeveloperInfo: ElectronApi['getDeveloperInfo'] = async () => {
+    const renderInfo = await getMemoryInfo('renderer');
+    const mainInfo = await ipcRenderer.invoke('main:getDeveloperInfo');
+    const rendererInfo = {
+        isDev: String(isDevelopment),
+        ...renderInfo,
+    };
+    return { ...rendererInfo, ...mainInfo };
+};
+
 const startTask: ElectronApi['startTask'] = (task) =>
     ipcRenderer.invoke('main:startTask', task);
 
@@ -232,6 +253,7 @@ contextBridge.exposeInMainWorld('electron', {
     checkForUpdates,
     downloadUpdate,
     onSaveStore,
+    onSnackbarMessage,
     onFileOpen,
     removeFileOpenListener,
     onFileChanged,
@@ -248,6 +270,7 @@ contextBridge.exposeInMainWorld('electron', {
     downloadValidationReport,
     isWindows,
     isDevelopment,
+    getDeveloperInfo,
     startTask,
     stopTask,
     onTaskProgress,

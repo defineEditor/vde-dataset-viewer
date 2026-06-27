@@ -17,6 +17,7 @@ import {
     NewWindowProps,
     DefineFileInfo,
     DefineXmlContent,
+    IUiSnackbar,
 } from 'interfaces/common';
 
 export type Channels = 'ipc-vde';
@@ -31,7 +32,7 @@ export interface ElectronApi {
             fileIdPrefix?: string;
             autoReload?: boolean;
             createLockFile?: boolean;
-            lockFileFolderFilter?: string;
+            lockFilePathFilter?: string;
         },
     ) => Promise<{
         fileId: string;
@@ -40,7 +41,10 @@ export interface ElectronApi {
         lastModified: number;
     } | null>;
     closeFile: (fileId: string, mode: 'local' | 'remote') => Promise<boolean>;
-    getMetadata: (fileId: string) => Promise<{
+    getMetadata: (
+        fileId: string,
+        forceReload?: boolean,
+    ) => Promise<{
         metadata: DatasetJsonMetadata;
         lastModified: number;
     } | null>;
@@ -71,6 +75,7 @@ export interface ElectronApi {
     saveLocalStore: (localStore: ILocalStore) => void;
     loadLocalStore: () => Promise<ILocalStore>;
     onSaveStore: (callback: () => Promise<void>) => void;
+    onSnackbarMessage: (callback: (data: IUiSnackbar) => void) => void;
     onFileOpen: (
         callback: (filePath: string, props?: NewWindowProps) => void,
     ) => void;
@@ -117,6 +122,7 @@ export interface ElectronApi {
     closeDefineXml: (fileId: string) => Promise<boolean>;
     isWindows: boolean;
     isDevelopment: boolean;
+    getDeveloperInfo: () => Promise<{ [key: string]: string | number }>;
     resizeWindow: (
         position: 'top' | 'bottom' | 'left' | 'right',
     ) => Promise<void>;

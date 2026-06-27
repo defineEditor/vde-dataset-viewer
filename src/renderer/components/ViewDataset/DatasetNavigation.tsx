@@ -2,8 +2,22 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import { openDataset, closeDataset } from 'renderer/redux/slices/ui';
 import AppContext from 'renderer/utils/AppContext';
-import { Tabs, Tab, Box, Stack, IconButton } from '@mui/material';
+import {
+    Tabs,
+    Tab,
+    Box,
+    Stack,
+    IconButton,
+    Tooltip,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions,
+    Button,
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 
 const styles = {
     tabs: {
@@ -25,6 +39,19 @@ const styles = {
         width: '100%',
         alignItems: 'center',
         justifyContent: 'space-between',
+        overflow: 'hidden',
+    },
+    dialog: {
+        minWidth: '30%',
+        maxHeight: '80%',
+    },
+    title: {
+        marginBottom: 2,
+        backgroundColor: 'primary.main',
+        color: 'grey.100',
+    },
+    actions: {
+        m: 2,
     },
 };
 
@@ -37,6 +64,7 @@ const DatasetNavigation: React.FC = () => {
             .getOpenedFiles()
             .filter((file) => file.mode === 'local' && !file.compareId),
     );
+    const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
     const currentFileId = useAppSelector((state) => state.ui.currentFileId);
     const loadedRecords = useAppSelector((state) => state.data.loadedRecords);
@@ -103,46 +131,101 @@ const DatasetNavigation: React.FC = () => {
         }
     };
 
+    const handleCloseAllDatasets = () => {
+        setShowConfirmDialog(true);
+    };
+
+    const handleConfirmCloseAll = () => {
+        setShowConfirmDialog(false);
+        openedFiles.forEach((file) => {
+            dispatch(
+                closeDataset({
+                    fileId: file.fileId,
+                }),
+            );
+            apiService.close(file.fileId);
+        });
+        setOpenedFiles([]);
+    };
+
+    const handleCancelCloseAll = () => {
+        setShowConfirmDialog(false);
+    };
+
     return (
-        <Tabs
-            value={
-                currentFileOpened
-                    ? currentFileId
-                    : openedFiles[0]?.fileId || false
-            }
-            variant="scrollable"
-            scrollButtons="auto"
-            sx={styles.tabs}
-        >
-            {openedFiles.map((file) => (
-                <Tab
-                    key={file.fileId}
-                    onClick={(e) =>
-                        handleDatasetChange(e, file.fileId, file.path)
-                    }
-                    label={
-                        <Stack
-                            direction="row"
-                            spacing={0}
-                            sx={styles.container}
-                        >
-                            <Box sx={styles.label}>{file.name}</Box>
-                            <IconButton
-                                component="span"
-                                onClick={(event) =>
-                                    handleCloseDataset(event, file.fileId)
-                                }
-                                sx={styles.iconButton}
+        <Stack direction="row" spacing={1} sx={styles.container}>
+            <Tabs
+                value={
+                    currentFileOpened
+                        ? currentFileId
+                        : openedFiles[0]?.fileId || false
+                }
+                variant="scrollable"
+                scrollButtons="auto"
+                sx={styles.tabs}
+            >
+                {openedFiles.map((file) => (
+                    <Tab
+                        key={file.fileId}
+                        onClick={(e) =>
+                            handleDatasetChange(e, file.fileId, file.path)
+                        }
+                        label={
+                            <Stack
+                                direction="row"
+                                spacing={0}
+                                sx={styles.container}
                             >
-                                <CloseIcon fontSize="small" />
-                            </IconButton>
-                        </Stack>
-                    }
-                    sx={styles.item}
-                    value={file.fileId}
-                />
-            ))}
-        </Tabs>
+                                <Box sx={styles.label}>{file.name}</Box>
+                                <IconButton
+                                    component="span"
+                                    onClick={(event) =>
+                                        handleCloseDataset(event, file.fileId)
+                                    }
+                                    sx={styles.iconButton}
+                                >
+                                    <CloseIcon fontSize="small" />
+                                </IconButton>
+                            </Stack>
+                        }
+                        sx={styles.item}
+                        value={file.fileId}
+                    />
+                ))}
+            </Tabs>
+            {openedFiles.length > 1 && (
+                <Tooltip title="Close All Datasets">
+                    <IconButton
+                        size="large"
+                        onClick={handleCloseAllDatasets}
+                        sx={styles.iconButton}
+                    >
+                        <HighlightOffIcon />
+                    </IconButton>
+                </Tooltip>
+            )}
+            <Dialog
+                open={showConfirmDialog}
+                onClose={handleCancelCloseAll}
+                slotProps={{ paper: { sx: styles.dialog } }}
+            >
+                <DialogTitle sx={styles.title}>Confirm Close All</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to close {openedFiles.length}{' '}
+                        datasets?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions sx={styles.actions}>
+                    <Button onClick={handleCancelCloseAll} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleConfirmCloseAll} color="primary">
+                        Close All
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </Stack>
     );
 };
 

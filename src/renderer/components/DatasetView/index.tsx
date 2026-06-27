@@ -16,7 +16,7 @@ import {
     IUiControl,
     TableRowValue,
 } from 'interfaces/common';
-import { useAppTheme } from 'renderer/utils/theme';
+import { useAppTheme } from 'renderer/theme';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import {
@@ -73,14 +73,14 @@ const styles = {
 
 interface DatasetViewProps {
     tableData: ITableData;
-    isLoading: boolean;
-    handleContextMenu: (
-        event: React.MouseEvent<HTMLTableCellElement, MouseEvent>,
+    settings: TableSettings;
+    isLoading?: boolean;
+    handleContextMenu?: (
+        event: React.MouseEvent<HTMLElement, MouseEvent>,
         columnId: string,
         value: TableRowValue,
         isHeader?: boolean,
     ) => void;
-    settings: TableSettings;
     currentPage?: number;
     currentMask?: IMask | null;
     annotatedCells?: Map<
@@ -101,22 +101,12 @@ const createPinningStyle = (
     zIndex = 1,
 ): PinningStyle => {
     const isPinned = column.getIsPinned();
-    const isLastLeftPinnedColumn =
-        isPinned === 'left' && column.getIsLastColumn('left');
-    const isFirstRightPinnedColumn =
-        isPinned === 'right' && column.getIsFirstColumn('right');
 
-    return (theme) => ({
+    return () => ({
         backgroundColor,
-        boxShadow: isLastLeftPinnedColumn
-            ? `-4px 0 4px -4px ${theme.vars?.palette.table.pinShadow} inset`
-            : isFirstRightPinnedColumn
-              ? `4px 0 4px -4px ${theme.vars?.palette.table.pinShadow} inset`
-              : undefined,
         left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
         right:
             isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
-        opacity: isPinned ? 0.98 : 1,
         position: isPinned ? 'sticky' : 'relative',
         zIndex,
     });
@@ -124,8 +114,8 @@ const createPinningStyle = (
 
 const DatasetView: React.FC<DatasetViewProps> = ({
     tableData,
-    isLoading,
-    handleContextMenu,
+    isLoading = false,
+    handleContextMenu = () => {},
     settings,
     currentPage = 0,
     currentMask = null,
@@ -204,7 +194,10 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             return headerCell;
         });
         // Add row number column if not present
-        if (!result.find((col) => col.accessorKey === '#')) {
+        if (
+            !settings.hideRowNumbers &&
+            !result.find((col) => col.accessorKey === '#')
+        ) {
             result.unshift({
                 accessorKey: '#',
                 header: '#',
@@ -309,7 +302,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         columns,
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
-        debugTable: settings.enableProfiler,
+        debugTable: settings.debug,
         columnResizeMode: 'onEnd',
         state: {
             sorting,
@@ -1064,7 +1057,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             startTime: number,
             commitTime: number,
         ) => {
-            if (!settings.enableProfiler) {
+            if (!settings.debug) {
                 return;
             }
 
@@ -1084,7 +1077,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             rows.length,
             tableData.fileId,
             visibleColumns.length,
-            settings.enableProfiler,
+            settings.debug,
         ],
     );
 
@@ -1123,7 +1116,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         <Box ref={viewContainerRef} style={styles.fullHeight}>
             {/* If height is not measured yet, do not render */}
             {tableHeight !== 0 &&
-                (settings.enableProfiler ? (
+                (settings.debug ? (
                     <Profiler id="DatasetView" onRender={handleProfileRender}>
                         {renderedView}
                     </Profiler>

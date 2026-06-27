@@ -11,10 +11,12 @@ import useScrollbarWidth from 'renderer/components/hooks/useScrollbarWidth';
 const styles = {
     container: {
         width: '100%',
+        height: '100%',
+        overflow: 'hidden',
     },
 };
 
-const DatasetContainer: React.FC<{
+const ReportDatasetContainer: React.FC<{
     data?: ITableData;
     type: 'summary' | 'details' | 'rules';
 }> = ({ data = undefined, type }) => {
@@ -79,4 +81,4 @@ const DatasetContainer: React.FC<{
     );
 };
 
-export default DatasetContainer;
+export default ReportDatasetContainer;

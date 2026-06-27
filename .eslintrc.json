@@ -56,5 +56,13 @@
     "globals": {
         "BufferEncoding": "readonly"
     },
-    "ignorePatterns": [".erb/**/*"]
+    "ignorePatterns": [".erb/**/*"],
+    "overrides": [
+        {
+        "files": ["*.ts", "*.tsx"],
+        "rules": {
+            "no-undef": "off"
+            }
+        }
+    ]
 }

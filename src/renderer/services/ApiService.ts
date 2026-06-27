@@ -27,6 +27,7 @@ import {
     DefineFileInfo,
     DefineXmlContent,
     FileWatcherEvent,
+    RequestReason,
 } from 'interfaces/common';
 import store from 'renderer/redux/store';
 import transformData from 'renderer/services/transformData';
@@ -200,7 +201,7 @@ class ApiService {
         const encoding = settings.other.inEncoding;
         const autoReload = settings.viewer.autoReload || false;
         const createLockFile = settings.other.createLockFile || false;
-        const lockFileFolderFilter = settings.other.lockFileFolderFilter || '';
+        const lockFilePathFilter = settings.other.lockFilePathFilter || '';
 
         const response = await window.electron.openFile('local', {
             encoding,
@@ -209,7 +210,7 @@ class ApiService {
             fileIdPrefix: compareId || 'f',
             autoReload,
             createLockFile,
-            lockFileFolderFilter,
+            lockFilePathFilter,
         });
         if (response === null) {
             return {
@@ -253,6 +254,7 @@ class ApiService {
     public getMetadata = async (
         fileId: string,
         filterColumns?: string[],
+        forceReload?: boolean,
     ): Promise<DatasetJsonMetadata | null> => {
         const file = this.openedFiles.find(
             (fileItem) => fileItem.fileId === fileId,
@@ -273,7 +275,7 @@ class ApiService {
         if (file.mode === 'remote') {
             result = await this.getMetadataRemote(fileId);
         } else {
-            result = await this.getMetadataLocal(fileId);
+            result = await this.getMetadataLocal(fileId, forceReload);
         }
         if (result === null) {
             return null;
@@ -303,11 +305,12 @@ class ApiService {
 
     private getMetadataLocal = async (
         fileId: string,
+        forceReload?: boolean,
     ): Promise<{
         metadata: DatasetJsonMetadata;
         lastModified: number;
     } | null> => {
-        const result = await window.electron.getMetadata(fileId);
+        const result = await window.electron.getMetadata(fileId, forceReload);
         return result;
     };
 
@@ -363,6 +366,7 @@ class ApiService {
         settings: ISettings,
         filterColumns?: string[],
         filterData?: BasicFilter,
+        _requestReason?: RequestReason,
         keepOpenedData: boolean = false,
     ): Promise<ITableRow[]> => {
         const file = this.openedFiles.find(
@@ -740,7 +744,7 @@ class ApiService {
             delete this.openedFilesData[fileId];
         }
         // Reload file
-        const newMetadata = await this.getMetadata(fileId);
+        const newMetadata = await this.getMetadata(fileId, undefined, true);
         if (newMetadata === null) {
             throw new Error('Failed to reload file metadata');
         } else {
@@ -1162,6 +1166,13 @@ class ApiService {
 
     public isDevelopment = (): boolean => {
         return window.electron.isDevelopment;
+    };
+
+    public getDeveloperInfo = async (): Promise<{
+        [key: string]: string | number;
+    }> => {
+        const result = await window.electron.getDeveloperInfo();
+        return result;
     };
 }
 

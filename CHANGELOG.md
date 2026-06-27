@@ -1,3 +1,41 @@
+# 0.7.0
+### Improvements
+* Add color themes and dark mode [#124](https://github.com/defineEditor/vde-dataset-viewer/issues/124)
+* Add compact mode [#142](https://github.com/defineEditor/vde-dataset-viewer/issues/142)
+* Add command line [#125](https://github.com/defineEditor/vde-dataset-viewer/issues/125)
+* Add ID column [#106](https://github.com/defineEditor/vde-dataset-viewer/issues/106)
+* Add autocomplete in filter and commands [#127](https://github.com/defineEditor/vde-dataset-viewer/issues/127)
+* Show labels instead of variable names [#119](https://github.com/defineEditor/vde-dataset-viewer/issues/119)
+* Add better sorting capabilities [#116](https://github.com/defineEditor/vde-dataset-viewer/issues/116)
+* Auto-reload functionality [#123](https://github.com/defineEditor/vde-dataset-viewer/issues/123)
+* Add support for Stata and SPSS [#163](https://github.com/defineEditor/vde-dataset-viewer/issues/163)
+* Optimize table rendering performance by using GPU [#159](https://github.com/defineEditor/vde-dataset-viewer/issues/159)
+* Show number of rows for all tables [#158](https://github.com/defineEditor/vde-dataset-viewer/issues/158)
+* Add developer modal [#156](https://github.com/defineEditor/vde-dataset-viewer/issues/156)
+* Add ability to create lock files for open files [#152](https://github.com/defineEditor/vde-dataset-viewer/issues/152)
+* Allow showing all values inside value selection popup in interactive filter [#145](https://github.com/defineEditor/vde-dataset-viewer/issues/145)
+* Add ability to add negative filter from the right click menu [#144](https://github.com/defineEditor/vde-dataset-viewer/issues/144)
+* Update shortcuts [#138](https://github.com/defineEditor/vde-dataset-viewer/issues/138)
+* Add ability to disable GPU by --disable-gpu flag [#139](https://github.com/defineEditor/vde-dataset-viewer/issues/139)
+* Add basic commands [#126](https://github.com/defineEditor/vde-dataset-viewer/issues/126)
+* Update CSV setting description [#122](https://github.com/defineEditor/vde-dataset-viewer/issues/122)
+* Add ability to close all opened datasets [#113](https://github.com/defineEditor/vde-dataset-viewer/issues/113)
+
+### Fixes
+* Pagination control can become hidden [#170](https://github.com/defineEditor/vde-dataset-viewer/issues/170)
+* Cell context filter does not use case sensitivity [#165](https://github.com/defineEditor/vde-dataset-viewer/issues/165)
+* Transparent row number background [#160](https://github.com/defineEditor/vde-dataset-viewer/issues/160)
+* Adding condition via cell context may result in incorrect filter [#150](https://github.com/defineEditor/vde-dataset-viewer/issues/150)
+* Going to line on a page further than 1st when filter is applied [#148](https://github.com/defineEditor/vde-dataset-viewer/issues/148)
+* Interactive filter issues [#143](https://github.com/defineEditor/vde-dataset-viewer/issues/143)
+* Keep columns visible when switching between datasets [#141](https://github.com/defineEditor/vde-dataset-viewer/issues/141)
+* Cell context menu filtering selects incorrect value when sorting was used before [#112](https://github.com/defineEditor/vde-dataset-viewer/issues/112)
+
+## Technical Changes
+* Update Electron version [#135](https://github.com/defineEditor/vde-dataset-viewer/issues/135)
+* Replace Toolpad with MUI components [#133](https://github.com/defineEditor/vde-dataset-viewer/issues/133)
+* Upgrade to MUI 9 [#132](https://github.com/defineEditor/vde-dataset-viewer/issues/132)
+
 # 0.6.5
 ### Improvements
 * Filtering using column headers [#100](https://github.com/defineEditor/vde-dataset-viewer/issues/100)

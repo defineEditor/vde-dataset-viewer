@@ -194,6 +194,9 @@ export const uiSlice = createSlice({
         setDatasetInfoTab: (state, action: PayloadAction<0 | 1>) => {
             state.viewer.datasetInfoTab = action.payload;
         },
+        setSettingsTab: (state, action: PayloadAction<number>) => {
+            state.settingsTab = action.payload;
+        },
         setDatasetScrollPosition: (
             state,
             action: PayloadAction<{
@@ -606,6 +609,7 @@ export const {
     setSelect,
     setPage,
     setDatasetInfoTab,
+    setSettingsTab,
     setDatasetScrollPosition,
     setReloadRequested,
     setDatasetSorting,

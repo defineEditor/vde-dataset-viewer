@@ -8,7 +8,13 @@ import {
     IpcMainInvokeEvent,
 } from 'electron';
 import StoreManager from 'main/managers/storeManager';
-import { resolveHtmlPath, writeToClipboard, resizeWindow } from 'main/util';
+import {
+    resolveHtmlPath,
+    writeToClipboard,
+    resizeWindow,
+    getDeveloperInfo,
+    parseArgs,
+} from 'main/utils';
 import {
     installExtension,
     REDUX_DEVTOOLS,
@@ -25,53 +31,17 @@ import { MainTask, NewWindowProps } from 'interfaces/main';
 let mainWindow: BrowserWindow | null = null;
 const openedWindows = new Set<BrowserWindow>();
 
-// Parse command line arguments
-function parseArgs(args: string[]): {
-    filePath: string | null;
-    compareFiles: { path1: string; path2: string } | null;
-    disableGpu: boolean;
-} {
-    const startIdx = app.isPackaged ? 1 : 2;
-    let filePath: string | null = null;
-    let compareFiles: { path1: string; path2: string } | null = null;
-    const disableGpu = args.includes('--disable-gpu');
-
-    // Check for --compare
-    const compareIndex = args.indexOf('--compare');
-    if (compareIndex !== -1 && args.length > compareIndex + 2) {
-        // Skip parameter arguments
-        for (
-            let i = compareIndex + 1;
-            i < args.length && compareFiles === null;
-            i++
-        ) {
-            // Skip parameter arguments
-            if (!args[i].startsWith('-') && args[i + 1]) {
-                compareFiles = {
-                    path1: args[i],
-                    path2: args[i + 1],
-                };
-            }
-        }
-    } else if (args.length > startIdx) {
-        for (let i = startIdx; i < args.length && filePath === null; i++) {
-            // Skip parameter arguments
-            if (!args[i].startsWith('-')) {
-                filePath = args[i];
-            }
-        }
-    }
-
-    return { filePath, compareFiles, disableGpu };
-}
-
 // Store command line arguments for later use
-const args = parseArgs(process.argv);
+const args = parseArgs(process.argv, app.isPackaged);
 let fileToOpen = args.filePath;
-const { compareFiles, disableGpu } = args;
+const { compareFiles, disableGpu, userDataDir } = args;
 
 if (disableGpu) {
     app.disableHardwareAcceleration();
+}
+
+if (userDataDir) {
+    app.setPath('userData', userDataDir);
 }
 
 // Handle file opening from "Open With" on start
@@ -92,7 +62,7 @@ if (!gotTheLock) {
             mainWindow.focus();
 
             // Check for file paths in command line arguments
-            const newArgs = parseArgs(commandLine);
+            const newArgs = parseArgs(commandLine, app.isPackaged);
             if (newArgs.compareFiles) {
                 mainWindow.webContents.send('renderer:openFile', undefined, {
                     compare: newArgs.compareFiles,
@@ -425,6 +395,10 @@ app.whenReady()
             if (_event.sender) {
                 _event.sender.stopFindInPage('clearSelection');
             }
+        });
+        ipcMain.handle('main:getDeveloperInfo', async () => {
+            const developerInfo = await getDeveloperInfo(fileManager);
+            return developerInfo;
         });
         mainWindow = await createWindow(
             fileToOpen,

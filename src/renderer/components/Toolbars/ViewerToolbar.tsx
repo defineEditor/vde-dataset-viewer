@@ -11,6 +11,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
+import DeveloperBoardIcon from '@mui/icons-material/DeveloperBoard';
 import SortIcon from '@mui/icons-material/Sort';
 import {
     openDataset,
@@ -69,6 +70,8 @@ const Header: React.FC = () => {
 
     const isModalOpen = useAppSelector((state) => state.ui.modals?.length > 0);
 
+    const isDebugMode = useAppSelector((state) => state.settings.viewer.debug);
+
     const openFiles = apiService.getOpenedFiles(currentFileId);
 
     const dataset = openFiles.length === 1 ? openFiles[0] : null;
@@ -123,6 +126,10 @@ const Header: React.FC = () => {
 
     const handleCommandLineClick = useCallback(() => {
         dispatch(openModal({ type: modals.COMMANDLINE, data: {} }));
+    }, [dispatch]);
+
+    const handleDeveloperClick = useCallback(() => {
+        dispatch(openModal({ type: modals.DEVELOPER, data: {} }));
     }, [dispatch]);
 
     const handleFilterClick = useCallback(() => {
@@ -456,6 +463,22 @@ const Header: React.FC = () => {
                     />
                 </IconButton>
             </Tooltip>
+            {isDebugMode && (
+                <Tooltip title="Developer" enterDelay={1000}>
+                    <IconButton
+                        onClick={handleDeveloperClick}
+                        id="developer"
+                        size="small"
+                        disabled={pathname !== paths.VIEWFILE}
+                    >
+                        <DeveloperBoardIcon
+                            sx={{
+                                color: 'grey.600',
+                            }}
+                        />
+                    </IconButton>
+                </Tooltip>
+            )}
         </Stack>
     );
 };
