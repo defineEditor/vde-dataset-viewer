@@ -8,7 +8,7 @@
 * Show labels instead of variable names [#119](https://github.com/defineEditor/vde-dataset-viewer/issues/119)
 * Add better sorting capabilities [#116](https://github.com/defineEditor/vde-dataset-viewer/issues/116)
 * Auto-reload functionality [#123](https://github.com/defineEditor/vde-dataset-viewer/issues/123)
-* Add support for Stata and SPSS [#163](https://github.com/defineEditor/vde-dataset-viewer/issues/163)
+* Add initial support for Stata (DTA) and SPSS (SAV, ZSAV, POR) [#163](https://github.com/defineEditor/vde-dataset-viewer/issues/163)
 * Optimize table rendering performance by using GPU [#159](https://github.com/defineEditor/vde-dataset-viewer/issues/159)
 * Show number of rows for all tables [#158](https://github.com/defineEditor/vde-dataset-viewer/issues/158)
 * Add developer modal [#156](https://github.com/defineEditor/vde-dataset-viewer/issues/156)

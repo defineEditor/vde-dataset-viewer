@@ -175,6 +175,12 @@ class FileManager {
             case 'sav':
                 type = 'sav';
                 break;
+            case 'zsav':
+                type = 'zsav';
+                break;
+            case 'por':
+                type = 'por';
+                break;
             case 'dta':
                 type = 'dta';
                 break;
@@ -197,7 +203,9 @@ class FileManager {
         try {
             if (type === 'xpt') {
                 data = new DatasetXpt(newFile.path);
-            } else if (['sas7bdat', 'sav', 'dta'].includes(type)) {
+            } else if (
+                ['sas7bdat', 'sav', 'dta', 'zsav', 'por'].includes(type)
+            ) {
                 data = new DatasetReadStat(newFile.path);
             } else {
                 const updatedEncoding: BufferEncoding =
@@ -578,6 +586,10 @@ class FileManager {
                         format = 'sas7bdat';
                     } else if (parsedPath.ext.toLowerCase() === '.sav') {
                         format = 'sav';
+                    } else if (parsedPath.ext.toLowerCase() === '.zsav') {
+                        format = 'zsav';
+                    } else if (parsedPath.ext.toLowerCase() === '.por') {
+                        format = 'por';
                     } else if (parsedPath.ext.toLowerCase() === '.dta') {
                         format = 'dta';
                     } else if (parsedPath.ext.toLowerCase() === '.ndjson') {
