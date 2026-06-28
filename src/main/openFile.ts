@@ -18,6 +18,8 @@ const openFile = async (
                     'sas7bdat',
                     'sav',
                     'dta',
+                    'zsav',
+                    'por',
                 ],
             },
             {
@@ -42,7 +44,7 @@ const openFile = async (
             },
             {
                 name: 'SPSS',
-                extensions: ['sav'],
+                extensions: ['sav', 'zsav', 'por'],
             },
             {
                 name: 'Stata',

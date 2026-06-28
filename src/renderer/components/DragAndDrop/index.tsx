@@ -72,6 +72,8 @@ const DragAndDrop: React.FC<Props> = ({ children }) => {
                         fileExtension === 'ndjson' ||
                         fileExtension === 'sas7bdat' ||
                         fileExtension === 'sav' ||
+                        fileExtension === 'zsav' ||
+                        fileExtension === 'por' ||
                         fileExtension === 'dta' ||
                         fileExtension === 'dsjc'
                     ) {

@@ -70,6 +70,8 @@ const FileSelector: React.FC<FileSelectorProps> = ({
                 'sas7bdat',
                 'sav',
                 'dta',
+                'zsav',
+                'por',
             ],
         },
         {
@@ -94,7 +96,7 @@ const FileSelector: React.FC<FileSelectorProps> = ({
         },
         {
             name: 'SPSS',
-            extensions: ['sav'],
+            extensions: ['sav', 'zsav', 'por'],
         },
         {
             name: 'Stata',
