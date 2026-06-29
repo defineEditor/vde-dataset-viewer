@@ -169,7 +169,12 @@ const DragAndDrop: React.FC<Props> = ({ children }) => {
     );
 
     const handleDragLeave = useCallback((event: React.DragEvent) => {
-        if (event.currentTarget.contains(event.relatedTarget as Node | null)) {
+        if (
+            (event.relatedTarget instanceof Node ||
+                event.relatedTarget === null) &&
+            event.currentTarget.contains(event.relatedTarget)
+        ) {
+            // If leave event is triggered by a child element
             return;
         }
         event.preventDefault();
