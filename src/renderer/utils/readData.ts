@@ -23,6 +23,13 @@ export const getHeader = (
             // Check if the displayFormat is a date, time, or datetime format
             let numericDatetimeType: 'date' | 'datetime' | 'time' | null = null;
 
+            // Normalize format names by removing trailing width/precision suffixes.
+            // Regex breakdown: `(.+?)\d*(\.\d*)?$`
+            // - `(.+?)` captures the base format name (non-greedy)
+            // - `\d*` matches optional trailing width digits
+            // - `(\.\d*)?` matches optional precision part (e.g., `.3` or `.`)
+            // - `$` anchors to the end of the string
+            // Examples: DATE9. -> DATE, TIME8. -> TIME, DATETIME20.3 -> DATETIME.
             const updatedDisplayFormat = item.displayFormat
                 .toUpperCase()
                 .replace(/(.+?)\d*(\.\d*)?$/, '$1');

@@ -11,7 +11,7 @@ Supported Formats:
 * Compressed Dataset-JSON 1.1
 * XPORT v5
 * SAS7BDAT
-* SPSS SAV
+* SPSS SAV, ZSAV, POR
 * Stata DTA
 
 

@@ -37,6 +37,8 @@ export type InputFileExtension =
     | 'sas7bdat'
     | 'sav'
     | 'dta'
+    | 'zsav'
+    | 'por'
     | 'json'
     | 'ndjson'
     | 'dsjc';

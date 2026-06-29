@@ -15,7 +15,7 @@ const processSasMetadata = (
     metadata: DatasetJsonMetadata,
     options: ConvertTask['options'],
     outputName: string,
-    inputFormat: 'XPT' | 'SAS7BDAT' | 'DTA' | 'SAV',
+    inputFormat: 'XPT' | 'SAS7BDAT' | 'DTA' | 'SAV' | 'ZSAV' | 'POR',
 ): DatasetJsonMetadata => {
     const newColumns = metadata.columns.map((column) => {
         const newColumn = { ...column };
@@ -636,7 +636,12 @@ const convertReadStat = async (
                 metadata,
                 options,
                 outputName,
-                file.format.toUpperCase() as 'SAS7BDAT' | 'DTA' | 'SAV',
+                file.format.toUpperCase() as
+                    | 'SAS7BDAT'
+                    | 'DTA'
+                    | 'SAV'
+                    | 'ZSAV'
+                    | 'POR',
             );
 
             // Set Dataset-JSON version
@@ -757,7 +762,9 @@ process.parentPort.once(
             await convertXpt(file, options, sendMessage);
         } else if (file.format === 'json' || file.format === 'ndjson') {
             await convertJson(file, options, sendMessage);
-        } else if (['sas7bdat', 'sav', 'dta'].includes(file.format)) {
+        } else if (
+            ['sas7bdat', 'sav', 'dta', 'zsav', 'por'].includes(file.format)
+        ) {
             await convertReadStat(file, options, sendMessage);
         }
         // Exit the process after a short delay to ensure all messages are sent

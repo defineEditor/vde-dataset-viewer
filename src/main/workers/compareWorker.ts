@@ -623,7 +623,9 @@ const openFile = (filePath: string, encoding: BufferEncoding | 'default') => {
     try {
         if (extension === 'xpt') {
             data = new DatasetXpt(filePath);
-        } else if (['sas7bdat', 'sav', 'dta'].includes(extension || '')) {
+        } else if (
+            ['sas7bdat', 'sav', 'dta', 'zsav', 'por'].includes(extension || '')
+        ) {
             data = new DatasetReadStat(filePath);
         } else {
             const updatedEncoding: BufferEncoding =
@@ -714,14 +716,24 @@ process.parentPort.once(
             // 2 - null and missing values are treated as equal
             const baseExtension = fileBase.split('.').pop()?.toLowerCase();
             const compExtension = fileComp.split('.').pop()?.toLowerCase();
-            const baseType = ['xpt', 'sas7bdat', 'sav', 'dta'].includes(
-                baseExtension || '',
-            )
+            const baseType = [
+                'xpt',
+                'sas7bdat',
+                'sav',
+                'dta',
+                'zsav',
+                'por',
+            ].includes(baseExtension || '')
                 ? 'sas'
                 : 'json';
-            const compType = ['xpt', 'sas7bdat', 'sav', 'dta'].includes(
-                compExtension || '',
-            )
+            const compType = [
+                'xpt',
+                'sas7bdat',
+                'sav',
+                'dta',
+                'zsav',
+                'por',
+            ].includes(compExtension || '')
                 ? 'sas'
                 : 'json';
             const differentTypes = baseType !== compType;

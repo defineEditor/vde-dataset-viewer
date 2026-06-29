@@ -72,6 +72,8 @@ const DragAndDrop: React.FC<Props> = ({ children }) => {
                         fileExtension === 'ndjson' ||
                         fileExtension === 'sas7bdat' ||
                         fileExtension === 'sav' ||
+                        fileExtension === 'zsav' ||
+                        fileExtension === 'por' ||
                         fileExtension === 'dta' ||
                         fileExtension === 'dsjc'
                     ) {
@@ -167,6 +169,14 @@ const DragAndDrop: React.FC<Props> = ({ children }) => {
     );
 
     const handleDragLeave = useCallback((event: React.DragEvent) => {
+        if (
+            (event.relatedTarget instanceof Node ||
+                event.relatedTarget === null) &&
+            event.currentTarget.contains(event.relatedTarget)
+        ) {
+            // If leave event is triggered by a child element
+            return;
+        }
         event.preventDefault();
         event.stopPropagation();
         setIsDragging(false);
@@ -178,13 +188,12 @@ const DragAndDrop: React.FC<Props> = ({ children }) => {
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            style={{ width: '100%', height: '100%' }}
+            style={{ position: 'relative', width: '100%', height: '100%' }}
         >
+            {children}
             {dragoverAnimation && isDragging ? (
                 <Follower mouseX={mousePos.x} mouseY={mousePos.y} />
-            ) : (
-                children
-            )}
+            ) : null}
         </div>
     );
 };
