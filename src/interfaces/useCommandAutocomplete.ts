@@ -26,8 +26,13 @@ export interface UniqueValuesApi {
     >;
 }
 
+export type FilterValueOptions = {
+    value: string;
+    type: 'value' | 'variable' | 'header';
+}[];
+
 export interface CommandAutocompleteState {
-    options: string[];
+    options: string[] | FilterValueOptions;
     replaceStart: number;
     replaceEnd: number;
     insertSuffix: string;
@@ -52,7 +57,7 @@ export interface CategoryAutocompleteParams {
     context: ResolvedAutocompleteContext;
     allColumnNames: string[];
     columnTypes: Record<string, 'numeric' | 'string' | 'boolean'>;
-    uniqueValueOptions: Record<string, string[]>;
+    uniqueValueOptions: Record<string, FilterValueOptions>;
     allValuesColumns: string[];
     historyOptions?: string[];
 }

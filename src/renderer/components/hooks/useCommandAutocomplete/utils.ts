@@ -1,3 +1,5 @@
+import { FilterValueOptions } from 'interfaces/common';
+
 export const getActiveSegment = (
     value: string,
 ): { segment: string; start: number } => {
@@ -28,6 +30,33 @@ export const filterOptions = (
     if (
         filteredOptions.length === 1 &&
         filteredOptions[0].toLowerCase() === normalizedSearch
+    ) {
+        return [];
+    }
+
+    return filteredOptions;
+};
+
+export const filterObjectOptions = (
+    options: FilterValueOptions,
+    search: string,
+    fullSearch: boolean = false,
+): FilterValueOptions => {
+    const normalizedSearch = search.toLowerCase();
+    if (normalizedSearch === '') {
+        return options;
+    }
+
+    const filteredOptions = options.filter((option) =>
+        fullSearch
+            ? option.value.toLowerCase().includes(normalizedSearch)
+            : option.value.toLowerCase().startsWith(normalizedSearch),
+    );
+
+    // We do not want to show the dropdown if there is only one option and it exactly matches the search (case-insensitive)
+    if (
+        filteredOptions.length === 1 &&
+        filteredOptions[0].value.toLowerCase() === normalizedSearch
     ) {
         return [];
     }

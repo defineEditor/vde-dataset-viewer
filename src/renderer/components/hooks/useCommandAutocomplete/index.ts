@@ -5,6 +5,7 @@ import type {
     CommandAutocompleteCategory,
     CommandAutocompleteState,
     UniqueValuesApi,
+    FilterValueOptions,
 } from 'interfaces/common';
 import { resolveAutocompleteContext } from 'renderer/components/hooks/useCommandAutocomplete/config';
 import { getFilterAutocomplete } from 'renderer/components/hooks/useCommandAutocomplete/categories/filter';
@@ -47,7 +48,7 @@ export const useCommandAutocomplete = ({
     resolvedCategory: CommandAutocompleteCategory;
 } => {
     const [uniqueValueOptions, setUniqueValueOptions] = useState<
-        Record<string, string[]>
+        Record<string, FilterValueOptions>
     >({});
     const [loadingValueColumnId, setLoadingValueColumnId] = useState<
         string | null
@@ -129,9 +130,30 @@ export const useCommandAutocomplete = ({
                         ),
                 );
 
+                // Get variable names which are comparable to the column type and add them to the list of unique values
+                const comparableVariables = metadata.columns
+                    .filter(
+                        (item) =>
+                            item.name !== columnId &&
+                            columnTypes[item.name] === columnTypes[columnId],
+                    )
+                    .map((item) => item.name);
+
+                const newValues: FilterValueOptions = Array.from(
+                    new Set([
+                        ...formattedValues.map((value) => ({
+                            value,
+                            type: 'value',
+                        })),
+                        ...comparableVariables.map((value) => ({
+                            value,
+                            type: 'variable',
+                        })),
+                    ]),
+                ) as FilterValueOptions;
                 setUniqueValueOptions((previousValues) => ({
                     ...previousValues,
-                    [columnId]: Array.from(new Set(formattedValues)),
+                    [columnId]: newValues,
                 }));
             } catch (_error) {
                 setUniqueValueOptions((previousValues) => ({

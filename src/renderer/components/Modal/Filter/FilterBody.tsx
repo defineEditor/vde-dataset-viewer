@@ -4,6 +4,7 @@ import React, {
     useCallback,
     useMemo,
     useContext,
+    useRef,
 } from 'react';
 import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
 import AppContext from 'renderer/utils/AppContext';
@@ -31,6 +32,7 @@ import {
 } from 'renderer/redux/slices/data';
 import {
     DatasetJsonMetadata,
+    FilterValueOptions,
     BasicFilter as IBasicFilter,
     IUiModalFilter,
 } from 'interfaces/common';
@@ -50,6 +52,7 @@ import InteractiveInput from 'renderer/components/Modal/Filter/InteractiveInput'
 import EditIcon from '@mui/icons-material/Edit';
 import { getHeader } from 'renderer/utils/readData';
 import { handleTransformation } from 'renderer/utils/transformUtils';
+import { formatFilterValueOption } from 'renderer/components/hooks/useCommandAutocomplete/utils';
 
 const styles = {
     dialog: {
@@ -224,7 +227,7 @@ const FilterBody: React.FC<FilterBodyProps> = ({
 
     // Unique values used for autocomplete
     const [uniqueValues, setUniqueValues] = useState<{
-        [key: string]: Array<string | boolean | number>;
+        [key: string]: FilterValueOptions;
     }>({});
 
     const getUniqueValues = useCallback(
@@ -281,12 +284,34 @@ const FilterBody: React.FC<FilterBodyProps> = ({
                     });
                 }
 
-                const newValues = {};
+                const newValues: Record<string, FilterValueOptions> = {};
 
                 Object.keys(values).forEach((column) => {
-                    newValues[column] = values[column].values;
+                    newValues[column] = values[column].values.map((value) => ({
+                        value: formatFilterValueOption(value, false),
+                        type: 'value',
+                    }));
                     // Add show all values text
-                    newValues[column].unshift('_show_all_values_');
+                    newValues[column].unshift({
+                        value: '_show_all_values_',
+                        type: 'header',
+                    });
+                    // Find all variables that match the column type
+                    const comparableVariables = metadata.columns
+                        .filter(
+                            (item) =>
+                                item.name.toLowerCase() !==
+                                    column.toLowerCase() &&
+                                columnTypes[item.name.toLowerCase()] ===
+                                    columnTypes[column.toLowerCase()],
+                        )
+                        .map((item) => item.name);
+                    newValues[column].push(
+                        ...(comparableVariables.map((value) => ({
+                            value,
+                            type: 'variable',
+                        })) as FilterValueOptions),
+                    );
                 });
                 setUniqueValues((prev) => ({
                     ...prev,
@@ -314,8 +339,46 @@ const FilterBody: React.FC<FilterBodyProps> = ({
                 }
             }
         },
-        [metadata, settings, apiService, fileId, filterType, compareFileIds],
+        [
+            metadata,
+            settings,
+            apiService,
+            fileId,
+            filterType,
+            compareFileIds,
+            columnTypes,
+        ],
     );
+
+    // On open get quick unique values for all current variables
+    const isLoadedUniqueValuesOnStart = useRef(false);
+    useEffect(() => {
+        if (
+            currentBasicFilter !== null &&
+            !isLoadedUniqueValuesOnStart.current
+        ) {
+            isLoadedUniqueValuesOnStart.current = true;
+            const columns = currentBasicFilter.conditions
+                .map((condition) => condition.variable)
+                .filter((value) => value !== '')
+                .filter((value) =>
+                    metadata.columns
+                        .map((column) => column.name.toLowerCase())
+                        .includes(value.toLowerCase()),
+                );
+            if (columns.length > 0) {
+                // Use proper column names from metadata
+                const properColumnNames = metadata.columns
+                    .map((column) => column.name)
+                    .filter((column) =>
+                        columns
+                            .map((value) => value.toLowerCase())
+                            .includes(column.toLowerCase()),
+                    );
+                getUniqueValues(properColumnNames);
+            }
+        }
+    }, [currentBasicFilter, getUniqueValues, metadata.columns]);
 
     useEffect(() => {
         setUniqueValues((prev) => {
@@ -324,7 +387,7 @@ const FilterBody: React.FC<FilterBodyProps> = ({
             Object.keys(newValues).forEach((column) => {
                 if (
                     allValuesLoaded[column] &&
-                    prev[column][0] === '_show_all_values_'
+                    prev[column][0].value === '_show_all_values_'
                 ) {
                     newValues[column] = prev[column].slice(1);
                 }

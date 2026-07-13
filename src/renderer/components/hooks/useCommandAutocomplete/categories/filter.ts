@@ -9,6 +9,7 @@ import type {
     CommandAutocompleteState,
 } from 'interfaces/common';
 import {
+    filterObjectOptions,
     filterOptions,
     getColumnName,
     getInOperatorValueInput,
@@ -135,7 +136,7 @@ export const getFilterAutocomplete = ({
                 updatedUniqueValueOptions[columnId] !== undefined
             ) {
                 updatedUniqueValueOptions[columnId] = [
-                    '_show_all_values_',
+                    { value: '_show_all_values_', type: 'header' },
                     ...updatedUniqueValueOptions[columnId],
                 ];
             }
@@ -178,7 +179,7 @@ export const getFilterAutocomplete = ({
         updatedUniqueValueOptions[columnId] !== undefined
     ) {
         updatedUniqueValueOptions[columnId] = [
-            '_show_all_values_',
+            { value: '_show_all_values_', type: 'header' },
             ...updatedUniqueValueOptions[columnId],
         ];
     }
@@ -195,15 +196,19 @@ export const getFilterAutocomplete = ({
         }
 
         const selectedValues = new Set(valueInput.selectedValues);
+        // In case of multiple operators, do not show variables
         const availableOptions = (
             updatedUniqueValueOptions[columnId] ?? []
         ).filter(
             (option) =>
-                option === '_show_all_values_' || !selectedValues.has(option),
+                (option.value === '_show_all_values_' &&
+                    option.type === 'header') ||
+                (!selectedValues.has(option.value) &&
+                    option.type !== 'variable'),
         );
 
         return {
-            options: filterOptions(
+            options: filterObjectOptions(
                 availableOptions,
                 valueInput.currentValueSearch,
                 true,
@@ -222,7 +227,7 @@ export const getFilterAutocomplete = ({
 
     if (conditionTokens.length === 3 && !endsWithSpace) {
         return {
-            options: filterOptions(
+            options: filterObjectOptions(
                 updatedUniqueValueOptions[columnId] ?? [],
                 currentFilterPrefix,
                 true,
