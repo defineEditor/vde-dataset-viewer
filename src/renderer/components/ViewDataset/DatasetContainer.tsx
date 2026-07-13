@@ -140,24 +140,24 @@ const readDataset = async (
             showLabels,
             settings.other.compactMode,
         );
-        if (requestReason === 'filterChange') {
+        if (currentFilter !== null) {
             // Mark filtered columns
-            if (currentFilter !== null) {
-                const filteredColumns = currentFilter.conditions.map(
-                    (c) => c.variable,
-                );
-                newData.header = newData.header.map((col) => {
-                    return {
-                        ...col,
-                        isFiltered: filteredColumns.includes(col.id),
-                    };
-                });
-            }
-            if (currentFilter !== null && newData.data.length < pageSize) {
-                setTotalRecords(newData.data.length);
-            } else {
-                setTotalRecords(newData.metadata.records);
-            }
+            const filteredColumns = currentFilter.conditions.map(
+                (c) => c.variable,
+            );
+            newData.header = newData.header.map((col) => {
+                return {
+                    ...col,
+                    isFiltered: filteredColumns.includes(col.id),
+                };
+            });
+        }
+        if (currentFilter !== null) {
+            // As filter returns maximum page size, we need to cap the total records to the page size
+            // In reality there can be more records
+            setTotalRecords(newData.data.length);
+        } else {
+            setTotalRecords(newData.metadata.records);
         }
         const endTime = performance.now();
         const timeLapsed = ((endTime - startTime) / 1000).toFixed(2);
@@ -167,9 +167,6 @@ const readDataset = async (
                 message: `${newData.data.length} record${newData.data.length === 1 ? '' : 's'} ${requestReason === 'filterChange' ? 'filtered' : 'loaded'}. (${timeLapsed}s)`,
             }),
         );
-        if (['reload', 'initial'].includes(requestReason)) {
-            setTotalRecords(newData.metadata.records);
-        }
         setTable(newData);
     }
     setIsLoading(false);
