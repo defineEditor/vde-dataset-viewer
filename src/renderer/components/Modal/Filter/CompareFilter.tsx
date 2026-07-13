@@ -8,6 +8,7 @@ import { closeModal } from 'renderer/redux/slices/ui';
 const CompareFilter: React.FC<IUiModalFilter> = ({
     type,
     filterType,
+    data: _modalData,
 }: IUiModalFilter) => {
     const { apiService } = useContext(AppContext);
     const dispatch = useAppDispatch();
@@ -78,7 +79,6 @@ const CompareFilter: React.FC<IUiModalFilter> = ({
             type={type}
             filterType={filterType}
             currentBasicFilter={currentBasicFilter}
-            data={data}
             metadata={metadata}
             dataset={dataset}
             loadedRecords={loadedRecords}
