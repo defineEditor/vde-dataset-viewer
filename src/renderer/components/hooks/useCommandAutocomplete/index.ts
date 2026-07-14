@@ -139,18 +139,23 @@ export const useCommandAutocomplete = ({
                     )
                     .map((item) => item.name);
 
-                const newValues: FilterValueOptions = Array.from(
-                    new Set([
-                        ...formattedValues.map((value) => ({
-                            value,
-                            type: 'value',
-                        })),
-                        ...comparableVariables.map((value) => ({
-                            value,
-                            type: 'variable',
-                        })),
-                    ]),
-                ) as FilterValueOptions;
+                const uniqueFormattedValues = Array.from(
+                    new Set(formattedValues),
+                );
+
+                const newValues: FilterValueOptions = [];
+                uniqueFormattedValues.forEach((value) => {
+                    newValues.push({
+                        value,
+                        type: 'value',
+                    });
+                });
+                comparableVariables.forEach((value) => {
+                    newValues.push({
+                        value,
+                        type: 'variable',
+                    });
+                });
                 setUniqueValueOptions((previousValues) => ({
                     ...previousValues,
                     [columnId]: newValues,

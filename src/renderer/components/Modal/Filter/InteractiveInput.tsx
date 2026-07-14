@@ -106,7 +106,7 @@ const handleSingleValue = (
     } else if (columnType === 'string') {
         newValue = value;
     } else if (columnType === 'number') {
-        if (value === '') {
+        if (value === '' || value === 'null') {
             newValue = null;
         } else {
             newValue = parseFloat(value);

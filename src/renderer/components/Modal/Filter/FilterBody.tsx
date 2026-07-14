@@ -387,6 +387,8 @@ const FilterBody: React.FC<FilterBodyProps> = ({
             Object.keys(newValues).forEach((column) => {
                 if (
                     allValuesLoaded[column] &&
+                    prev[column] &&
+                    prev[column][0] &&
                     prev[column][0].value === '_show_all_values_'
                 ) {
                     newValues[column] = prev[column].slice(1);

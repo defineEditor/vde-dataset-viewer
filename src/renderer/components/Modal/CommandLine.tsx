@@ -289,7 +289,7 @@ const CommandLine: React.FC<IUiModal> = () => {
                     placeholder="id USUBJID; idadd AVISIT; sort /A.*/ desc"
                     helperText={
                         helperText.text ||
-                        'Commands: id<add>, sort<add>, show<add>, hide<add>, filter<add>, info, go, reset. Separate multiple commands with ;'
+                        'Commands: id<add|rm>, sort<add|rm>, show<add>, hide<add>, filter<add>, info, go, reset. Separate multiple commands with ;'
                     }
                     error={helperText.isError}
                     autoFocus
