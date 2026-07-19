@@ -31,6 +31,7 @@ import {
     resetReportFilter,
 } from 'renderer/redux/slices/data';
 import {
+    ColumnType,
     DatasetJsonMetadata,
     FilterValueOptions,
     BasicFilter as IBasicFilter,
@@ -141,7 +142,7 @@ const FilterBody: React.FC<FilterBodyProps> = ({
     const settings = useAppSelector((state) => state.settings);
 
     const columnTypes = useMemo(() => {
-        const types = {};
+        const types: Record<string, ColumnType> = {};
         const header = getHeader(metadata, settings);
         // Get all columns with formatted dates;
         const dateColumns = header
@@ -155,6 +156,11 @@ const FilterBody: React.FC<FilterBodyProps> = ({
                 !dateColumns.includes(column.name)
             ) {
                 types[column.name.toLowerCase()] = 'number';
+            } else if (
+                ['date', 'datetime', 'time'].includes(column.dataType) &&
+                !dateColumns.includes(column.name)
+            ) {
+                types[column.name.toLowerCase()] = 'date';
             } else {
                 types[column.name.toLowerCase()] = 'string';
             }

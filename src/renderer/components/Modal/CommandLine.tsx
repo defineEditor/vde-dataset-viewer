@@ -27,7 +27,7 @@ import {
     resetFilter,
     setFilter,
 } from 'renderer/redux/slices/data';
-import { IMask, IUiModal } from 'interfaces/common';
+import { ColumnType, IMask, IUiModal } from 'interfaces/common';
 import { modals } from 'misc/constants';
 import { parseDatasetCommand } from 'renderer/utils/commandLine';
 import { getCommandHelperText } from 'renderer/components/hooks/useCommandAutocomplete';
@@ -88,12 +88,14 @@ const CommandLine: React.FC<IUiModal> = () => {
         if (!metadata) {
             return {};
         }
-        const types: Record<string, 'numeric' | 'string' | 'boolean'> = {};
+        const types: Record<string, ColumnType> = {};
         metadata.columns.forEach((col) => {
             if (
                 ['integer', 'float', 'double', 'number'].includes(col.dataType)
             ) {
-                types[col.name] = 'numeric';
+                types[col.name] = 'number';
+            } else if (['date', 'datetime', 'time'].includes(col.dataType)) {
+                types[col.name] = 'date';
             } else if (['boolean'].includes(col.dataType)) {
                 types[col.name] = 'boolean';
             } else {

@@ -150,7 +150,10 @@ export const handleTransformation = (
     value: string | number | boolean | null,
     dateFormat: ISettings['viewer']['dateFormat'],
 ) => {
-    let updatedValue = value;
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+    let updatedValue: string | number | boolean | null = value;
     if (numericDatetimeType) {
         let date: Date | null = null;
         if (dateFormat === 'ISO8601' || numericDatetimeType === 'time') {

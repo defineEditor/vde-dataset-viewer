@@ -27,6 +27,7 @@ import {
     Connector,
     FilterCondition,
     FilterValueOptions,
+    ColumnType,
 } from 'interfaces/common';
 
 const styles = {
@@ -67,14 +68,14 @@ const styles = {
 const updateConditionVariable = (
     condition: FilterCondition,
     newVariable: string,
-    columnTypes: Record<string, 'string' | 'number' | 'boolean'>,
+    columnTypes: Record<string, ColumnType>,
     getUniqueValues: (column: string[], getAll?: boolean) => Promise<void>,
 ): FilterCondition => {
     const newCondition = { ...condition };
     newCondition.variable = newVariable;
     // Check if the operator matches the new column type
     const columnType = columnTypes[newVariable.toLowerCase()];
-    if (columnType === 'string') {
+    if (columnType === 'string' || columnType === 'date') {
         if (!stringOperators.includes(newCondition.operator)) {
             newCondition.operator = 'eq';
         }
@@ -96,14 +97,14 @@ const updateConditionVariable = (
 
 const handleSingleValue = (
     value: string,
-    columnType: 'string' | 'number' | 'boolean',
+    columnType: ColumnType,
     handleNull: boolean = true,
 ): string | number | boolean | null => {
     let newValue: string | number | boolean | null;
 
     if (value === 'null' && handleNull) {
         newValue = null;
-    } else if (columnType === 'string') {
+    } else if (columnType === 'string' || columnType === 'date') {
         newValue = value;
     } else if (columnType === 'number') {
         if (value === '' || value === 'null') {
@@ -126,7 +127,7 @@ const handleSingleValue = (
 const updateConditionValue = (
     condition: FilterCondition,
     newValue: FilterValueOptions[number] | FilterValueOptions[number][],
-    columnTypes: Record<string, 'string' | 'number' | 'boolean'>,
+    columnTypes: Record<string, ColumnType>,
 ): FilterCondition => {
     const newCondition = { ...condition };
     const columnType = columnTypes[condition.variable.toLowerCase()];
@@ -193,9 +194,9 @@ const handleRenderOption = (
                 <Stack direction="row" spacing={1} sx={styles.variableValue}>
                     <Typography variant="body1">{option.value}</Typography>
                     <Chip
-                        label="var"
+                        label="col"
                         size="small"
-                        color="success"
+                        color="primary"
                         sx={styles.chip}
                     />
                 </Stack>
@@ -206,7 +207,7 @@ const handleRenderOption = (
 
 const ValueAutocomplete: React.FC<{
     condition: FilterCondition;
-    columnTypes: Record<string, 'string' | 'number' | 'boolean'>;
+    columnTypes: Record<string, ColumnType>;
     columnNames: string[];
     uniqueValues: { [key: string]: FilterValueOptions };
     onSelectChange: (
@@ -380,7 +381,7 @@ const InteractiveInput: React.FC<{
     filter: BasicFilter | null;
     onChange: (_filter: BasicFilter) => void;
     columnNames: string[];
-    columnTypes: Record<string, 'string' | 'number' | 'boolean'>;
+    columnTypes: Record<string, ColumnType>;
     uniqueValues: { [key: string]: FilterValueOptions };
     onGetUniqueValues: (column: string[], getAll?: boolean) => Promise<void>;
 }> = ({
@@ -679,7 +680,10 @@ const InteractiveInput: React.FC<{
                                         columnTypes[
                                             condition.variable.toLowerCase()
                                         ];
-                                    if (columnType === 'string') {
+                                    if (
+                                        columnType === 'string' ||
+                                        columnType === 'date'
+                                    ) {
                                         return stringOperators.includes(
                                             operator,
                                         );

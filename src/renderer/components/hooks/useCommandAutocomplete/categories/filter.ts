@@ -19,9 +19,10 @@ import {
 
 const FILTER_CONNECTORS = ['and', 'or'];
 const FILTER_COMPARATORS = {
-    numeric: numberOperators.map((op) => operatorLabels[op] || op),
+    number: numberOperators.map((op) => operatorLabels[op] || op),
     string: stringOperators.map((op) => operatorLabels[op] || op),
     boolean: booleanOperators.map((op) => operatorLabels[op] || op),
+    date: stringOperators.map((op) => operatorLabels[op] || op),
 };
 
 export const getFilterAutocomplete = ({

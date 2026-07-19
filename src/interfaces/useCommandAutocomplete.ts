@@ -1,5 +1,6 @@
 import type { DatasetJsonMetadata } from 'interfaces/api';
 import type { ISettings } from 'interfaces/store';
+import type { ColumnType } from 'interfaces/table';
 
 export type CommandAutocompleteCategory =
     | 'variables'
@@ -56,7 +57,7 @@ export interface ResolvedAutocompleteContext {
 export interface CategoryAutocompleteParams {
     context: ResolvedAutocompleteContext;
     allColumnNames: string[];
-    columnTypes: Record<string, 'numeric' | 'string' | 'boolean'>;
+    columnTypes: Record<string, ColumnType>;
     uniqueValueOptions: Record<string, FilterValueOptions>;
     allValuesColumns: string[];
     historyOptions?: string[];

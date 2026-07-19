@@ -75,3 +75,5 @@ export type RequestReason =
     | 'filterChange'
     | 'reload'
     | 'pagination';
+
+export type ColumnType = 'number' | 'string' | 'boolean' | 'date';

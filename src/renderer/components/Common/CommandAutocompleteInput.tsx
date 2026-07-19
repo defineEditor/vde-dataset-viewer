@@ -16,6 +16,7 @@ import type {
     ISettings,
     UniqueValuesApi,
     FilterValueOptions,
+    ColumnType,
 } from 'interfaces/common';
 import { useCommandAutocomplete } from 'renderer/components/hooks/useCommandAutocomplete';
 import { getLastFilterCondition } from 'renderer/components/hooks/useCommandAutocomplete/utils';
@@ -44,7 +45,7 @@ interface CommandAutocompleteInputProps {
     value: string;
     onValueChange: (nextValue: string) => void;
     allColumnNames: string[];
-    columnTypes: Record<string, 'numeric' | 'string' | 'boolean'>;
+    columnTypes: Record<string, ColumnType>;
     currentFileId: string;
     apiService: UniqueValuesApi;
     settings: ISettings;

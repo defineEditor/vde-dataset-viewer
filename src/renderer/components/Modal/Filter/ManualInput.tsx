@@ -9,7 +9,7 @@ import Filter from 'js-array-filter';
 import { useAppSelector } from 'renderer/redux/hooks';
 import AppContext from 'renderer/utils/AppContext';
 import CommandAutocompleteInput from 'renderer/components/Common/CommandAutocompleteInput';
-import type { DatasetJsonMetadata } from 'interfaces/common';
+import type { DatasetJsonMetadata, ColumnType } from 'interfaces/common';
 
 const styles = {
     input: {
@@ -65,14 +65,16 @@ const ManualInput: React.FC<{
     );
 
     const columnTypes = useMemo(() => {
-        const types: Record<string, 'numeric' | 'string' | 'boolean'> = {};
+        const types: Record<string, ColumnType> = {};
         metadata.columns.forEach((column) => {
             if (
                 ['integer', 'float', 'double', 'number'].includes(
                     column.dataType,
                 )
             ) {
-                types[column.name] = 'numeric';
+                types[column.name] = 'number';
+            } else if (['date', 'datetime', 'time'].includes(column.dataType)) {
+                types[column.name] = 'date';
             } else if (['boolean'].includes(column.dataType)) {
                 types[column.name] = 'boolean';
             } else {
