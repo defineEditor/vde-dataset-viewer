@@ -57,8 +57,8 @@ const COMMAND_ALIASES: Record<string, string> = {
     id: 'id',
     ia: 'idadd',
     idadd: 'idadd',
+    idrm: 'idrm',
     info: 'info',
-    osa: 'sortadd',
     r: 'reset',
     reset: 'reset',
     sha: 'showadd',
@@ -69,6 +69,7 @@ const COMMAND_ALIASES: Record<string, string> = {
     so: 'sort',
     sort: 'sort',
     sortadd: 'sortadd',
+    sortrm: 'sortrm',
 };
 
 const SORT_DIRECTIONS = new Set(['asc', 'desc']);
@@ -570,6 +571,30 @@ const parseSingleDatasetCommand = ({
                 ],
             };
         }
+        case 'idrm': {
+            const args = tokenizeArguments(rest);
+            if (args.length === 0) {
+                return {
+                    ok: false,
+                    error: 'Idrm command requires one or more column selectors.',
+                };
+            }
+            const resolvedColumns = resolveColumns(metadata, args);
+            if (!resolvedColumns.ok) {
+                return resolvedColumns;
+            }
+            return {
+                ok: true,
+                actions: [
+                    {
+                        type: 'setIdColumns',
+                        columns: currentIdColumns.filter(
+                            (col) => !resolvedColumns.columns.includes(col),
+                        ),
+                    },
+                ],
+            };
+        }
         case 'sort': {
             const args = tokenizeArguments(rest);
             if (args.length === 0) {
@@ -609,6 +634,33 @@ const parseSingleDatasetCommand = ({
                         sorting: mergeSorting(
                             currentSorting,
                             sortColumns.sorting,
+                        ),
+                    },
+                ],
+            };
+        }
+        case 'sortrm': {
+            const args = tokenizeArguments(rest);
+            if (args.length === 0) {
+                return {
+                    ok: false,
+                    error: 'Sortrm command requires one or more column selectors.',
+                };
+            }
+            const sortColumns = parseSortColumns(metadata, args);
+            if (!sortColumns.ok) {
+                return sortColumns;
+            }
+            return {
+                ok: true,
+                actions: [
+                    {
+                        type: 'setSorting',
+                        sorting: currentSorting.filter(
+                            (col) =>
+                                !sortColumns.sorting
+                                    .map((s) => s.id)
+                                    .includes(col.id),
                         ),
                     },
                 ],

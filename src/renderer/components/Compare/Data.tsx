@@ -472,6 +472,7 @@ const Data: React.FC = () => {
                     settings,
                     commonCols,
                     currentFilter,
+                    'initial',
                 );
 
                 // Load compare file
@@ -499,6 +500,7 @@ const Data: React.FC = () => {
                     settings,
                     commonColsComp,
                     currentFilter,
+                    'initial',
                     true,
                 );
                 // Reorder columns to match data.base order

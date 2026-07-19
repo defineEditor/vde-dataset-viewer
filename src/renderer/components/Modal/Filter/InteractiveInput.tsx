@@ -9,6 +9,7 @@ import {
     MenuItem,
     Box,
     Fab,
+    Chip,
 } from '@mui/material';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutlined';
 import AddIcon from '@mui/icons-material/Add';
@@ -21,7 +22,13 @@ import {
     operatorHumanFriendlyLabels,
     filterRegex,
 } from 'js-array-filter';
-import { BasicFilter, Connector, FilterCondition } from 'interfaces/common';
+import {
+    BasicFilter,
+    Connector,
+    FilterCondition,
+    FilterValueOptions,
+    ColumnType,
+} from 'interfaces/common';
 
 const styles = {
     columnSelect: {
@@ -49,18 +56,26 @@ const styles = {
             opacity: 1,
         },
     },
+    chip: {
+        height: 15,
+        fontSize: 10,
+    },
+    variableValue: {
+        alignItems: 'center',
+    },
 };
 
 const updateConditionVariable = (
     condition: FilterCondition,
     newVariable: string,
-    columnTypes: Record<string, 'string' | 'number' | 'boolean'>,
+    columnTypes: Record<string, ColumnType>,
+    getUniqueValues: (column: string[], getAll?: boolean) => Promise<void>,
 ): FilterCondition => {
     const newCondition = { ...condition };
     newCondition.variable = newVariable;
     // Check if the operator matches the new column type
     const columnType = columnTypes[newVariable.toLowerCase()];
-    if (columnType === 'string') {
+    if (columnType === 'string' || columnType === 'date') {
         if (!stringOperators.includes(newCondition.operator)) {
             newCondition.operator = 'eq';
         }
@@ -76,22 +91,23 @@ const updateConditionVariable = (
         }
         newCondition.value = null;
     }
+    getUniqueValues([newVariable], false);
     return newCondition;
 };
 
 const handleSingleValue = (
     value: string,
-    columnType: 'string' | 'number' | 'boolean',
+    columnType: ColumnType,
     handleNull: boolean = true,
 ): string | number | boolean | null => {
     let newValue: string | number | boolean | null;
 
     if (value === 'null' && handleNull) {
         newValue = null;
-    } else if (columnType === 'string') {
+    } else if (columnType === 'string' || columnType === 'date') {
         newValue = value;
     } else if (columnType === 'number') {
-        if (value === '') {
+        if (value === '' || value === 'null') {
             newValue = null;
         } else {
             newValue = parseFloat(value);
@@ -110,17 +126,30 @@ const handleSingleValue = (
 
 const updateConditionValue = (
     condition: FilterCondition,
-    newValue: string | string[],
-    columnTypes: Record<string, 'string' | 'number' | 'boolean'>,
+    newValue: FilterValueOptions[number] | FilterValueOptions[number][],
+    columnTypes: Record<string, ColumnType>,
 ): FilterCondition => {
     const newCondition = { ...condition };
     const columnType = columnTypes[condition.variable.toLowerCase()];
     if (Array.isArray(newValue)) {
         newCondition.value = newValue.map((value) =>
-            handleSingleValue(value, columnType, false),
+            handleSingleValue(value.value, columnType, false),
         ) as unknown as string[] | number[];
+        if ('compareVariable' in newCondition) {
+            delete newCondition.compareVariable;
+        }
+    } else if (newValue.type === 'variable') {
+        newCondition.compareVariable = newValue.value;
+        newCondition.value = null;
     } else {
-        newCondition.value = handleSingleValue(newValue, columnType, false);
+        newCondition.value = handleSingleValue(
+            newValue.value,
+            columnType,
+            false,
+        );
+        if ('compareVariable' in newCondition) {
+            delete newCondition.compareVariable;
+        }
     }
     return newCondition;
 };
@@ -129,12 +158,12 @@ const handleRenderOption = (
     props: React.HTMLAttributes<HTMLLIElement> & {
         key: React.Key;
     },
-    option: string | React.ReactNode,
+    option: FilterValueOptions[number],
     _state,
     _ownerState,
-): string | React.ReactNode => {
+): React.ReactNode => {
     const { key, ...optionProps } = props;
-    if (option === '_show_all_values_') {
+    if (option.value === '_show_all_values_' && option.type === 'header') {
         return (
             <Box
                 key={key}
@@ -157,19 +186,33 @@ const handleRenderOption = (
     }
     return (
         <Box key={key} component="li" {...optionProps}>
-            {option}
+            {typeof option === 'object' &&
+            option !== null &&
+            option.type === 'value' ? (
+                option.value
+            ) : (
+                <Stack direction="row" spacing={1} sx={styles.variableValue}>
+                    <Typography variant="body1">{option.value}</Typography>
+                    <Chip
+                        label="col"
+                        size="small"
+                        color="primary"
+                        sx={styles.chip}
+                    />
+                </Stack>
+            )}
         </Box>
     );
 };
 
 const ValueAutocomplete: React.FC<{
     condition: FilterCondition;
-    columnTypes: Record<string, 'string' | 'number' | 'boolean'>;
+    columnTypes: Record<string, ColumnType>;
     columnNames: string[];
-    uniqueValues: { [key: string]: Array<string | boolean | number> };
+    uniqueValues: { [key: string]: FilterValueOptions };
     onSelectChange: (
         _event: React.ChangeEvent<{}>,
-        value: string | string[] | null,
+        value: FilterValueOptions[number] | FilterValueOptions[number][] | null,
         reason: AutocompleteChangeReason,
     ) => void;
     onInputChange: (
@@ -195,29 +238,49 @@ const ValueAutocomplete: React.FC<{
         }
     }, [isMultiple, condition.value]);
 
-    const textValue = React.useMemo(() => {
+    const currentValue = React.useMemo(() => {
+        // Value can come from condition.value or condition.compareVariable
+        const isVariable = condition.compareVariable !== undefined;
+        const newValue = isVariable
+            ? condition.compareVariable
+            : condition.value;
         if (isMultiple) {
             if (['number', 'boolean'].includes(columnType)) {
-                return condition.value === null ||
-                    !Array.isArray(condition.value)
+                return newValue === null || !Array.isArray(newValue)
                     ? []
-                    : (condition.value
+                    : newValue
                           .filter(
                               (value) => value !== null && value !== undefined,
                           )
-                          .map((value) => value.toString()) as string[]);
+                          .map((value) => ({
+                              value: value.toString(),
+                              type: 'value' as FilterValueOptions[number]['type'],
+                          }));
             }
-            return condition.value === null || !Array.isArray(condition.value)
+            return newValue === null || !Array.isArray(newValue)
                 ? []
-                : (condition.value as string[]);
+                : newValue.map((value) => ({
+                      value: value.toString(),
+                      type: 'value' as FilterValueOptions[number]['type'],
+                  }));
         }
-        if (['number', 'boolean'].includes(columnType)) {
-            return condition.value === null || condition.value === undefined
+        if (!isVariable && ['number', 'boolean'].includes(columnType)) {
+            return newValue === null || newValue === undefined
                 ? ''
-                : condition.value.toString();
+                : {
+                      value: newValue.toString(),
+                      type: isVariable
+                          ? 'variable'
+                          : ('value' as FilterValueOptions[number]['type']),
+                  };
         }
-        return condition.value as string;
-    }, [isMultiple, columnType, condition.value]);
+        return {
+            value: newValue,
+            type: isVariable
+                ? 'variable'
+                : ('value' as FilterValueOptions[number]['type']),
+        };
+    }, [isMultiple, columnType, condition.value, condition.compareVariable]);
 
     // Get proper column name
     const columnName = columnNames.find(
@@ -233,13 +296,17 @@ const ValueAutocomplete: React.FC<{
         }
     };
 
-    let valueOptions: string[] = [];
+    let valueOptions: FilterValueOptions = [];
 
     if (columnName !== undefined && uniqueValues[columnName]) {
-        // Do not show null in multiselection, nulls should be handled by separate condition
-        valueOptions = uniqueValues[columnName]
-            .filter((value) => value !== null && value !== undefined)
-            .map((value) => value.toString());
+        // Do not show variables in multiselection
+        if (isMultiple) {
+            valueOptions = uniqueValues[columnName].filter(
+                (option) => option.type !== 'variable',
+            );
+        } else {
+            valueOptions = uniqueValues[columnName];
+        }
     }
 
     return (
@@ -248,7 +315,11 @@ const ValueAutocomplete: React.FC<{
             multiple={isMultiple}
             sx={styles.valueSelect}
             options={valueOptions}
-            value={textValue}
+            value={
+                currentValue as
+                    | FilterValueOptions[number]
+                    | FilterValueOptions[number][]
+            }
             inputValue={inputValue}
             renderOption={handleRenderOption}
             onInputChange={(_event, newInputValue) => {
@@ -256,30 +327,45 @@ const ValueAutocomplete: React.FC<{
             }}
             filterOptions={(options, state) => {
                 const filteredOptions = options.filter((option) =>
-                    String(option)
+                    option.value
                         .toLowerCase()
                         .includes(state.inputValue.toLowerCase()),
                 );
-                const isNew = !filteredOptions.includes(state.inputValue);
+                const isNew = !filteredOptions
+                    .map((option) => option.value)
+                    .includes(state.inputValue);
                 if (isNew) {
-                    filteredOptions.push(state.inputValue);
+                    filteredOptions.push({
+                        value: state.inputValue,
+                        type: 'value',
+                    });
                 }
                 return filteredOptions;
             }}
             onChange={(event, value, reason) =>
-                onSelectChange(event, value as string[] | string | null, reason)
+                onSelectChange(
+                    event,
+                    value as
+                        | FilterValueOptions[number]
+                        | FilterValueOptions[number][]
+                        | null,
+                    reason,
+                )
+            }
+            getOptionLabel={(option) =>
+                typeof option === 'string'
+                    ? option
+                    : typeof option === 'object' &&
+                        option !== null &&
+                        'value' in option
+                      ? option.value
+                      : String(option)
             }
             renderInput={(params) => (
                 <TextField
                     {...params}
                     label="Value"
                     variant="outlined"
-                    type={
-                        columnTypes[condition.variable.toLowerCase()] ===
-                        'number'
-                            ? 'number'
-                            : 'text'
-                    }
                     fullWidth
                     margin="normal"
                     onChange={isMultiple ? () => {} : onInputChange}
@@ -295,8 +381,8 @@ const InteractiveInput: React.FC<{
     filter: BasicFilter | null;
     onChange: (_filter: BasicFilter) => void;
     columnNames: string[];
-    columnTypes: Record<string, 'string' | 'number' | 'boolean'>;
-    uniqueValues: { [key: string]: Array<string | boolean | number> };
+    columnTypes: Record<string, ColumnType>;
+    uniqueValues: { [key: string]: FilterValueOptions };
     onGetUniqueValues: (column: string[], getAll?: boolean) => Promise<void>;
 }> = ({
     columnNames,
@@ -361,6 +447,7 @@ const InteractiveInput: React.FC<{
                     conditions[index],
                     value,
                     columnTypes,
+                    onGetUniqueValues,
                 );
                 const newConditions = [...conditions];
                 newConditions[index] = newCondition;
@@ -378,6 +465,7 @@ const InteractiveInput: React.FC<{
                 conditions[index],
                 event.target.value,
                 columnTypes,
+                onGetUniqueValues,
             );
             const newConditions = [...conditions];
             newConditions[index] = newCondition;
@@ -391,13 +479,29 @@ const InteractiveInput: React.FC<{
     const handleOperatorChange =
         (index: number) => (event: React.ChangeEvent<HTMLInputElement>) => {
             const newCondition = { ...conditions[index] };
+            const oldIsMultiple = ['in', 'notin'].includes(
+                newCondition.operator,
+            );
             newCondition.operator = event.target
                 .value as FilterCondition['operator'];
+            const newIsMultiple = ['in', 'notin'].includes(
+                newCondition.operator,
+            );
             if (filterRegex.function.test(newCondition.operator)) {
                 newCondition.isFunction = true;
                 newCondition.value = null;
+                if ('compareVariable' in newCondition) {
+                    delete newCondition.compareVariable;
+                }
             } else if (newCondition.isFunction) {
                 delete newCondition.isFunction;
+            }
+            // Reset values when switching between single and multiple selection
+            if (oldIsMultiple !== newIsMultiple) {
+                newCondition.value = newIsMultiple ? [] : '';
+                if ('compareVariable' in newCondition) {
+                    delete newCondition.compareVariable;
+                }
             }
             const newConditions = [...conditions];
             newConditions[index] = newCondition;
@@ -412,7 +516,10 @@ const InteractiveInput: React.FC<{
         (index: number) =>
         (
             event: React.ChangeEvent<{}>,
-            value: string | string[] | null,
+            value:
+                | FilterValueOptions[number]
+                | FilterValueOptions[number][]
+                | null,
             reason: AutocompleteChangeReason,
         ) => {
             event.stopPropagation();
@@ -463,7 +570,7 @@ const InteractiveInput: React.FC<{
         (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
             const newCondition = updateConditionValue(
                 conditions[index],
-                event.target.value,
+                { value: event.target.value, type: 'value' },
                 columnTypes,
             );
             const newConditions = [...conditions];
@@ -573,7 +680,10 @@ const InteractiveInput: React.FC<{
                                         columnTypes[
                                             condition.variable.toLowerCase()
                                         ];
-                                    if (columnType === 'string') {
+                                    if (
+                                        columnType === 'string' ||
+                                        columnType === 'date'
+                                    ) {
                                         return stringOperators.includes(
                                             operator,
                                         );

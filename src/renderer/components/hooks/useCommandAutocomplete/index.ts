@@ -5,6 +5,8 @@ import type {
     CommandAutocompleteCategory,
     CommandAutocompleteState,
     UniqueValuesApi,
+    FilterValueOptions,
+    ColumnType,
 } from 'interfaces/common';
 import { resolveAutocompleteContext } from 'renderer/components/hooks/useCommandAutocomplete/config';
 import { getFilterAutocomplete } from 'renderer/components/hooks/useCommandAutocomplete/categories/filter';
@@ -34,7 +36,7 @@ export const useCommandAutocomplete = ({
     apiService: UniqueValuesApi;
     allColumnNames: string[];
     category?: CommandAutocompleteCategory;
-    columnTypes: Record<string, 'numeric' | 'string' | 'boolean'>;
+    columnTypes: Record<string, ColumnType>;
     allValuesColumns: string[];
     command: string;
     currentFileId: string;
@@ -47,7 +49,7 @@ export const useCommandAutocomplete = ({
     resolvedCategory: CommandAutocompleteCategory;
 } => {
     const [uniqueValueOptions, setUniqueValueOptions] = useState<
-        Record<string, string[]>
+        Record<string, FilterValueOptions>
     >({});
     const [loadingValueColumnId, setLoadingValueColumnId] = useState<
         string | null
@@ -121,17 +123,44 @@ export const useCommandAutocomplete = ({
                     settings,
                 });
 
+                const columnType = columnTypes[columnId];
                 const formattedValues = (values[columnId]?.values ?? []).map(
                     (value) =>
                         formatFilterValueOption(
                             value,
-                            columnTypes[columnId] === 'string',
+                            columnType === 'string' || columnType === 'date',
                         ),
                 );
 
+                // Get variable names which are comparable to the column type and add them to the list of unique values
+                const comparableVariables = metadata.columns
+                    .filter(
+                        (item) =>
+                            item.name !== columnId &&
+                            columnTypes[item.name] === columnTypes[columnId],
+                    )
+                    .map((item) => item.name);
+
+                const uniqueFormattedValues = Array.from(
+                    new Set(formattedValues),
+                );
+
+                const newValues: FilterValueOptions = [];
+                uniqueFormattedValues.forEach((value) => {
+                    newValues.push({
+                        value,
+                        type: 'value',
+                    });
+                });
+                comparableVariables.forEach((value) => {
+                    newValues.push({
+                        value,
+                        type: 'variable',
+                    });
+                });
                 setUniqueValueOptions((previousValues) => ({
                     ...previousValues,
-                    [columnId]: Array.from(new Set(formattedValues)),
+                    [columnId]: newValues,
                 }));
             } catch (_error) {
                 setUniqueValueOptions((previousValues) => ({

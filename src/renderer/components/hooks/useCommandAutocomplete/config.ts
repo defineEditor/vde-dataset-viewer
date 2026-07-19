@@ -8,8 +8,10 @@ import { getActiveSegment } from 'renderer/components/hooks/useCommandAutocomple
 const COMMAND_SYNTAX = {
     id: 'id [selectors] - set ID columns',
     idadd: 'idadd|ia [selectors] - add columns to ID columns',
+    idrm: 'idrm|idr [selectors] - remove columns from ID columns',
     sort: 'sort [selector] [asc|desc] ... - set sorting',
     sortadd: 'sortadd|soa [selector] [asc|desc] ... - add sorting columns',
+    sortrm: 'sortrm [selector] ... - remove sorting columns',
     show: 'show [selectors] - show only selected columns',
     showadd: 'showadd|sha [selectors] - add columns to visible columns',
     hide: 'hide [selectors] - hide selected columns',
@@ -26,8 +28,10 @@ const COMMAND_SYNTAX = {
 const MULTIKEY_COMMANDS = [
     'sort',
     'sortadd',
+    'sortrm',
     'soa',
     'idadd',
+    'idrm',
     'ia',
     'show',
     'showadd',
@@ -51,6 +55,8 @@ export const COMMAND_ALIASES: Record<string, string> = {
     id: 'id',
     ia: 'idadd',
     idadd: 'idadd',
+    idrm: 'idrm',
+    idr: 'idrm',
     info: 'info',
     r: 'reset',
     reset: 'reset',
@@ -62,13 +68,16 @@ export const COMMAND_ALIASES: Record<string, string> = {
     so: 'sort',
     sort: 'sort',
     sortadd: 'sortadd',
+    sortrm: 'sortrm',
 };
 
 const COMMAND_CATEGORIES: Record<string, CommandAutocompleteCategory> = {
     id: 'variables',
     idadd: 'variables',
+    idrm: 'variables',
     sort: 'variables',
     sortadd: 'variables',
+    sortrm: 'variables',
     show: 'variables',
     showadd: 'variables',
     hide: 'variables',

@@ -51,7 +51,6 @@ const ReportFilter: React.FC<IUiModalFilter> = ({
             type={type}
             filterType={filterType}
             currentBasicFilter={currentBasicFilter}
-            data={table.data}
             metadata={table.metadata}
             dataset={dataset}
             loadedRecords={table.data.length}

@@ -5,6 +5,8 @@ import {
     Box,
     TextField,
     Typography,
+    Chip,
+    Stack,
 } from '@mui/material';
 import type { TextFieldProps } from '@mui/material/TextField';
 import type { SxProps, Theme } from '@mui/material/styles';
@@ -13,6 +15,8 @@ import type {
     DatasetJsonMetadata,
     ISettings,
     UniqueValuesApi,
+    FilterValueOptions,
+    ColumnType,
 } from 'interfaces/common';
 import { useCommandAutocomplete } from 'renderer/components/hooks/useCommandAutocomplete';
 import { getLastFilterCondition } from 'renderer/components/hooks/useCommandAutocomplete/utils';
@@ -26,6 +30,13 @@ const styles = {
             opacity: 1,
         },
     },
+    chip: {
+        height: 15,
+        fontSize: 10,
+    },
+    variableValue: {
+        alignItems: 'center',
+    },
 };
 
 type CommandAutocompleteMode = 'command' | 'filter';
@@ -34,7 +45,7 @@ interface CommandAutocompleteInputProps {
     value: string;
     onValueChange: (nextValue: string) => void;
     allColumnNames: string[];
-    columnTypes: Record<string, 'numeric' | 'string' | 'boolean'>;
+    columnTypes: Record<string, ColumnType>;
     currentFileId: string;
     apiService: UniqueValuesApi;
     settings: ISettings;
@@ -71,12 +82,18 @@ const handleRenderOption = (
     props: React.HTMLAttributes<HTMLLIElement> & {
         key: React.Key;
     },
-    option: string | React.ReactNode,
+    option: string | React.ReactNode | FilterValueOptions[number],
     _state,
     _ownerState,
 ): string | React.ReactNode => {
     const { key, ...optionProps } = props;
-    if (option === '_show_all_values_') {
+    const isObject =
+        typeof option === 'object' && option !== null && 'value' in option;
+    if (
+        isObject &&
+        option.value === '_show_all_values_' &&
+        option.type === 'header'
+    ) {
         return (
             <Box
                 key={key}
@@ -99,7 +116,27 @@ const handleRenderOption = (
     }
     return (
         <Box key={key} component="li" {...optionProps}>
-            {option}
+            {isObject ? (
+                option.type === 'value' ? (
+                    option.value
+                ) : (
+                    <Stack
+                        direction="row"
+                        spacing={1}
+                        sx={styles.variableValue}
+                    >
+                        <Typography variant="body1">{option.value}</Typography>
+                        <Chip
+                            label="col"
+                            size="small"
+                            color="primary"
+                            sx={styles.chip}
+                        />
+                    </Stack>
+                )
+            ) : (
+                option
+            )}
         </Box>
     );
 };
@@ -180,9 +217,10 @@ const CommandAutocompleteInput: React.FC<CommandAutocompleteInputProps> = ({
                 prevValue === false &&
                 commandAutocomplete?.tokenType === 'value' &&
                 commandAutocomplete.options.length === 1 &&
+                typeof commandAutocomplete.options[0] === 'object' &&
                 commandAutocomplete.replaceEnd -
                     commandAutocomplete.replaceStart ===
-                    commandAutocomplete.options[0].length
+                    commandAutocomplete.options[0].value.length
             ) {
                 return false;
             }
@@ -384,6 +422,15 @@ const CommandAutocompleteInput: React.FC<CommandAutocompleteInputProps> = ({
             loading={isAutocompleteLoading}
             inputValue={value}
             onInputChange={handleInputChange}
+            getOptionLabel={(option) =>
+                typeof option === 'string'
+                    ? option
+                    : typeof option === 'object' &&
+                        option !== null &&
+                        'value' in option
+                      ? option.value
+                      : String(option)
+            }
             renderOption={handleRenderOption}
             onClose={() => {
                 if (historyRequested) {
