@@ -1,4 +1,4 @@
-import { BasicFilter, IApiStudy, IApiStudyDataset } from 'interfaces/api';
+import { BasicFilter, IApiStudy, IApiStudyDataset } from '@/interfaces/api';
 import {
     ICheckUpdateResult,
     SettingsConverter,
@@ -9,11 +9,11 @@ import {
     DefineFileInfo,
     DatasetDiff,
     CompareSettings,
-} from 'interfaces/main';
-import { ParsedValidationReport } from 'interfaces/core.report';
-import { modals, ModalType, AllowedPathnames } from 'misc/constants';
-import { ConversionConfig } from 'interfaces/converter';
-import { ThemeModePreference, ThemePalette } from 'interfaces/theme';
+} from '@/interfaces/main';
+import { ParsedValidationReport } from '@/interfaces/core.report';
+import { modals, ModalType, AllowedPathnames } from '@/misc/constants';
+import { ConversionConfig } from '@/interfaces/converter';
+import { ThemeModePreference, ThemePalette } from '@/interfaces/theme';
 
 export interface IMask {
     name: string;

@@ -2,14 +2,14 @@ import {
     ConvertedFileInfo,
     ConverterProcessTask,
     ConvertTask,
-} from 'interfaces/main';
+} from '@/interfaces/main';
 import DatasetXpt from 'xport-js';
 import DatasetJson, { ItemDataArray } from 'js-stream-dataset-json';
 import { DatasetReadStat } from 'js-stream-sas7bdat';
 import path from 'path';
 import fs from 'fs';
 import { tmpdir } from 'os';
-import { DatasetJsonMetadata, ItemType } from 'interfaces/common';
+import { DatasetJsonMetadata, ItemType } from '@/interfaces/common';
 
 const processSasMetadata = (
     metadata: DatasetJsonMetadata,

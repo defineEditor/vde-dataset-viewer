@@ -1,12 +1,12 @@
 import { IpcMainInvokeEvent } from 'electron';
-import { DefineFileInfo, DefineXmlContent } from 'interfaces/common';
+import { DefineFileInfo, DefineXmlContent } from '@/interfaces/common';
 import parseDefineXml from 'parse-define-xml';
 import fs from 'fs';
 import fsPromises from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 import readline from 'readline';
-import openFile from 'main/openFile';
+import openFile from '@/main/openFile';
 
 const getHash = (str: string): string => {
     const timestamp = Date.now();

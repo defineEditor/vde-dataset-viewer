@@ -12,23 +12,23 @@ import {
     DialogContentText,
     DialogTitle,
 } from '@mui/material';
-import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
-import { resetSettings, setSettings } from 'renderer/redux/slices/settings';
-import { openSnackbar, setSettingsTab } from 'renderer/redux/slices/ui';
+import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
+import { resetSettings, setSettings } from '@/renderer/redux/slices/settings';
+import { openSnackbar, setSettingsTab } from '@/renderer/redux/slices/ui';
 import {
     resetValidatorInfo,
     setValidatorData,
-} from 'renderer/redux/slices/data';
-import AppContext from 'renderer/utils/AppContext';
-import store from 'renderer/redux/store';
-import { dehydrateState } from 'renderer/redux/stateUtils';
-import { styles } from 'renderer/components/Settings/styles';
-import { ISettings } from 'interfaces/common';
-import { Viewer } from 'renderer/components/Settings/Viewer';
-import { Converter } from 'renderer/components/Settings/Converter';
-import { Validator } from 'renderer/components/Settings/Validator';
-import { Compare } from 'renderer/components/Settings/Compare';
-import { Other } from 'renderer/components/Settings/Other';
+} from '@/renderer/redux/slices/data';
+import AppContext from '@/renderer/utils/AppContext';
+import store from '@/renderer/redux/store';
+import { dehydrateState } from '@/renderer/redux/stateUtils';
+import { styles } from '@/renderer/components/Settings/styles';
+import { ISettings } from '@/interfaces/common';
+import { Viewer } from '@/renderer/components/Settings/Viewer';
+import { Converter } from '@/renderer/components/Settings/Converter';
+import { Validator } from '@/renderer/components/Settings/Validator';
+import { Compare } from '@/renderer/components/Settings/Compare';
+import { Other } from '@/renderer/components/Settings/Other';
 
 const Settings: React.FC = () => {
     const tabIndex = useAppSelector((state) => state.ui.settingsTab);

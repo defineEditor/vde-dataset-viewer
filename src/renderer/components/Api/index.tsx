@@ -1,7 +1,11 @@
 import { useCallback, useContext } from 'react';
-import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
-import { openModal, openSnackbar, openDataset } from 'renderer/redux/slices/ui';
-import Layout from 'renderer/components/Api/Layout';
+import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
+import {
+    openModal,
+    openSnackbar,
+    openDataset,
+} from '@/renderer/redux/slices/ui';
+import Layout from '@/renderer/components/Api/Layout';
 import {
     removeApi,
     setCurrentApi,
@@ -9,10 +13,10 @@ import {
     setCurrentDataset,
     setStudies,
     setDatasets,
-} from 'renderer/redux/slices/api';
-import { modals } from 'misc/constants';
-import AppContext from 'renderer/utils/AppContext';
-import { IApiStudy, IApiStudyDataset } from 'interfaces/api';
+} from '@/renderer/redux/slices/api';
+import { modals } from '@/misc/constants';
+import AppContext from '@/renderer/utils/AppContext';
+import { IApiStudy, IApiStudyDataset } from '@/interfaces/api';
 
 const SelectDataset = () => {
     const dispatch = useAppDispatch();

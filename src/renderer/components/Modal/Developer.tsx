@@ -1,24 +1,24 @@
 import React, { useCallback, useEffect, useContext, useRef } from 'react';
-import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
+import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import DatasetView from 'renderer/components/DatasetView';
-import AppContext from 'renderer/utils/AppContext';
+import DatasetView from '@/renderer/components/DatasetView';
+import AppContext from '@/renderer/utils/AppContext';
 import {
     DatasetJsonMetadata,
     ITableData,
     IUiModal,
     ITableRow,
-} from 'interfaces/common';
+} from '@/interfaces/common';
 import { Stack, Typography } from '@mui/material';
 import { Theme } from '@mui/material/styles';
-import { closeModal, openSnackbar } from 'renderer/redux/slices/ui';
-import ApiService from 'renderer/services/ApiService';
-import useWidth from 'renderer/components/hooks/useWidth';
-import useScrollbarWidth from 'renderer/components/hooks/useScrollbarWidth';
+import { closeModal, openSnackbar } from '@/renderer/redux/slices/ui';
+import ApiService from '@/renderer/services/ApiService';
+import useWidth from '@/renderer/components/hooks/useWidth';
+import useScrollbarWidth from '@/renderer/components/hooks/useScrollbarWidth';
 
 const styles = {
     dialog: {

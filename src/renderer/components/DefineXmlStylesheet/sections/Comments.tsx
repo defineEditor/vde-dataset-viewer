@@ -1,10 +1,10 @@
 import React from 'react';
-import { DefineXmlContent } from 'interfaces/defineXml';
+import { DefineXmlContent } from '@/interfaces/defineXml';
 import {
     getCommentDefs,
     getMetaDataVersion,
-} from 'renderer/components/DefineXmlStylesheet/utils/defineXmlHelpers';
-import { getCommentContent } from 'renderer/components/DefineXmlStylesheet/utils/itemRenderHelpers';
+} from '@/renderer/components/DefineXmlStylesheet/utils/defineXmlHelpers';
+import { getCommentContent } from '@/renderer/components/DefineXmlStylesheet/utils/itemRenderHelpers';
 
 interface CommentsProps {
     content: DefineXmlContent;

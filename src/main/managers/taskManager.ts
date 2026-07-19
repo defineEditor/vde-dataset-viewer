@@ -7,8 +7,8 @@ import {
     CompareTask,
     MainTask,
     MainProcessTask,
-} from 'interfaces/common';
-import { mainTaskTypes } from 'misc/constants';
+} from '@/interfaces/common';
+import { mainTaskTypes } from '@/misc/constants';
 
 class TaskManager {
     private processes: Map<string, UtilityProcess>;

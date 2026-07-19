@@ -1,9 +1,9 @@
 import React, { useRef, useCallback } from 'react';
-import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
+import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
 import { Stack, IconButton, Typography } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { setCurrentIssueIndex, setGoTo } from 'renderer/redux/slices/ui';
+import { setCurrentIssueIndex, setGoTo } from '@/renderer/redux/slices/ui';
 
 const styles = {
     tabs: {

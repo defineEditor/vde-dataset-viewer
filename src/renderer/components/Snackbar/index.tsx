@@ -4,8 +4,8 @@ import ErrorIcon from '@mui/icons-material/Error';
 import WarningIcon from '@mui/icons-material/Warning';
 import InfoIcon from '@mui/icons-material/Info';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { closeSnackbar } from 'renderer/redux/slices/ui';
-import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
+import { closeSnackbar } from '@/renderer/redux/slices/ui';
+import { useAppSelector, useAppDispatch } from '@/renderer/redux/hooks';
 
 const styles = {
     message: {

@@ -1,7 +1,7 @@
 import React from 'react';
-import { DatasetJsonMetadata } from 'interfaces/api.d';
-import { SettingsViewer } from 'interfaces/store.d';
-import { ItemType } from 'interfaces/datasetJson.d';
+import { DatasetJsonMetadata } from '@/interfaces/api.d';
+import { SettingsViewer } from '@/interfaces/store.d';
+import { ItemType } from '@/interfaces/datasetJson.d';
 import { BasicFilter } from 'js-array-filter';
 import { CoreCell } from '@tanstack/react-table';
 

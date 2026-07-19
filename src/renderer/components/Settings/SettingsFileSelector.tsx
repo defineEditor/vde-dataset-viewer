@@ -1,6 +1,6 @@
 import React from 'react';
-import FileSelector from 'renderer/components/Common/SingleFileSelector';
-import { styles } from 'renderer/components/Settings/styles';
+import FileSelector from '@/renderer/components/Common/SingleFileSelector';
+import { styles } from '@/renderer/components/Settings/styles';
 
 const SettingsFileSelector: React.FC<{
     name: string;

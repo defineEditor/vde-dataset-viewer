@@ -1,7 +1,7 @@
 import React from 'react';
-import { DatasetJsonMetadata, IHeaderCell } from 'interfaces/common';
-import CellContextMenu from 'renderer/components/DatasetView/CellContextMenu';
-import HeaderContextMenu from 'renderer/components/DatasetView/HeaderContextMenu';
+import { DatasetJsonMetadata, IHeaderCell } from '@/interfaces/common';
+import CellContextMenu from '@/renderer/components/DatasetView/CellContextMenu';
+import HeaderContextMenu from '@/renderer/components/DatasetView/HeaderContextMenu';
 
 interface ContextMenuProps {
     open: boolean;

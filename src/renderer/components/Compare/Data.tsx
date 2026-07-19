@@ -7,26 +7,26 @@ import React, {
     useCallback,
 } from 'react';
 import { Box, CircularProgress, Typography, Stack } from '@mui/material';
-import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
-import CompareDataContainer from 'renderer/components/Compare/CompareDataContainer';
-import AppContext from 'renderer/utils/AppContext';
+import { useAppSelector, useAppDispatch } from '@/renderer/redux/hooks';
+import CompareDataContainer from '@/renderer/components/Compare/CompareDataContainer';
+import AppContext from '@/renderer/utils/AppContext';
 import {
     DatasetDiff,
     ITableData,
     ItemDataArray,
     IUiControl,
-} from 'interfaces/common';
-import { getData } from 'renderer/utils/readData';
+} from '@/interfaces/common';
+import { getData } from '@/renderer/utils/readData';
 import { diffChars } from 'diff';
 import {
     openSnackbar,
     setCompareFileIds,
     setComparePage,
-} from 'renderer/redux/slices/ui';
-import BottomToolbar from 'renderer/components/Compare/BottomToolbar';
-import ApiService from 'renderer/services/ApiService';
-import DifferencesModal from 'renderer/components/Compare/DifferencesModal';
-import { clearLoadedRecords } from 'renderer/redux/slices/data';
+} from '@/renderer/redux/slices/ui';
+import BottomToolbar from '@/renderer/components/Compare/BottomToolbar';
+import ApiService from '@/renderer/services/ApiService';
+import DifferencesModal from '@/renderer/components/Compare/DifferencesModal';
+import { clearLoadedRecords } from '@/renderer/redux/slices/data';
 
 const styles = {
     containerVertical: {

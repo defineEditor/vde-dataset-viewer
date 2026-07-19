@@ -1,4 +1,4 @@
-import { ParsedValidationReport, ITableData, IMask } from 'interfaces/common';
+import { ParsedValidationReport, ITableData, IMask } from '@/interfaces/common';
 
 /**
  * Get issue annotations for table view

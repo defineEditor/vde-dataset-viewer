@@ -6,8 +6,8 @@ import React, {
     useContext,
     useRef,
 } from 'react';
-import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
-import AppContext from 'renderer/utils/AppContext';
+import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
+import AppContext from '@/renderer/utils/AppContext';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import Box from '@mui/material/Box';
@@ -22,21 +22,21 @@ import {
     closeModal,
     setFilterInputMode,
     restartCompare,
-} from 'renderer/redux/slices/ui';
-import ManualInput from 'renderer/components/Modal/Filter/ManualInput';
+} from '@/renderer/redux/slices/ui';
+import ManualInput from '@/renderer/components/Modal/Filter/ManualInput';
 import {
     setFilter,
     resetFilter,
     setReportFilter,
     resetReportFilter,
-} from 'renderer/redux/slices/data';
+} from '@/renderer/redux/slices/data';
 import {
     ColumnType,
     DatasetJsonMetadata,
     FilterValueOptions,
     BasicFilter as IBasicFilter,
     IUiModalFilter,
-} from 'interfaces/common';
+} from '@/interfaces/common';
 import {
     Stack,
     Switch,
@@ -49,11 +49,11 @@ import {
     Chip,
     Tooltip,
 } from '@mui/material';
-import InteractiveInput from 'renderer/components/Modal/Filter/InteractiveInput';
+import InteractiveInput from '@/renderer/components/Modal/Filter/InteractiveInput';
 import EditIcon from '@mui/icons-material/Edit';
-import { getHeader } from 'renderer/utils/readData';
-import { handleTransformation } from 'renderer/utils/transformUtils';
-import { formatFilterValueOption } from 'renderer/components/hooks/useCommandAutocomplete/utils';
+import { getHeader } from '@/renderer/utils/readData';
+import { handleTransformation } from '@/renderer/utils/transformUtils';
+import { formatFilterValueOption } from '@/renderer/components/hooks/useCommandAutocomplete/utils';
 
 const styles = {
     dialog: {

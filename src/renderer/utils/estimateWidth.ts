@@ -1,5 +1,5 @@
 // Estimate width based on data
-import { ITableData } from 'interfaces/common';
+import { ITableData } from '@/interfaces/common';
 
 export default function estimateWidth(
     data: ITableData,

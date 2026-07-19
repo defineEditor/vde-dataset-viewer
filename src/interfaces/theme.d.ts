@@ -58,7 +58,7 @@ export interface ThemeTablePalette {
 
 export type AppPaletteOptions = NonNullable<ThemeOptions['palette']>;
 
-declare module '@mui/material/styles/createPalette' {
+declare module '@mui/material/styles' {
     interface TypeBackground {
         subtle: string;
         chrome: string;

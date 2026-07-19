@@ -11,14 +11,14 @@ import {
     FileInfo,
     InputFileExtension,
     ItemDataArray,
-} from 'interfaces/common';
-import openFile from 'main/openFile';
+} from '@/interfaces/common';
+import openFile from '@/main/openFile';
 import fs from 'fs';
 import fsPromises from 'fs/promises';
 import Filter from 'js-array-filter';
 import crypto from 'crypto';
 import path from 'path';
-import FileWatcher from 'main/managers/fileWatcher';
+import FileWatcher from '@/main/managers/fileWatcher';
 
 const getHash = (str: string, lastModified: number): string => {
     const hash = crypto

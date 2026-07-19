@@ -1,5 +1,5 @@
 import Filter, { BasicFilter } from 'js-array-filter';
-import { DatasetJsonMetadata, IUiControl } from 'interfaces/common';
+import { DatasetJsonMetadata, IUiControl } from '@/interfaces/common';
 
 type DatasetCommandAction =
     | { type: 'resetAll' }

@@ -1,12 +1,12 @@
 /* eslint-disable react/no-array-index-key */
 import React from 'react';
-import { DefineXmlContent } from 'interfaces/defineXml';
-import { renderDocumentRefs } from 'renderer/components/DefineXmlStylesheet/utils/itemRenderHelpers';
+import { DefineXmlContent } from '@/interfaces/defineXml';
+import { renderDocumentRefs } from '@/renderer/components/DefineXmlStylesheet/utils/itemRenderHelpers';
 import {
     getMetaDataVersion,
     getMethodDefs,
     getTranslatedText,
-} from 'renderer/components/DefineXmlStylesheet/utils/defineXmlHelpers';
+} from '@/renderer/components/DefineXmlStylesheet/utils/defineXmlHelpers';
 
 interface MethodsProps {
     content: DefineXmlContent;

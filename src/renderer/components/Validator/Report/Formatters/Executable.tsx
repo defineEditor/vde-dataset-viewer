@@ -1,6 +1,6 @@
 import React from 'react';
 import { Alert, AlertProps } from '@mui/material';
-import { ITableRow, IssueExecutability } from 'interfaces/common';
+import { ITableRow, IssueExecutability } from '@/interfaces/common';
 import { CoreCell } from '@tanstack/react-table';
 
 const styles = {

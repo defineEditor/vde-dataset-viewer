@@ -28,7 +28,7 @@ import {
     FilterCondition,
     FilterValueOptions,
     ColumnType,
-} from 'interfaces/common';
+} from '@/interfaces/common';
 
 const styles = {
     columnSelect: {

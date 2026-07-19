@@ -3,14 +3,14 @@ import { Typography, Tooltip, IconButton, Stack } from '@mui/material';
 import FilterIcon from '@mui/icons-material/FilterAlt';
 import DownloadIcon from '@mui/icons-material/Download';
 import FilterOffIcon from '@mui/icons-material/FilterAltOff';
-import { openModal, openSnackbar } from 'renderer/redux/slices/ui';
+import { openModal, openSnackbar } from '@/renderer/redux/slices/ui';
 import {
     resetReportFilter,
     setReportLastSaveFolder,
-} from 'renderer/redux/slices/data';
-import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
-import AppContext from 'renderer/utils/AppContext';
-import { modals } from 'misc/constants';
+} from '@/renderer/redux/slices/data';
+import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
+import AppContext from '@/renderer/utils/AppContext';
+import { modals } from '@/misc/constants';
 
 const styles = {
     main: {

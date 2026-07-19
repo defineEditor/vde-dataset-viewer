@@ -9,8 +9,8 @@ import {
     RadioGroup,
     Radio,
 } from '@mui/material';
-import { ISettings } from 'interfaces/common';
-import { styles } from 'renderer/components/Settings/styles';
+import { ISettings } from '@/interfaces/common';
+import { styles } from '@/renderer/components/Settings/styles';
 
 interface ConverterProps {
     settings: ISettings;

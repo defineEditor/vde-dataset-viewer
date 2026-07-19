@@ -6,11 +6,11 @@ import Box from '@mui/material/Box';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
-import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
-import { setCompareResultTab } from 'renderer/redux/slices/ui';
-import Metadata from 'renderer/components/Compare/Metadata';
-import Data from 'renderer/components/Compare/Data';
-import Summary from 'renderer/components/Compare/Summary';
+import { useAppSelector, useAppDispatch } from '@/renderer/redux/hooks';
+import { setCompareResultTab } from '@/renderer/redux/slices/ui';
+import Metadata from '@/renderer/components/Compare/Metadata';
+import Data from '@/renderer/components/Compare/Data';
+import Summary from '@/renderer/components/Compare/Summary';
 
 const styles = {
     root: {

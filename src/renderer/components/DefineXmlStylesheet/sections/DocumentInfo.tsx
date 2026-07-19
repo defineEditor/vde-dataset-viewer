@@ -1,5 +1,5 @@
 import React from 'react';
-import { DefineXmlContent } from 'interfaces/defineXml';
+import { DefineXmlContent } from '@/interfaces/defineXml';
 import { getOdm, getMetaDataVersion } from '../utils/defineXmlHelpers';
 
 interface DocumentInfoProps {

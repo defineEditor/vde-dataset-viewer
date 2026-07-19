@@ -11,7 +11,7 @@ import {
     Box,
     Typography,
 } from '@mui/material';
-import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
+import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
 import {
     openModal,
     openSnackbar,
@@ -19,8 +19,8 @@ import {
     setDatasetSorting,
     setSelect,
     setDatasetShowLabels,
-} from 'renderer/redux/slices/ui';
-import { resetFilter, setFilter } from 'renderer/redux/slices/data';
+} from '@/renderer/redux/slices/ui';
+import { resetFilter, setFilter } from '@/renderer/redux/slices/data';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import InfoIcon from '@mui/icons-material/Info';
@@ -34,16 +34,16 @@ import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import LabelIcon from '@mui/icons-material/Label';
 import LabelOffIcon from '@mui/icons-material/LabelOff';
 import SortIcon from '@mui/icons-material/Sort';
-import { getSafeValue } from 'renderer/utils/transformUtils';
-import { modals } from 'misc/constants';
+import { getSafeValue } from '@/renderer/utils/transformUtils';
+import { modals } from '@/misc/constants';
 import {
     IHeaderCell,
     DatasetJsonMetadata,
     TableRowValue,
     BasicFilter,
     IUiControl,
-} from 'interfaces/common';
-import AppContext from 'renderer/utils/AppContext';
+} from '@/interfaces/common';
+import AppContext from '@/renderer/utils/AppContext';
 import Filter from 'js-array-filter';
 
 const styles = {

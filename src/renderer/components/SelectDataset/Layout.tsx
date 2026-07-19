@@ -1,13 +1,13 @@
 import React, { useRef, useEffect, useState } from 'react';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import Carousel from 'renderer/components/SelectDataset/Carousel';
+import Carousel from '@/renderer/components/SelectDataset/Carousel';
 import Box from '@mui/material/Box';
-import { IRecentFile, ApiOpenedFileWithMetadata } from 'interfaces/common';
-import FileCard from 'renderer/components/SelectDataset/FileCard';
-import FolderCard from 'renderer/components/SelectDataset/FolderCard';
-import DatasetCard from 'renderer/components/SelectDataset/DatasetCard';
-import OpenNewCard from 'renderer/components/SelectDataset/OpenNewCard';
+import { IRecentFile, ApiOpenedFileWithMetadata } from '@/interfaces/common';
+import FileCard from '@/renderer/components/SelectDataset/FileCard';
+import FolderCard from '@/renderer/components/SelectDataset/FolderCard';
+import DatasetCard from '@/renderer/components/SelectDataset/DatasetCard';
+import OpenNewCard from '@/renderer/components/SelectDataset/OpenNewCard';
 
 const styles = {
     main: {

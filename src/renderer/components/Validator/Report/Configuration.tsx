@@ -13,7 +13,10 @@ import {
     IconButton,
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { ParsedValidationReport, ValidationRunReport } from 'interfaces/common';
+import {
+    ParsedValidationReport,
+    ValidationRunReport,
+} from '@/interfaces/common';
 
 const styles = {
     container: {

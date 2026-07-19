@@ -9,8 +9,8 @@ import {
     DialogContent,
     DialogActions,
 } from '@mui/material';
-import { useAppSelector } from 'renderer/redux/hooks';
-import { ValidatorConfig } from 'interfaces/common';
+import { useAppSelector } from '@/renderer/redux/hooks';
+import { ValidatorConfig } from '@/interfaces/common';
 
 const styles = {
     dialogContent: {

@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { ui as initialUi } from 'renderer/redux/initialState';
+import { ui as initialUi } from '@/renderer/redux/initialState';
 import {
     IUiSnackbar,
     IUiModal,
@@ -15,8 +15,8 @@ import {
     IUiCompare,
     CompareSettings,
     IUiControl,
-} from 'interfaces/common';
-import { paths } from 'misc/constants';
+} from '@/interfaces/common';
+import { paths } from '@/misc/constants';
 
 export const uiSlice = createSlice({
     name: 'ui',

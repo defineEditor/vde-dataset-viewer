@@ -1,10 +1,14 @@
 import React from 'react';
-import { ITableData, DatasetJsonMetadata, ITableRow } from 'interfaces/common';
 import { CoreCell } from '@tanstack/react-table';
-import calculateColumnWidth from 'renderer/utils/calculateColumnWidth';
-import renderVariableName from 'renderer/components/Modal/DatasetInfo/VariableName';
-import renderVariableNumber from 'renderer/components/Modal/DatasetInfo/VariableNumber';
-import columnDefs from 'renderer/components/Modal/DatasetInfo/columnDefs';
+import {
+    ITableData,
+    DatasetJsonMetadata,
+    ITableRow,
+} from '@/interfaces/common';
+import calculateColumnWidth from '@/renderer/utils/calculateColumnWidth';
+import renderVariableName from '@/renderer/components/Modal/DatasetInfo/VariableName';
+import renderVariableNumber from '@/renderer/components/Modal/DatasetInfo/VariableNumber';
+import columnDefs from '@/renderer/components/Modal/DatasetInfo/columnDefs';
 
 const convertMetadataToDataset = (
     data: DatasetJsonMetadata,

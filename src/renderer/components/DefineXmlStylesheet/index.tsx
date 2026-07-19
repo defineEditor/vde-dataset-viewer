@@ -1,16 +1,16 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { Box, Button, Stack } from '@mui/material';
-import AppContext from 'renderer/utils/AppContext';
-import { DefineXmlContent } from 'interfaces/defineXml';
-import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
-import StylesheetLayout from 'renderer/components/DefineXmlStylesheet/StylesheetLayout';
-import handleOpenDataset from 'renderer/utils/handleOpenDataset';
+import AppContext from '@/renderer/utils/AppContext';
+import { DefineXmlContent } from '@/interfaces/defineXml';
+import { useAppSelector, useAppDispatch } from '@/renderer/redux/hooks';
+import StylesheetLayout from '@/renderer/components/DefineXmlStylesheet/StylesheetLayout';
+import handleOpenDataset from '@/renderer/utils/handleOpenDataset';
 import {
     openSnackbar,
     setDefineFileId,
     setDefineIsLoading,
-} from 'renderer/redux/slices/ui';
-import Loading from 'renderer/components/Loading';
+} from '@/renderer/redux/slices/ui';
+import Loading from '@/renderer/components/Loading';
 
 const styles = {
     container: {

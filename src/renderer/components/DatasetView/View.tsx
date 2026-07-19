@@ -30,8 +30,8 @@ import ExposureIcon from '@mui/icons-material/Exposure';
 import LooksOneIcon from '@mui/icons-material/LooksOne';
 import AccessTimeIcon from '@mui/icons-material/HourglassFull';
 import { VirtualItem, Virtualizer } from '@tanstack/react-virtual';
-import { ITableRow, TableRowValue, TableSettings } from 'interfaces/common';
-import Loading from 'renderer/components/Loading';
+import { ITableRow, TableRowValue, TableSettings } from '@/interfaces/common';
+import Loading from '@/renderer/components/Loading';
 
 const getContainerStyle =
     (settings: TableSettings) =>

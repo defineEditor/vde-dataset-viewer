@@ -21,12 +21,12 @@ import {
     toggleSidebar,
     setCompareFiles,
     setReloadRequested,
-} from 'renderer/redux/slices/ui';
-import { resetFilter, addRecent } from 'renderer/redux/slices/data';
-import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
-import { openNewDataset } from 'renderer/utils/readData';
-import AppContext from 'renderer/utils/AppContext';
-import { modals, paths } from 'misc/constants';
+} from '@/renderer/redux/slices/ui';
+import { resetFilter, addRecent } from '@/renderer/redux/slices/data';
+import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
+import { openNewDataset } from '@/renderer/utils/readData';
+import AppContext from '@/renderer/utils/AppContext';
+import { modals, paths } from '@/misc/constants';
 
 const styles = {
     main: {

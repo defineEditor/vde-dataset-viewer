@@ -12,14 +12,14 @@ import {
     DensitySettings,
     AppTheme,
     AppPaletteOptions,
-} from 'interfaces/theme';
-import { buildDefaultPalette } from 'renderer/theme/themes/defaultTheme';
-import { buildSolarizedPalette } from 'renderer/theme/themes/solarizedTheme';
-import { buildGitHubPalette } from 'renderer/theme/themes/githubTheme';
-import { buildoneDarkPalette } from 'renderer/theme/themes/oneDarkTheme';
-import { buildDraculaPalette } from 'renderer/theme/themes/draculaTheme';
-import { buildMatchaPalette } from 'renderer/theme/themes/matchaTheme';
-import { buildCatppuccinPalette } from 'renderer/theme/themes/catppuccinTheme';
+} from '@/interfaces/theme';
+import { buildDefaultPalette } from '@/renderer/theme/themes/defaultTheme';
+import { buildSolarizedPalette } from '@/renderer/theme/themes/solarizedTheme';
+import { buildGitHubPalette } from '@/renderer/theme/themes/githubTheme';
+import { buildoneDarkPalette } from '@/renderer/theme/themes/oneDarkTheme';
+import { buildDraculaPalette } from '@/renderer/theme/themes/draculaTheme';
+import { buildMatchaPalette } from '@/renderer/theme/themes/matchaTheme';
+import { buildCatppuccinPalette } from '@/renderer/theme/themes/catppuccinTheme';
 
 const densityConfig: Record<ThemeDensity, DensitySettings> = {
     normal: {

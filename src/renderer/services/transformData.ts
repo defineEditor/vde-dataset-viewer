@@ -1,12 +1,12 @@
 /* eslint-disable no-redeclare */
-import { DatasetJsonMetadata, ISettings, ITableRow } from 'interfaces/common';
+import { DatasetJsonMetadata, ISettings, ITableRow } from '@/interfaces/common';
 import { ItemDataArray } from 'js-stream-dataset-json';
 import {
     sasDateToJsDate,
     sasDatetimeToJsDate,
     formatDateToDDMONYYYY,
     sasTimeToComponents,
-} from 'renderer/utils/transformUtils';
+} from '@/renderer/utils/transformUtils';
 
 function transformData(
     data: ItemDataArray[],

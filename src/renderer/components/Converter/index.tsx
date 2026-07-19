@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import Configuration from 'renderer/components/Converter/Configuration';
-import Execution from 'renderer/components/Converter/Execution';
-import { ConvertTask } from 'interfaces/common';
+import Configuration from '@/renderer/components/Converter/Configuration';
+import Execution from '@/renderer/components/Converter/Execution';
+import { ConvertTask } from '@/interfaces/common';
 
 const Converter: React.FC = () => {
     const [step, setStep] = useState<'configuration' | 'execution'>(

@@ -4,13 +4,13 @@ import {
     openSnackbar,
     setGoTo,
     setShowIssues,
-} from 'renderer/redux/slices/ui';
-import { addRecent } from 'renderer/redux/slices/data';
-import { openNewDataset } from 'renderer/utils/readData';
+} from '@/renderer/redux/slices/ui';
+import { addRecent } from '@/renderer/redux/slices/data';
+import { openNewDataset } from '@/renderer/utils/readData';
 
-import { NewWindowProps } from 'interfaces/common';
-import { AppDispatch } from 'renderer/redux/store';
-import ApiService from 'renderer/services/ApiService';
+import { NewWindowProps } from '@/interfaces/common';
+import { AppDispatch } from '@/renderer/redux/store';
+import ApiService from '@/renderer/services/ApiService';
 
 const handleOpenDataset = async (
     filePath: string,

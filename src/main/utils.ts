@@ -8,8 +8,8 @@ import {
     WebContents,
 } from 'electron';
 import path from 'path';
-import FileManager from 'main/managers/fileManager';
-import getMemoryInfo from 'renderer/utils/getMemoryInfo';
+import FileManager from '@/main/managers/fileManager';
+import getMemoryInfo from '@/renderer/utils/getMemoryInfo';
 
 const resolveHtmlPath = (htmlFileName: string) => {
     if (process.env.NODE_ENV === 'development') {

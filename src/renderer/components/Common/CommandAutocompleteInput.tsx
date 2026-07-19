@@ -17,9 +17,9 @@ import type {
     UniqueValuesApi,
     FilterValueOptions,
     ColumnType,
-} from 'interfaces/common';
-import { useCommandAutocomplete } from 'renderer/components/hooks/useCommandAutocomplete';
-import { getLastFilterCondition } from 'renderer/components/hooks/useCommandAutocomplete/utils';
+} from '@/interfaces/common';
+import { useCommandAutocomplete } from '@/renderer/components/hooks/useCommandAutocomplete';
+import { getLastFilterCondition } from '@/renderer/components/hooks/useCommandAutocomplete/utils';
 
 const styles = {
     showAllValuesLi: {

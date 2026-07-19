@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import AppContext from 'renderer/utils/AppContext';
-import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
+import AppContext from '@/renderer/utils/AppContext';
+import { useAppSelector, useAppDispatch } from '@/renderer/redux/hooks';
 import {
     List,
     ListItem,
@@ -27,15 +27,15 @@ import {
     setValidationTab,
     setValidationModalTab,
     setPathname,
-} from 'renderer/redux/slices/ui';
+} from '@/renderer/redux/slices/ui';
 import {
     removeValidationReport,
     setReportLastSaveFolder,
     setValidatorData,
-} from 'renderer/redux/slices/data';
-import { ValidationRunReport } from 'interfaces/common';
-import getReportTitle from 'renderer/utils/getReportTitle';
-import { paths } from 'misc/constants';
+} from '@/renderer/redux/slices/data';
+import { ValidationRunReport } from '@/interfaces/common';
+import getReportTitle from '@/renderer/utils/getReportTitle';
+import { paths } from '@/misc/constants';
 
 const styles = {
     container: {

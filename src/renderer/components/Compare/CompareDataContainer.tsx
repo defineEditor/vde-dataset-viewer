@@ -1,13 +1,13 @@
 import React, { useState, useCallback } from 'react';
-import DatasetView from 'renderer/components/DatasetView';
-import ContextMenu from 'renderer/components/DatasetView/ContextMenu';
+import DatasetView from '@/renderer/components/DatasetView';
+import ContextMenu from '@/renderer/components/DatasetView/ContextMenu';
 import {
     IHeaderCell,
     ITableData,
     IUiControl,
     SettingsViewer,
     TableRowValue,
-} from 'interfaces/common';
+} from '@/interfaces/common';
 
 interface CompareDataContainerProps {
     tableData: ITableData | null;

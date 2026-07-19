@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
-import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
+import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import AppContext from 'renderer/utils/AppContext';
-import { closeModal, openSnackbar } from 'renderer/redux/slices/ui';
-import { addApi, updateApi } from 'renderer/redux/slices/api';
-import { IApiRecord, IUiModalEditApi } from 'interfaces/common';
+import AppContext from '@/renderer/utils/AppContext';
+import { closeModal, openSnackbar } from '@/renderer/redux/slices/ui';
+import { addApi, updateApi } from '@/renderer/redux/slices/api';
+import { IApiRecord, IUiModalEditApi } from '@/interfaces/common';
 
 const styles = {
     dialog: {

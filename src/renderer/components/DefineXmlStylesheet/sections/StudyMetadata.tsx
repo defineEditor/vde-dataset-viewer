@@ -1,5 +1,5 @@
 import React from 'react';
-import { DefineXmlContent } from 'interfaces/defineXml';
+import { DefineXmlContent } from '@/interfaces/defineXml';
 import type { Define20, ArmDefine20 } from 'parse-define-xml';
 import {
     getGlobalVariables,

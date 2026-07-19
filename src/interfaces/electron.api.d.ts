@@ -18,7 +18,7 @@ import {
     DefineFileInfo,
     DefineXmlContent,
     IUiSnackbar,
-} from 'interfaces/common';
+} from '@/interfaces/common';
 
 export type Channels = 'ipc-vde';
 

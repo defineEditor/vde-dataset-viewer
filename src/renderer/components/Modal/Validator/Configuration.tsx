@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect, useMemo } from 'react';
-import { useAppSelector } from 'renderer/redux/hooks';
+import { useAppSelector } from '@/renderer/redux/hooks';
 import {
     Stack,
     Typography,
@@ -14,10 +14,10 @@ import {
     Autocomplete,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import FileSelector from 'renderer/components/Common/SingleFileSelector';
-import AppContext from 'renderer/utils/AppContext';
-import { ValidatorConfig } from 'interfaces/main';
-import OptionsModal from 'renderer/components/Validator/OptionsModal';
+import FileSelector from '@/renderer/components/Common/SingleFileSelector';
+import AppContext from '@/renderer/utils/AppContext';
+import { ValidatorConfig } from '@/interfaces/main';
+import OptionsModal from '@/renderer/components/Validator/OptionsModal';
 
 const styles = {
     container: {

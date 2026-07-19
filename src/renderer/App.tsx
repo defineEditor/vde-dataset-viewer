@@ -1,25 +1,25 @@
 import React, { useEffect, useMemo } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
-import { createAppTheme } from 'renderer/theme';
-import Main from 'renderer/components/Main';
-import Snackbar from 'renderer/components/Snackbar';
-import Modal from 'renderer/components/Modal';
 import { CssBaseline } from '@mui/material';
 import { Provider } from 'react-redux';
-import store from 'renderer/redux/store';
-import AppContext from 'renderer/utils/AppContext';
-import AppContextProvider from 'renderer/utils/AppContextProvider';
-import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
-import { dehydrateState, safeLoadState } from 'renderer/redux/stateUtils';
+import { createAppTheme } from '@/renderer/theme';
+import Main from '@/renderer/components/Main';
+import Snackbar from '@/renderer/components/Snackbar';
+import Modal from '@/renderer/components/Modal';
+import store from '@/renderer/redux/store';
+import AppContext from '@/renderer/utils/AppContext';
+import AppContextProvider from '@/renderer/utils/AppContextProvider';
+import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
+import { dehydrateState, safeLoadState } from '@/renderer/redux/stateUtils';
 import {
     closeAllModals,
     openModal,
     setPathname,
     openSnackbar,
-} from 'renderer/redux/slices/ui';
-import { modals, paths } from 'misc/constants';
-import DragAndDrop from 'renderer/components/DragAndDrop';
-import { IUiSnackbar } from 'interfaces/common';
+} from '@/renderer/redux/slices/ui';
+import { modals, paths } from '@/misc/constants';
+import DragAndDrop from '@/renderer/components/DragAndDrop';
+import { IUiSnackbar } from '@/interfaces/common';
 
 class ErrorBoundary extends React.Component<
     { children: React.ReactNode },

@@ -7,26 +7,26 @@ import {
     ipcMain,
     IpcMainInvokeEvent,
 } from 'electron';
-import StoreManager from 'main/managers/storeManager';
+import StoreManager from '@/main/managers/storeManager';
 import {
     resolveHtmlPath,
     writeToClipboard,
     resizeWindow,
     getDeveloperInfo,
     parseArgs,
-} from 'main/utils';
+} from '@/main/utils';
 import {
     installExtension,
     REDUX_DEVTOOLS,
     REACT_DEVELOPER_TOOLS,
 } from 'electron-devtools-installer';
-import { checkForUpdates, downloadUpdate } from 'main/appUpdate';
-import FileManager from 'main/managers/fileManager';
-import NetManager from 'main/managers/netManager';
-import TaskManager from 'main/managers/taskManager';
-import ReportManager from 'main/managers/reportManager';
-import DefineXmlManager from 'main/managers/defineXmlManager';
-import { MainTask, NewWindowProps } from 'interfaces/main';
+import { checkForUpdates, downloadUpdate } from '@/main/appUpdate';
+import FileManager from '@/main/managers/fileManager';
+import NetManager from '@/main/managers/netManager';
+import TaskManager from '@/main/managers/taskManager';
+import ReportManager from '@/main/managers/reportManager';
+import DefineXmlManager from '@/main/managers/defineXmlManager';
+import { MainTask, NewWindowProps } from '@/interfaces/main';
 
 let mainWindow: BrowserWindow | null = null;
 const openedWindows = new Set<BrowserWindow>();

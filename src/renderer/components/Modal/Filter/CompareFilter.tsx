@@ -1,9 +1,9 @@
 import React, { useContext } from 'react';
-import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
-import AppContext from 'renderer/utils/AppContext';
-import { IUiModalFilter, ITableRow } from 'interfaces/common';
-import FilterBody from 'renderer/components/Modal/Filter/FilterBody';
-import { closeModal } from 'renderer/redux/slices/ui';
+import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
+import AppContext from '@/renderer/utils/AppContext';
+import { IUiModalFilter, ITableRow } from '@/interfaces/common';
+import FilterBody from '@/renderer/components/Modal/Filter/FilterBody';
+import { closeModal } from '@/renderer/redux/slices/ui';
 
 const CompareFilter: React.FC<IUiModalFilter> = ({
     type,

@@ -25,12 +25,12 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
-import AppContext from 'renderer/utils/AppContext';
-import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
-import { IMask } from 'interfaces/store';
-import { closeModal, setMask } from 'renderer/redux/slices/ui';
-import { saveMask, deleteMask } from 'renderer/redux/slices/data';
-import { modals } from 'misc/constants';
+import AppContext from '@/renderer/utils/AppContext';
+import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
+import { IMask } from '@/interfaces/store';
+import { closeModal, setMask } from '@/renderer/redux/slices/ui';
+import { saveMask, deleteMask } from '@/renderer/redux/slices/data';
+import { modals } from '@/misc/constants';
 
 const styles = {
     dialog: {

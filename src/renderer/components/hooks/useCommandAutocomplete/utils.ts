@@ -1,4 +1,4 @@
-import { FilterValueOptions } from 'interfaces/common';
+import { FilterValueOptions } from '@/interfaces/common';
 
 export const getActiveSegment = (
     value: string,

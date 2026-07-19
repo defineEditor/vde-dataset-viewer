@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { settings as initialSettings } from 'renderer/redux/initialState';
-import { ISettings, DeepPartial } from 'interfaces/common';
+import { settings as initialSettings } from '@/renderer/redux/initialState';
+import { ISettings, DeepPartial } from '@/interfaces/common';
 
 export const dataSlice = createSlice({
     name: 'data',

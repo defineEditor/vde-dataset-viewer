@@ -3,21 +3,21 @@ import { useTheme } from '@mui/material/styles';
 import {
     DefineXmlContent,
     DefineStylesheetSection as Section,
-} from 'interfaces/common';
-import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
-import { setDefineScrollPosition } from 'renderer/redux/slices/ui';
-import NavigationMenu from 'renderer/components/DefineXmlStylesheet/NavigationMenu';
-import DocumentInfo from 'renderer/components/DefineXmlStylesheet/sections/DocumentInfo';
-import StudyMetadata from 'renderer/components/DefineXmlStylesheet/sections/StudyMetadata';
-import Standards from 'renderer/components/DefineXmlStylesheet/sections/Standards';
-import Datasets from 'renderer/components/DefineXmlStylesheet/sections/Datasets';
-import DatasetDetails from 'renderer/components/DefineXmlStylesheet/sections/DatasetDetails';
-import CodeLists from 'renderer/components/DefineXmlStylesheet/sections/CodeLists';
-import Methods from 'renderer/components/DefineXmlStylesheet/sections/Methods';
-import Comments from 'renderer/components/DefineXmlStylesheet/sections/Comments';
-import AnalysisResults from 'renderer/components/DefineXmlStylesheet/sections/AnalysisResults';
+} from '@/interfaces/common';
+import { useAppSelector, useAppDispatch } from '@/renderer/redux/hooks';
+import { setDefineScrollPosition } from '@/renderer/redux/slices/ui';
+import NavigationMenu from '@/renderer/components/DefineXmlStylesheet/NavigationMenu';
+import DocumentInfo from '@/renderer/components/DefineXmlStylesheet/sections/DocumentInfo';
+import StudyMetadata from '@/renderer/components/DefineXmlStylesheet/sections/StudyMetadata';
+import Standards from '@/renderer/components/DefineXmlStylesheet/sections/Standards';
+import Datasets from '@/renderer/components/DefineXmlStylesheet/sections/Datasets';
+import DatasetDetails from '@/renderer/components/DefineXmlStylesheet/sections/DatasetDetails';
+import CodeLists from '@/renderer/components/DefineXmlStylesheet/sections/CodeLists';
+import Methods from '@/renderer/components/DefineXmlStylesheet/sections/Methods';
+import Comments from '@/renderer/components/DefineXmlStylesheet/sections/Comments';
+import AnalysisResults from '@/renderer/components/DefineXmlStylesheet/sections/AnalysisResults';
 import { getItemGroupDefs } from './utils/defineXmlHelpers';
-import 'renderer/components/DefineXmlStylesheet/defineXml.css';
+import '@/renderer/components/DefineXmlStylesheet/defineXml.css';
 
 interface StylesheetLayoutProps {
     content: DefineXmlContent;

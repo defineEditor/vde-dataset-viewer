@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
-import { openDataset, closeDataset } from 'renderer/redux/slices/ui';
-import AppContext from 'renderer/utils/AppContext';
+import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
+import { openDataset, closeDataset } from '@/renderer/redux/slices/ui';
+import AppContext from '@/renderer/utils/AppContext';
 import {
     Tabs,
     Tab,

@@ -12,8 +12,8 @@ import {
     DialogContent,
     DialogTitle,
 } from '@mui/material';
-import AppContext from 'renderer/utils/AppContext';
-import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
+import AppContext from '@/renderer/utils/AppContext';
+import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
 import {
     closeModal,
     openModal,
@@ -21,17 +21,17 @@ import {
     setDatasetSorting,
     setMask,
     setGoTo,
-} from 'renderer/redux/slices/ui';
+} from '@/renderer/redux/slices/ui';
 import {
     addRecentCommand,
     resetFilter,
     setFilter,
-} from 'renderer/redux/slices/data';
-import { ColumnType, IMask, IUiModal } from 'interfaces/common';
-import { modals } from 'misc/constants';
-import { parseDatasetCommand } from 'renderer/utils/commandLine';
-import { getCommandHelperText } from 'renderer/components/hooks/useCommandAutocomplete';
-import CommandAutocompleteInput from 'renderer/components/Common/CommandAutocompleteInput';
+} from '@/renderer/redux/slices/data';
+import { ColumnType, IMask, IUiModal } from '@/interfaces/common';
+import { modals } from '@/misc/constants';
+import { parseDatasetCommand } from '@/renderer/utils/commandLine';
+import { getCommandHelperText } from '@/renderer/components/hooks/useCommandAutocomplete';
+import CommandAutocompleteInput from '@/renderer/components/Common/CommandAutocompleteInput';
 
 const styles = {
     dialog: {

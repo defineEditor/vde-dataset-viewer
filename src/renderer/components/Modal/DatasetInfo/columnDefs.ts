@@ -1,4 +1,4 @@
-import { IHeaderCell } from 'interfaces/common';
+import { IHeaderCell } from '@/interfaces/common';
 
 const columnDefs: IHeaderCell[] = [
     {

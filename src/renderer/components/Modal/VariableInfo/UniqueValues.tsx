@@ -9,19 +9,19 @@ import Stack from '@mui/material/Stack';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import ContextMenu from 'renderer/components/DatasetView/ContextMenu';
-import AppContext from 'renderer/utils/AppContext';
+import ContextMenu from '@/renderer/components/DatasetView/ContextMenu';
+import AppContext from '@/renderer/utils/AppContext';
 import {
     IHeaderCell,
     ITableData,
     DatasetJsonMetadata,
     TableRowValue,
-} from 'interfaces/common';
+} from '@/interfaces/common';
 import { Typography, LinearProgress } from '@mui/material';
-import DatasetView from 'renderer/components/DatasetView';
-import { useAppSelector } from 'renderer/redux/hooks';
-import useWidth from 'renderer/components/hooks/useWidth';
-import useScrollbarWidth from 'renderer/components/hooks/useScrollbarWidth';
+import DatasetView from '@/renderer/components/DatasetView';
+import { useAppSelector } from '@/renderer/redux/hooks';
+import useWidth from '@/renderer/components/hooks/useWidth';
+import useScrollbarWidth from '@/renderer/components/hooks/useScrollbarWidth';
 
 const styles = {
     container: {

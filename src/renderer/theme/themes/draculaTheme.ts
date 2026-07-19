@@ -3,8 +3,8 @@ import type {
     Theme as MuiTheme,
     ThemeOptions as MuiThemeOptions,
 } from '@mui/material/styles';
-import type { ResolvedThemeMode } from 'interfaces/theme';
-import { compositeOverBackground } from 'renderer/theme/themes/utils';
+import type { ResolvedThemeMode } from '@/interfaces/theme';
+import { compositeOverBackground } from '@/renderer/theme/themes/utils';
 
 const buildDraculaGrey = (mode: ResolvedThemeMode): Record<string, string> => {
     if (mode === 'dark') {

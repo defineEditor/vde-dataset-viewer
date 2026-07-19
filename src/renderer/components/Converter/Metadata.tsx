@@ -10,7 +10,7 @@ import {
     Box,
     Alert,
 } from '@mui/material';
-import { DatasetMetadata, SourceSystem } from 'interfaces/common';
+import { DatasetMetadata, SourceSystem } from '@/interfaces/common';
 
 interface MetadataDialogProps {
     open: boolean;

@@ -9,10 +9,10 @@ import {
     Box,
     ButtonBase,
 } from '@mui/material';
-import DogWorker from 'renderer/components/Loading/DogWorker';
-import CatWorker from 'renderer/components/Loading/CatWorker';
-import { useAppSelector } from 'renderer/redux/hooks';
-import { ISettings, IUiValidation } from 'interfaces/common';
+import DogWorker from '@/renderer/components/Loading/DogWorker';
+import CatWorker from '@/renderer/components/Loading/CatWorker';
+import { useAppSelector } from '@/renderer/redux/hooks';
+import { ISettings, IUiValidation } from '@/interfaces/common';
 
 const styles = {
     container: {

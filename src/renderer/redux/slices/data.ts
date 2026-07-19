@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { data as initialData } from 'renderer/redux/initialState';
+import { data as initialData } from '@/renderer/redux/initialState';
 import {
     IRecentFile,
     BasicFilter,
@@ -11,10 +11,10 @@ import {
     IUiValidationPage,
     ValidatorData,
     DatasetDiff,
-} from 'interfaces/common';
-import deepEqual from 'renderer/utils/deepEqual';
-import getFolderName from 'renderer/utils/getFolderName';
-import { closeDataset, closeCompare } from 'renderer/redux/slices/ui';
+} from '@/interfaces/common';
+import deepEqual from '@/renderer/utils/deepEqual';
+import getFolderName from '@/renderer/utils/getFolderName';
+import { closeDataset, closeCompare } from '@/renderer/redux/slices/ui';
 
 export const dataSlice = createSlice({
     name: 'data',
