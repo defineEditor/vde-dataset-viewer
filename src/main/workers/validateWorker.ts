@@ -1,9 +1,3 @@
-import {
-    ValidatorProcessTask,
-    ValidateSubTask,
-    ValidationRunReport,
-    IssueSummaryItem,
-} from '@/interfaces/common';
 import fs from 'fs';
 import fsPromises from 'fs/promises';
 import path from 'path';
@@ -11,6 +5,12 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { tmpdir } from 'os';
 import zlib from 'zlib';
+import {
+    ValidatorProcessTask,
+    ValidateSubTask,
+    ValidationRunReport,
+    IssueSummaryItem,
+} from '@/interfaces/common';
 
 const execAsync = promisify(exec);
 const gzipPromise = promisify(zlib.gzip);

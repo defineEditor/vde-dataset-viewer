@@ -7,6 +7,11 @@ import {
     ipcMain,
     IpcMainInvokeEvent,
 } from 'electron';
+import {
+    installExtension,
+    REDUX_DEVTOOLS,
+    REACT_DEVELOPER_TOOLS,
+} from 'electron-devtools-installer';
 import StoreManager from '@/main/managers/storeManager';
 import {
     resolveHtmlPath,
@@ -15,11 +20,6 @@ import {
     getDeveloperInfo,
     parseArgs,
 } from '@/main/utils';
-import {
-    installExtension,
-    REDUX_DEVTOOLS,
-    REACT_DEVELOPER_TOOLS,
-} from 'electron-devtools-installer';
 import { checkForUpdates, downloadUpdate } from '@/main/appUpdate';
 import FileManager from '@/main/managers/fileManager';
 import NetManager from '@/main/managers/netManager';

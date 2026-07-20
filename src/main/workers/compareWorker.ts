@@ -1,3 +1,7 @@
+import Filter from 'js-array-filter';
+import DatasetJson from 'js-stream-dataset-json';
+import { DatasetReadStat } from 'js-stream-sas7bdat';
+import DatasetXpt from 'xport-js';
 import {
     CompareProcessTask,
     DatasetDiff,
@@ -13,10 +17,6 @@ import {
     BasicFilter,
     ColumnMetadata,
 } from '@/interfaces/common';
-import Filter from 'js-array-filter';
-import DatasetJson from 'js-stream-dataset-json';
-import { DatasetReadStat } from 'js-stream-sas7bdat';
-import DatasetXpt from 'xport-js';
 
 const transformData = (
     data: ItemDataArray[],
