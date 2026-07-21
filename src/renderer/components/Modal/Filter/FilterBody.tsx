@@ -116,7 +116,10 @@ const updateFilterDateValues = (
 
     const conditionsUpdated = filter.conditions.map((condition) => {
         const updatedCondition = { ...condition };
-        if (dateColumns.includes(condition.variable.toLowerCase())) {
+        if (
+            condition.variable &&
+            dateColumns.includes(condition.variable.toLowerCase())
+        ) {
             const numericDatetimeType = header.find(
                 (column) =>
                     column.id.toLowerCase() ===
@@ -173,7 +176,7 @@ const getFilterWithUpdateDateTypes = (
     // We need to update type of some columns, as settings can change how they are shown
     const updatedColumns = columns.map((column) => {
         const updatedColumn = { ...column };
-        const updatedType = columnTypes[column.name];
+        const updatedType = columnTypes[column.name.toLowerCase()];
         if (updatedType === 'number') {
             updatedColumn.dataType = 'double';
         } else if (updatedType) {
