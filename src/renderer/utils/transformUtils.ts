@@ -145,49 +145,84 @@ export const formatDDMONYYYYtoDate = (dateStr: string): Date => {
     return date;
 };
 
-export const handleTransformation = (
+function handleTransformation(
     numericDatetimeType: IHeaderCell['numericDatetimeType'],
     value: string | number | boolean | null,
     dateFormat: ISettings['viewer']['dateFormat'],
-) => {
-    if (value === null || value === undefined || value === '') {
-        return null;
-    }
-    let updatedValue: string | number | boolean | null = value;
-    if (numericDatetimeType) {
-        let date: Date | null = null;
-        if (dateFormat === 'ISO8601' || numericDatetimeType === 'time') {
-            if (numericDatetimeType === 'datetime') {
-                // Shift by timezone offset to get UTC time
-                date = new Date(
-                    new Date(value as string).getTime() -
-                        new Date().getTimezoneOffset() * 60 * 1000,
-                );
-            } else if (numericDatetimeType === 'date') {
-                date = new Date(value as string);
-            } else if (numericDatetimeType === 'time') {
-                date = new Date(`2000-01-01T${value}Z`);
+    direction: 'toFormatted' | 'toNumeric',
+): string | number | boolean | null {
+    if (direction === 'toNumeric') {
+        if (value === null || value === undefined || value === '') {
+            return null;
+        }
+        let updatedValue: string | number | boolean | null = value;
+        if (numericDatetimeType) {
+            let date: Date | null = null;
+            if (dateFormat === 'ISO8601' || numericDatetimeType === 'time') {
+                if (numericDatetimeType === 'datetime') {
+                    date = new Date(new Date(`${value}Z`).getTime());
+                } else if (numericDatetimeType === 'date') {
+                    date = new Date(value as string);
+                } else if (numericDatetimeType === 'time') {
+                    date = new Date(`2000-01-01T${value}Z`);
+                }
+            } else if (dateFormat === 'DDMONYEAR') {
+                date = formatDDMONYYYYtoDate(value as string);
             }
-        } else if (dateFormat === 'DDMONYEAR') {
-            date = formatDDMONYYYYtoDate(value as string);
-        }
 
-        if (date === null) {
-            updatedValue = null;
-        } else if (numericDatetimeType === 'datetime') {
-            updatedValue = jsDateToSasDatetime(date);
-        } else if (numericDatetimeType === 'date') {
-            updatedValue = jsDateToSasDate(date);
-        } else if (numericDatetimeType === 'time') {
-            updatedValue = componentsToSasTime(
-                date.getUTCHours(),
-                date.getUTCMinutes(),
-                date.getUTCSeconds(),
-            );
+            if (date === null) {
+                updatedValue = null;
+            } else if (numericDatetimeType === 'datetime') {
+                updatedValue = jsDateToSasDatetime(date);
+            } else if (numericDatetimeType === 'date') {
+                updatedValue = jsDateToSasDate(date);
+            } else if (numericDatetimeType === 'time') {
+                updatedValue = componentsToSasTime(
+                    date.getUTCHours(),
+                    date.getUTCMinutes(),
+                    date.getUTCSeconds(),
+                );
+            }
         }
+        return updatedValue;
     }
-    return updatedValue;
-};
+    if (direction === 'toFormatted') {
+        if (value === null || value === undefined || value === '') {
+            return '';
+        }
+        let updatedValue: string | number | boolean | null = value;
+        if (numericDatetimeType) {
+            // Convert numeric dates to character format
+            if (numericDatetimeType === 'date') {
+                // Convert numeric SAS date to character format
+                const dateValue = sasDateToJsDate(Number(updatedValue));
+                updatedValue =
+                    dateFormat === 'DDMONYEAR'
+                        ? formatDateToDDMONYYYY(dateValue)
+                        : dateValue.toISOString().split('T')[0];
+            } else if (numericDatetimeType === 'time') {
+                // Convert numeric SAS time to character format
+                const { hours, minutes, seconds } = sasTimeToComponents(
+                    Number(updatedValue),
+                );
+                updatedValue = `${hours}:${minutes}:${seconds}`;
+            } else if (numericDatetimeType === 'datetime') {
+                // Convert numeric SAS datetime to character format
+                const datetimeValue = sasDatetimeToJsDate(Number(updatedValue));
+                updatedValue =
+                    dateFormat === 'DDMONYEAR'
+                        ? formatDateToDDMONYYYY(datetimeValue, true)
+                        : datetimeValue
+                              .toISOString()
+                              .replace('T', ' ')
+                              .split('.')[0];
+            }
+        }
+        return updatedValue;
+    }
+    return value;
+}
+export { handleTransformation };
 
 // Get safe value;
 export const getSafeValue = (
@@ -200,6 +235,7 @@ export const getSafeValue = (
         header.numericDatetimeType,
         rawVal,
         dateFormat,
+        'toNumeric',
     );
     if (val === null) {
         return isStringColumn ? `''` : `null`;

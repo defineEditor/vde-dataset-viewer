@@ -23,15 +23,21 @@ const ManualInput: React.FC<{
     datasetName: string;
     fileId: string;
     metadata: DatasetJsonMetadata;
-}> = ({ inputValue, handleSetInputValue, datasetName, fileId, metadata }) => {
+    columnTypes: Record<string, ColumnType>;
+    filterForValidation: Filter;
+}> = ({
+    inputValue,
+    handleSetInputValue,
+    datasetName,
+    fileId,
+    metadata,
+    columnTypes,
+    filterForValidation,
+}) => {
     const { apiService } = useContext(AppContext);
     const [error, setError] = useState(false);
     const [warning, setWarning] = useState(false);
     const settings = useAppSelector((state) => state.settings);
-
-    const filterForValidation = useMemo(() => {
-        return new Filter('dataset-json1.1', metadata.columns, '');
-    }, [metadata.columns]);
 
     const recentFilters = useAppSelector(
         (state) => state.data.filterData.recentFilters,
@@ -63,26 +69,6 @@ const ManualInput: React.FC<{
         () => metadata.columns.map((column) => column.name),
         [metadata.columns],
     );
-
-    const columnTypes = useMemo(() => {
-        const types: Record<string, ColumnType> = {};
-        metadata.columns.forEach((column) => {
-            if (
-                ['integer', 'float', 'double', 'number'].includes(
-                    column.dataType,
-                )
-            ) {
-                types[column.name] = 'number';
-            } else if (['date', 'datetime', 'time'].includes(column.dataType)) {
-                types[column.name] = 'date';
-            } else if (['boolean'].includes(column.dataType)) {
-                types[column.name] = 'boolean';
-            } else {
-                types[column.name] = 'string';
-            }
-        });
-        return types;
-    }, [metadata.columns]);
 
     const handleInputChange = useCallback(
         (value: string) => {

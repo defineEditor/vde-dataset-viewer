@@ -22,6 +22,7 @@ import {
     closeModal,
     setFilterInputMode,
     restartCompare,
+    openSnackbar,
 } from 'renderer/redux/slices/ui';
 import ManualInput from 'renderer/components/Modal/Filter/ManualInput';
 import {
@@ -35,6 +36,7 @@ import {
     DatasetJsonMetadata,
     FilterValueOptions,
     BasicFilter as IBasicFilter,
+    ISettings,
     IUiModalFilter,
 } from 'interfaces/common';
 import {
@@ -100,10 +102,92 @@ const styles = {
     },
 };
 
+const updateFilterDateValues = (
+    filter: IBasicFilter,
+    metadata: DatasetJsonMetadata,
+    settings: ISettings,
+    direction: 'toFormatted' | 'toNumeric',
+): IBasicFilter => {
+    const header = getHeader(metadata, settings);
+    // Get all columns with formatted dates;
+    const dateColumns = header
+        .filter((column) => column.numericDatetimeType)
+        .map((column) => column.id.toLowerCase());
+
+    const conditionsUpdated = filter.conditions.map((condition) => {
+        const updatedCondition = { ...condition };
+        if (
+            condition.variable &&
+            dateColumns.includes(condition.variable.toLowerCase())
+        ) {
+            const numericDatetimeType = header.find(
+                (column) =>
+                    column.id.toLowerCase() ===
+                    condition.variable.toLowerCase(),
+            )?.numericDatetimeType;
+            if (
+                (typeof condition.value === 'string' &&
+                    direction === 'toNumeric') ||
+                (typeof condition.value === 'number' &&
+                    direction === 'toFormatted')
+            ) {
+                updatedCondition.value = handleTransformation(
+                    numericDatetimeType,
+                    condition.value,
+                    settings.viewer.dateFormat,
+                    direction,
+                );
+            } else if (Array.isArray(updatedCondition.value)) {
+                updatedCondition.value = updatedCondition.value.map((value) => {
+                    if (
+                        (typeof value === 'string' &&
+                            direction === 'toNumeric') ||
+                        (typeof value === 'number' &&
+                            direction === 'toFormatted')
+                    ) {
+                        return handleTransformation(
+                            numericDatetimeType,
+                            value,
+                            settings.viewer.dateFormat,
+                            direction,
+                        );
+                    }
+                    return value;
+                });
+            }
+        }
+        return updatedCondition;
+    });
+    return {
+        ...filter,
+        conditions: conditionsUpdated,
+    };
+};
+
 // Create dummy filter for conversion and validation purposes;
 const filterForConversion = new Filter('dataset-json1.1', [], '', {
     caseInsensitiveColNames: true,
 });
+
+const getFilterWithUpdateDateTypes = (
+    columns: DatasetJsonMetadata['columns'],
+    columnTypes: Record<string, ColumnType>,
+) => {
+    // We need to update type of some columns, as settings can change how they are shown
+    const updatedColumns = columns.map((column) => {
+        const updatedColumn = { ...column };
+        const updatedType = columnTypes[column.name.toLowerCase()];
+        if (updatedType === 'number') {
+            updatedColumn.dataType = 'double';
+        } else if (updatedType) {
+            updatedColumn.dataType = updatedType;
+        } else {
+            updatedColumn.dataType = column.dataType;
+        }
+        return updatedColumn;
+    });
+    return new Filter('dataset-json1.1', updatedColumns, '');
+};
 
 interface FilterBodyProps {
     type: IUiModalFilter['type'];
@@ -169,30 +253,61 @@ const FilterBody: React.FC<FilterBodyProps> = ({
     }, [metadata, settings]);
 
     const filterForValidation = useMemo(() => {
-        return new Filter('dataset-json1.1', metadata.columns, '');
-    }, [metadata.columns]);
+        return getFilterWithUpdateDateTypes(metadata.columns, columnTypes);
+    }, [metadata.columns, columnTypes]);
 
     const currentFilterString = useMemo(() => {
         if (currentBasicFilter === null) {
             return '';
         }
-        return new Filter(
-            'dataset-json1.1',
-            metadata.columns,
+        // If filter contains numeric dates, format it first
+        const updatedFilter = updateFilterDateValues(
             currentBasicFilter,
-        ).toString();
-    }, [currentBasicFilter, metadata.columns]);
+            metadata,
+            settings,
+            'toFormatted',
+        );
+        const tempFilter = getFilterWithUpdateDateTypes(
+            metadata.columns,
+            columnTypes,
+        );
+        tempFilter.update(updatedFilter);
+        return tempFilter.toString();
+    }, [currentBasicFilter, metadata, settings, columnTypes]);
 
     const [inputValue, setInputValue] = useState(currentFilterString);
-    const [interactiveFilter, setInteractiveFilter] =
-        useState(currentBasicFilter);
+    const [interactiveFilter, setInteractiveFilter] = useState(
+        currentBasicFilter === null
+            ? null
+            : updateFilterDateValues(
+                  currentBasicFilter,
+                  metadata,
+                  settings,
+                  'toFormatted',
+              ),
+    );
 
     const lastOptions = useAppSelector(
         (state) => state.data.filterData.lastOptions,
     );
-    const recentFilters = useAppSelector(
+    const rawRecentFilters = useAppSelector(
         (state) => state.data.filterData.recentFilters,
     );
+
+    const recentFilters = useMemo(() => {
+        return rawRecentFilters.map((filter) => {
+            const updatedFilter = updateFilterDateValues(
+                filter.filter,
+                metadata,
+                settings,
+                'toFormatted',
+            );
+            return {
+                ...filter,
+                filter: updatedFilter,
+            };
+        });
+    }, [rawRecentFilters, metadata, settings]);
 
     const recentFiltersValidated = useMemo(() => {
         return recentFilters.map((filter) => {
@@ -481,12 +596,12 @@ const FilterBody: React.FC<FilterBodyProps> = ({
                 setInputValue(filter.toString());
             }
         } else {
-            const filter = new Filter(
-                'dataset-json1.1',
+            const tempFilter = getFilterWithUpdateDateTypes(
                 metadata.columns,
-                inputValue,
+                columnTypes,
             );
-            setInteractiveFilter(filter.toBasicFilter());
+            tempFilter.update(inputValue);
+            setInteractiveFilter(tempFilter.toBasicFilter());
         }
         dispatch(
             setFilterInputMode(
@@ -514,51 +629,30 @@ const FilterBody: React.FC<FilterBodyProps> = ({
                     finalFilter = '';
                 } else {
                     // If filter contains formatted dates, convert them to numeric values;
-                    const header = getHeader(metadata, settings);
-                    // Get all columns with formatted dates;
-                    const dateColumns = header
-                        .filter((column) => column.numericDatetimeType)
-                        .map((column) => column.id);
-
-                    const conditionsUpdated = interactiveFilter.conditions.map(
-                        (condition) => {
-                            if (dateColumns.includes(condition.variable)) {
-                                const numericDatetimeType = header.find(
-                                    (column) =>
-                                        column.id === condition.variable,
-                                )?.numericDatetimeType;
-                                if (typeof condition.value === 'string') {
-                                    condition.value = handleTransformation(
-                                        numericDatetimeType,
-                                        condition.value,
-                                        settings.viewer.dateFormat,
-                                    );
-                                } else if (Array.isArray(condition.value)) {
-                                    condition.value = condition.value.map(
-                                        (value) => {
-                                            if (typeof value === 'string') {
-                                                return handleTransformation(
-                                                    numericDatetimeType,
-                                                    value,
-                                                    settings.viewer.dateFormat,
-                                                ) as number;
-                                            }
-                                            return value;
-                                        },
-                                    );
-                                }
-                            }
-                            return condition;
-                        },
+                    const updatedFilter = updateFilterDateValues(
+                        interactiveFilter,
+                        metadata,
+                        settings,
+                        'toNumeric',
                     );
-                    newFilter.update({
-                        ...interactiveFilter,
-                        conditions: conditionsUpdated,
-                    });
+                    newFilter.update(updatedFilter);
                     finalFilter = newFilter.toString();
                 }
             } else {
-                finalFilter = inputValue;
+                // If filter contains formatted dates, convert them to numeric values;
+                const tempFilter = getFilterWithUpdateDateTypes(
+                    metadata.columns,
+                    columnTypes,
+                );
+                tempFilter.update(inputValue);
+                const updatedFilter = updateFilterDateValues(
+                    tempFilter.toBasicFilter(),
+                    metadata,
+                    settings,
+                    'toNumeric',
+                );
+                newFilter.update(updatedFilter);
+                finalFilter = newFilter.toString();
             }
 
             if (finalFilter === '') {
@@ -597,6 +691,13 @@ const FilterBody: React.FC<FilterBodyProps> = ({
                     dispatch(restartCompare({ compareId: fileId }));
                 }
                 handleClose();
+            } else {
+                dispatch(
+                    openSnackbar({
+                        message: 'Invalid filter',
+                        type: 'error',
+                    }),
+                );
             }
         },
         [
@@ -612,6 +713,7 @@ const FilterBody: React.FC<FilterBodyProps> = ({
             filterType,
             reportTab,
             fileId,
+            columnTypes,
         ],
     );
 
@@ -730,6 +832,8 @@ const FilterBody: React.FC<FilterBodyProps> = ({
                             datasetName={dataset.name}
                             fileId={fileId}
                             metadata={metadata}
+                            columnTypes={columnTypes}
+                            filterForValidation={filterForValidation}
                         />
                     )}
                     {['dataset', 'compare'].includes(filterType) && (
@@ -745,7 +849,20 @@ const FilterBody: React.FC<FilterBodyProps> = ({
                                     .slice(0, 5)
                                     .map((filterItem, index) => (
                                         <React.Fragment key={filterItem.date}>
-                                            <ListItem sx={styles.filterItem}>
+                                            <ListItem
+                                                sx={styles.filterItem}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (
+                                                        filterItem.isValid ||
+                                                        inputType === 'manual'
+                                                    ) {
+                                                        handleSelectFilter(
+                                                            filterItem.filter,
+                                                        );
+                                                    }
+                                                }}
+                                            >
                                                 <ListItemAvatar>
                                                     <Chip
                                                         label={`Ctrl+${index === 9 ? 0 : index + 1}`}
