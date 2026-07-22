@@ -123,7 +123,7 @@ export const useCommandAutocomplete = ({
                     settings,
                 });
 
-                const columnType = columnTypes[columnId];
+                const columnType = columnTypes[columnId.toLowerCase()];
                 const formattedValues = (values[columnId]?.values ?? []).map(
                     (value) =>
                         formatFilterValueOption(
