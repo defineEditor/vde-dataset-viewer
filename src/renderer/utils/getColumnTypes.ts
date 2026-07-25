@@ -1,5 +1,9 @@
-import { DatasetJsonMetadata, ISettings, ColumnType } from 'interfaces/common';
-import { getHeader } from 'renderer/utils/readData';
+import {
+    DatasetJsonMetadata,
+    ISettings,
+    ColumnType,
+} from '@/interfaces/common';
+import { getHeader } from '@/renderer/utils/readData';
 
 const getColumnTypes = (
     metadata: DatasetJsonMetadata,
