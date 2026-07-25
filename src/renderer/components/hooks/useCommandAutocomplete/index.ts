@@ -136,8 +136,10 @@ export const useCommandAutocomplete = ({
                 const comparableVariables = metadata.columns
                     .filter(
                         (item) =>
-                            item.name !== columnId &&
-                            columnTypes[item.name] === columnTypes[columnId],
+                            item.name.toLowerCase() !==
+                                columnId.toLowerCase() &&
+                            columnTypes[item.name.toLowerCase()] ===
+                                columnTypes[columnId.toLowerCase()],
                     )
                     .map((item) => item.name);
 
