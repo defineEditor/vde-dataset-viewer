@@ -56,6 +56,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import { getHeader } from 'renderer/utils/readData';
 import { handleTransformation } from 'renderer/utils/transformUtils';
 import { formatFilterValueOption } from 'renderer/components/hooks/useCommandAutocomplete/utils';
+import getColumnTypes from 'renderer/utils/getColumnTypes';
 
 const styles = {
     dialog: {
@@ -226,30 +227,7 @@ const FilterBody: React.FC<FilterBodyProps> = ({
     const settings = useAppSelector((state) => state.settings);
 
     const columnTypes = useMemo(() => {
-        const types: Record<string, ColumnType> = {};
-        const header = getHeader(metadata, settings);
-        // Get all columns with formatted dates;
-        const dateColumns = header
-            .filter((column) => column.numericDatetimeType)
-            .map((column) => column.id);
-        metadata.columns.forEach((column) => {
-            if (column.dataType === 'boolean') {
-                types[column.name.toLowerCase()] = 'boolean';
-            } else if (
-                ['float', 'double', 'integer'].includes(column.dataType) &&
-                !dateColumns.includes(column.name)
-            ) {
-                types[column.name.toLowerCase()] = 'number';
-            } else if (
-                ['date', 'datetime', 'time'].includes(column.dataType) &&
-                !dateColumns.includes(column.name)
-            ) {
-                types[column.name.toLowerCase()] = 'date';
-            } else {
-                types[column.name.toLowerCase()] = 'string';
-            }
-        });
-        return types;
+        return getColumnTypes(metadata, settings);
     }, [metadata, settings]);
 
     const filterForValidation = useMemo(() => {

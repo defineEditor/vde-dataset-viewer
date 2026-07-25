@@ -123,7 +123,7 @@ export const useCommandAutocomplete = ({
                     settings,
                 });
 
-                const columnType = columnTypes[columnId];
+                const columnType = columnTypes[columnId.toLowerCase()];
                 const formattedValues = (values[columnId]?.values ?? []).map(
                     (value) =>
                         formatFilterValueOption(
@@ -136,8 +136,10 @@ export const useCommandAutocomplete = ({
                 const comparableVariables = metadata.columns
                     .filter(
                         (item) =>
-                            item.name !== columnId &&
-                            columnTypes[item.name] === columnTypes[columnId],
+                            item.name.toLowerCase() !==
+                                columnId.toLowerCase() &&
+                            columnTypes[item.name.toLowerCase()] ===
+                                columnTypes[columnId.toLowerCase()],
                     )
                     .map((item) => item.name);
 
