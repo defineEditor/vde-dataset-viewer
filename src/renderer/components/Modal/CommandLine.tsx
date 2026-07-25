@@ -27,11 +27,12 @@ import {
     resetFilter,
     setFilter,
 } from '@/renderer/redux/slices/data';
-import { ColumnType, IMask, IUiModal } from '@/interfaces/common';
+import { IMask, IUiModal } from '@/interfaces/common';
 import { modals } from '@/misc/constants';
 import { parseDatasetCommand } from '@/renderer/utils/commandLine';
 import { getCommandHelperText } from '@/renderer/components/hooks/useCommandAutocomplete';
 import CommandAutocompleteInput from '@/renderer/components/Common/CommandAutocompleteInput';
+import getColumnTypes from '@/renderer/utils/getColumnTypes';
 
 const styles = {
     dialog: {
@@ -85,25 +86,8 @@ const CommandLine: React.FC<IUiModal> = () => {
         [metadata],
     );
     const columnTypes = useMemo(() => {
-        if (!metadata) {
-            return {};
-        }
-        const types: Record<string, ColumnType> = {};
-        metadata.columns.forEach((col) => {
-            if (
-                ['integer', 'float', 'double', 'number'].includes(col.dataType)
-            ) {
-                types[col.name] = 'number';
-            } else if (['date', 'datetime', 'time'].includes(col.dataType)) {
-                types[col.name] = 'date';
-            } else if (['boolean'].includes(col.dataType)) {
-                types[col.name] = 'boolean';
-            } else {
-                types[col.name] = 'string';
-            }
-        });
-        return types;
-    }, [metadata]);
+        return getColumnTypes(metadata, settings);
+    }, [metadata, settings]);
     const currentVisibleColumns = currentMask?.columns ?? allColumnNames;
 
     const recentCommandStrings = useMemo(() => {

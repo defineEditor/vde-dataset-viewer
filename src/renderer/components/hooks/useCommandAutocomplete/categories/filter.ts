@@ -98,7 +98,10 @@ export const getFilterAutocomplete = ({
             }
 
             return {
-                options: FILTER_COMPARATORS[columnTypes[columnId] || 'string'],
+                options:
+                    FILTER_COMPARATORS[
+                        columnTypes[columnId.toLowerCase()] || 'string'
+                    ],
                 replaceStart: context.sourceText.length,
                 replaceEnd: context.sourceText.length,
                 insertSuffix: ' ',
@@ -157,7 +160,9 @@ export const getFilterAutocomplete = ({
 
         return {
             options: filterOptions(
-                FILTER_COMPARATORS[columnTypes[columnId] || 'string'],
+                FILTER_COMPARATORS[
+                    columnTypes[columnId.toLowerCase()] || 'string'
+                ],
                 currentFilterPrefix,
             ),
             replaceStart,

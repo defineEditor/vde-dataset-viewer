@@ -364,7 +364,7 @@ const ValueAutocomplete: React.FC<{
             renderInput={(params) => (
                 <TextField
                     {...params}
-                    label="Value"
+                    label="Value/Column"
                     variant="outlined"
                     fullWidth
                     margin="normal"
