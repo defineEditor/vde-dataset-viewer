@@ -1,8 +1,8 @@
 import type {
     CategoryAutocompleteParams,
     CommandAutocompleteState,
-} from '@/interfaces/common';
-import { filterOptions } from '@/renderer/components/hooks/useCommandAutocomplete/utils';
+} from '@interfaces/common';
+import { filterOptions } from '@components/hooks/useCommandAutocomplete/utils';
 
 export const getHistoryAutocomplete = ({
     context,

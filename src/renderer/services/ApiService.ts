@@ -28,11 +28,11 @@ import {
     DefineXmlContent,
     FileWatcherEvent,
     RequestReason,
-} from '@/interfaces/common';
-import store from '@/renderer/redux/store';
-import transformData from '@/renderer/services/transformData';
+} from '@interfaces/common';
+import store from '@redux/store';
+import transformData from '@services/transformData';
 import Filter from 'js-array-filter';
-import { setLoadedRecords } from '@/renderer/redux/slices/data';
+import { setLoadedRecords } from '@redux/slices/data';
 import {
     startValidation,
     deleteValidationReport,
@@ -40,7 +40,7 @@ import {
     getValidationReport,
     downloadValidationReport,
     showValidationLog,
-} from '@/renderer/services/validation';
+} from '@services/validation';
 
 class ApiService {
     // List of opened files with basic information

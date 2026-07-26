@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { api as initialApi } from '@/renderer/redux/initialState';
-import { IApiRecord, IApiStudy, IApiStudyDataset } from '@/interfaces/common';
+import { api as initialApi } from '@redux/initialState';
+import { IApiRecord, IApiStudy, IApiStudyDataset } from '@interfaces/common';
 
 export const apiSlice = createSlice({
     name: 'api',

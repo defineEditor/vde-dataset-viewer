@@ -16,7 +16,7 @@ import {
     DatasetMetadata,
     BasicFilter,
     ColumnMetadata,
-} from '@/interfaces/common';
+} from '@interfaces/common';
 
 const transformData = (
     data: ItemDataArray[],

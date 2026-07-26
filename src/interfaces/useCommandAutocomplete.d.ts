@@ -1,6 +1,6 @@
-import type { DatasetJsonMetadata } from '@/interfaces/api';
-import type { ISettings } from '@/interfaces/store';
-import type { ColumnType } from '@/interfaces/table';
+import type { DatasetJsonMetadata } from '@interfaces/api';
+import type { ISettings } from '@interfaces/store';
+import type { ColumnType } from '@interfaces/table';
 
 export type CommandAutocompleteCategory =
     | 'variables'

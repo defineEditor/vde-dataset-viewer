@@ -9,7 +9,7 @@ import {
 } from 'electron';
 import path from 'path';
 import FileManager from '@/main/managers/fileManager';
-import getMemoryInfo from '@/renderer/utils/getMemoryInfo';
+import getMemoryInfo from '@utils/getMemoryInfo';
 
 const resolveHtmlPath = (htmlFileName: string) => {
     if (process.env.NODE_ENV === 'development') {

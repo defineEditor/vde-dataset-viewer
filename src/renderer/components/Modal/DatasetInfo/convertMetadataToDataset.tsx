@@ -4,11 +4,11 @@ import {
     ITableData,
     DatasetJsonMetadata,
     ITableRow,
-} from '@/interfaces/common';
-import calculateColumnWidth from '@/renderer/utils/calculateColumnWidth';
-import renderVariableName from '@/renderer/components/Modal/DatasetInfo/VariableName';
-import renderVariableNumber from '@/renderer/components/Modal/DatasetInfo/VariableNumber';
-import columnDefs from '@/renderer/components/Modal/DatasetInfo/columnDefs';
+} from '@interfaces/common';
+import calculateColumnWidth from '@utils/calculateColumnWidth';
+import renderVariableName from '@components/Modal/DatasetInfo/VariableName';
+import renderVariableNumber from '@components/Modal/DatasetInfo/VariableNumber';
+import columnDefs from '@components/Modal/DatasetInfo/columnDefs';
 
 const convertMetadataToDataset = (
     data: DatasetJsonMetadata,

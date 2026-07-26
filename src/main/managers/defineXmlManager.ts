@@ -5,7 +5,7 @@ import fsPromises from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 import readline from 'readline';
-import { DefineFileInfo, DefineXmlContent } from '@/interfaces/common';
+import { DefineFileInfo, DefineXmlContent } from '@interfaces/common';
 import openFile from '@/main/openFile';
 
 const getHash = (str: string): string => {

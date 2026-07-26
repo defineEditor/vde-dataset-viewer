@@ -1,14 +1,14 @@
 import React, { useEffect, useCallback, useContext } from 'react';
-import { useAppDispatch } from '@/renderer/redux/hooks';
+import { useAppDispatch } from '@redux/hooks';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import AppContext from '@/renderer/utils/AppContext';
-import { closeModal, openSnackbar } from '@/renderer/redux/slices/ui';
+import AppContext from '@utils/AppContext';
+import { closeModal, openSnackbar } from '@redux/slices/ui';
 import DOMPurify from 'dompurify';
-import { ICheckUpdateResult, IUiModalAppUpdate } from '@/interfaces/common';
+import { ICheckUpdateResult, IUiModalAppUpdate } from '@interfaces/common';
 import { Typography } from '@mui/material';
 
 const styles = {

@@ -16,7 +16,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import {
     ParsedValidationReport,
     ValidationRunReport,
-} from '@/interfaces/common';
+} from '@interfaces/common';
 
 const styles = {
     container: {

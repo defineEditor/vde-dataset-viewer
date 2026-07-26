@@ -13,7 +13,7 @@ import {
     Alert,
     MenuItem,
 } from '@mui/material';
-import { ConversionOptions, OutputFormat } from '@/interfaces/common';
+import { ConversionOptions, OutputFormat } from '@interfaces/common';
 
 interface OptionsDialogProps {
     open: boolean;

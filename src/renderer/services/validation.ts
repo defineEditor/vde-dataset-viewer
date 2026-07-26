@@ -9,14 +9,14 @@ import {
     MainTask,
     ParsedValidationReport,
     ValidationReportCompare,
-} from '@/interfaces/common';
-import store from '@/renderer/redux/store';
+} from '@interfaces/common';
+import store from '@redux/store';
 import { mainTaskTypes } from '@/misc/constants';
 import {
     addValidationReport,
     setValidatorData,
-} from '@/renderer/redux/slices/data';
-import { updateValidation, openSnackbar } from '@/renderer/redux/slices/ui';
+} from '@redux/slices/data';
+import { updateValidation, openSnackbar } from '@redux/slices/ui';
 
 // Minimal interface for ApiService context
 interface ApiServiceContext {

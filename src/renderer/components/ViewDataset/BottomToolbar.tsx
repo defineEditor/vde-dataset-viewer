@@ -8,10 +8,10 @@ import {
 } from '@mui/material';
 import TableViewOutlinedIcon from '@mui/icons-material/TableViewOutlined';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
-import { useAppSelector, useAppDispatch } from '@/renderer/redux/hooks';
-import { setBottomSection } from '@/renderer/redux/slices/ui';
-import DatasetNavigation from '@/renderer/components/ViewDataset/DatasetNavigation';
-import IssueNavigation from '@/renderer/components/ViewDataset/IssueNavigation';
+import { useAppSelector, useAppDispatch } from '@redux/hooks';
+import { setBottomSection } from '@redux/slices/ui';
+import DatasetNavigation from '@components/ViewDataset/DatasetNavigation';
+import IssueNavigation from '@components/ViewDataset/IssueNavigation';
 
 const styles = {
     container: {

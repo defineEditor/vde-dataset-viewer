@@ -24,16 +24,16 @@ import {
 } from '@mui/material';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
-import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
+import { useAppDispatch, useAppSelector } from '@redux/hooks';
 import {
     closeModal,
     setPathname,
     setCompareFiles,
     initializeCompare,
     closeCompare,
-} from '@/renderer/redux/slices/ui';
+} from '@redux/slices/ui';
 import { modals, paths } from '@/misc/constants';
-import AppContext from '@/renderer/utils/AppContext';
+import AppContext from '@utils/AppContext';
 
 const styles = {
     dialog: {

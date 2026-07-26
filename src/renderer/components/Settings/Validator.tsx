@@ -5,15 +5,15 @@ import {
     ValidatorData,
     TaskProgress,
     ValidateGetInfoResult,
-} from '@/interfaces/common';
-import AppContext from '@/renderer/utils/AppContext';
-import { useAppDispatch } from '@/renderer/redux/hooks';
-import { openSnackbar } from '@/renderer/redux/slices/ui';
-import { styles } from '@/renderer/components/Settings/styles';
+} from '@interfaces/common';
+import AppContext from '@utils/AppContext';
+import { useAppDispatch } from '@redux/hooks';
+import { openSnackbar } from '@redux/slices/ui';
+import { styles } from '@components/Settings/styles';
 import { mainTaskTypes } from '@/misc/constants';
-import { ValidatorInfo } from '@/renderer/components/Settings/ValidatorInfo';
-import SettingsFileSelector from '@/renderer/components/Settings/SettingsFileSelector';
-import { validator as initialValidator } from '@/renderer/redux/initialState';
+import { ValidatorInfo } from '@components/Settings/ValidatorInfo';
+import SettingsFileSelector from '@components/Settings/SettingsFileSelector';
+import { validator as initialValidator } from '@redux/initialState';
 
 interface ValidatorProps {
     settings: ISettings;

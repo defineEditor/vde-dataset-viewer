@@ -14,10 +14,10 @@ import {
 } from '@mui/material';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import AppContext from '@/renderer/utils/AppContext';
-import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
-import { closeModal, setDatasetSorting } from '@/renderer/redux/slices/ui';
-import { IUiControl } from '@/interfaces/common';
+import AppContext from '@utils/AppContext';
+import { useAppDispatch, useAppSelector } from '@redux/hooks';
+import { closeModal, setDatasetSorting } from '@redux/slices/ui';
+import { IUiControl } from '@interfaces/common';
 import { modals } from '@/misc/constants';
 
 const styles = {

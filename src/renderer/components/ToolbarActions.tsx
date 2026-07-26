@@ -6,12 +6,12 @@ import Brightness6Icon from '@mui/icons-material/Brightness6';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import ViewCompact from '@mui/icons-material/ViewCompact';
 import ViewCozy from '@mui/icons-material/ViewCozy';
-import { setZoomLevel } from '@/renderer/redux/slices/ui';
+import { setZoomLevel } from '@redux/slices/ui';
 import {
     toggleColorMode,
     toggleCompactMode,
-} from '@/renderer/redux/slices/settings';
-import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
+} from '@redux/slices/settings';
+import { useAppDispatch, useAppSelector } from '@redux/hooks';
 
 const styles = {
     main: {

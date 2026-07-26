@@ -11,7 +11,7 @@ import {
     FileInfo,
     InputFileExtension,
     ItemDataArray,
-} from '@/interfaces/common';
+} from '@interfaces/common';
 import openFile from '@/main/openFile';
 import fs from 'fs';
 import fsPromises from 'fs/promises';

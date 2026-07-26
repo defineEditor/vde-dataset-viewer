@@ -2,7 +2,7 @@ import React from 'react';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
-import { IApiStudy } from '@/interfaces/common';
+import { IApiStudy } from '@interfaces/common';
 
 const styles = {
     card: (theme) => ({

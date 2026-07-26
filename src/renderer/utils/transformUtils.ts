@@ -1,4 +1,4 @@
-import { IHeaderCell, ISettings } from '@/interfaces/common';
+import { IHeaderCell, ISettings } from '@interfaces/common';
 
 // Constants for epoch conversion
 // SAS epoch is January 1, 1960

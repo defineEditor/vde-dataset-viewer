@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@mui/material';
-import { BasicFilter, ITableRow, IUiValidationPage } from '@/interfaces/common';
+import { BasicFilter, ITableRow, IUiValidationPage } from '@interfaces/common';
 import { CoreCell } from '@tanstack/react-table';
 
 const styles = {

@@ -9,9 +9,9 @@ import {
     NewWindowProps,
     FileWatcherEvent,
     IUiSnackbar,
-} from '@/interfaces/common';
-import { ElectronApi, Channels } from '@/interfaces/electron.api';
-import getMemoryInfo from '@/renderer/utils/getMemoryInfo';
+} from '@interfaces/common';
+import { ElectronApi, Channels } from '@interfaces/electron.api';
+import getMemoryInfo from '@utils/getMemoryInfo';
 
 const openFile: ElectronApi['openFile'] = (mode, fileSettings) =>
     ipcRenderer.invoke('main:openFile', mode, fileSettings);

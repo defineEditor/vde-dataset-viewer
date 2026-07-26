@@ -8,8 +8,8 @@ import {
     ConvertedFileInfo,
     ConverterProcessTask,
     ConvertTask,
-} from '@/interfaces/main';
-import { DatasetJsonMetadata, ItemType } from '@/interfaces/common';
+} from '@interfaces/main';
+import { DatasetJsonMetadata, ItemType } from '@interfaces/common';
 
 const processSasMetadata = (
     metadata: DatasetJsonMetadata,

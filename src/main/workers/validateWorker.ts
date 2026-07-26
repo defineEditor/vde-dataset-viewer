@@ -10,7 +10,7 @@ import {
     ValidateSubTask,
     ValidationRunReport,
     IssueSummaryItem,
-} from '@/interfaces/common';
+} from '@interfaces/common';
 
 const execAsync = promisify(exec);
 const gzipPromise = promisify(zlib.gzip);

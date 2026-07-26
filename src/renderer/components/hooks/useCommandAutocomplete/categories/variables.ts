@@ -1,11 +1,11 @@
 import type {
     CategoryAutocompleteParams,
     CommandAutocompleteState,
-} from '@/interfaces/common';
+} from '@interfaces/common';
 import {
     filterOptions,
     isNumericToken,
-} from '@/renderer/components/hooks/useCommandAutocomplete/utils';
+} from '@components/hooks/useCommandAutocomplete/utils';
 
 const SORT_COMMANDS = new Set(['sort', 'sortadd']);
 const SORT_DIRECTIONS = ['asc', 'desc'];

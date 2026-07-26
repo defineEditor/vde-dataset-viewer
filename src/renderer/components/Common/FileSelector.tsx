@@ -17,11 +17,11 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import WarningRoundedIcon from '@mui/icons-material/WarningRounded';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import TableSortLabel from '@mui/material/TableSortLabel';
-import AppContext from '@/renderer/utils/AppContext';
-import { useAppDispatch } from '@/renderer/redux/hooks';
-import { openSnackbar } from '@/renderer/redux/slices/ui';
-import { ConvertedFileInfo, FileInfo } from '@/interfaces/common';
-import getHumanReadableSize from '@/renderer/utils/getHumanReadableSize';
+import AppContext from '@utils/AppContext';
+import { useAppDispatch } from '@redux/hooks';
+import { openSnackbar } from '@redux/slices/ui';
+import { ConvertedFileInfo, FileInfo } from '@interfaces/common';
+import getHumanReadableSize from '@utils/getHumanReadableSize';
 
 const getFormattedDate = (timestamp: number): string => {
     return new Date(timestamp).toISOString().split('.')[0].replace('T', ' ');

@@ -17,7 +17,7 @@ import {
     ListSubheader,
 } from '@mui/material';
 import { Theme } from '@mui/material/styles';
-import { useAppTheme } from '@/renderer/theme';
+import { useAppTheme } from '@renderer/theme';
 import CloudIcon from '@mui/icons-material/Cloud';
 import CachedIcon from '@mui/icons-material/Cached';
 import WysiwygIcon from '@mui/icons-material/Wysiwyg';
@@ -29,16 +29,16 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import MenuIcon from '@mui/icons-material/Menu';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
-import { AllowedPathnames } from '@/interfaces/common';
+import { AllowedPathnames } from '@interfaces/common';
 import { paths } from '@/misc/constants';
-import { useAppSelector, useAppDispatch } from '@/renderer/redux/hooks';
-import { setPathname, toggleAppBarExpanded } from '@/renderer/redux/slices/ui';
-import ViewerToolbar from '@/renderer/components/Toolbars/ViewerToolbar';
-import ReportToolbar from '@/renderer/components/Toolbars/ReportToolbar';
-import DefineToolbar from '@/renderer/components/Toolbars/DefineToolbar';
-import CompareToolbar from '@/renderer/components/Toolbars/CompareToolbar';
-import ToolbarActions from '@/renderer/components/ToolbarActions';
-import Shortcuts from '@/renderer/components/Shortcuts';
+import { useAppSelector, useAppDispatch } from '@redux/hooks';
+import { setPathname, toggleAppBarExpanded } from '@redux/slices/ui';
+import ViewerToolbar from '@components/Toolbars/ViewerToolbar';
+import ReportToolbar from '@components/Toolbars/ReportToolbar';
+import DefineToolbar from '@components/Toolbars/DefineToolbar';
+import CompareToolbar from '@components/Toolbars/CompareToolbar';
+import ToolbarActions from '@components/ToolbarActions';
+import Shortcuts from '@components/Shortcuts';
 
 type NavigationEntry =
     | {

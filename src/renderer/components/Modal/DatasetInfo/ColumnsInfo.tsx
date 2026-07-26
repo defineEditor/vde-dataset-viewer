@@ -1,17 +1,17 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Box } from '@mui/material';
-import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
-import { setGoTo, openModal } from '@/renderer/redux/slices/ui';
+import { useAppDispatch, useAppSelector } from '@redux/hooks';
+import { setGoTo, openModal } from '@redux/slices/ui';
 import { modals } from '@/misc/constants';
 import {
     DatasetJsonMetadata,
     ITableData,
     ITableRow,
-} from '@/interfaces/common';
-import DatasetView from '@/renderer/components/DatasetView';
-import convertMetadataToDataset from '@/renderer/components/Modal/DatasetInfo/convertMetadataToDataset';
-import useWidth from '@/renderer/components/hooks/useWidth';
-import useScrollbarWidth from '@/renderer/components/hooks/useScrollbarWidth';
+} from '@interfaces/common';
+import DatasetView from '@components/DatasetView';
+import convertMetadataToDataset from '@components/Modal/DatasetInfo/convertMetadataToDataset';
+import useWidth from '@components/hooks/useWidth';
+import useScrollbarWidth from '@components/hooks/useScrollbarWidth';
 
 const styles = {
     container: {

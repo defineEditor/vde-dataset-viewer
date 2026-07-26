@@ -10,13 +10,13 @@ import {
     Box,
     Tooltip,
 } from '@mui/material';
-import { ISettings } from '@/interfaces/common';
+import { ISettings } from '@interfaces/common';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
 import FontDownloadIcon from '@mui/icons-material/FontDownload';
 import LooksOneIcon from '@mui/icons-material/LooksOne';
 import AccessTimeIcon from '@mui/icons-material/HourglassFull';
 import ExposureIcon from '@mui/icons-material/Exposure';
-import { styles } from '@/renderer/components/Settings/styles';
+import { styles } from '@components/Settings/styles';
 
 interface ViewerProps {
     settings: ISettings;

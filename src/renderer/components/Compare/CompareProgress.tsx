@@ -8,10 +8,10 @@ import {
     Stack,
     Box,
 } from '@mui/material';
-import DogWorker from '@/renderer/components/Loading/DogWorker';
-import CatWorker from '@/renderer/components/Loading/CatWorker';
-import { useAppSelector } from '@/renderer/redux/hooks';
-import { ISettings } from '@/interfaces/common';
+import DogWorker from '@components/Loading/DogWorker';
+import CatWorker from '@components/Loading/CatWorker';
+import { useAppSelector } from '@redux/hooks';
+import { ISettings } from '@interfaces/common';
 
 const styles = {
     container: {

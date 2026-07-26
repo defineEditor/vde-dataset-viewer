@@ -5,17 +5,17 @@ import React, {
     useState,
     useRef,
 } from 'react';
-import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
+import { useAppDispatch, useAppSelector } from '@redux/hooks';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import AppContext from '@/renderer/utils/AppContext';
-import { closeModal } from '@/renderer/redux/slices/ui';
-import UniqueValues from '@/renderer/components/Modal/VariableInfo/UniqueValues';
-import { IUiModalVariableInfo, TableRowValue } from '@/interfaces/common';
+import AppContext from '@utils/AppContext';
+import { closeModal } from '@redux/slices/ui';
+import UniqueValues from '@components/Modal/VariableInfo/UniqueValues';
+import { IUiModalVariableInfo, TableRowValue } from '@interfaces/common';
 import { List, ListItem, ListItemText, Typography } from '@mui/material';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';

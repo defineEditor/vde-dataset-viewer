@@ -23,14 +23,14 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
-import AppContext from '@/renderer/utils/AppContext';
-import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
-import { closeModal, setDatasetIdColumns } from '@/renderer/redux/slices/ui';
+import AppContext from '@utils/AppContext';
+import { useAppDispatch, useAppSelector } from '@redux/hooks';
+import { closeModal, setDatasetIdColumns } from '@redux/slices/ui';
 import {
     saveIdColumnSet,
     deleteIdColumnSet,
-} from '@/renderer/redux/slices/data';
-import { IIdColumnSet } from '@/interfaces/store';
+} from '@redux/slices/data';
+import { IIdColumnSet } from '@interfaces/store';
 import { modals } from '@/misc/constants';
 
 const styles = {

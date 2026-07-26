@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { WebContents } from 'electron';
-import { FileWatcherEvent } from '@/interfaces/common';
+import { FileWatcherEvent } from '@interfaces/common';
 
 interface WatchedFile {
     fileId: string;

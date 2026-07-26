@@ -1,5 +1,5 @@
 import { UpdateCheckResult } from 'electron-updater';
-import { DatasetMetadata, ItemDataArray } from '@/interfaces/datasetJson';
+import { DatasetMetadata, ItemDataArray } from '@interfaces/datasetJson';
 import { BasicFilter } from 'js-array-filter';
 import { mainTaskTypes } from '@/misc/constants';
 

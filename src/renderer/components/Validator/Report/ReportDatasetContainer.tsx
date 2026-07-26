@@ -1,12 +1,12 @@
 import React, { useRef } from 'react';
 import { Box } from '@mui/material';
-import DatasetView from '@/renderer/components/DatasetView';
-import { ITableData } from '@/interfaces/common';
-import { useAppSelector } from '@/renderer/redux/hooks';
-import columnDefs from '@/renderer/components/Validator/Report/columnDefs';
-import calculateColumnWidth from '@/renderer/utils/calculateColumnWidth';
-import useWidth from '@/renderer/components/hooks/useWidth';
-import useScrollbarWidth from '@/renderer/components/hooks/useScrollbarWidth';
+import DatasetView from '@components/DatasetView';
+import { ITableData } from '@interfaces/common';
+import { useAppSelector } from '@redux/hooks';
+import columnDefs from '@components/Validator/Report/columnDefs';
+import calculateColumnWidth from '@utils/calculateColumnWidth';
+import useWidth from '@components/hooks/useWidth';
+import useScrollbarWidth from '@components/hooks/useScrollbarWidth';
 
 const styles = {
     container: {

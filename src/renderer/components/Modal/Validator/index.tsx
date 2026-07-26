@@ -5,7 +5,7 @@ import React, {
     useContext,
     useMemo,
 } from 'react';
-import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
+import { useAppDispatch, useAppSelector } from '@redux/hooks';
 import {
     Tabs,
     Tab,
@@ -18,24 +18,24 @@ import {
     Stack,
 } from '@mui/material';
 import { Theme } from '@mui/material/styles';
-import Configuration from '@/renderer/components/Modal/Validator/Configuration';
-import Issues from '@/renderer/components/Modal/Validator/Issues';
-import Results from '@/renderer/components/Common/ValidationResults';
-import AppContext from '@/renderer/utils/AppContext';
+import Configuration from '@components/Modal/Validator/Configuration';
+import Issues from '@components/Modal/Validator/Issues';
+import Results from '@components/Common/ValidationResults';
+import AppContext from '@utils/AppContext';
 import {
     InputFileExtension,
     IUiModal,
     IUiValidation,
     IUiViewer,
     ValidatorConfig,
-} from '@/interfaces/common';
+} from '@interfaces/common';
 import {
     closeModal,
     setValidationModalTab,
     updateValidation,
     setShowIssues,
-} from '@/renderer/redux/slices/ui';
-import ValidationProgress from '@/renderer/components/Modal/Validator/ValidationProgress';
+} from '@redux/slices/ui';
+import ValidationProgress from '@components/Modal/Validator/ValidationProgress';
 
 const styles = {
     dialog: {

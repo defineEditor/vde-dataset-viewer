@@ -26,7 +26,7 @@ import NetManager from '@/main/managers/netManager';
 import TaskManager from '@/main/managers/taskManager';
 import ReportManager from '@/main/managers/reportManager';
 import DefineXmlManager from '@/main/managers/defineXmlManager';
-import { MainTask, NewWindowProps } from '@/interfaces/main';
+import { MainTask, NewWindowProps } from '@interfaces/main';
 
 let mainWindow: BrowserWindow | null = null;
 const openedWindows = new Set<BrowserWindow>();

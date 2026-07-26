@@ -5,16 +5,16 @@ import React, {
     useContext,
     useRef,
 } from 'react';
-import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
+import { useAppDispatch, useAppSelector } from '@redux/hooks';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import AppContext from '@/renderer/utils/AppContext';
-import { IUiModal } from '@/interfaces/common';
-import MetadataInfo from '@/renderer/components/Modal/DatasetInfo/MetadataInfo';
-import ColumnsInfo from '@/renderer/components/Modal/DatasetInfo/ColumnsInfo';
+import AppContext from '@utils/AppContext';
+import { IUiModal } from '@interfaces/common';
+import MetadataInfo from '@components/Modal/DatasetInfo/MetadataInfo';
+import ColumnsInfo from '@components/Modal/DatasetInfo/ColumnsInfo';
 import {
     Tabs,
     Tab,
@@ -26,7 +26,7 @@ import {
 } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
-import { closeModal, setDatasetInfoTab } from '@/renderer/redux/slices/ui';
+import { closeModal, setDatasetInfoTab } from '@redux/slices/ui';
 
 const styles = {
     dialog: {

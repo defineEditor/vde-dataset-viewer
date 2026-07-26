@@ -4,8 +4,8 @@ import type {
     Theme as MuiTheme,
     ThemeOptions as MuiThemeOptions,
 } from '@mui/material/styles';
-import { ResolvedThemeMode } from '@/interfaces/theme';
-import { compositeOverBackground } from '@/renderer/theme/themes/utils';
+import { ResolvedThemeMode } from '@interfaces/theme';
+import { compositeOverBackground } from '@renderer/theme/themes/utils';
 
 const buildDefaultGrey = (mode: ResolvedThemeMode): Record<string, string> => {
     const themeGrey = {} as Record<string, string>;

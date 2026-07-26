@@ -1,6 +1,6 @@
 import React from 'react';
 import { List, ListItem, ListItemText, Stack } from '@mui/material';
-import { DatasetJsonMetadata } from '@/interfaces/common';
+import { DatasetJsonMetadata } from '@interfaces/common';
 
 const styles = {
     metadataColumn: {

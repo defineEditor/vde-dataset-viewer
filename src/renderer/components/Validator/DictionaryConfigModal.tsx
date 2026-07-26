@@ -9,8 +9,8 @@ import {
     DialogContent,
     DialogActions,
 } from '@mui/material';
-import { ValidatorConfig } from '@/interfaces/main';
-import PathSelector from '@/renderer/components/Common/SingleFileSelector';
+import { ValidatorConfig } from '@interfaces/main';
+import PathSelector from '@components/Common/SingleFileSelector';
 
 const styles = {
     dialogContent: {

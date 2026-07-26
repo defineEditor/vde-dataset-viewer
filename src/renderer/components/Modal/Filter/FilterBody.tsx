@@ -34,14 +34,14 @@ import {
     setFilterInputMode,
     restartCompare,
     openSnackbar,
-} from '@/renderer/redux/slices/ui';
-import ManualInput from '@/renderer/components/Modal/Filter/ManualInput';
+} from '@redux/slices/ui';
+import ManualInput from '@components/Modal/Filter/ManualInput';
 import {
     setFilter,
     resetFilter,
     setReportFilter,
     resetReportFilter,
-} from '@/renderer/redux/slices/data';
+} from '@redux/slices/data';
 import {
     ColumnType,
     DatasetJsonMetadata,
@@ -49,14 +49,14 @@ import {
     BasicFilter as IBasicFilter,
     ISettings,
     IUiModalFilter,
-} from '@/interfaces/common';
-import InteractiveInput from '@/renderer/components/Modal/Filter/InteractiveInput';
-import AppContext from '@/renderer/utils/AppContext';
-import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
-import { getHeader } from '@/renderer/utils/readData';
-import { handleTransformation } from '@/renderer/utils/transformUtils';
-import { formatFilterValueOption } from '@/renderer/components/hooks/useCommandAutocomplete/utils';
-import getColumnTypes from '@/renderer/utils/getColumnTypes';
+} from '@interfaces/common';
+import InteractiveInput from '@components/Modal/Filter/InteractiveInput';
+import AppContext from '@utils/AppContext';
+import { useAppDispatch, useAppSelector } from '@redux/hooks';
+import { getHeader } from '@utils/readData';
+import { handleTransformation } from '@utils/transformUtils';
+import { formatFilterValueOption } from '@components/hooks/useCommandAutocomplete/utils';
+import getColumnTypes from '@utils/getColumnTypes';
 
 const styles = {
     dialog: {

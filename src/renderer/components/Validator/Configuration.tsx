@@ -13,13 +13,13 @@ import {
     FileInfo,
     ConvertedFileInfo,
     ValidatorConfig,
-} from '@/interfaces/common';
-import { useAppSelector } from '@/renderer/redux/hooks';
-import FileSelector from '@/renderer/components/Common/FileSelector';
-import DictionaryConfigModal from '@/renderer/components/Validator/DictionaryConfigModal';
-import OptionsModal from '@/renderer/components/Validator/OptionsModal';
-import PathSelector from '@/renderer/components/Common/SingleFileSelector';
-import AppContext from '@/renderer/utils/AppContext';
+} from '@interfaces/common';
+import { useAppSelector } from '@redux/hooks';
+import FileSelector from '@components/Common/FileSelector';
+import DictionaryConfigModal from '@components/Validator/DictionaryConfigModal';
+import OptionsModal from '@components/Validator/OptionsModal';
+import PathSelector from '@components/Common/SingleFileSelector';
+import AppContext from '@utils/AppContext';
 
 const styles = {
     container: {

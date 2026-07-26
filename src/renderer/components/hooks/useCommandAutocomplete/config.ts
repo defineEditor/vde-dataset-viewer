@@ -2,8 +2,8 @@ import type {
     CommandAutocompleteCategory,
     CommandHelperTextState,
     ResolvedAutocompleteContext,
-} from '@/interfaces/common';
-import { getActiveSegment } from '@/renderer/components/hooks/useCommandAutocomplete/utils';
+} from '@interfaces/common';
+import { getActiveSegment } from '@components/hooks/useCommandAutocomplete/utils';
 
 const COMMAND_SYNTAX = {
     id: 'id [selectors] - set ID columns',

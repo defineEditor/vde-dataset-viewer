@@ -7,7 +7,7 @@ import {
     ConverterData,
     ValidatorData,
     CompareData,
-} from '@/interfaces/common';
+} from '@interfaces/common';
 import { paths } from '@/misc/constants';
 
 export const settings: ISettings = {

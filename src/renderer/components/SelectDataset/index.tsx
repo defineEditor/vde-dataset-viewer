@@ -1,14 +1,14 @@
 import { useContext, useState, useEffect, useCallback } from 'react';
-import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
+import { useAppDispatch, useAppSelector } from '@redux/hooks';
 import {
     closeDataset,
     openDataset,
     openSnackbar,
-} from '@/renderer/redux/slices/ui';
-import { addRecent } from '@/renderer/redux/slices/data';
-import { openNewDataset } from '@/renderer/utils/readData';
-import Layout from '@/renderer/components/SelectDataset/Layout';
-import AppContext from '@/renderer/utils/AppContext';
+} from '@redux/slices/ui';
+import { addRecent } from '@redux/slices/data';
+import { openNewDataset } from '@utils/readData';
+import Layout from '@components/SelectDataset/Layout';
+import AppContext from '@utils/AppContext';
 
 const SelectDataset = () => {
     const dispatch = useAppDispatch();

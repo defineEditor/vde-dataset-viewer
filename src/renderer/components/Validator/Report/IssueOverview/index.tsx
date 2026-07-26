@@ -10,17 +10,17 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import LoopOutlinedIcon from '@mui/icons-material/LoopOutlined';
-import { useAppSelector, useAppDispatch } from '@/renderer/redux/hooks';
+import { useAppSelector, useAppDispatch } from '@redux/hooks';
 import {
     toggleShowOnlyDatasetsWithIssues,
     setReportSummaryType,
     setValidationReportTab,
-} from '@/renderer/redux/slices/ui';
-import DatasetCards from '@/renderer/components/Validator/Report/IssueOverview/DatasetCards';
-import IssueCards from '@/renderer/components/Validator/Report/IssueOverview/IssueCards';
+} from '@redux/slices/ui';
+import DatasetCards from '@components/Validator/Report/IssueOverview/DatasetCards';
+import IssueCards from '@components/Validator/Report/IssueOverview/IssueCards';
 import { BasicFilter } from 'js-array-filter';
-import { setReportFilter } from '@/renderer/redux/slices/data';
-import { IUiValidationPage, ParsedValidationReport } from '@/interfaces/common';
+import { setReportFilter } from '@redux/slices/data';
+import { IUiValidationPage, ParsedValidationReport } from '@interfaces/common';
 
 const RotatingIcon = styled(
     (props: { rotate: boolean } & React.ComponentProps<typeof IconButton>) => {

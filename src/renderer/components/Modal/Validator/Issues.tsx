@@ -16,18 +16,18 @@ import {
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import SearchIcon from '@mui/icons-material/Search';
-import AppContext from '@/renderer/utils/AppContext';
-import { IssueSummaryItem } from '@/interfaces/core.report';
-import { useAppSelector, useAppDispatch } from '@/renderer/redux/hooks';
+import AppContext from '@utils/AppContext';
+import { IssueSummaryItem } from '@interfaces/core.report';
+import { useAppSelector, useAppDispatch } from '@redux/hooks';
 import {
     openSnackbar,
     setGoTo,
     setIssueFilter,
     setShowIssues,
-} from '@/renderer/redux/slices/ui';
-import { setReport } from '@/renderer/redux/slices/data';
-import getReportTitle from '@/renderer/utils/getReportTitle';
-import transformReport from '@/renderer/components/Validator/Report/transformReport';
+} from '@redux/slices/ui';
+import { setReport } from '@redux/slices/data';
+import getReportTitle from '@utils/getReportTitle';
+import transformReport from '@components/Validator/Report/transformReport';
 
 const styles = {
     container: {

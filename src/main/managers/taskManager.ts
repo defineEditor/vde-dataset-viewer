@@ -7,7 +7,7 @@ import {
     CompareTask,
     MainTask,
     MainProcessTask,
-} from '@/interfaces/common';
+} from '@interfaces/common';
 import { mainTaskTypes } from '@/misc/constants';
 
 class TaskManager {

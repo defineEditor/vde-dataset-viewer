@@ -11,7 +11,7 @@ import {
     Paper,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { useAppSelector } from '@/renderer/redux/hooks';
+import { useAppSelector } from '@redux/hooks';
 import { diffChars } from 'diff';
 
 const styles = {

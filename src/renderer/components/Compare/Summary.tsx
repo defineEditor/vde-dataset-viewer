@@ -18,11 +18,11 @@ import {
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlined';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
-import AppContext from '@/renderer/utils/AppContext';
-import { openNewDataset } from '@/renderer/utils/readData';
-import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
-import { openDataset, openSnackbar } from '@/renderer/redux/slices/ui';
-import { addRecent } from '@/renderer/redux/slices/data';
+import AppContext from '@utils/AppContext';
+import { openNewDataset } from '@utils/readData';
+import { useAppDispatch, useAppSelector } from '@redux/hooks';
+import { openDataset, openSnackbar } from '@redux/slices/ui';
+import { addRecent } from '@redux/slices/data';
 
 const styles = {
     root: {

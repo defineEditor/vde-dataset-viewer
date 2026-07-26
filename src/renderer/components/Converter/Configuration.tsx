@@ -12,10 +12,10 @@ import {
     IconButton,
 } from '@mui/material';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
-import AppContext from '@/renderer/utils/AppContext';
-import { useAppDispatch, useAppSelector } from '@/renderer/redux/hooks';
-import { openSnackbar } from '@/renderer/redux/slices/ui';
-import { setConverterData } from '@/renderer/redux/slices/data';
+import AppContext from '@utils/AppContext';
+import { useAppDispatch, useAppSelector } from '@redux/hooks';
+import { openSnackbar } from '@redux/slices/ui';
+import { setConverterData } from '@redux/slices/data';
 import {
     ConvertedFileInfo,
     OutputFormat,
@@ -24,11 +24,11 @@ import {
     ConversionOptions,
     ConverterData,
     OutputFileExtension,
-} from '@/interfaces/common';
+} from '@interfaces/common';
 import { mainTaskTypes } from '@/misc/constants';
-import Metadata from '@/renderer/components/Converter/Metadata';
-import Options from '@/renderer/components/Converter/Options';
-import FileSelector from '@/renderer/components/Common/FileSelector';
+import Metadata from '@components/Converter/Metadata';
+import Options from '@components/Converter/Options';
+import FileSelector from '@components/Common/FileSelector';
 
 const styles = {
     container: {
