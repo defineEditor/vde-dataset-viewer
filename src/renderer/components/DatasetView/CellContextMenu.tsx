@@ -7,22 +7,22 @@ import {
     ListItemIcon,
     ListItemText,
 } from '@mui/material';
-import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
+import { useAppDispatch, useAppSelector } from '@redux/hooks';
 import Filter from 'js-array-filter';
 import {
     DatasetJsonMetadata,
     BasicFilter,
     IHeaderCell,
-} from 'interfaces/common';
+} from '@interfaces/common';
 import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutlined';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import ChecklistIcon from '@mui/icons-material/Checklist';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutlined';
 import DisabledByDefaultSharpIcon from '@mui/icons-material/DisabledByDefaultSharp';
-import { getSafeValue } from 'renderer/utils/transformUtils';
-import { resetFilter, setFilter } from 'renderer/redux/slices/data';
-import { restartCompare } from 'renderer/redux/slices/ui';
+import { getSafeValue } from '@utils/transformUtils';
+import { resetFilter, setFilter } from '@redux/slices/data';
+import { restartCompare } from '@redux/slices/ui';
 
 interface ContextMenuProps {
     open: boolean;

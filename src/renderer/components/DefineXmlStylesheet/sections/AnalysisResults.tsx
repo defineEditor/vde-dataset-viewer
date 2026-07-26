@@ -1,17 +1,17 @@
 /* eslint-disable react/no-array-index-key */
 import React from 'react';
-import { DefineXmlContent } from 'interfaces/defineXml';
+import { DefineXmlContent } from '@interfaces/defineXml';
 import {
     getAnalysisResultDisplays,
     getTranslatedText,
     getMetaDataVersion,
-} from 'renderer/components/DefineXmlStylesheet/utils/defineXmlHelpers';
+} from '@components/DefineXmlStylesheet/utils/defineXmlHelpers';
 import {
     renderDocumentRefs,
     getCommentContent,
     getWhereClauseText,
     getAnalysisParameterDisplay,
-} from 'renderer/components/DefineXmlStylesheet/utils/itemRenderHelpers';
+} from '@components/DefineXmlStylesheet/utils/itemRenderHelpers';
 
 interface AnalysisResultsProps {
     content: DefineXmlContent;

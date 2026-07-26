@@ -1,6 +1,6 @@
 import React, { useEffect, useContext, useState, useCallback } from 'react';
 import { Box, Button, Stack } from '@mui/material';
-import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
+import { useAppSelector, useAppDispatch } from '@redux/hooks';
 import {
     openModal,
     openSnackbar,
@@ -8,14 +8,14 @@ import {
     closeCompare,
     setNewCompareInfo,
     stopCompare,
-} from 'renderer/redux/slices/ui';
-import { mainTaskTypes, modals } from 'misc/constants';
-import Results from 'renderer/components/Compare/Results';
-import AppContext from 'renderer/utils/AppContext';
-import { CompareTask, DatasetDiff, TaskProgress } from 'interfaces/common';
-import { addRecentCompare, setCompareData } from 'renderer/redux/slices/data';
-import CompareProgress from 'renderer/components/Compare/CompareProgress';
-import { getSimpleHash } from 'renderer/utils/getHash';
+} from '@redux/slices/ui';
+import { mainTaskTypes, modals } from '@/misc/constants';
+import Results from '@components/Compare/Results';
+import AppContext from '@utils/AppContext';
+import { CompareTask, DatasetDiff, TaskProgress } from '@interfaces/common';
+import { addRecentCompare, setCompareData } from '@redux/slices/data';
+import CompareProgress from '@components/Compare/CompareProgress';
+import { getSimpleHash } from '@utils/getHash';
 
 const styles = {
     loadingContainer: {

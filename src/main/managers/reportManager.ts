@@ -7,8 +7,8 @@ import { promisify } from 'util';
 import {
     ParsedValidationReport,
     ValidationReportCompare,
-} from 'interfaces/common';
-import FileManager from 'main/managers/fileManager';
+} from '@interfaces/common';
+import FileManager from '@/main/managers/fileManager';
 
 const gunzipPromise = promisify(zlib.gunzip);
 class ReportManager {

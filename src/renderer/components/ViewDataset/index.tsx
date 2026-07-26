@@ -1,5 +1,5 @@
 import React from 'react';
-import DatasetContainer from 'renderer/components/ViewDataset/DatasetContainer';
+import DatasetContainer from '@components/ViewDataset/DatasetContainer';
 
 const ViewFile: React.FC = () => {
     return <DatasetContainer />;

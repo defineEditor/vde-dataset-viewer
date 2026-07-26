@@ -1,5 +1,5 @@
 import { app, IpcMainInvokeEvent } from 'electron';
-import { ILocalStore } from 'interfaces/common';
+import { ILocalStore } from '@interfaces/common';
 import path from 'path';
 import fs from 'fs';
 

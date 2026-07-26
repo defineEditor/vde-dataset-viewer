@@ -1,8 +1,8 @@
 import React, { useContext } from 'react';
-import { useAppSelector } from 'renderer/redux/hooks';
-import AppContext from 'renderer/utils/AppContext';
-import { IUiModalFilter } from 'interfaces/common';
-import FilterBody from 'renderer/components/Modal/Filter/FilterBody';
+import { useAppSelector } from '@redux/hooks';
+import AppContext from '@utils/AppContext';
+import { IUiModalFilter } from '@interfaces/common';
+import FilterBody from '@components/Modal/Filter/FilterBody';
 
 const DatasetFilter: React.FC<IUiModalFilter> = ({
     type,

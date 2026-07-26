@@ -7,11 +7,11 @@ import {
     Paper,
     Typography,
 } from '@mui/material';
-import AppContext from 'renderer/utils/AppContext';
-import { useAppDispatch } from 'renderer/redux/hooks';
-import { ConvertTask, TaskProgress } from 'interfaces/common';
-import { openSnackbar } from 'renderer/redux/slices/ui';
-import { mainTaskTypes } from 'misc/constants';
+import AppContext from '@utils/AppContext';
+import { useAppDispatch } from '@redux/hooks';
+import { ConvertTask, TaskProgress } from '@interfaces/common';
+import { openSnackbar } from '@redux/slices/ui';
+import { mainTaskTypes } from '@/misc/constants';
 
 const styles = {
     container: {

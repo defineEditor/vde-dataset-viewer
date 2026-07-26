@@ -33,15 +33,15 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import SearchIcon from '@mui/icons-material/Search';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import ViewColumnIcon from '@mui/icons-material/ViewColumn';
-import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
+import { useAppDispatch, useAppSelector } from '@redux/hooks';
 import {
     openSnackbar,
     setShowAllDifferences,
     setCurrentIssueIndex,
-} from 'renderer/redux/slices/ui';
-import { DatasetDiff } from 'interfaces/main';
-import { IUiControl } from 'interfaces/common';
-import AppContext from 'renderer/utils/AppContext';
+} from '@redux/slices/ui';
+import { DatasetDiff } from '@interfaces/main';
+import { IUiControl } from '@interfaces/common';
+import AppContext from '@utils/AppContext';
 import { ItemDataArray } from 'js-array-filter';
 
 const styles = {

@@ -1,17 +1,17 @@
 import React, { useCallback, useContext, useState } from 'react';
-import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
+import { useAppDispatch, useAppSelector } from '@redux/hooks';
 import {
     openDataset,
     openSnackbar,
     setDefineFileId,
     setPathname,
-} from 'renderer/redux/slices/ui';
-import { addRecent, setValidatorData } from 'renderer/redux/slices/data';
-import { openNewDataset } from 'renderer/utils/readData';
-import AppContext from 'renderer/utils/AppContext';
-import Follower from 'renderer/components/DragAndDrop/Follower';
-import { paths } from 'misc/constants';
-import { FileInfo } from 'interfaces/common';
+} from '@redux/slices/ui';
+import { addRecent, setValidatorData } from '@redux/slices/data';
+import { openNewDataset } from '@utils/readData';
+import AppContext from '@utils/AppContext';
+import Follower from '@components/DragAndDrop/Follower';
+import { paths } from '@/misc/constants';
+import { FileInfo } from '@interfaces/common';
 
 interface Props {
     children: React.ReactNode;

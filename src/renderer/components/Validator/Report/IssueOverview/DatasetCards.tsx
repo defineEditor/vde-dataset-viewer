@@ -26,7 +26,7 @@ import {
     IssueSummaryItem,
     DatasetDetail,
     IUiValidationPage,
-} from 'interfaces/common';
+} from '@interfaces/common';
 
 const styles = {
     actions: {

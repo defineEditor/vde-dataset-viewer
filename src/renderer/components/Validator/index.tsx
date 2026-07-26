@@ -1,21 +1,21 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { Box, Tabs, Tab, Paper, Button, Stack } from '@mui/material';
 import { Theme } from '@mui/material/styles';
-import Results from 'renderer/components/Common/ValidationResults';
-import Report from 'renderer/components/Validator/Report';
+import Results from '@components/Common/ValidationResults';
+import Report from '@components/Validator/Report';
 import {
     FileInfo,
     InputFileExtension,
     IUiValidation,
     IUiValidationPage,
     ValidatorConfig,
-} from 'interfaces/common';
-import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
-import { updateValidation, setValidationTab } from 'renderer/redux/slices/ui';
-import { setValidatorData } from 'renderer/redux/slices/data';
-import Configuration from 'renderer/components/Validator/Configuration';
-import AppContext from 'renderer/utils/AppContext';
-import ValidationProgress from 'renderer/components/Modal/Validator/ValidationProgress';
+} from '@interfaces/common';
+import { useAppSelector, useAppDispatch } from '@redux/hooks';
+import { updateValidation, setValidationTab } from '@redux/slices/ui';
+import { setValidatorData } from '@redux/slices/data';
+import Configuration from '@components/Validator/Configuration';
+import AppContext from '@utils/AppContext';
+import ValidationProgress from '@components/Modal/Validator/ValidationProgress';
 
 const styles = {
     container: {

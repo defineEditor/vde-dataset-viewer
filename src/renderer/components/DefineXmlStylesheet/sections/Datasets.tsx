@@ -1,5 +1,5 @@
 import React from 'react';
-import { DefineXmlContent, ArmDefine21 } from 'interfaces/common';
+import { DefineXmlContent, ArmDefine21 } from '@interfaces/common';
 import {
     getItemGroupDefs,
     getItemDefs,
@@ -7,8 +7,8 @@ import {
     getStandards,
     getTranslatedText,
     getMetaDataVersion,
-} from 'renderer/components/DefineXmlStylesheet/utils/defineXmlHelpers';
-import { getCommentContent } from 'renderer/components/DefineXmlStylesheet/utils/itemRenderHelpers';
+} from '@components/DefineXmlStylesheet/utils/defineXmlHelpers';
+import { getCommentContent } from '@components/DefineXmlStylesheet/utils/itemRenderHelpers';
 
 interface DatasetsProps {
     content: DefineXmlContent;

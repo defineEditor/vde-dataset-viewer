@@ -9,9 +9,9 @@ import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import Box from '@mui/material/Box';
-import { openModal, openSnackbar } from 'renderer/redux/slices/ui';
-import AppContext from 'renderer/utils/AppContext';
-import { modals } from 'misc/constants';
+import { openModal, openSnackbar } from '@redux/slices/ui';
+import AppContext from '@utils/AppContext';
+import { modals } from '@/misc/constants';
 
 const styles = {
     root: {

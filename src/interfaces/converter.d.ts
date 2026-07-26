@@ -1,5 +1,5 @@
-import { OutputFormat } from 'interfaces/main';
-import { DatasetMetadata } from 'interfaces/datasetJson';
+import { OutputFormat } from '@interfaces/main';
+import { DatasetMetadata } from '@interfaces/datasetJson';
 
 export interface ConversionOptions {
     prettyPrint: boolean;

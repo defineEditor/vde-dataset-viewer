@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
-import { useAppSelector } from 'renderer/redux/hooks';
-import { IUiModalFilter } from 'interfaces/common';
-import FilterBody from 'renderer/components/Modal/Filter/FilterBody';
-import convertToDataset from 'renderer/components/Validator/Report/convertToDataset';
+import { useAppSelector } from '@redux/hooks';
+import { IUiModalFilter } from '@interfaces/common';
+import FilterBody from '@components/Modal/Filter/FilterBody';
+import convertToDataset from '@components/Validator/Report/convertToDataset';
 
 const ReportFilter: React.FC<IUiModalFilter> = ({
     type,

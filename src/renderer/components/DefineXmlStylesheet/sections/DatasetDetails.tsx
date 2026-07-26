@@ -5,7 +5,7 @@ import type {
     ArmDefine20,
     ArmDefine21,
 } from 'parse-define-xml';
-import { DefineXmlContent } from 'interfaces/defineXml';
+import { DefineXmlContent } from '@interfaces/defineXml';
 import {
     getTranslatedText,
     getItemDefs,
@@ -15,14 +15,14 @@ import {
     displayNonStandard,
     displayStandard,
     getItemGroupDefs,
-} from 'renderer/components/DefineXmlStylesheet/utils/defineXmlHelpers';
+} from '@components/DefineXmlStylesheet/utils/defineXmlHelpers';
 import {
     getItemAttributes,
     getOriginContent,
     getMethodContent,
     getCommentContent,
     getWhereClauseText,
-} from 'renderer/components/DefineXmlStylesheet/utils/itemRenderHelpers';
+} from '@components/DefineXmlStylesheet/utils/itemRenderHelpers';
 
 type ItemGroupDef =
     | Define20.ItemGroupDef

@@ -1,8 +1,8 @@
 import React from 'react';
-import { IUiModalFilter } from 'interfaces/common';
-import DatasetFilter from 'renderer/components/Modal/Filter/DatasetFilter';
-import CompareFilter from 'renderer/components/Modal/Filter/CompareFilter';
-import ReportFilter from 'renderer/components/Modal/Filter/ReportFilter';
+import { IUiModalFilter } from '@interfaces/common';
+import DatasetFilter from '@components/Modal/Filter/DatasetFilter';
+import CompareFilter from '@components/Modal/Filter/CompareFilter';
+import ReportFilter from '@components/Modal/Filter/ReportFilter';
 
 const FilterComponent: React.FC<IUiModalFilter> = (props: IUiModalFilter) => {
     const { filterType } = props;

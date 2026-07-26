@@ -1,7 +1,7 @@
 import React from 'react';
 import { TablePagination, Stack, Box } from '@mui/material';
-import DiffNavigation from 'renderer/components/Compare/DiffNavigation';
-import { IUiControl } from 'interfaces/common';
+import DiffNavigation from '@components/Compare/DiffNavigation';
+import { IUiControl } from '@interfaces/common';
 
 const styles = {
     container: {

@@ -1,4 +1,4 @@
-import { ValidationRunReport } from 'interfaces/common';
+import { ValidationRunReport } from '@interfaces/common';
 
 const getTimeAgo = (date: number): string => {
     const now = new Date();

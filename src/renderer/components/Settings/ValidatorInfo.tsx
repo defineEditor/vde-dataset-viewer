@@ -1,8 +1,8 @@
 import React from 'react';
 import { TextField, Stack, Button, MenuItem, Box } from '@mui/material';
-import { styles } from 'renderer/components/Settings/styles';
+import { styles } from '@components/Settings/styles';
 import CircularProgress from '@mui/material/CircularProgress';
-import { ValidatorData } from 'interfaces/store';
+import { ValidatorData } from '@interfaces/store';
 
 interface ValidatorInfoProps {
     disableRefresh: boolean;

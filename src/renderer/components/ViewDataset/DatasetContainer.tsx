@@ -18,11 +18,11 @@ import {
     ISettings,
     BasicFilter,
     RequestReason,
-} from 'interfaces/common';
-import DatasetView from 'renderer/components/DatasetView';
-import ContextMenu from 'renderer/components/DatasetView/ContextMenu';
-import AppContext from 'renderer/utils/AppContext';
-import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
+} from '@interfaces/common';
+import DatasetView from '@components/DatasetView';
+import ContextMenu from '@components/DatasetView/ContextMenu';
+import AppContext from '@utils/AppContext';
+import { useAppSelector, useAppDispatch } from '@redux/hooks';
 import {
     openSnackbar,
     setPage,
@@ -31,15 +31,15 @@ import {
     setGoTo,
     setSelect,
     setReloadRequested,
-} from 'renderer/redux/slices/ui';
-import { resetFilter } from 'renderer/redux/slices/data';
-import { getData } from 'renderer/utils/readData';
-import estimateWidth from 'renderer/utils/estimateWidth';
-import deepEqual from 'renderer/utils/deepEqual';
-import DatasetSidebar from 'renderer/components/DatasetView/Sidebar';
-import getIssueAnnotations from 'renderer/utils/getIssueAnnotations';
-import BottomToolbar from 'renderer/components/ViewDataset/BottomToolbar';
-import ApiService from 'renderer/services/ApiService';
+} from '@redux/slices/ui';
+import { resetFilter } from '@redux/slices/data';
+import { getData } from '@utils/readData';
+import estimateWidth from '@utils/estimateWidth';
+import deepEqual from '@utils/deepEqual';
+import DatasetSidebar from '@components/DatasetView/Sidebar';
+import getIssueAnnotations from '@utils/getIssueAnnotations';
+import BottomToolbar from '@components/ViewDataset/BottomToolbar';
+import ApiService from '@services/ApiService';
 
 const styles = {
     main: {

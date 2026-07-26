@@ -8,22 +8,25 @@ import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
-import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
-import { openSnackbar, setValidationReportTab } from 'renderer/redux/slices/ui';
-import { setReport, setReportFilter } from 'renderer/redux/slices/data';
-import AppContext from 'renderer/utils/AppContext';
+import { useAppSelector, useAppDispatch } from '@redux/hooks';
+import {
+    openSnackbar,
+    setValidationReportTab,
+} from '@redux/slices/ui';
+import { setReport, setReportFilter } from '@redux/slices/data';
+import AppContext from '@utils/AppContext';
 import {
     ITableData,
     IUiValidationPage,
     NewWindowProps,
     BasicFilter,
-} from 'interfaces/common';
-import convertToDataset from 'renderer/components/Validator/Report/convertToDataset';
-import DatasetContainer from 'renderer/components/Validator/Report/ReportDatasetContainer';
-import Configuration from 'renderer/components/Validator/Report/Configuration';
-import IssueOverview from 'renderer/components/Validator/Report/IssueOverview';
-import transformReport from 'renderer/components/Validator/Report/transformReport';
-import handleOpenDataset from 'renderer/utils/handleOpenDataset';
+} from '@interfaces/common';
+import convertToDataset from '@components/Validator/Report/convertToDataset';
+import DatasetContainer from '@components/Validator/Report/ReportDatasetContainer';
+import Configuration from '@components/Validator/Report/Configuration';
+import IssueOverview from '@components/Validator/Report/IssueOverview';
+import transformReport from '@components/Validator/Report/transformReport';
+import handleOpenDataset from '@utils/handleOpenDataset';
 
 const styles = {
     container: {

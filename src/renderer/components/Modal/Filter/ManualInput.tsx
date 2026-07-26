@@ -6,10 +6,10 @@ import React, {
     useContext,
 } from 'react';
 import Filter from 'js-array-filter';
-import { useAppSelector } from 'renderer/redux/hooks';
-import AppContext from 'renderer/utils/AppContext';
-import CommandAutocompleteInput from 'renderer/components/Common/CommandAutocompleteInput';
-import type { DatasetJsonMetadata, ColumnType } from 'interfaces/common';
+import { useAppSelector } from '@redux/hooks';
+import AppContext from '@utils/AppContext';
+import CommandAutocompleteInput from '@components/Common/CommandAutocompleteInput';
+import type { DatasetJsonMetadata, ColumnType } from '@interfaces/common';
 
 const styles = {
     input: {

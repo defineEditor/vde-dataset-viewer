@@ -7,8 +7,8 @@ import {
     ConverterData,
     ValidatorData,
     CompareData,
-} from 'interfaces/common';
-import { paths } from 'misc/constants';
+} from '@interfaces/common';
+import { paths } from '@/misc/constants';
 
 export const settings: ISettings = {
     viewer: {

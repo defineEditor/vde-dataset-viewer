@@ -1,7 +1,7 @@
 import { UpdateCheckResult } from 'electron-updater';
-import { DatasetMetadata, ItemDataArray } from 'interfaces/datasetJson';
+import { DatasetMetadata, ItemDataArray } from '@interfaces/datasetJson';
 import { BasicFilter } from 'js-array-filter';
-import { mainTaskTypes } from 'misc/constants';
+import { mainTaskTypes } from '@/misc/constants';
 
 export interface SettingsConverter {
     threads: number;

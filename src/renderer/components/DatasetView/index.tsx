@@ -8,24 +8,7 @@ import React, {
 } from 'react';
 import { Box } from '@mui/material';
 import { Theme } from '@mui/material/styles';
-import {
-    ITableData,
-    ItemType,
-    IMask,
-    TableSettings,
-    IUiControl,
-    TableRowValue,
-} from 'interfaces/common';
-import { useAppTheme } from 'renderer/theme';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
-import {
-    openSnackbar,
-    setDatasetScrollPosition,
-    setDatasetSorting,
-} from 'renderer/redux/slices/ui';
-import View from 'renderer/components/DatasetView/View';
-import useTableHeight from 'renderer/components/DatasetView/useTableHeight';
 import {
     ColumnDef,
     getCoreRowModel,
@@ -36,6 +19,23 @@ import {
     VisibilityState,
     Column as IColumn,
 } from '@tanstack/react-table';
+import {
+    ITableData,
+    ItemType,
+    IMask,
+    TableSettings,
+    IUiControl,
+    TableRowValue,
+} from '@interfaces/common';
+import { useAppTheme } from '@renderer/theme';
+import { useAppDispatch, useAppSelector } from '@redux/hooks';
+import {
+    openSnackbar,
+    setDatasetScrollPosition,
+    setDatasetSorting,
+} from '@redux/slices/ui';
+import View from '@components/DatasetView/View';
+import useTableHeight from '@components/DatasetView/useTableHeight';
 
 const emptySelect = { row: null, column: null };
 const emptyGoTo = { row: null, column: null, cellSelection: false };

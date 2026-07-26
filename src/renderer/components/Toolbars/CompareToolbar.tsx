@@ -6,18 +6,18 @@ import FilterIcon from '@mui/icons-material/FilterAlt';
 import FlipCameraAndroidIcon from '@mui/icons-material/FlipCameraAndroid';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ListAltIcon from '@mui/icons-material/ListAlt';
-import AppContext from 'renderer/utils/AppContext';
-import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
+import AppContext from '@utils/AppContext';
+import { useAppDispatch, useAppSelector } from '@redux/hooks';
 import {
     openModal,
     closeCompare,
     setCompareView,
     setShowAllDifferences,
     restartCompare,
-} from 'renderer/redux/slices/ui';
-import { clearLoadedRecords } from 'renderer/redux/slices/data';
-import { modals } from 'misc/constants';
-import store from 'renderer/redux/store';
+} from '@redux/slices/ui';
+import { clearLoadedRecords } from '@redux/slices/data';
+import { modals } from '@/misc/constants';
+import store from '@redux/store';
 
 const styles = {
     main: {

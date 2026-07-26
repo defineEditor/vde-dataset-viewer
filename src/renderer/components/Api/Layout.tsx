@@ -1,13 +1,13 @@
 import React, { useRef, useEffect, useState } from 'react';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import Carousel from 'renderer/components/SelectDataset/Carousel';
+import Carousel from '@components/SelectDataset/Carousel';
 import Box from '@mui/material/Box';
-import { IApiRecord, IApiStudy, IApiStudyDataset } from 'interfaces/common';
-import ApiCard from 'renderer/components/Api/ApiCard';
-import OpenNewCard from 'renderer/components/Api/OpenNewCard';
-import StudyCard from 'renderer/components/Api/StudyCard';
-import DatasetCard from 'renderer/components/Api/DatasetCard';
+import { IApiRecord, IApiStudy, IApiStudyDataset } from '@interfaces/common';
+import ApiCard from '@components/Api/ApiCard';
+import OpenNewCard from '@components/Api/OpenNewCard';
+import StudyCard from '@components/Api/StudyCard';
+import DatasetCard from '@components/Api/DatasetCard';
 
 const styles = {
     main: {

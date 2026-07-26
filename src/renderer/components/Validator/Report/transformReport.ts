@@ -1,4 +1,4 @@
-import { ParsedValidationReport } from 'interfaces/common';
+import { ParsedValidationReport } from '@interfaces/common';
 
 const removeExtensions = (dataset: string) =>
     dataset.replace(/\.[^/\\.]+$/, '').toUpperCase();

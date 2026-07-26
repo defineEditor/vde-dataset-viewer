@@ -1,11 +1,11 @@
 import React, { useState, useCallback } from 'react';
-import { DefineXmlContent } from 'interfaces/defineXml';
+import { DefineXmlContent } from '@interfaces/defineXml';
 import {
     DefineStylesheetSection as Section,
     Define20,
     Define21,
     SettingsDefine,
-} from 'interfaces/common';
+} from '@interfaces/common';
 import {
     getMetaDataVersion,
     getItemGroupDefs,
@@ -15,7 +15,7 @@ import {
     getTranslatedText,
     getMethodDefs,
     getCommentDefs,
-} from 'renderer/components/DefineXmlStylesheet/utils/defineXmlHelpers';
+} from '@components/DefineXmlStylesheet/utils/defineXmlHelpers';
 
 interface NavigationMenuProps {
     content: DefineXmlContent;

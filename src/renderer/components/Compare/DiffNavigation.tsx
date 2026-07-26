@@ -1,10 +1,10 @@
 import React, { useRef, useCallback } from 'react';
-import { useAppDispatch, useAppSelector } from 'renderer/redux/hooks';
+import { useAppDispatch, useAppSelector } from '@redux/hooks';
 import { Stack, IconButton, Typography, Box, Button } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { setCurrentIssueIndex } from 'renderer/redux/slices/ui';
-import { IUiControl } from 'interfaces/common';
+import { setCurrentIssueIndex } from '@redux/slices/ui';
+import { IUiControl } from '@interfaces/common';
 
 const styles = {
     tabs: {

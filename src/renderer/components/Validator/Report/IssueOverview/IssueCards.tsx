@@ -25,7 +25,7 @@ import {
     ParsedValidationReport,
     IssueSummaryItem,
     IUiValidationPage,
-} from 'interfaces/common';
+} from '@interfaces/common';
 
 const styles = {
     actions: {

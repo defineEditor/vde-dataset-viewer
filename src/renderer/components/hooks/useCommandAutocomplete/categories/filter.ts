@@ -7,7 +7,7 @@ import {
 import type {
     CategoryAutocompleteParams,
     CommandAutocompleteState,
-} from 'interfaces/common';
+} from '@interfaces/common';
 import {
     filterObjectOptions,
     filterOptions,
@@ -15,7 +15,7 @@ import {
     getInOperatorValueInput,
     getLastFilterCondition,
     tokenizeQuotedText,
-} from 'renderer/components/hooks/useCommandAutocomplete/utils';
+} from '@components/hooks/useCommandAutocomplete/utils';
 
 const FILTER_CONNECTORS = ['and', 'or'];
 const FILTER_COMPARATORS = {

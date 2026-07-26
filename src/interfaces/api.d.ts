@@ -1,5 +1,5 @@
 import DatasetJson from 'js-stream-dataset-json';
-import { InputFileExtension } from 'interfaces/main';
+import { InputFileExtension } from '@interfaces/main';
 
 export type DatasetJsonMetadata = Awaited<
     ReturnType<InstanceType<typeof DatasetJson>['getMetadata']>

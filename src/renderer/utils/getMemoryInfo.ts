@@ -1,4 +1,4 @@
-import getHumanReadableSize from 'renderer/utils/getHumanReadableSize';
+import getHumanReadableSize from '@utils/getHumanReadableSize';
 
 const getMemoryInfo = async (id: string) => {
     // Get main process memory usage info

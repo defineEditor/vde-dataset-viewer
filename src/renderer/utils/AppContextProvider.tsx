@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import ApiService from 'renderer/services/ApiService';
-import AppContext from 'renderer/utils/AppContext';
+import ApiService from '@services/ApiService';
+import AppContext from '@utils/AppContext';
 
 interface IAppContextProvider {
     children: React.ReactNode;

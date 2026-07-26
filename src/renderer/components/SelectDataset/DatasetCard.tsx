@@ -9,8 +9,8 @@ import MenuItem from '@mui/material/MenuItem';
 import CloseIcon from '@mui/icons-material/Close';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import AppContext from 'renderer/utils/AppContext';
-import { ApiOpenedFileWithMetadata } from 'interfaces/api';
+import AppContext from '@utils/AppContext';
+import { ApiOpenedFileWithMetadata } from '@interfaces/api';
 
 const styles = {
     card: {

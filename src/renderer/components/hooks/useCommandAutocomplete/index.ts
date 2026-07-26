@@ -7,19 +7,19 @@ import type {
     UniqueValuesApi,
     FilterValueOptions,
     ColumnType,
-} from 'interfaces/common';
-import { resolveAutocompleteContext } from 'renderer/components/hooks/useCommandAutocomplete/config';
-import { getFilterAutocomplete } from 'renderer/components/hooks/useCommandAutocomplete/categories/filter';
-import { getHistoryAutocomplete } from 'renderer/components/hooks/useCommandAutocomplete/categories/history';
-import { getVariablesAutocomplete } from 'renderer/components/hooks/useCommandAutocomplete/categories/variables';
-import { formatFilterValueOption } from 'renderer/components/hooks/useCommandAutocomplete/utils';
+} from '@interfaces/common';
+import { resolveAutocompleteContext } from '@components/hooks/useCommandAutocomplete/config';
+import { getFilterAutocomplete } from '@components/hooks/useCommandAutocomplete/categories/filter';
+import { getHistoryAutocomplete } from '@components/hooks/useCommandAutocomplete/categories/history';
+import { getVariablesAutocomplete } from '@components/hooks/useCommandAutocomplete/categories/variables';
+import { formatFilterValueOption } from '@components/hooks/useCommandAutocomplete/utils';
 
 export type {
     CommandAutocompleteCategory,
     CommandAutocompleteState,
     CommandHelperTextState,
-} from 'interfaces/useCommandAutocomplete';
-export { getCommandHelperText } from 'renderer/components/hooks/useCommandAutocomplete/config';
+} from '@interfaces/useCommandAutocomplete';
+export { getCommandHelperText } from '@components/hooks/useCommandAutocomplete/config';
 
 export const useCommandAutocomplete = ({
     apiService,

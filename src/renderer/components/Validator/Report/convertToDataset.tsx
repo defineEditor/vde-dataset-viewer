@@ -5,14 +5,14 @@ import {
     DatasetJsonMetadata,
     BasicFilter,
     IUiValidationPage,
-} from 'interfaces/common';
+} from '@interfaces/common';
 import Filter from 'js-array-filter';
-import renderRuleStatus from 'renderer/components/Validator/Report/Formatters/RuleStatus';
-import renderExecutability from 'renderer/components/Validator/Report/Formatters/Executable';
-import renderRow from 'renderer/components/Validator/Report/Formatters/Row';
-import renderVariables from 'renderer/components/Validator/Report/Formatters/Variables';
-import renderSummaryIssues from 'renderer/components/Validator/Report/Formatters/SummaryIssues';
-import columnDefs from 'renderer/components/Validator/Report/columnDefs';
+import renderRuleStatus from '@components/Validator/Report/Formatters/RuleStatus';
+import renderExecutability from '@components/Validator/Report/Formatters/Executable';
+import renderRow from '@components/Validator/Report/Formatters/Row';
+import renderVariables from '@components/Validator/Report/Formatters/Variables';
+import renderSummaryIssues from '@components/Validator/Report/Formatters/SummaryIssues';
+import columnDefs from '@components/Validator/Report/columnDefs';
 
 const convertToDataset = (
     data: ParsedValidationReport,

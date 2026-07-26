@@ -2,10 +2,10 @@ import React, { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Box, CircularProgress, CssBaseline } from '@mui/material';
 import { ThemeProvider, useTheme } from '@mui/material/styles';
-import LoadingSanta from 'renderer/components/Loading/LoadingSanta';
-import LoadingCat from 'renderer/components/Loading/LoadingCat';
-import LoadingDog from 'renderer/components/Loading/LoadingDog';
-import { useAppSelector } from 'renderer/redux/hooks';
+import LoadingSanta from '@components/Loading/LoadingSanta';
+import LoadingCat from '@components/Loading/LoadingCat';
+import LoadingDog from '@components/Loading/LoadingDog';
+import { useAppSelector } from '@redux/hooks';
 
 const getRandomLoadingComponent = () => {
     const now = new Date();

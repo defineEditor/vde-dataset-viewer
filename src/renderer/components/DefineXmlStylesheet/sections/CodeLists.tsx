@@ -1,13 +1,13 @@
 import React from 'react';
-import { Define21, DefineXmlContent } from 'interfaces/defineXml';
+import { Define21, DefineXmlContent } from '@interfaces/defineXml';
 import {
     getCodeLists,
     getStandards,
     getCommentDefs,
     getTranslatedText,
     getLeafs,
-} from 'renderer/components/DefineXmlStylesheet/utils/defineXmlHelpers';
-import { getCommentContent } from 'renderer/components/DefineXmlStylesheet/utils/itemRenderHelpers';
+} from '@components/DefineXmlStylesheet/utils/defineXmlHelpers';
+import { getCommentContent } from '@components/DefineXmlStylesheet/utils/itemRenderHelpers';
 
 interface CodeListsProps {
     content: DefineXmlContent;

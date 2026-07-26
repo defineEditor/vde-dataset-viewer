@@ -17,13 +17,13 @@ import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
-import { useAppDispatch } from 'renderer/redux/hooks';
+import { useAppDispatch } from '@redux/hooks';
 import {
     openSnackbar,
     setDefineFileId,
     resetDefineUi,
-} from 'renderer/redux/slices/ui';
-import AppContext from 'renderer/utils/AppContext';
+} from '@redux/slices/ui';
+import AppContext from '@utils/AppContext';
 
 const styles = {
     main: {

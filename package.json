@@ -67,7 +67,15 @@
         ],
         "moduleNameMapper": {
             "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/.erb/mocks/fileMock.js",
-            "\\.(css|less|sass|scss)$": "identity-obj-proxy"
+            "\\.(css|less|sass|scss)$": "identity-obj-proxy",
+            "@main/(.*)$": "<rootDir>/src/main/$1",
+            "@renderer/(.*)$": "<rootDir>/src/renderer/$1",
+            "@redux/(.*)$": "<rootDir>/src/renderer/redux/$1",
+            "@components/(.*)$": "<rootDir>/src/renderer/components/$1",
+            "@services/(.*)$": "<rootDir>/src/renderer/services/$1",
+            "@utils/(.*)$": "<rootDir>/src/renderer/utils/$1",
+            "@interfaces/(.*)$": "<rootDir>/src/interfaces/$1",
+            "^@/(.*)$": "<rootDir>/src/$1"
         },
         "setupFiles": [
             "./.erb/scripts/check-build-exists.ts"

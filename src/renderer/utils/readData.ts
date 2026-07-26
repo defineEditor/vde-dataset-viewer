@@ -7,8 +7,8 @@ import {
     ISettings,
     ITableRow,
     RequestReason,
-} from 'interfaces/common';
-import ApiService from 'renderer/services/ApiService';
+} from '@interfaces/common';
+import ApiService from '@services/ApiService';
 
 export const getHeader = (
     metadata: DatasetJsonMetadata,

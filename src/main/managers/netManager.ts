@@ -1,6 +1,6 @@
 import { net } from 'electron';
 import { IpcMainInvokeEvent } from 'electron/main';
-import { IFetchResponse } from 'interfaces/common';
+import { IFetchResponse } from '@interfaces/common';
 
 class NetManager {
     async fetch(

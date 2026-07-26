@@ -1,6 +1,6 @@
 import { app, dialog } from 'electron';
 import { autoUpdater } from 'electron-updater';
-import { ICheckUpdateResult, UpdateCheckResult } from 'interfaces/main';
+import { ICheckUpdateResult, UpdateCheckResult } from '@interfaces/main';
 
 const appVersion = app.getVersion();
 

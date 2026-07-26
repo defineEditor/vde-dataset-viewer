@@ -1,12 +1,11 @@
 import React, { useEffect } from 'react';
-import SelectDataset from 'renderer/components/SelectDataset';
+import SelectDataset from '@components/SelectDataset';
 import { useColorScheme } from '@mui/material/styles';
-import Api from 'renderer/components/Api';
-import AppContext from 'renderer/utils/AppContext';
-import ViewFile from 'renderer/components/ViewDataset';
-import Settings from 'renderer/components/Settings';
-import DefineXml from 'renderer/components/DefineXmlStylesheet';
-import { useAppSelector, useAppDispatch } from 'renderer/redux/hooks';
+import Api from '@components/Api';
+import ViewFile from '@components/ViewDataset';
+import Settings from '@components/Settings';
+import DefineXml from '@components/DefineXmlStylesheet';
+import { useAppSelector, useAppDispatch } from '@redux/hooks';
 import {
     setPathname,
     setZoomLevel,
@@ -14,16 +13,17 @@ import {
     initializeCompare,
     openSnackbar,
     setReloadRequested,
-} from 'renderer/redux/slices/ui';
-import { FileWatcherEvent, NewWindowProps } from 'interfaces/common';
-import Converter from 'renderer/components/Converter';
-import Validator from 'renderer/components/Validator';
-import Compare from 'renderer/components/Compare';
-import About from 'renderer/components/About';
-import Toolpad from 'renderer/components/Toolpad';
-import { paths } from 'misc/constants';
-import { saveStore } from 'renderer/redux/stateUtils';
-import handleOpenDataset from 'renderer/utils/handleOpenDataset';
+} from '@redux/slices/ui';
+import Converter from '@components/Converter';
+import Validator from '@components/Validator';
+import Compare from '@components/Compare';
+import About from '@components/About';
+import Toolpad from '@components/Toolpad';
+import { saveStore } from '@redux/stateUtils';
+import AppContext from '@utils/AppContext';
+import handleOpenDataset from '@utils/handleOpenDataset';
+import { FileWatcherEvent, NewWindowProps } from '@interfaces/common';
+import { paths } from '@/misc/constants';
 
 const renderPage = (
     pathname: string,

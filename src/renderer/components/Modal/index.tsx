@@ -1,21 +1,21 @@
 import React from 'react';
-import { useAppSelector } from 'renderer/redux/hooks';
-import CommandLine from 'renderer/components/Modal/CommandLine';
-import GoTo from 'renderer/components/Modal/GoTo';
-import DatasetInfo from 'renderer/components/Modal/DatasetInfo';
-import Developer from 'renderer/components/Modal/Developer';
-import VariableInfo from 'renderer/components/Modal/VariableInfo';
-import Filter from 'renderer/components/Modal/Filter';
-import AppUpdate from 'renderer/components/Modal/AppUpdate';
-import EditApi from 'renderer/components/Modal/EditApi';
-import ErrorModal from 'renderer/components/Modal/ErrorModal';
-import IdColumns from 'renderer/components/Modal/IdColumns';
-import Mask from 'renderer/components/Modal/Mask';
-import Sorting from 'renderer/components/Modal/Sorting';
-import Validator from 'renderer/components/Modal/Validator';
-import SelectCompare from 'renderer/components/Modal/SelectCompare';
-import { modals as modalNames } from 'misc/constants';
-import { IUiModal } from 'interfaces/store';
+import { useAppSelector } from '@redux/hooks';
+import CommandLine from '@components/Modal/CommandLine';
+import GoTo from '@components/Modal/GoTo';
+import DatasetInfo from '@components/Modal/DatasetInfo';
+import Developer from '@components/Modal/Developer';
+import VariableInfo from '@components/Modal/VariableInfo';
+import Filter from '@components/Modal/Filter';
+import AppUpdate from '@components/Modal/AppUpdate';
+import EditApi from '@components/Modal/EditApi';
+import ErrorModal from '@components/Modal/ErrorModal';
+import IdColumns from '@components/Modal/IdColumns';
+import Mask from '@components/Modal/Mask';
+import Sorting from '@components/Modal/Sorting';
+import Validator from '@components/Modal/Validator';
+import SelectCompare from '@components/Modal/SelectCompare';
+import { modals as modalNames } from '@/misc/constants';
+import { IUiModal } from '@interfaces/store';
 
 const MODAL_COMPONENTS = {
     [modalNames.COMMANDLINE]: CommandLine,

@@ -7,7 +7,7 @@ import {
     ConformanceDetails,
     DatasetDetail,
     DictionaryVersions,
-} from 'interfaces/core.report';
+} from '@interfaces/core.report';
 
 /**
  * Individual error within a rule result

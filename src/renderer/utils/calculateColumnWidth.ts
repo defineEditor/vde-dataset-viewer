@@ -1,7 +1,7 @@
 // Function to calculate column width;
 
-import { IHeaderCell, ITableData } from 'interfaces/table';
-import estimateWidth from 'renderer/utils/estimateWidth';
+import { IHeaderCell, ITableData } from '@interfaces/table';
+import estimateWidth from '@utils/estimateWidth';
 
 const calculateColumnWidth = (
     columns: IHeaderCell[],

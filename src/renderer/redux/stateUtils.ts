@@ -1,7 +1,7 @@
-import initialState, { data, ui, api } from 'renderer/redux/initialState';
-import { IStore, IUi, IApi, IData } from 'interfaces/common';
-import store from 'renderer/redux/store';
-import ApiService from 'renderer/services/ApiService';
+import initialState, { data, ui, api } from '@redux/initialState';
+import { IStore, IUi, IApi, IData } from '@interfaces/common';
+import store from '@redux/store';
+import ApiService from '@services/ApiService';
 
 // In case new state slices are added, the previous state will be merged with the new version to add all required attributes
 const mergeDefaults = (

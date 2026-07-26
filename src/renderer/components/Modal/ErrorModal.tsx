@@ -6,14 +6,14 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
-import { useAppDispatch } from 'renderer/redux/hooks';
+import { useAppDispatch } from '@redux/hooks';
 import {
     closeModal,
     setPathname,
     openSnackbar,
-} from 'renderer/redux/slices/ui';
-import { IUiModalMessage } from 'interfaces/store';
-import { paths } from 'misc/constants';
+} from '@redux/slices/ui';
+import { IUiModalMessage } from '@interfaces/store';
+import { paths } from '@/misc/constants';
 
 const openLink = (event) => {
     event.preventDefault();

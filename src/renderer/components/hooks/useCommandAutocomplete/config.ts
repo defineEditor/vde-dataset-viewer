@@ -2,13 +2,13 @@ import type {
     CommandAutocompleteCategory,
     CommandHelperTextState,
     ResolvedAutocompleteContext,
-} from 'interfaces/common';
-import { getActiveSegment } from 'renderer/components/hooks/useCommandAutocomplete/utils';
+} from '@interfaces/common';
+import { getActiveSegment } from '@components/hooks/useCommandAutocomplete/utils';
 
 const COMMAND_SYNTAX = {
     id: 'id [selectors] - set ID columns',
     idadd: 'idadd|ia [selectors] - add columns to ID columns',
-    idrm: 'idrm|idr [selectors] - remove columns from ID columns',
+    idrm: 'idrm [selectors] - remove columns from ID columns',
     sort: 'sort [selector] [asc|desc] ... - set sorting',
     sortadd: 'sortadd|soa [selector] [asc|desc] ... - add sorting columns',
     sortrm: 'sortrm [selector] ... - remove sorting columns',

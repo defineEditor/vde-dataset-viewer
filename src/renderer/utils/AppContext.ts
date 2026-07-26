@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import ApiService from 'renderer/services/ApiService';
+import ApiService from '@services/ApiService';
 
 export interface IAppContext {
     apiService: ApiService;
