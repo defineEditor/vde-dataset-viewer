@@ -2,6 +2,7 @@ import React from 'react';
 import { useAppSelector } from '@redux/hooks';
 import CommandLine from '@components/Modal/CommandLine';
 import GoTo from '@components/Modal/GoTo';
+import Help from '@components/Modal/Help';
 import DatasetInfo from '@components/Modal/DatasetInfo';
 import Developer from '@components/Modal/Developer';
 import VariableInfo from '@components/Modal/VariableInfo';
@@ -20,6 +21,7 @@ import { IUiModal } from '@interfaces/store';
 const MODAL_COMPONENTS = {
     [modalNames.COMMANDLINE]: CommandLine,
     [modalNames.GOTO]: GoTo,
+    [modalNames.HELP]: Help,
     [modalNames.DATASETINFO]: DatasetInfo,
     [modalNames.FILTER]: Filter,
     [modalNames.APPUPDATE]: AppUpdate,

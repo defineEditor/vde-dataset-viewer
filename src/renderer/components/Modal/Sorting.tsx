@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import {
     Dialog,
-    DialogTitle,
     DialogContent,
     DialogActions,
     Button,
@@ -14,6 +13,7 @@ import {
 } from '@mui/material';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import ModalTitle from '@components/Modal/ModalTitle';
 import AppContext from '@utils/AppContext';
 import { useAppDispatch, useAppSelector } from '@redux/hooks';
 import { closeModal, setDatasetSorting } from '@redux/slices/ui';
@@ -143,7 +143,12 @@ const Sorting: React.FC = () => {
             fullWidth
             slotProps={{ paper: { sx: { ...styles.dialog } } }}
         >
-            <DialogTitle sx={styles.title}>Sorting</DialogTitle>
+            <ModalTitle
+                sx={styles.title}
+                title="Sorting"
+                helpId="SORTING"
+                onClose={handleClose}
+            />
             <DialogContent>
                 <Autocomplete
                     multiple

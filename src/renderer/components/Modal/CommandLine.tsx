@@ -5,13 +5,7 @@ import React, {
     useMemo,
     useState,
 } from 'react';
-import {
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-} from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent } from '@mui/material';
 import AppContext from '@utils/AppContext';
 import { useAppDispatch, useAppSelector } from '@redux/hooks';
 import {
@@ -22,16 +16,13 @@ import {
     setMask,
     setGoTo,
 } from '@redux/slices/ui';
-import {
-    addRecentCommand,
-    resetFilter,
-    setFilter,
-} from '@redux/slices/data';
+import { addRecentCommand, resetFilter, setFilter } from '@redux/slices/data';
 import { IMask, IUiModal } from '@interfaces/common';
 import { modals } from '@/misc/constants';
 import { parseDatasetCommand } from '@utils/commandLine';
 import { getCommandHelperText } from '@components/hooks/useCommandAutocomplete';
 import CommandAutocompleteInput from '@components/Common/CommandAutocompleteInput';
+import ModalTitle from '@components/Modal/ModalTitle';
 import getColumnTypes from '@utils/getColumnTypes';
 
 const styles = {
@@ -265,7 +256,12 @@ const CommandLine: React.FC<IUiModal> = () => {
             fullWidth
             slotProps={{ paper: { sx: { ...styles.dialog } } }}
         >
-            <DialogTitle sx={styles.title}>Command Line</DialogTitle>
+            <ModalTitle
+                sx={styles.title}
+                title="Command Line"
+                helpId="COMMANDLINE"
+                onClose={handleClose}
+            />
             <DialogContent>
                 <CommandAutocompleteInput
                     value={command}

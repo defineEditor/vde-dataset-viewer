@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useCallback, useState } from 'react';
 import {
     Dialog,
-    DialogTitle,
     DialogContent,
     DialogActions,
     Button,
@@ -24,6 +23,7 @@ import {
 } from '@mui/material';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
+import ModalTitle from '@components/Modal/ModalTitle';
 import { useAppDispatch, useAppSelector } from '@redux/hooks';
 import {
     closeModal,
@@ -211,9 +211,12 @@ const SelectCompare: React.FC = () => {
             fullWidth
             slotProps={{ paper: { sx: { ...styles.dialog } } }}
         >
-            <DialogTitle sx={styles.title}>
-                Select Files for Comparison
-            </DialogTitle>
+            <ModalTitle
+                sx={styles.title}
+                title="Select Files for Comparison"
+                helpId="SELECTCOMPARE"
+                onClose={handleClose}
+            />
             <DialogContent>
                 <Stack sx={styles.input}>
                     <Stack direction="row">

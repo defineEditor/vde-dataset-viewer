@@ -10,3 +10,4 @@ export * from '@interfaces/defineXml';
 export * from '@interfaces/useCommandAutocomplete';
 export * from '@interfaces/theme';
 export { ModalType, AllowedPathnames } from '@/misc/constants';
+export { HelpModalId } from '@/misc/help';

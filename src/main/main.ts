@@ -1,4 +1,5 @@
 /* eslint global-require: off, no-console: off, promise/always-return: off */
+import url from 'node:url';
 import path from 'path';
 import {
     app,
@@ -6,6 +7,8 @@ import {
     shell,
     ipcMain,
     IpcMainInvokeEvent,
+    protocol,
+    net,
 } from 'electron';
 import {
     installExtension,
@@ -101,6 +104,23 @@ if (isDebug) {
     sourceMapSupport.install();
 }
 
+protocol.registerSchemesAsPrivileged([
+    {
+        scheme: 'media',
+        privileges: {
+            standard: true,
+            secure: true,
+            supportFetchAPI: true,
+            stream: true,
+            bypassCSP: true,
+        },
+    },
+]);
+
+const RESOURCES_PATH = app.isPackaged
+    ? path.join(process.resourcesPath, 'assets')
+    : path.join(__dirname, '../../assets');
+
 app.whenReady()
     .then(async () => {
         if (isDebug) {
@@ -124,10 +144,6 @@ const createWindow = async (
     position?: 'top' | 'bottom' | 'left' | 'right',
     props?: NewWindowProps,
 ): Promise<BrowserWindow | null> => {
-    const RESOURCES_PATH = app.isPackaged
-        ? path.join(process.resourcesPath, 'assets')
-        : path.join(__dirname, '../../assets');
-
     const getAssetPath = (...paths: string[]): string => {
         return path.join(RESOURCES_PATH, ...paths);
     };
@@ -263,6 +279,7 @@ app.on('window-all-closed', () => {
 
 app.whenReady()
     .then(async () => {
+        // Event handlers
         const fileManager = new FileManager();
         const storeManager = new StoreManager();
         const netManager = new NetManager();
@@ -400,6 +417,32 @@ app.whenReady()
             const developerInfo = await getDeveloperInfo(fileManager);
             return developerInfo;
         });
+
+        protocol.handle('media', (request) => {
+            // Extract file path from URL (e.g., media:///C:/path/to/video.mp4)
+            // Strip scheme prefix 'media://' or 'media:///'
+            const filePath = decodeURIComponent(
+                request.url.replace(/^media:\/\/\/?/, ''),
+            );
+
+            // Resolve absolute path and convert to file:// URL for net.fetch
+            const fileUrl = `file://${path.join(RESOURCES_PATH, filePath)}`;
+
+            const targetUrl = url.pathToFileURL(
+                `${path.join(RESOURCES_PATH, filePath)}`,
+            ).href;
+            if (targetUrl !== fileUrl) {
+                console.warn(
+                    `Resolved file URL (${fileUrl}) does not match target URL (${targetUrl}).`,
+                );
+            }
+            // net.fetch automatically supports byte-range requests for HTML5 video
+            return net.fetch(fileUrl, {
+                bypassCustomProtocolHandlers: true,
+            });
+        });
+
+        // Create the main window
         mainWindow = await createWindow(
             fileToOpen,
             undefined,

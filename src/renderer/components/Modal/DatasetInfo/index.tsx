@@ -5,16 +5,12 @@ import React, {
     useContext,
     useRef,
 } from 'react';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
 import { useAppDispatch, useAppSelector } from '@redux/hooks';
-import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import AppContext from '@utils/AppContext';
-import { IUiModal } from '@interfaces/common';
-import MetadataInfo from '@components/Modal/DatasetInfo/MetadataInfo';
-import ColumnsInfo from '@components/Modal/DatasetInfo/ColumnsInfo';
 import {
     Tabs,
     Tab,
@@ -26,6 +22,11 @@ import {
 } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
+import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
+import AppContext from '@utils/AppContext';
+import { IUiModal } from '@interfaces/common';
+import MetadataInfo from '@components/Modal/DatasetInfo/MetadataInfo';
+import ColumnsInfo from '@components/Modal/DatasetInfo/ColumnsInfo';
 import { closeModal, setDatasetInfoTab } from '@redux/slices/ui';
 
 const styles = {
@@ -80,6 +81,9 @@ const styles = {
         '&::placeholder': {
             color: 'rgba(255, 255, 255, 0.7)',
         },
+    },
+    closeButton: {
+        color: 'inherit',
     },
     searchIcon: { color: 'white' },
 };
@@ -139,28 +143,39 @@ const DatasetInfo: React.FC<IUiModal> = (props: IUiModal) => {
                     <Typography variant="h6" sx={styles.label}>
                         Dataset Information
                     </Typography>
-                    {datasetInfoTab === 1 && (
-                        <TextField
-                            placeholder="Ctrl + F to search"
-                            size="small"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            variant="outlined"
-                            inputRef={searchInputRef}
-                            slotProps={{
-                                input: {
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <SearchIcon
-                                                sx={styles.searchIcon}
-                                            />
-                                        </InputAdornment>
-                                    ),
-                                    sx: styles.searchInput,
-                                },
-                            }}
-                        />
-                    )}
+                    <Stack direction="row" spacing={1}>
+                        {datasetInfoTab === 1 && (
+                            <TextField
+                                placeholder="Ctrl + F to search"
+                                size="small"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                variant="outlined"
+                                inputRef={searchInputRef}
+                                slotProps={{
+                                    input: {
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <SearchIcon
+                                                    sx={styles.searchIcon}
+                                                />
+                                            </InputAdornment>
+                                        ),
+                                        sx: styles.searchInput,
+                                    },
+                                }}
+                            />
+                        )}
+                        <Tooltip title="Close">
+                            <IconButton
+                                aria-label="Close"
+                                onClick={handleClose}
+                                sx={styles.closeButton}
+                            >
+                                <CloseOutlinedIcon />
+                            </IconButton>
+                        </Tooltip>
+                    </Stack>
                 </Stack>
             </DialogTitle>
             <DialogContent sx={styles.content}>
@@ -189,11 +204,6 @@ const DatasetInfo: React.FC<IUiModal> = (props: IUiModal) => {
                     )}
                 </Box>
             </DialogContent>
-            <DialogActions sx={styles.actions}>
-                <Button onClick={handleClose} color="primary">
-                    Close
-                </Button>
-            </DialogActions>
         </Dialog>
     );
 };
