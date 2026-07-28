@@ -3,7 +3,7 @@ export interface HelpContentEntry {
     content: string;
 }
 
-export const HELP_CONTENT: Record<string, HelpContentEntry> = {
+export const HELP_CONTENT = {
     COMMANDLINE: {
         title: 'Command Line',
         content: `
@@ -149,7 +149,7 @@ Sorting is applied only to the currently shown page of data.
         title: 'Go To',
         content: `
 #### About
-Go to to a specific row, column, or cell in the current dataset.
+Go to a specific row, column, or cell in the current dataset.
 
 
 #### Supported Inputs
@@ -213,6 +213,6 @@ Data Validation runs the configured validator against the current dataset and le
 Validation is initiated in the background. You can continue working while the validation is running.
         `.trim(),
     },
-};
+} satisfies Record<string, HelpContentEntry>;
 
 export type HelpModalId = keyof typeof HELP_CONTENT;

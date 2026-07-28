@@ -1,5 +1,4 @@
 /* eslint global-require: off, no-console: off, promise/always-return: off */
-import url from 'node:url';
 import path from 'path';
 import {
     app,
@@ -112,14 +111,13 @@ protocol.registerSchemesAsPrivileged([
             secure: true,
             supportFetchAPI: true,
             stream: true,
-            bypassCSP: true,
         },
     },
 ]);
 
 const RESOURCES_PATH = app.isPackaged
     ? path.join(process.resourcesPath, 'assets')
-    : path.join(__dirname, '../../assets');
+    : path.join(__dirname, path.normalize('../../assets'));
 
 app.whenReady()
     .then(async () => {
@@ -421,25 +419,27 @@ app.whenReady()
         protocol.handle('media', (request) => {
             // Extract file path from URL (e.g., media:///C:/path/to/video.mp4)
             // Strip scheme prefix 'media://' or 'media:///'
-            const filePath = decodeURIComponent(
-                request.url.replace(/^media:\/\/\/?/, ''),
+            const filePath = path.resolve(
+                path.join(
+                    RESOURCES_PATH,
+                    path.normalize(
+                        decodeURIComponent(
+                            request.url.replace(/^media:\/\/\/?/, ''),
+                        ),
+                    ),
+                ),
             );
 
-            // Resolve absolute path and convert to file:// URL for net.fetch
-            const fileUrl = `file://${path.join(RESOURCES_PATH, filePath)}`;
+            if (filePath.startsWith(RESOURCES_PATH)) {
+                // Resolve absolute path and convert to file:// URL for net.fetch
+                const fileUrl = `file://${filePath}`;
 
-            const targetUrl = url.pathToFileURL(
-                `${path.join(RESOURCES_PATH, filePath)}`,
-            ).href;
-            if (targetUrl !== fileUrl) {
-                console.warn(
-                    `Resolved file URL (${fileUrl}) does not match target URL (${targetUrl}).`,
-                );
+                // net.fetch automatically supports byte-range requests for HTML5 video
+                return net.fetch(fileUrl);
             }
-            // net.fetch automatically supports byte-range requests for HTML5 video
-            return net.fetch(fileUrl, {
-                bypassCustomProtocolHandlers: true,
-            });
+
+            // If the file path is outside the allowed directory, return a 403 response
+            return new Response('Incorrect path', { status: 403 });
         });
 
         // Create the main window

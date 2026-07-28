@@ -30,7 +30,7 @@ const styles = {
 interface ModalTitleProps extends DialogTitleProps {
     title: string;
     onClose: () => void;
-    helpId?: HelpModalId;
+    helpId?: HelpModalId | null;
 }
 
 const ModalTitle: React.FC<ModalTitleProps> = ({

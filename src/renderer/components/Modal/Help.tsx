@@ -55,6 +55,7 @@ const styles = {
     },
     media: {
         width: '100%',
+        maxWidth: 'fit-content',
         borderRadius: 1,
         border: '1px solid',
         borderColor: 'divider',
