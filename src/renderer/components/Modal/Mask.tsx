@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import {
     Dialog,
-    DialogTitle,
     DialogContent,
     DialogActions,
     Button,
@@ -25,6 +24,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
+import ModalTitle from '@components/Modal/ModalTitle';
 import AppContext from '@utils/AppContext';
 import { useAppDispatch, useAppSelector } from '@redux/hooks';
 import { IMask } from '@interfaces/store';
@@ -251,7 +251,12 @@ const Mask: React.FC = () => {
             fullWidth
             slotProps={{ paper: { sx: { ...styles.dialog } } }}
         >
-            <DialogTitle sx={styles.title}>Column Visibility</DialogTitle>
+            <ModalTitle
+                sx={styles.title}
+                title="Column Visibility"
+                helpId="MASK"
+                onClose={handleClose}
+            />
             <DialogContent>
                 <Box>
                     <Box sx={styles.options}>

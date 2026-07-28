@@ -6,6 +6,8 @@ import {
     shell,
     ipcMain,
     IpcMainInvokeEvent,
+    protocol,
+    net,
 } from 'electron';
 import {
     installExtension,
@@ -101,6 +103,22 @@ if (isDebug) {
     sourceMapSupport.install();
 }
 
+protocol.registerSchemesAsPrivileged([
+    {
+        scheme: 'media',
+        privileges: {
+            standard: true,
+            secure: true,
+            supportFetchAPI: true,
+            stream: true,
+        },
+    },
+]);
+
+const RESOURCES_PATH = app.isPackaged
+    ? path.join(process.resourcesPath, 'assets')
+    : path.join(__dirname, path.normalize('../../assets'));
+
 app.whenReady()
     .then(async () => {
         if (isDebug) {
@@ -124,10 +142,6 @@ const createWindow = async (
     position?: 'top' | 'bottom' | 'left' | 'right',
     props?: NewWindowProps,
 ): Promise<BrowserWindow | null> => {
-    const RESOURCES_PATH = app.isPackaged
-        ? path.join(process.resourcesPath, 'assets')
-        : path.join(__dirname, '../../assets');
-
     const getAssetPath = (...paths: string[]): string => {
         return path.join(RESOURCES_PATH, ...paths);
     };
@@ -263,6 +277,7 @@ app.on('window-all-closed', () => {
 
 app.whenReady()
     .then(async () => {
+        // Event handlers
         const fileManager = new FileManager();
         const storeManager = new StoreManager();
         const netManager = new NetManager();
@@ -400,6 +415,34 @@ app.whenReady()
             const developerInfo = await getDeveloperInfo(fileManager);
             return developerInfo;
         });
+
+        protocol.handle('media', (request) => {
+            // Extract file path from URL (e.g., media:///C:/path/to/video.mp4)
+            // Strip scheme prefix 'media://' or 'media:///'
+            const filePath = path.resolve(
+                path.join(
+                    RESOURCES_PATH,
+                    path.normalize(
+                        decodeURIComponent(
+                            request.url.replace(/^media:\/\/\/?/, ''),
+                        ),
+                    ),
+                ),
+            );
+
+            if (filePath.startsWith(RESOURCES_PATH)) {
+                // Resolve absolute path and convert to file:// URL for net.fetch
+                const fileUrl = `file://${filePath}`;
+
+                // net.fetch automatically supports byte-range requests for HTML5 video
+                return net.fetch(fileUrl);
+            }
+
+            // If the file path is outside the allowed directory, return a 403 response
+            return new Response('Incorrect path', { status: 403 });
+        });
+
+        // Create the main window
         mainWindow = await createWindow(
             fileToOpen,
             undefined,

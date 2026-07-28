@@ -14,6 +14,7 @@ import { ParsedValidationReport } from '@interfaces/core.report';
 import { modals, ModalType, AllowedPathnames } from '@/misc/constants';
 import { ConversionConfig } from '@interfaces/converter';
 import { ThemeModePreference, ThemePalette } from '@interfaces/theme';
+import { HelpModalId } from '@/misc/help';
 
 export interface IMask {
     name: string;
@@ -92,8 +93,6 @@ export interface IUiModalGeneral extends IUiModalBase {
         | typeof modals.COMMANDLINE
         | typeof modals.GOTO
         | typeof modals.DATASETINFO
-        | typeof modals.FILTER
-        | typeof modals.VARIABLEINFO
         | typeof modals.MASK
         | typeof modals.SORTING
         | typeof modals.IDCOLUMNS
@@ -101,6 +100,13 @@ export interface IUiModalGeneral extends IUiModalBase {
         | typeof modals.SELECTCOMPARE
         | typeof modals.DEVELOPER;
     data: {};
+}
+
+export interface IUiModalHelp extends IUiModalBase {
+    type: typeof modals.HELP;
+    data: {
+        helpId: HelpModalId;
+    };
 }
 
 export interface IUiModalEditApi extends IUiModalBase {
@@ -131,6 +137,7 @@ export interface IUiModalFilter extends IUiModalBase {
 export type IUiModal =
     | IUiModalAppUpdate
     | IUiModalFilter
+    | IUiModalHelp
     | IUiModalVariableInfo
     | IUiModalGeneral
     | IUiModalEditApi

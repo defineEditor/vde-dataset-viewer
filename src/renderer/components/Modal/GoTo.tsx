@@ -5,13 +5,13 @@ import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
 import AppContext from '@utils/AppContext';
 import Autocomplete, {
     AutocompleteChangeReason,
 } from '@mui/material/Autocomplete';
 import { closeModal, setGoTo } from '@redux/slices/ui';
 import { IUiModal } from '@interfaces/common';
+import ModalTitle from '@components/Modal/ModalTitle';
 
 const styles = {
     dialog: {
@@ -171,7 +171,12 @@ const GoTo: React.FC<IUiModal> = (props: IUiModal) => {
             onClose={handleClose}
             slotProps={{ paper: { sx: { ...styles.dialog } } }}
         >
-            <DialogTitle sx={styles.title}>Go To</DialogTitle>
+            <ModalTitle
+                sx={styles.title}
+                title="Go To"
+                helpId="GOTO"
+                onClose={handleClose}
+            />
             <DialogContent>
                 <Autocomplete
                     freeSolo

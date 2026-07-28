@@ -1,10 +1,8 @@
 import React, { useCallback, useEffect, useContext, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '@redux/hooks';
-import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
+import ModalTitle from '@components/Modal/ModalTitle';
 import DatasetView from '@components/DatasetView';
 import AppContext from '@utils/AppContext';
 import {
@@ -13,7 +11,6 @@ import {
     IUiModal,
     ITableRow,
 } from '@interfaces/common';
-import { Stack, Typography } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import { closeModal, openSnackbar } from '@redux/slices/ui';
 import ApiService from '@services/ApiService';
@@ -184,13 +181,11 @@ const Developer: React.FC<IUiModal> = (props: IUiModal) => {
             onClose={handleClose}
             slotProps={{ paper: { sx: { ...styles.dialog } } }}
         >
-            <DialogTitle sx={styles.title}>
-                <Stack direction="row" sx={styles.titleStack}>
-                    <Typography variant="h6" sx={styles.label}>
-                        Developer Information
-                    </Typography>
-                </Stack>
-            </DialogTitle>
+            <ModalTitle
+                sx={styles.title}
+                onClose={handleClose}
+                title="Developer Information"
+            />
             <DialogContent sx={styles.content} ref={containerRef}>
                 {developerData && (
                     <DatasetView
@@ -202,11 +197,6 @@ const Developer: React.FC<IUiModal> = (props: IUiModal) => {
                     />
                 )}
             </DialogContent>
-            <DialogActions sx={styles.actions}>
-                <Button onClick={handleClose} color="primary">
-                    Close
-                </Button>
-            </DialogActions>
         </Dialog>
     );
 };

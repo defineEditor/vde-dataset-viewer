@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import {
     Dialog,
-    DialogTitle,
     DialogContent,
     DialogActions,
     Button,
@@ -23,13 +22,11 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
+import ModalTitle from '@components/Modal/ModalTitle';
 import AppContext from '@utils/AppContext';
 import { useAppDispatch, useAppSelector } from '@redux/hooks';
 import { closeModal, setDatasetIdColumns } from '@redux/slices/ui';
-import {
-    saveIdColumnSet,
-    deleteIdColumnSet,
-} from '@redux/slices/data';
+import { saveIdColumnSet, deleteIdColumnSet } from '@redux/slices/data';
 import { IIdColumnSet } from '@interfaces/store';
 import { modals } from '@/misc/constants';
 
@@ -260,7 +257,12 @@ const IdColumns: React.FC = () => {
             fullWidth
             slotProps={{ paper: { sx: { ...styles.dialog } } }}
         >
-            <DialogTitle sx={styles.title}>ID Columns</DialogTitle>
+            <ModalTitle
+                sx={styles.title}
+                title="ID Columns"
+                helpId="IDCOLUMNS"
+                onClose={handleClose}
+            />
             <DialogContent>
                 <Box>
                     <Autocomplete

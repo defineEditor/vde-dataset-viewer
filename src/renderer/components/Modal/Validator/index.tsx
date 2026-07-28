@@ -14,13 +14,13 @@ import {
     Button,
     DialogActions,
     DialogContent,
-    DialogTitle,
     Stack,
 } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import Configuration from '@components/Modal/Validator/Configuration';
 import Issues from '@components/Modal/Validator/Issues';
 import Results from '@components/Common/ValidationResults';
+import ModalTitle from '@components/Modal/ModalTitle';
 import AppContext from '@utils/AppContext';
 import {
     InputFileExtension,
@@ -284,17 +284,12 @@ const Validator: React.FC<IUiModal> = (props: IUiModal) => {
             onClose={handleClose}
             slotProps={{ paper: { sx: styles.dialog } }}
         >
-            <DialogTitle sx={styles.title}>
-                <Box
-                    sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                    }}
-                >
-                    <div>Data Validation</div>
-                </Box>
-            </DialogTitle>
+            <ModalTitle
+                sx={styles.title}
+                title="Data Validation"
+                helpId="VALIDATOR"
+                onClose={handleClose}
+            />
             <DialogContent sx={styles.content}>
                 <Tabs
                     value={validatorTab}

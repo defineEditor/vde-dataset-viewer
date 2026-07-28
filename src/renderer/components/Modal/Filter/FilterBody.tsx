@@ -11,7 +11,6 @@ import Dialog from '@mui/material/Dialog';
 import Box from '@mui/material/Box';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
@@ -57,6 +56,7 @@ import { getHeader } from '@utils/readData';
 import { handleTransformation } from '@utils/transformUtils';
 import { formatFilterValueOption } from '@components/hooks/useCommandAutocomplete/utils';
 import getColumnTypes from '@utils/getColumnTypes';
+import ModalTitle from '@components/Modal/ModalTitle';
 
 const styles = {
     dialog: {
@@ -761,7 +761,12 @@ const FilterBody: React.FC<FilterBodyProps> = ({
             onClose={handleClose}
             slotProps={{ paper: { sx: { ...styles.dialog } } }}
         >
-            <DialogTitle sx={styles.title}>Filter Data</DialogTitle>
+            <ModalTitle
+                sx={styles.title}
+                title="Filter Data"
+                helpId="FILTER"
+                onClose={handleClose}
+            />
             <DialogContent>
                 <Stack spacing={2} direction="column">
                     <Stack spacing={2} direction="row">
