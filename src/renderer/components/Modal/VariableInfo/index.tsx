@@ -230,7 +230,7 @@ const VariableInfo: React.FC<IUiModalVariableInfo> = ({
                 <Stack direction="row" spacing={2}>
                     <Stack direction="column" sx={styles.properties}>
                         <Typography variant="h6" sx={styles.sectionTitle}>
-                            Variable Properties
+                            Column Properties
                         </Typography>
                         <List>
                             {variableAttributes

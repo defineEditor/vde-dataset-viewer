@@ -56,7 +56,7 @@ Allows to filter data based on column values, and supports both interactive and 
 #### Input Modes
 - **Interactive** mode builds filters condition by condition.
 - **Manual** mode lets you write the full expression yourself. Supports autocompletion.
-- Switching from manual to interactive requires a valid filter expression.
+- Switching between different modes requires a valid filter expression.
 
 #### Available Operations [Column Types]
 - Equal (=) [**String, Numeric, Boolean**]
@@ -85,7 +85,7 @@ Allows to filter data based on column values, and supports both interactive and 
 
 #### Manual Mode Notes
 - String and regex values must be quoted.
-- Column-to-column comparisons use the other column name as the value.
+- Column-to-column comparisons use the other column name as the value (tagged with 'col').
 - Combine conditions with **and** and **or**.
 - Use parentheses to control evaluation order.
 
@@ -181,9 +181,11 @@ This modal starts a dataset-to-dataset comparison by selecting the base file and
 - **Ignore White Spaces** ignores leading and trailing spaces during comparison.
 - **Case Insensitive** ignores value letter case during comparison.
 - **Recent Compares** shows the history of comparisons.
+- Use Ctrl+<X> to select previously compared files.
 
 #### Additional Notes
 Compare is initiated in the background. You can continue working while the comparison is running.
+Once the comparison is complete, you will be notified and the result will be available in **Compare** section.
 
         `.trim(),
     },
