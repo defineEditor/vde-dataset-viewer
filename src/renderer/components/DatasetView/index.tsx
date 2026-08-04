@@ -26,6 +26,7 @@ import {
     TableSettings,
     IUiControl,
     TableRowValue,
+    ItemDescription,
 } from '@interfaces/common';
 import { useAppTheme } from '@renderer/theme';
 import { useAppDispatch, useAppSelector } from '@redux/hooks';
@@ -148,12 +149,13 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     );
 
     const columns = useMemo<ColumnDef<ITableRow>[]>(() => {
+        const metadataByName: Record<string, ItemDescription> = {};
+        tableData.metadata.columns.forEach((metadata) => {
+            metadataByName[metadata.name.toLowerCase()] = metadata;
+        });
         const result = tableData.header.map((column) => {
             // Find variable metadata for the column
-            const columnMetadata = tableData.metadata.columns.find(
-                (metadata) =>
-                    metadata.name.toLowerCase() === column.id.toLowerCase(),
-            );
+            const columnMetadata = metadataByName[column.id.toLowerCase()];
             const columnInfo = {
                 name: columnMetadata?.name || column.id,
                 label: columnMetadata?.label,
@@ -236,7 +238,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         return result;
     }, [
         tableData.header,
-        tableData.metadata,
+        tableData.metadata.columns,
         settings,
         reduxShowLabels,
         theme.densitySettings.table.rowNumberWidth,

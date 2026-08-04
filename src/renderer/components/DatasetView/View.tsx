@@ -346,12 +346,16 @@ const DatasetHeaderCell: React.FC<{
                             <Box>
                                 {`Name: ${header.column.columnDef.meta?.info?.name}`}
                             </Box>
-                            <Box>
-                                {`Label: ${header.column.columnDef.meta?.info?.label}`}
-                            </Box>
-                            <Box>
-                                {`Type: ${header.column.columnDef.meta?.info?.dataType}`}
-                            </Box>
+                            {header.column.columnDef.meta?.info?.label && (
+                                <Box>
+                                    {`Label: ${header.column.columnDef.meta?.info?.label}`}
+                                </Box>
+                            )}
+                            {header.column.columnDef.meta?.info?.dataType && (
+                                <Box>
+                                    {`Type: ${header.column.columnDef.meta?.info?.dataType}`}
+                                </Box>
+                            )}
                             {header.column.columnDef.meta?.info?.length && (
                                 <Box>
                                     {`Length: ${header.column.columnDef.meta?.info?.length}`}
