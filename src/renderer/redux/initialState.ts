@@ -24,6 +24,7 @@ export const settings: ISettings = {
         showTypeIcons: false,
         copyWithHeaders: false,
         showLabels: false,
+        showColumnTooltips: true,
         debug: false,
         autoReload: false,
     },

@@ -30,6 +30,7 @@ const ReportDatasetContainer: React.FC<{
         dynamicRowHeight: true,
         hideRowNumbers: false,
         showLabels: true,
+        showColumnTooltips: false,
     };
 
     // Measure width of the table

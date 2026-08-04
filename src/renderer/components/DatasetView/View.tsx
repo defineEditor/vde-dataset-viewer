@@ -98,6 +98,12 @@ const styles = {
     virtualPadding: {
         display: 'flex',
     },
+    tableHeaderContainer: {
+        display: 'flex',
+        width: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     tableHeaderCell: (theme) => ({
         padding: 0,
         fontFamily: 'Roboto Mono',
@@ -332,72 +338,114 @@ const DatasetHeaderCell: React.FC<{
                     </IconButton>
                 </Tooltip>
             ) : (
-                <>
-                    {settings.disableSorting ? (
-                        <Stack sx={styles.tableHeaderLabel} direction="row">
-                            <Box sx={styles.tableHeaderText}>
-                                {flexRender(
-                                    header.column.columnDef.header,
-                                    header.getContext(),
-                                )}
+                <Tooltip
+                    disableFocusListener={!settings.showColumnTooltips}
+                    disableHoverListener={!settings.showColumnTooltips}
+                    title={
+                        <Stack>
+                            <Box>
+                                {`Name: ${header.column.columnDef.meta?.info?.name}`}
                             </Box>
-                            {settings.showTypeIcons &&
-                                getTypeIcon(header.column.columnDef.meta?.type)}
-                            {filteredColumns.includes(header.id) && (
-                                <FilterIcon sx={styles.filterIcon} />
+                            {header.column.columnDef.meta?.info?.label && (
+                                <Box>
+                                    {`Label: ${header.column.columnDef.meta?.info?.label}`}
+                                </Box>
+                            )}
+                            {header.column.columnDef.meta?.info?.dataType && (
+                                <Box>
+                                    {`Type: ${header.column.columnDef.meta?.info?.dataType}`}
+                                </Box>
+                            )}
+                            {header.column.columnDef.meta?.info?.length && (
+                                <Box>
+                                    {`Length: ${header.column.columnDef.meta?.info?.length}`}
+                                </Box>
+                            )}
+                            {header.column.columnDef.meta?.info
+                                ?.displayFormat && (
+                                <Box>
+                                    {`Display Format: ${header.column.columnDef.meta?.info?.displayFormat}`}
+                                </Box>
                             )}
                         </Stack>
-                    ) : (
-                        <TableSortLabel
-                            onClick={() => {
-                                onSortingChange([
-                                    {
-                                        id: header.id,
-                                        desc: isSorted ? !isSorted.desc : false,
-                                    },
-                                ]);
-                            }}
-                            onMouseDown={(event: React.MouseEvent) => {
-                                if (event.button === 0) {
-                                    handleMouseDown(null, header.id);
-                                }
-                            }}
-                            onMouseOver={() => handleMouseOver(null, header.id)}
-                            active={!!isSorted}
-                            direction={isSorted?.desc ? 'desc' : 'asc'}
-                            sx={styles.tableHeaderLabel}
-                        >
-                            <Box sx={styles.tableHeaderText}>
-                                {flexRender(
-                                    header.column.columnDef.header,
-                                    header.getContext(),
+                    }
+                    enterDelay={1000}
+                >
+                    <Box sx={styles.tableHeaderContainer}>
+                        {settings.disableSorting ? (
+                            <Stack sx={styles.tableHeaderLabel} direction="row">
+                                <Box sx={styles.tableHeaderText}>
+                                    {flexRender(
+                                        header.column.columnDef.header,
+                                        header.getContext(),
+                                    )}
+                                </Box>
+                                {settings.showTypeIcons &&
+                                    getTypeIcon(
+                                        header.column.columnDef.meta?.type,
+                                    )}
+                                {filteredColumns.includes(header.id) && (
+                                    <FilterIcon sx={styles.filterIcon} />
                                 )}
-                            </Box>
-                            {settings.showTypeIcons &&
-                                getTypeIcon(header.column.columnDef.meta?.type)}
-                            {filteredColumns.includes(header.id) && (
-                                <FilterIcon sx={styles.filterIcon} />
-                            )}
-                        </TableSortLabel>
-                    )}
-                    <Box
-                        sx={styles.resizer}
-                        {...{
-                            onDoubleClick: () => header.column.resetSize(),
-                            onMouseDown: header.getResizeHandler(),
-                            onMouseUp: () => handleResizeEnd(),
-                            onTouchStart: header.getResizeHandler(),
-                            className: `resizer ${
-                                table.options.columnResizeDirection
-                            }`,
-                            style: {
-                                transform: header.column.getIsResizing()
-                                    ? `translateX(${(table.options.columnResizeDirection === 'rtl' ? -1 : 1) * (table.getState().columnSizingInfo.deltaOffset ?? 0)}px)`
-                                    : '',
-                            },
-                        }}
-                    />
-                </>
+                            </Stack>
+                        ) : (
+                            <TableSortLabel
+                                onClick={() => {
+                                    onSortingChange([
+                                        {
+                                            id: header.id,
+                                            desc: isSorted
+                                                ? !isSorted.desc
+                                                : false,
+                                        },
+                                    ]);
+                                }}
+                                onMouseDown={(event: React.MouseEvent) => {
+                                    if (event.button === 0) {
+                                        handleMouseDown(null, header.id);
+                                    }
+                                }}
+                                onMouseOver={() =>
+                                    handleMouseOver(null, header.id)
+                                }
+                                active={!!isSorted}
+                                direction={isSorted?.desc ? 'desc' : 'asc'}
+                                sx={styles.tableHeaderLabel}
+                            >
+                                <Box sx={styles.tableHeaderText}>
+                                    {flexRender(
+                                        header.column.columnDef.header,
+                                        header.getContext(),
+                                    )}
+                                </Box>
+                                {settings.showTypeIcons &&
+                                    getTypeIcon(
+                                        header.column.columnDef.meta?.type,
+                                    )}
+                                {filteredColumns.includes(header.id) && (
+                                    <FilterIcon sx={styles.filterIcon} />
+                                )}
+                            </TableSortLabel>
+                        )}
+                        <Box
+                            sx={styles.resizer}
+                            {...{
+                                onDoubleClick: () => header.column.resetSize(),
+                                onMouseDown: header.getResizeHandler(),
+                                onMouseUp: () => handleResizeEnd(),
+                                onTouchStart: header.getResizeHandler(),
+                                className: `resizer ${
+                                    table.options.columnResizeDirection
+                                }`,
+                                style: {
+                                    transform: header.column.getIsResizing()
+                                        ? `translateX(${(table.options.columnResizeDirection === 'rtl' ? -1 : 1) * (table.getState().columnSizingInfo.deltaOffset ?? 0)}px)`
+                                        : '',
+                                },
+                            }}
+                        />
+                    </Box>
+                </Tooltip>
             )}
         </TableCell>
     );

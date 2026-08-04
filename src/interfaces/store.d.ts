@@ -48,6 +48,7 @@ export interface SettingsViewer {
     showTypeIcons: boolean;
     copyWithHeaders: boolean;
     showLabels: boolean;
+    showColumnTooltips: boolean;
     debug: boolean;
     autoReload: boolean;
 }

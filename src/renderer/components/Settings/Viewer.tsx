@@ -235,6 +235,22 @@ export const Viewer: React.FC<ViewerProps> = ({
             <FormControlLabel
                 control={
                     <Checkbox
+                        checked={settings.viewer.showColumnTooltips}
+                        onChange={onSettingChange}
+                        name="viewer.showColumnTooltips"
+                    />
+                }
+                label="Show Column Tooltips"
+            />
+            <Typography variant="caption" sx={styles.helperText}>
+                When enabled, column tooltips are shown when hovering over
+                column headers, displaying basic column information
+            </Typography>
+        </Stack>
+        <Stack spacing={0}>
+            <FormControlLabel
+                control={
+                    <Checkbox
                         checked={settings.viewer.copyWithHeaders}
                         onChange={onSettingChange}
                         name="viewer.copyWithHeaders"

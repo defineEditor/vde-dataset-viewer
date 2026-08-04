@@ -26,6 +26,7 @@ import {
     TableSettings,
     IUiControl,
     TableRowValue,
+    ItemDescription,
 } from '@interfaces/common';
 import { useAppTheme } from '@renderer/theme';
 import { useAppDispatch, useAppSelector } from '@redux/hooks';
@@ -47,6 +48,13 @@ declare module '@tanstack/table-core' {
         type?: ItemType | 'rowNumber';
         align?: 'right' | 'left' | 'center' | 'justify';
         style?: React.CSSProperties;
+        info?: {
+            name: string;
+            label?: string;
+            length?: number;
+            displayFormat?: string;
+            dataType?: string;
+        };
     }
 }
 
@@ -141,7 +149,20 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     );
 
     const columns = useMemo<ColumnDef<ITableRow>[]>(() => {
+        const metadataByName: Record<string, ItemDescription> = {};
+        tableData.metadata.columns.forEach((metadata) => {
+            metadataByName[metadata.name.toLowerCase()] = metadata;
+        });
         const result = tableData.header.map((column) => {
+            // Find variable metadata for the column
+            const columnMetadata = metadataByName[column.id.toLowerCase()];
+            const columnInfo = {
+                name: columnMetadata?.name || column.id,
+                label: columnMetadata?.label,
+                length: columnMetadata?.length,
+                displayFormat: columnMetadata?.displayFormat,
+                dataType: columnMetadata?.dataType,
+            };
             const headerCell: {
                 accessorKey: string;
                 header: string;
@@ -151,6 +172,13 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                     type?: ItemType | 'rowNumber';
                     align?: 'right' | 'left' | 'center' | 'justify';
                     style?: React.CSSProperties;
+                    info?: {
+                        name: string;
+                        label?: string;
+                        length?: number;
+                        displayFormat?: string;
+                        dataType?: string;
+                    };
                 };
                 cell?: ColumnDef<ITableRow>['cell'];
             } = {
@@ -165,6 +193,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                     type: column.numericDatetimeType
                         ? 'datetime'
                         : column.type || 'string',
+                    info: columnInfo,
                 },
             };
 
@@ -209,6 +238,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         return result;
     }, [
         tableData.header,
+        tableData.metadata.columns,
         settings,
         reduxShowLabels,
         theme.densitySettings.table.rowNumberWidth,
