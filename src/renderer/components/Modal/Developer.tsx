@@ -173,6 +173,7 @@ const Developer: React.FC<IUiModal> = (props: IUiModal) => {
         showTypeIcons: false,
         hideRowNumbers: true,
         showLabels: true,
+        showColumnTooltips: false,
     };
 
     return (

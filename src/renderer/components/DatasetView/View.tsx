@@ -339,6 +339,8 @@ const DatasetHeaderCell: React.FC<{
                 </Tooltip>
             ) : (
                 <Tooltip
+                    disableFocusListener={!settings.showColumnTooltips}
+                    disableHoverListener={!settings.showColumnTooltips}
                     title={
                         <Stack>
                             <Box>

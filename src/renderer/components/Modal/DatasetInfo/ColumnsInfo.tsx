@@ -108,6 +108,7 @@ const ColumnsInfo: React.FC<{
         dynamicRowHeight: true,
         hideRowNumbers: false,
         showLabels: true,
+        showColumnTooltips: false,
     };
 
     return (

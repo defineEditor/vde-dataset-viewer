@@ -68,6 +68,7 @@ export interface TableSettings extends SettingsViewer {
     width?: number;
     denseHeader?: boolean;
     disableSorting?: boolean;
+    showColumnTooltips?: boolean;
 }
 
 export type RequestReason =

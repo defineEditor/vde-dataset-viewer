@@ -261,6 +261,7 @@ const UniqueValues: React.FC<{
         hideRowNumbers: true,
         showLabels: true,
         width: containerWidth || undefined,
+        showColumnTooltips: false,
     };
 
     return (
