@@ -204,7 +204,7 @@ const VariableInfo: React.FC<IUiModalVariableInfo> = ({
         >
             <DialogTitle sx={styles.title}>
                 <Stack direction="row" sx={styles.titleStack}>
-                    Variable Information: {variableInfo.name}
+                    Column Information: {variableInfo.name}
                     <TextField
                         size="small"
                         value={searchTerm}

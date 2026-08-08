@@ -71,7 +71,7 @@ export const settings: ISettings = {
     },
     compare: {
         tolerance: 10e-12,
-        idColumns: [],
+        groupColumns: [],
         maxDiffCount: 100,
         maxColumnDiffCount: 50,
         ignorePattern: '',

@@ -71,7 +71,7 @@ export interface ConvertedFileInfo extends FileInfo {
 // Diff interfaces
 export interface CompareSettings {
     tolerance: number;
-    idColumns: string[];
+    groupColumns: string[];
     maxDiffCount: number;
     maxColumnDiffCount: number;
     ignorePattern: string;
