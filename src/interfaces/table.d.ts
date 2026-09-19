@@ -3,7 +3,18 @@ import { DatasetJsonMetadata } from '@interfaces/api.d';
 import { SettingsViewer } from '@interfaces/store.d';
 import { ItemType } from '@interfaces/datasetJson.d';
 import { BasicFilter } from 'js-array-filter';
-import { CoreCell } from '@tanstack/react-table';
+import type {
+    Cell,
+    CellData,
+    RowData,
+    TableFeatures,
+} from '@tanstack/react-table';
+
+export type CoreCell<TData extends RowData, TValue = CellData> = Cell<
+    TableFeatures,
+    TData,
+    TValue
+>;
 
 export type SortOrder = 'asc' | 'desc';
 export type AlignType = 'left' | 'center' | 'right' | 'justify';
@@ -68,7 +79,6 @@ export interface TableSettings extends SettingsViewer {
     width?: number;
     denseHeader?: boolean;
     disableSorting?: boolean;
-    showColumnTooltips?: boolean;
 }
 
 export type RequestReason =
@@ -78,3 +88,16 @@ export type RequestReason =
     | 'pagination';
 
 export type ColumnType = 'number' | 'string' | 'boolean' | 'date';
+
+export interface ColumnMeta {
+    type?: ItemType | 'rowNumber';
+    align?: 'right' | 'left' | 'center' | 'justify';
+    style?: React.CSSProperties;
+    info?: {
+        name: string;
+        label?: string;
+        length?: number;
+        displayFormat?: string;
+        dataType?: string;
+    };
+}

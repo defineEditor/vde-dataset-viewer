@@ -10,14 +10,20 @@ import { Box } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {
-    ColumnDef,
-    getCoreRowModel,
-    useReactTable,
-    getSortedRowModel,
-    SortingState as ISortingState,
-    RowData,
-    VisibilityState,
     Column as IColumn,
+    ColumnDef,
+    ColumnVisibilityState,
+    SortingState as ISortingState,
+    columnOrderingFeature,
+    columnPinningFeature,
+    columnResizingFeature,
+    columnSizingFeature,
+    columnVisibilityFeature,
+    createSortedRowModel,
+    rowSortingFeature,
+    tableFeatures,
+    useTable,
+    metaHelper,
 } from '@tanstack/react-table';
 import {
     ITableData,
@@ -27,6 +33,8 @@ import {
     IUiControl,
     TableRowValue,
     ItemDescription,
+    ColumnMeta,
+    ITableRow,
 } from '@interfaces/common';
 import { useAppTheme } from '@renderer/theme';
 import { useAppDispatch, useAppSelector } from '@redux/hooks';
@@ -42,25 +50,17 @@ const emptySelect = { row: null, column: null };
 const emptyGoTo = { row: null, column: null, cellSelection: false };
 const emptyArray: unknown[] = [];
 
-declare module '@tanstack/table-core' {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    interface ColumnMeta<TData extends RowData, TValue> {
-        type?: ItemType | 'rowNumber';
-        align?: 'right' | 'left' | 'center' | 'justify';
-        style?: React.CSSProperties;
-        info?: {
-            name: string;
-            label?: string;
-            length?: number;
-            displayFormat?: string;
-            dataType?: string;
-        };
-    }
-}
-
-interface ITableRow {
-    [key: string]: string | number | boolean | null;
-}
+const datasetFeatures = tableFeatures({
+    rowSortingFeature,
+    columnVisibilityFeature,
+    columnOrderingFeature,
+    columnPinningFeature,
+    columnSizingFeature,
+    columnResizingFeature,
+    sortedRowModel: createSortedRowModel(),
+    columnMeta: metaHelper<ColumnMeta>(),
+});
+export type DatasetTableFeatures = typeof datasetFeatures;
 
 type HighlightedCells = {
     [columnId: string]: number[];
@@ -104,7 +104,7 @@ interface DatasetViewProps {
 }
 
 const createPinningStyle = (
-    column: IColumn<ITableRow, unknown>,
+    column: IColumn<DatasetTableFeatures, ITableRow, unknown>,
     backgroundColor: string,
     zIndex = 1,
 ): PinningStyle => {
@@ -112,9 +112,9 @@ const createPinningStyle = (
 
     return () => ({
         backgroundColor,
-        left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
-        right:
-            isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
+        left:
+            isPinned === 'start' ? `${column.getStart('start')}px` : undefined,
+        right: isPinned === 'end' ? `${column.getAfter('end')}px` : undefined,
         position: isPinned ? 'sticky' : 'relative',
         zIndex,
     });
@@ -148,7 +148,9 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         (state) => state.ui.control[tableData.fileId]?.showLabels,
     );
 
-    const columns = useMemo<ColumnDef<ITableRow>[]>(() => {
+    const columns = useMemo<
+        ColumnDef<DatasetTableFeatures, ITableRow>[]
+    >(() => {
         const metadataByName: Record<string, ItemDescription> = {};
         tableData.metadata.columns.forEach((metadata) => {
             metadataByName[metadata.name.toLowerCase()] = metadata;
@@ -180,7 +182,7 @@ const DatasetView: React.FC<DatasetViewProps> = ({
                         dataType?: string;
                     };
                 };
-                cell?: ColumnDef<ITableRow>['cell'];
+                cell?: ColumnDef<DatasetTableFeatures, ITableRow>['cell'];
             } = {
                 accessorKey: column.id,
                 header:
@@ -217,8 +219,10 @@ const DatasetView: React.FC<DatasetViewProps> = ({
             }
 
             if (column.cell) {
-                headerCell.cell =
-                    column.cell as unknown as ColumnDef<ITableRow>['cell'];
+                headerCell.cell = column.cell as unknown as ColumnDef<
+                    DatasetTableFeatures,
+                    ITableRow
+                >['cell'];
             }
             return headerCell;
         });
@@ -245,13 +249,13 @@ const DatasetView: React.FC<DatasetViewProps> = ({
     ]);
 
     // Create column visibility state based on current mask
-    const columnVisibility = useMemo<VisibilityState>(() => {
+    const columnVisibility = useMemo<ColumnVisibilityState>(() => {
         if (!currentMask || !currentMask.columns.length) {
             // If no mask is applied, all columns are visible
             return {};
         }
 
-        const visibilityState: VisibilityState = {};
+        const visibilityState: ColumnVisibilityState = {};
 
         // Always make row number column visible
         visibilityState['#'] = true;
@@ -327,18 +331,18 @@ const DatasetView: React.FC<DatasetViewProps> = ({
 
     // Initial rows;
     const { data } = tableData;
-    const table = useReactTable({
+    const table = useTable<DatasetTableFeatures, ITableRow>({
         data: isLoading ? [] : data,
         columns,
-        getCoreRowModel: getCoreRowModel(),
-        getSortedRowModel: getSortedRowModel(),
+        features: datasetFeatures,
         debugTable: settings.debug,
         columnResizeMode: 'onEnd',
         state: {
             sorting,
             columnVisibility,
             columnPinning: {
-                left: pinnedLeftColumnIds,
+                start: pinnedLeftColumnIds,
+                end: [],
             },
         },
         onSortingChange: handleSetSorting,
@@ -357,13 +361,13 @@ const DatasetView: React.FC<DatasetViewProps> = ({
         [visibleColumns],
     );
     const leftPinnedColumns = table
-        .getLeftVisibleLeafColumns()
+        .getStartVisibleLeafColumns()
         .filter((column) => !settings.hideRowNumbers || column.id !== '#');
     const centerColumns = table.getCenterVisibleLeafColumns();
     const pinningLayoutKey = visibleColumns
         .map(
             (column) =>
-                `${column.id}:${column.getIsPinned()}:${column.getStart('left')}:${column.getAfter('right')}:${column.getSize()}:${column.getIsLastColumn('left')}:${column.getIsFirstColumn('right')}`,
+                `${column.id}:${column.getIsPinned()}:${column.getStart('start')}:${column.getAfter('end')}:${column.getSize()}:${column.getIsLastColumn('start')}:${column.getIsFirstColumn('end')}`,
         )
         .join('|');
 

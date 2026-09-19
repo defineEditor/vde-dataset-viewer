@@ -1,7 +1,7 @@
 import React from 'react';
 import { Alert } from '@mui/material';
 import { ITableRow } from '@interfaces/common';
-import { CoreCell } from '@tanstack/react-table';
+import type { CoreCell } from '@interfaces/common';
 
 const styles = {
     alert: (theme) => ({

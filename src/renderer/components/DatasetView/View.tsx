@@ -14,15 +14,17 @@ import {
 } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import {
-    Cell as ICell,
     flexRender,
-    Header as IHeader,
-    Table as ITable,
-    Column as IColumn,
-    Row as IRow,
+    type Cell as ICell,
+    type Column as IColumn,
+    type Header as IHeader,
+    type ReactTable,
+    type Row as IRow,
     SortingState as ISortingState,
     Updater as IUpdater,
 } from '@tanstack/react-table';
+import type { DatasetTableFeatures } from '@components/DatasetView/index';
+import { ITableRow, TableRowValue, TableSettings } from '@interfaces/common';
 import SelectAllIcon from '@mui/icons-material/SelectAll';
 import FilterIcon from '@mui/icons-material/FilterAlt';
 import FontDownloadIcon from '@mui/icons-material/FontDownload';
@@ -30,8 +32,13 @@ import ExposureIcon from '@mui/icons-material/Exposure';
 import LooksOneIcon from '@mui/icons-material/LooksOne';
 import AccessTimeIcon from '@mui/icons-material/HourglassFull';
 import { VirtualItem, Virtualizer } from '@tanstack/react-virtual';
-import { ITableRow, TableRowValue, TableSettings } from '@interfaces/common';
 import Loading from '@components/Loading';
+
+type DatasetColumn = IColumn<DatasetTableFeatures, ITableRow, unknown>;
+type DatasetHeader = IHeader<DatasetTableFeatures, ITableRow, unknown>;
+type DatasetCell = ICell<DatasetTableFeatures, ITableRow, unknown>;
+type DatasetTable = ReactTable<DatasetTableFeatures, ITableRow>;
+type DatasetRow = IRow<DatasetTableFeatures, ITableRow>;
 
 const getContainerStyle =
     (settings: TableSettings) =>
@@ -272,8 +279,8 @@ type HighlightedCells = {
 type PinningStyle = (theme: Theme) => React.CSSProperties;
 
 const DatasetHeaderCell: React.FC<{
-    column: IColumn<ITableRow, unknown>;
-    header: IHeader<ITableRow, unknown>;
+    column: DatasetColumn;
+    header: DatasetHeader;
     filteredColumns: string[];
     handleContextMenu: (
         event: React.MouseEvent<HTMLTableCellElement, MouseEvent>,
@@ -287,7 +294,7 @@ const DatasetHeaderCell: React.FC<{
     onSortingChange: (updater: IUpdater<ISortingState>) => void;
     settings: TableSettings;
     sorting: ISortingState;
-    table: ITable<ITableRow>;
+    table: DatasetTable;
     usePinningStyles?: boolean;
     pinningStyle?: PinningStyle;
 }> = ({
@@ -439,7 +446,7 @@ const DatasetHeaderCell: React.FC<{
                                 }`,
                                 style: {
                                     transform: header.column.getIsResizing()
-                                        ? `translateX(${(table.options.columnResizeDirection === 'rtl' ? -1 : 1) * (table.getState().columnSizingInfo.deltaOffset ?? 0)}px)`
+                                        ? `translateX(${(table.options.columnResizeDirection === 'rtl' ? -1 : 1) * ((table as unknown as { state: { columnResizing: { deltaOffset?: number } } }).state.columnResizing.deltaOffset ?? 0)}px)`
                                         : '',
                                 },
                             }}
@@ -453,7 +460,7 @@ const DatasetHeaderCell: React.FC<{
 
 const DatasetBodyCell: React.FC<{
     annotatedCells: Map<string, AnnotationData> | null;
-    cell: ICell<ITableRow, unknown>;
+    cell: DatasetCell;
     handleCellClick: (rowIndex: number, columnId: string) => void;
     handleContextMenu: (
         event: React.MouseEvent<HTMLTableCellElement, MouseEvent>,
@@ -466,7 +473,7 @@ const DatasetBodyCell: React.FC<{
     highlightedCells: Record<string, number[]>;
     rowAnnotation: AnnotationData | null;
     rowIndex: number;
-    visibleColumns: IColumn<ITableRow, unknown>[];
+    visibleColumns: DatasetColumn[];
     settings: TableSettings;
     usePinningStyles?: boolean;
     pinningStyle?: PinningStyle;
@@ -568,16 +575,16 @@ const DatasetBodyCell: React.FC<{
 };
 
 const DatasetViewUI: React.FC<{
-    table: ITable<ITableRow>;
+    table: DatasetTable;
     tableContainerRef: React.RefObject<HTMLDivElement | null>;
-    visibleColumns: IColumn<ITableRow, unknown>[];
-    leftPinnedColumns: IColumn<ITableRow, unknown>[];
-    centerColumns: IColumn<ITableRow, unknown>[];
+    visibleColumns: DatasetColumn[];
+    leftPinnedColumns: DatasetColumn[];
+    centerColumns: DatasetColumn[];
     virtualPaddingLeft: number | undefined;
     virtualPaddingRight: number | undefined;
     virtualColumns: VirtualItem[];
     virtualRows: VirtualItem[];
-    rows: IRow<ITableRow>[];
+    rows: DatasetRow[];
     highlightedCells: HighlightedCells;
     handleCellClick: (rowIndex: number, columnId: string) => void;
     handleMouseDown: (rowIndex: number | null, columnId: string | null) => void;
@@ -735,7 +742,7 @@ const DatasetViewUI: React.FC<{
                             const row = rows[virtualRow.index];
                             const centerCells = row.getCenterVisibleCells();
                             const leftPinnedCells = row
-                                .getLeftVisibleCells()
+                                .getStartVisibleCells()
                                 .filter(
                                     (cell) =>
                                         !settings.hideRowNumbers ||
