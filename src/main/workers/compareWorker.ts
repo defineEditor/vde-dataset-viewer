@@ -592,6 +592,10 @@ export const compareData = (
         totalDiffs: newTotalDiffs,
         maxDiffReached,
         maxColDiffReached,
+        groupOrderIssues: {
+            base: false,
+            compare: false,
+        },
     };
 
     return { data: dataDiff, summary };
@@ -920,12 +924,18 @@ process.parentPort.once(
                 colsWithMetadataDiffs: 0,
                 colsWithoutDiffs: 0,
                 totalRowsChecked: 0,
+                groupOrderIssues: {
+                    base: false,
+                    compare: false,
+                },
             };
 
             const totalRecords = Math.min(baseMeta.records, compMeta.records);
             let maxDiffCountReached = false;
             let baseRecords = 0;
             let compRecords = 0;
+            let lastBaseGroupKey: ItemDataArray | null = null;
+            let lastCompGroupKey: ItemDataArray | null = null;
             // Track page maps for filtered data
             // It is needed to quickly navigate to specific rows when filter is applied
             const pageMaps = {
@@ -976,6 +986,27 @@ process.parentPort.once(
                 let compChunk = await compStream.next(bufferSize);
 
                 while ((baseChunk || compChunk) && !maxDiffCountReached) {
+                    if (baseChunk) {
+                        if (
+                            lastBaseGroupKey &&
+                            compareGroupKeys(baseChunk.key, lastBaseGroupKey) <
+                                0
+                        ) {
+                            summary.groupOrderIssues.base = true;
+                        }
+                        lastBaseGroupKey = baseChunk.key;
+                    }
+                    if (compChunk) {
+                        if (
+                            lastCompGroupKey &&
+                            compareGroupKeys(compChunk.key, lastCompGroupKey) <
+                                0
+                        ) {
+                            summary.groupOrderIssues.compare = true;
+                        }
+                        lastCompGroupKey = compChunk.key;
+                    }
+
                     let blockDiff: ReturnType<typeof compareData>;
                     let baseBlockLen = 0;
                     let compBlockLen = 0;
@@ -1171,13 +1202,15 @@ process.parentPort.once(
                     !metadataDiff.attributeDiffs[col],
             ).length;
 
-            sendMessage(100, summary.totalDiffs, {
+            const result: DatasetDiff = {
                 metadata: metadataDiff,
                 data: dataDiff,
                 settings: options,
                 summary,
                 pageMaps,
-            });
+            };
+
+            sendMessage(100, summary.totalDiffs, result);
         } catch (error) {
             sendMessage(0, 0, undefined, (error as Error).message);
         }

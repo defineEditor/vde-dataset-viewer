@@ -4,6 +4,7 @@
     "incremental": true,
     "target": "es2022",
     "module": "nodenext",
+    "isolatedModules": true,
     "lib": ["dom", "es2022"],
     "declaration": true,
     "declarationMap": true,
