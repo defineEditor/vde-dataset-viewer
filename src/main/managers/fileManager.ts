@@ -1,4 +1,4 @@
-import { dialog, IpcMainInvokeEvent } from 'electron';
+import { dialog, IpcMainInvokeEvent, BrowserWindow } from 'electron';
 import DatasetJson from 'js-stream-dataset-json';
 import { DatasetReadStat } from 'js-stream-sas7bdat';
 import DatasetXpt from 'xport-js';
@@ -121,7 +121,8 @@ class FileManager {
             }
             newFile = { path: filePath };
         } else {
-            newFile = await openFile(folderPath);
+            const mainWindow = BrowserWindow.fromWebContents(event.sender);
+            newFile = await openFile(mainWindow!, folderPath);
         }
 
         let type: DataType;
@@ -489,7 +490,9 @@ class FileManager {
             if (multiple) {
                 properties.push('multiSelections');
             }
-            const result = await dialog.showOpenDialog({
+
+            const mainWindow = BrowserWindow.fromWebContents(event.sender);
+            const result = await dialog.showOpenDialog(mainWindow!, {
                 properties,
                 defaultPath: startFolder,
                 filters,
@@ -506,7 +509,7 @@ class FileManager {
 
     // Open directory dialog
     public openFolder = async (
-        _event: IpcMainInvokeEvent,
+        event: IpcMainInvokeEvent,
         options: {
             multiple?: boolean;
             initialFolder?: string;
@@ -527,7 +530,8 @@ class FileManager {
             if (multiple) {
                 properties.push('multiSelections');
             }
-            const result = await dialog.showOpenDialog({
+            const mainWindow = BrowserWindow.fromWebContents(event.sender);
+            const result = await dialog.showOpenDialog(mainWindow!, {
                 properties,
                 defaultPath: startFolder,
             });
@@ -541,7 +545,7 @@ class FileManager {
     };
 
     public openDirectoryDialog = async (
-        _event: IpcMainInvokeEvent,
+        event: IpcMainInvokeEvent,
         initialFolder: string | null,
     ): Promise<string | null> => {
         try {
@@ -554,7 +558,8 @@ class FileManager {
                 }
             }
 
-            const result = await dialog.showOpenDialog({
+            const mainWindow = BrowserWindow.fromWebContents(event.sender);
+            const result = await dialog.showOpenDialog(mainWindow!, {
                 properties: ['openDirectory'],
                 defaultPath: startFolder,
             });

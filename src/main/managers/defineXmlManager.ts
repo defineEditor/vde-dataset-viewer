@@ -1,4 +1,4 @@
-import { IpcMainInvokeEvent } from 'electron';
+import { IpcMainInvokeEvent, BrowserWindow } from 'electron';
 import parseDefineXml from 'parse-define-xml';
 import fs from 'fs';
 import fsPromises from 'fs/promises';
@@ -133,13 +133,14 @@ class DefineXmlManager {
      * Does NOT parse the full XML content, only reads ODM attributes
      */
     public openDefineXml = async (
-        _event: IpcMainInvokeEvent,
+        event: IpcMainInvokeEvent,
         filePath?: string,
     ): Promise<DefineFileInfo | null> => {
         // If the file is not specified, allow user to select via dialog
         let definePath: string = filePath || '';
+        const mainWindow = BrowserWindow.fromWebContents(event.sender);
         if (!filePath) {
-            const newPath = await openFile(undefined, [
+            const newPath = await openFile(mainWindow!, undefined, [
                 {
                     name: 'Define-XML',
                     extensions: ['xml'],

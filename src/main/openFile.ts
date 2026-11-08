@@ -1,10 +1,11 @@
-import { dialog } from 'electron';
+import { dialog, BrowserWindow } from 'electron';
 
 const openFile = async (
+    window: BrowserWindow,
     folderPath?: string,
     filters?: { name: string; extensions: string[] }[],
 ): Promise<{ path: string } | undefined> => {
-    const { canceled, filePaths } = await dialog.showOpenDialog({
+    const { canceled, filePaths } = await dialog.showOpenDialog(window, {
         title: 'Open Dataset-JSON file',
         defaultPath: folderPath,
         filters: filters || [
