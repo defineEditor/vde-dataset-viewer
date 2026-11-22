@@ -31,6 +31,7 @@ import {
     setCompareFiles,
     initializeCompare,
     closeCompare,
+    openSnackbar,
 } from '@redux/slices/ui';
 import { modals, paths } from '@/misc/constants';
 import AppContext from '@utils/AppContext';
@@ -74,6 +75,10 @@ const styles = {
     flag: {
         mb: 1,
     },
+    groupColumn: {
+        backgroundColor: 'primary.main',
+        color: 'primary.contrastText',
+    },
 };
 
 const SelectCompare: React.FC = () => {
@@ -104,14 +109,24 @@ const SelectCompare: React.FC = () => {
     const [ignoreValueCase, setIgnoreValueCase] = useState<boolean>(
         ignoreValueCaseSettings,
     );
+    const [groupColumnsFlag, setGroupColumnsFlag] = useState<boolean>(false);
+    const [groupColumns, setGroupColumns] = useState<string[]>([]);
+    const [sharedColumns, setSharedColumns] = useState<string[]>([]);
+
     const [fileComp, setFileComp] = useState<string>(fileCompState);
     const [fileBase, setFileBase] = useState<string>(fileBaseState);
 
+    const resetGroupColumns = useCallback(() => {
+        setGroupColumns([]);
+    }, []);
+
     const handleUpdateFileBase = (event) => {
+        resetGroupColumns();
         setFileBase(event.target.value);
     };
 
     const handleUpdateFileComp = (event) => {
+        resetGroupColumns();
         setFileComp(event.target.value);
     };
 
@@ -141,7 +156,11 @@ const SelectCompare: React.FC = () => {
                 initializeCompare({
                     fileBase: newFileBase,
                     fileComp: newFileComp,
-                    customSettings: { ignoreWhiteSpaces, ignoreValueCase },
+                    customSettings: {
+                        ignoreWhiteSpaces,
+                        ignoreValueCase,
+                        groupColumns,
+                    },
                 }),
             );
             handleClose();
@@ -152,19 +171,81 @@ const SelectCompare: React.FC = () => {
             currentCompareId,
             ignoreWhiteSpaces,
             ignoreValueCase,
+            groupColumns,
         ],
     );
+
+    // Read the columns of both files and open the group columns selection
+    const handleGetColumns = useCallback(async () => {
+        if (!fileBase || !fileComp) {
+            return;
+        }
+
+        try {
+            if (fileBase === fileComp) {
+                // This makes no sense, so no need to check columns
+                return;
+            }
+
+            const [baseColumns, compColumns] = await Promise.all([
+                apiService.getFileColumns(fileBase),
+                apiService.getFileColumns(fileComp),
+            ]);
+
+            const compColumnSet = new Set(
+                compColumns.map((column) => column.toLowerCase()),
+            );
+            const newSharedColumns = baseColumns.filter((column) =>
+                compColumnSet.has(column.toLowerCase()),
+            );
+
+            if (newSharedColumns.length === 0) {
+                dispatch(
+                    openSnackbar({
+                        message: 'The selected files do not share any columns',
+                        type: 'warning',
+                    }),
+                );
+                setSharedColumns([]);
+                return;
+            }
+            setSharedColumns(newSharedColumns);
+
+            // Drop previously selected columns that are not shared anymore
+            const newSharedColumnSet = new Set(
+                newSharedColumns.map((column) => column.toLowerCase()),
+            );
+            const stillAvailable = groupColumns.filter((column) =>
+                newSharedColumnSet.has(column.toLowerCase()),
+            );
+            if (stillAvailable.length !== groupColumns.length) {
+                setGroupColumns(stillAvailable);
+            }
+        } catch (error) {
+            dispatch(
+                openSnackbar({
+                    message: (error as Error).message,
+                    type: 'error',
+                }),
+            );
+        }
+    }, [apiService, dispatch, fileBase, fileComp, groupColumns]);
 
     const handleSelectFile = async (type: 'base' | 'comp') => {
         const result = await apiService.openFileDialog({
             multiple: false,
         });
         if (result && result.length > 0) {
+            resetGroupColumns();
             if (type === 'base') {
                 setFileBase(result[0].fullPath);
             } else {
                 setFileComp(result[0].fullPath);
             }
+        }
+        // Refresh the list of columns
+        if (groupColumnsFlag) {
+            handleGetColumns();
         }
     };
 
@@ -172,6 +253,7 @@ const SelectCompare: React.FC = () => {
         fileBase: string;
         fileComp: string;
     }) => {
+        resetGroupColumns();
         setFileBase(recent.fileBase);
         setFileComp(recent.fileComp);
     };
@@ -191,6 +273,7 @@ const SelectCompare: React.FC = () => {
                     if (recentCompares[index]) {
                         event.preventDefault();
                         const recent = recentCompares[index];
+                        resetGroupColumns();
                         handleCompare(recent.fileBase, recent.fileComp);
                     }
                 }
@@ -201,7 +284,13 @@ const SelectCompare: React.FC = () => {
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [recentCompares, dispatch, handleClose, handleCompare]);
+    }, [
+        recentCompares,
+        dispatch,
+        handleClose,
+        handleCompare,
+        resetGroupColumns,
+    ]);
 
     return (
         <Dialog
@@ -244,6 +333,19 @@ const SelectCompare: React.FC = () => {
                                 />
                             }
                             label="Case Insensitive"
+                            sx={styles.flag}
+                        />
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={groupColumnsFlag}
+                                    onChange={() =>
+                                        setGroupColumnsFlag(!groupColumnsFlag)
+                                    }
+                                    name="compare.groupColumnsFlag"
+                                />
+                            }
+                            label="Group records"
                             sx={styles.flag}
                         />
                     </Stack>
@@ -309,6 +411,41 @@ const SelectCompare: React.FC = () => {
                             }}
                         />
                     </Box>
+
+                    {groupColumnsFlag && (
+                        <Box sx={styles.fileInput}>
+                            <Autocomplete
+                                multiple
+                                fullWidth
+                                options={sharedColumns}
+                                value={groupColumns}
+                                onChange={(_event, newValue) => {
+                                    setGroupColumns(newValue);
+                                }}
+                                renderValue={(value, getItemProps) =>
+                                    value.map((option, index) => (
+                                        <Chip
+                                            label={option}
+                                            {...getItemProps({ index })}
+                                            sx={styles.groupColumn}
+                                            key={option}
+                                        />
+                                    ))
+                                }
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        placeholder={
+                                            groupColumns.length === 0
+                                                ? 'Select group columns'
+                                                : undefined
+                                        }
+                                        fullWidth
+                                    />
+                                )}
+                            />
+                        </Box>
+                    )}
 
                     <Autocomplete
                         options={recentCompares}

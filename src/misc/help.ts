@@ -180,6 +180,7 @@ This modal starts a dataset-to-dataset comparison by selecting the base file and
 - **Switch** swaps base and compare files.
 - **Ignore White Spaces** ignores leading and trailing spaces during comparison.
 - **Case Insensitive** ignores value letter case during comparison.
+- **Group Columns** compares subsets based on a key.
 - **Recent Compares** shows the history of comparisons.
 - Use Ctrl+<X> to select previously compared files.
 

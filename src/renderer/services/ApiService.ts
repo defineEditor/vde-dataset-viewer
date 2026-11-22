@@ -803,6 +803,44 @@ class ApiService {
         return this.openedFilesMetadata[fileId];
     };
 
+    // Read column names from a file path without keeping the file open
+    public getFileColumns = async (filePath: string): Promise<string[]> => {
+        // Check if the file is already opened
+        let isOpen = false;
+        let currentFileId: string | null = null;
+        this.openedFiles.some((file) => {
+            if (file.path === filePath) {
+                isOpen = true;
+                currentFileId = file.fileId;
+                return true;
+            }
+            return false;
+        });
+        if (isOpen && currentFileId !== null) {
+            // Get the latest metadata, force reload
+            const metadata = await this.getMetadata(
+                currentFileId,
+                undefined,
+                true,
+            );
+            if (metadata) {
+                return metadata.columns.map((column) => column.name);
+            }
+            throw new Error(`Unable to read columns from ${filePath}`);
+        }
+        // Open file temporarily
+        const { metadata, fileId } = await this.openFile({
+            mode: 'local',
+            filePath,
+        });
+        if (!fileId) {
+            throw new Error(`Unable to read columns from ${filePath}`);
+        }
+        const result = metadata.columns.map((column) => column.name);
+        this.close(fileId);
+        return result;
+    };
+
     public getOpenedFileData = (fileId: string): ITableRow[] => {
         if (this.openedFilesData[fileId] === undefined) {
             throw new Error(
