@@ -324,20 +324,37 @@ const compareMetadata = (
     return metadataDiff;
 };
 
-const compareGroupValues = (
+export const compareGroupValues = (
     a: ItemDataArray[number],
     b: ItemDataArray[number],
+    options?: Pick<CompareSettings, 'ignoreValueCase' | 'ignoreWhiteSpaces'>,
 ): number => {
+    const aMissing = a === null || a === undefined;
+    const bMissing = b === null || b === undefined;
+    if (aMissing && bMissing) return 0;
+    if (aMissing) return -1;
+    if (bMissing) return 1;
     if (a === b) return 0;
-    if (a === null) return -1;
-    if (b === null) return 1;
     if (typeof a === 'number' && typeof b === 'number') {
+        const aNaN = Number.isNaN(a);
+        const bNaN = Number.isNaN(b);
+        if (aNaN && bNaN) return 0;
+        if (aNaN) return -1;
+        if (bNaN) return 1;
         if (a < b) return -1;
         if (a > b) return 1;
         return 0;
     }
-    const sa = String(a);
-    const sb = String(b);
+    let sa = String(a);
+    let sb = String(b);
+    if (options?.ignoreWhiteSpaces) {
+        sa = sa.trim();
+        sb = sb.trim();
+    }
+    if (options?.ignoreValueCase) {
+        sa = sa.toLowerCase();
+        sb = sb.toLowerCase();
+    }
     if (sa < sb) return -1;
     if (sa > sb) return 1;
     return 0;
@@ -346,10 +363,14 @@ const compareGroupValues = (
 const getGroupKey = (row: ItemDataArray, groupIdx: number[]): ItemDataArray =>
     groupIdx.map((idx) => row[idx]);
 
-const compareGroupKeys = (a: ItemDataArray, b: ItemDataArray): number => {
+const compareGroupKeys = (
+    a: ItemDataArray,
+    b: ItemDataArray,
+    options?: Pick<CompareSettings, 'ignoreValueCase' | 'ignoreWhiteSpaces'>,
+): number => {
     const len = Math.min(a.length, b.length);
     for (let i = 0; i < len; i++) {
-        const cmp = compareGroupValues(a[i], b[i]);
+        const cmp = compareGroupValues(a[i], b[i], options);
         if (cmp !== 0) return cmp;
     }
     if (a.length < b.length) return -1;
@@ -754,7 +775,11 @@ const createGroupStream = (
         while (
             i < pending.length &&
             rows.length < limit &&
-            compareGroupKeys(getGroupKey(pending[i], groupIdx), key) === 0
+            compareGroupKeys(
+                getGroupKey(pending[i], groupIdx),
+                key,
+                options,
+            ) === 0
         ) {
             rows.push(pending[i]);
             i++;
@@ -991,8 +1016,11 @@ process.parentPort.once(
                     if (baseChunk) {
                         if (
                             lastBaseGroupKey &&
-                            compareGroupKeys(baseChunk.key, lastBaseGroupKey) <
-                                0
+                            compareGroupKeys(
+                                baseChunk.key,
+                                lastBaseGroupKey,
+                                options,
+                            ) < 0
                         ) {
                             summary.groupOrderIssues.base = true;
                         }
@@ -1001,8 +1029,11 @@ process.parentPort.once(
                     if (compChunk) {
                         if (
                             lastCompGroupKey &&
-                            compareGroupKeys(compChunk.key, lastCompGroupKey) <
-                                0
+                            compareGroupKeys(
+                                compChunk.key,
+                                lastCompGroupKey,
+                                options,
+                            ) < 0
                         ) {
                             summary.groupOrderIssues.compare = true;
                         }
@@ -1018,6 +1049,7 @@ process.parentPort.once(
                         groupKeyComparison = compareGroupKeys(
                             baseChunk.key,
                             compChunk.key,
+                            options,
                         );
                     }
 
