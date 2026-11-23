@@ -21,6 +21,10 @@ import {
     columnVisibilityFeature,
     createSortedRowModel,
     rowSortingFeature,
+    sortFn_alphanumeric as sortFnAlphanumeric,
+    sortFn_basic as sortFnBasic,
+    sortFn_datetime as sortFnDatetime,
+    sortFn_text as sortFnText,
     tableFeatures,
     useTable,
     metaHelper,
@@ -58,6 +62,12 @@ const datasetFeatures = tableFeatures({
     columnSizingFeature,
     columnResizingFeature,
     sortedRowModel: createSortedRowModel(),
+    sortFns: {
+        alphanumeric: sortFnAlphanumeric,
+        text: sortFnText,
+        datetime: sortFnDatetime,
+        basic: sortFnBasic,
+    },
     columnMeta: metaHelper<ColumnMeta>(),
 });
 export type DatasetTableFeatures = typeof datasetFeatures;

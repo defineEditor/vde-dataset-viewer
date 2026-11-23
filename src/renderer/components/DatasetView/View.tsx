@@ -446,7 +446,7 @@ const DatasetHeaderCell: React.FC<{
                                 }`,
                                 style: {
                                     transform: header.column.getIsResizing()
-                                        ? `translateX(${(table.options.columnResizeDirection === 'rtl' ? -1 : 1) * ((table as unknown as { state: { columnResizing: { deltaOffset?: number } } }).state.columnResizing.deltaOffset ?? 0)}px)`
+                                        ? `translateX(${(table.options.columnResizeDirection === 'rtl' ? -1 : 1) * (table.state.columnResizing.deltaOffset ?? 0)}px)`
                                         : '',
                                 },
                             }}
