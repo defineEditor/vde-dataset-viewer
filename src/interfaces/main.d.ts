@@ -71,7 +71,6 @@ export interface ConvertedFileInfo extends FileInfo {
 // Diff interfaces
 export interface CompareSettings {
     tolerance: number;
-    groupColumns: string[];
     maxDiffCount: number;
     maxColumnDiffCount: number;
     ignorePattern: string;
@@ -213,6 +212,7 @@ export interface CompareTask {
     type: typeof mainTaskTypes.COMPARE;
     fileBase: string;
     fileComp: string;
+    groupColumns: string[];
     filterData: BasicFilter | null;
     options: CompareSettings;
     fileSettings: CompareFileSettings;
@@ -255,6 +255,7 @@ export interface CompareProcessTask {
     webContentsId: string;
     fileBase: string;
     fileComp: string;
+    groupColumns: string[];
     filterData: BasicFilter | null;
     options: CompareSettings;
     fileSettings: CompareFileSettings;

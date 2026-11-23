@@ -90,6 +90,10 @@ const SelectCompare: React.FC = () => {
 
     const fileBaseState =
         useAppSelector((state) => state.ui.compare.fileBase) || '';
+    const fileCompState =
+        useAppSelector((state) => state.ui.compare.fileComp) || '';
+    const groupColumnsState =
+        useAppSelector((state) => state.ui.compare.groupColumns) || [];
 
     const ignoreWhiteSpacesSettings = useAppSelector(
         (state) => state.settings.compare.ignoreWhiteSpaces,
@@ -97,8 +101,6 @@ const SelectCompare: React.FC = () => {
     const ignoreValueCaseSettings = useAppSelector(
         (state) => state.settings.compare.ignoreValueCase,
     );
-    const fileCompState =
-        useAppSelector((state) => state.ui.compare.fileComp) || '';
     const currentCompareId = useAppSelector(
         (state) => state.ui.compare.currentCompareId,
     );
@@ -109,8 +111,11 @@ const SelectCompare: React.FC = () => {
     const [ignoreValueCase, setIgnoreValueCase] = useState<boolean>(
         ignoreValueCaseSettings,
     );
-    const [groupColumnsFlag, setGroupColumnsFlag] = useState<boolean>(false);
-    const [groupColumns, setGroupColumns] = useState<string[]>([]);
+    const [groupColumnsFlag, setGroupColumnsFlag] = useState<boolean>(
+        groupColumnsState.length > 0,
+    );
+    const [groupColumns, setGroupColumns] =
+        useState<string[]>(groupColumnsState);
     const [sharedColumns, setSharedColumns] = useState<string[]>([]);
 
     const [fileComp, setFileComp] = useState<string>(fileCompState);
@@ -156,10 +161,10 @@ const SelectCompare: React.FC = () => {
                 initializeCompare({
                     fileBase: newFileBase,
                     fileComp: newFileComp,
+                    groupColumns,
                     customSettings: {
                         ignoreWhiteSpaces,
                         ignoreValueCase,
-                        groupColumns,
                     },
                 }),
             );
@@ -231,6 +236,15 @@ const SelectCompare: React.FC = () => {
         }
     }, [apiService, dispatch, fileBase, fileComp, groupColumns]);
 
+    const handleToggleGroupColumnsFlag = (newValue: boolean) => {
+        setGroupColumnsFlag(newValue);
+        if (newValue) {
+            handleGetColumns();
+        } else {
+            resetGroupColumns();
+        }
+    };
+
     const handleSelectFile = async (type: 'base' | 'comp') => {
         const result = await apiService.openFileDialog({
             multiple: false,
@@ -252,10 +266,16 @@ const SelectCompare: React.FC = () => {
     const handleSelectRecent = (recent: {
         fileBase: string;
         fileComp: string;
+        groupColumns?: string[];
     }) => {
-        resetGroupColumns();
         setFileBase(recent.fileBase);
         setFileComp(recent.fileComp);
+        if (recent.groupColumns) {
+            setGroupColumns(recent.groupColumns);
+            setGroupColumnsFlag(true);
+        } else {
+            resetGroupColumns();
+        }
     };
 
     // Keyboard shortcuts
@@ -340,7 +360,9 @@ const SelectCompare: React.FC = () => {
                                 <Checkbox
                                     checked={groupColumnsFlag}
                                     onChange={() =>
-                                        setGroupColumnsFlag(!groupColumnsFlag)
+                                        handleToggleGroupColumnsFlag(
+                                            !groupColumnsFlag,
+                                        )
                                     }
                                     name="compare.groupColumnsFlag"
                                 />
@@ -435,6 +457,7 @@ const SelectCompare: React.FC = () => {
                                 renderInput={(params) => (
                                     <TextField
                                         {...params}
+                                        helperText="Datasets must be sorted by the selected group columns for correct comparison"
                                         placeholder={
                                             groupColumns.length === 0
                                                 ? 'Select group columns'
@@ -527,8 +550,22 @@ const SelectCompare: React.FC = () => {
                                             />
                                         </ListItemAvatar>
                                         <ListItemText
-                                            primary={`Base: ${recent.fileBase}`}
-                                            secondary={`Comp: ${recent.fileComp}`}
+                                            disableTypography
+                                            primary={
+                                                <Stack direction="column">
+                                                    <Box>
+                                                        Base: ${recent.fileBase}
+                                                    </Box>
+                                                    <Box>
+                                                        Comp: ${recent.fileComp}
+                                                    </Box>
+                                                </Stack>
+                                            }
+                                            secondary={
+                                                recent.groupColumns
+                                                    ? `ID: ${recent.groupColumns.join(', ')}`
+                                                    : undefined
+                                            }
                                         />
                                     </ListItem>
                                     <Divider />

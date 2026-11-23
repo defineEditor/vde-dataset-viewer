@@ -237,6 +237,7 @@ const Main: React.FC = () => {
                         initializeCompare({
                             fileBase,
                             fileComp,
+                            groupColumns: [],
                         }),
                     );
                     dispatch(setPathname({ pathname: paths.COMPARE }));

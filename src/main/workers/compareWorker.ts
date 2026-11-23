@@ -845,8 +845,15 @@ process.parentPort.once(
     'message',
     async (messageData: { data: CompareProcessTask }) => {
         const { data } = messageData;
-        const { id, fileBase, fileComp, options, fileSettings, filterData } =
-            data;
+        const {
+            id,
+            fileBase,
+            fileComp,
+            options,
+            fileSettings,
+            filterData,
+            groupColumns,
+        } = data;
 
         const sendMessage = (
             progress: number,
@@ -945,17 +952,17 @@ process.parentPort.once(
 
             // Group comparison is enabled when group columns are defined.
             // Data is assumed to be already sorted by these columns.
-            if (options.groupColumns?.length > 0) {
+            if (groupColumns?.length > 0) {
                 // Group-based comparison: rows are streamed in chunks so groups
                 // larger than the buffer are not held in memory entirely.
                 const baseGroupIdx = getGroupColumnIndices(
                     baseMeta,
-                    options.groupColumns,
+                    groupColumns,
                     'base',
                 );
                 const compGroupIdx = getGroupColumnIndices(
                     compMeta,
-                    options.groupColumns,
+                    groupColumns,
                     'compare',
                 );
 
