@@ -198,11 +198,13 @@ const SelectCompare: React.FC = () => {
             ]);
 
             const compColumnSet = new Set(
-                compColumns.map((column) => column.toLowerCase()),
+                compColumns.map((column) => column.name.toLowerCase()),
             );
-            const newSharedColumns = baseColumns.filter((column) =>
-                compColumnSet.has(column.toLowerCase()),
-            );
+            const newSharedColumns = baseColumns
+                .filter((column) =>
+                    compColumnSet.has(column.name.toLowerCase()),
+                )
+                .map((column) => column.name);
 
             if (newSharedColumns.length === 0) {
                 dispatch(

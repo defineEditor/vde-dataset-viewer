@@ -1,11 +1,27 @@
-import { dialog, BrowserWindow } from 'electron';
+import {
+    dialog,
+    BrowserWindow,
+    OpenDialogOptions,
+    OpenDialogReturnValue,
+} from 'electron';
+
+// Show a dialog attached to the given window when possible. BrowserWindow
+// can be null when the sender is not backed by a window, in which case the
+// dialog is shown without a parent instead of passing null to Electron.
+export const showOpenDialog = (
+    window: BrowserWindow | null | undefined,
+    options: OpenDialogOptions,
+): Promise<OpenDialogReturnValue> =>
+    window
+        ? dialog.showOpenDialog(window, options)
+        : dialog.showOpenDialog(options);
 
 const openFile = async (
-    window: BrowserWindow,
+    window: BrowserWindow | null | undefined,
     folderPath?: string,
     filters?: { name: string; extensions: string[] }[],
 ): Promise<{ path: string } | undefined> => {
-    const { canceled, filePaths } = await dialog.showOpenDialog(window, {
+    const { canceled, filePaths } = await showOpenDialog(window, {
         title: 'Open Dataset-JSON file',
         defaultPath: folderPath,
         filters: filters || [

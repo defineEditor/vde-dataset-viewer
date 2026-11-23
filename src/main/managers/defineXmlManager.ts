@@ -140,7 +140,7 @@ class DefineXmlManager {
         let definePath: string = filePath || '';
         const mainWindow = BrowserWindow.fromWebContents(event.sender);
         if (!filePath) {
-            const newPath = await openFile(mainWindow!, undefined, [
+            const newPath = await openFile(mainWindow, undefined, [
                 {
                     name: 'Define-XML',
                     extensions: ['xml'],

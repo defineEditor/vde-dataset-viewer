@@ -28,6 +28,7 @@ import {
     DefineXmlContent,
     FileWatcherEvent,
     RequestReason,
+    ItemDescription,
 } from '@interfaces/common';
 import store from '@redux/store';
 import transformData from '@services/transformData';
@@ -803,42 +804,15 @@ class ApiService {
         return this.openedFilesMetadata[fileId];
     };
 
-    // Read column names from a file path without keeping the file open
-    public getFileColumns = async (filePath: string): Promise<string[]> => {
-        // Check if the file is already opened
-        let isOpen = false;
-        let currentFileId: string | null = null;
-        this.openedFiles.some((file) => {
-            if (file.path === filePath) {
-                isOpen = true;
-                currentFileId = file.fileId;
-                return true;
-            }
-            return false;
-        });
-        if (isOpen && currentFileId !== null) {
-            // Get the latest metadata, force reload
-            const metadata = await this.getMetadata(
-                currentFileId,
-                undefined,
-                true,
-            );
-            if (metadata) {
-                return metadata.columns.map((column) => column.name);
-            }
-            throw new Error(`Unable to read columns from ${filePath}`);
-        }
-        // Open file temporarily
-        const { metadata, fileId } = await this.openFile({
-            mode: 'local',
+    // Read column metadata from a file path without opening it in the viewer
+    public getFileColumns = async (
+        filePath: string,
+    ): Promise<ItemDescription[]> => {
+        const { settings } = store.getState();
+        return window.electron.getFileColumns(
             filePath,
-        });
-        if (!fileId) {
-            throw new Error(`Unable to read columns from ${filePath}`);
-        }
-        const result = metadata.columns.map((column) => column.name);
-        this.close(fileId);
-        return result;
+            settings.other.inEncoding,
+        );
     };
 
     public getOpenedFileData = (fileId: string): ITableRow[] => {

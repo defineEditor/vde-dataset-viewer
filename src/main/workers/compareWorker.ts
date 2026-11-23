@@ -1213,6 +1213,7 @@ process.parentPort.once(
                 metadata: metadataDiff,
                 data: dataDiff,
                 settings: options,
+                groupColumns: groupColumns || [],
                 summary,
                 pageMaps,
             };

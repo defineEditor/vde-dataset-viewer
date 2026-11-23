@@ -145,6 +145,7 @@ export interface DatasetDiff {
     data: DataDiff;
     summary: DiffSummary;
     settings: CompareSettings;
+    groupColumns: string[];
     pageMaps: {
         base: number[];
         comp: number[];
