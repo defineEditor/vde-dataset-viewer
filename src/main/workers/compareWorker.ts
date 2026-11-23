@@ -694,7 +694,6 @@ const getGroupColumnIndices = (
 interface GroupChunk {
     key: ItemDataArray;
     rows: ItemDataArray[];
-    groupEnd: boolean;
     startRow: number;
 }
 
@@ -761,28 +760,9 @@ const createGroupStream = (
             i++;
         }
 
-        let groupEnd = false;
-        if (i < pending.length) {
-            groupEnd =
-                compareGroupKeys(getGroupKey(pending[i], groupIdx), key) !== 0;
-        } else if (endReached) {
-            groupEnd = true;
-        } else {
-            // Peek the next row to determine whether the group continues
-            // eslint-disable-next-line no-await-in-loop
-            await readChunk();
-            if (i < pending.length) {
-                groupEnd =
-                    compareGroupKeys(getGroupKey(pending[i], groupIdx), key) !==
-                    0;
-            } else {
-                groupEnd = true;
-            }
-        }
-
         pending.splice(0, i);
         rowsConsumed += rows.length;
-        return { key, rows, groupEnd, startRow };
+        return { key, rows, startRow };
     };
 
     return { next };

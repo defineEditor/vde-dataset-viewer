@@ -293,16 +293,20 @@ export const dataSlice = createSlice({
             }>,
         ) => {
             const { fileBase, fileComp, groupColumns } = action.payload;
+            const normalizedGroupColumns =
+                groupColumns && groupColumns.length > 0
+                    ? groupColumns
+                    : undefined;
             // Check if already exists
-            const index = state.compare.recentCompares.findIndex((c) => {
-                if (c.fileBase === fileBase && c.fileComp === fileComp) {
-                    if (groupColumns) {
-                        return deepEqual(c.groupColumns || [], groupColumns);
-                    }
-                    return true;
-                }
-                return false;
-            });
+            const index = state.compare.recentCompares.findIndex(
+                (c) =>
+                    c.fileBase === fileBase &&
+                    c.fileComp === fileComp &&
+                    deepEqual(
+                        c.groupColumns || [],
+                        normalizedGroupColumns || [],
+                    ),
+            );
             if (index !== -1) {
                 state.compare.recentCompares.splice(index, 1);
             } else if (state.compare.recentCompares.length >= 20) {
@@ -311,7 +315,7 @@ export const dataSlice = createSlice({
             state.compare.recentCompares.unshift({
                 fileBase,
                 fileComp,
-                groupColumns,
+                groupColumns: normalizedGroupColumns,
             });
         },
     },
