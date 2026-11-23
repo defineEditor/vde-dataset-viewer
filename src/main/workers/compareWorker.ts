@@ -814,6 +814,7 @@ const applyBlockDiff = ({
     const nextSummary = {
         ...currentSummary,
         ...blockDiff.summary,
+        groupOrderIssues: { ...currentSummary.groupOrderIssues },
         totalRowsChecked: blockDiff.summary.maxDiffReached
             ? (blockDiff.summary.lastDiffRow || 0) + 1
             : baseRowsProcessed + Math.min(baseBlockLen, compBlockLen),

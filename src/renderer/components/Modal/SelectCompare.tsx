@@ -272,7 +272,7 @@ const SelectCompare: React.FC = () => {
     }) => {
         setFileBase(recent.fileBase);
         setFileComp(recent.fileComp);
-        if (recent.groupColumns) {
+        if (recent.groupColumns && recent.groupColumns.length > 0) {
             setGroupColumns(recent.groupColumns);
             setGroupColumnsFlag(true);
         } else {
@@ -556,16 +556,16 @@ const SelectCompare: React.FC = () => {
                                             primary={
                                                 <Stack direction="column">
                                                     <Box>
-                                                        Base: ${recent.fileBase}
+                                                        Base: {recent.fileBase}
                                                     </Box>
                                                     <Box>
-                                                        Comp: ${recent.fileComp}
+                                                        Comp: {recent.fileComp}
                                                     </Box>
                                                 </Stack>
                                             }
                                             secondary={
                                                 recent.groupColumns
-                                                    ? `ID: ${recent.groupColumns.join(', ')}`
+                                                    ? `Group columns: ${recent.groupColumns.join(', ')}`
                                                     : undefined
                                             }
                                         />
