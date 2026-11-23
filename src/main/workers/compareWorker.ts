@@ -583,7 +583,9 @@ export const compareData = (
             ? Math.max(summaryInit?.lastDiffRow || -Infinity, lastDiffRow)
             : summaryInit?.lastDiffRow || null;
     const totalDiffs =
-        dataDiff.deletedRows.length + dataDiff.modifiedRows.length;
+        dataDiff.addedRows.length +
+        dataDiff.deletedRows.length +
+        dataDiff.modifiedRows.length;
     const newTotalDiffs = (summaryInit?.totalDiffs || 0) + totalDiffs;
 
     const summary = {
@@ -793,9 +795,10 @@ const applyBlockDiff = ({
     compBlockLen,
     baseRowsProcessed,
     compRowsProcessed,
-    totalRecords,
+    progressTotal,
     currentSummary,
     sendMessage,
+    isGroupMode = false,
 }: {
     dataDiff: DatasetDiff['data'];
     blockDiff: ReturnType<typeof compareData>;
@@ -803,30 +806,41 @@ const applyBlockDiff = ({
     compBlockLen: number;
     baseRowsProcessed: number;
     compRowsProcessed: number;
-    totalRecords: number;
+    progressTotal: number;
     currentSummary: DatasetDiff['summary'];
     sendMessage: (progress: number, issues: number) => void;
+    isGroupMode?: boolean;
 }) => {
     dataDiff.addedRows.push(...blockDiff.data.addedRows);
     dataDiff.deletedRows.push(...blockDiff.data.deletedRows);
     dataDiff.modifiedRows.push(...blockDiff.data.modifiedRows);
 
-    const nextSummary = {
-        ...currentSummary,
-        ...blockDiff.summary,
-        groupOrderIssues: { ...currentSummary.groupOrderIssues },
-        totalRowsChecked: blockDiff.summary.maxDiffReached
-            ? (blockDiff.summary.lastDiffRow || 0) + 1
-            : baseRowsProcessed + Math.min(baseBlockLen, compBlockLen),
-    };
-
     const nextBaseRecords = baseRowsProcessed + baseBlockLen;
     const nextCompRecords = compRowsProcessed + compBlockLen;
     const nextMaxDiffReached = blockDiff.summary.maxDiffReached || false;
 
+    const rowsChecked = isGroupMode
+        ? Math.max(nextBaseRecords, nextCompRecords)
+        : baseRowsProcessed + Math.min(baseBlockLen, compBlockLen);
+
+    const nextSummary = {
+        ...currentSummary,
+        ...blockDiff.summary,
+        groupOrderIssues: { ...currentSummary.groupOrderIssues },
+        totalRowsChecked: nextMaxDiffReached
+            ? Math.max(
+                  currentSummary.totalRowsChecked,
+                  (blockDiff.summary.lastDiffRow || 0) + 1,
+              )
+            : rowsChecked,
+    };
+
+    const progressNumerator = isGroupMode
+        ? nextBaseRecords + nextCompRecords
+        : nextSummary.totalRowsChecked;
     const progress =
-        totalRecords > 0
-            ? Math.round((nextSummary.totalRowsChecked / totalRecords) * 100)
+        progressTotal > 0
+            ? Math.round((progressNumerator / progressTotal) * 100)
             : 0;
     if (progress < 100 && !nextMaxDiffReached) {
         sendMessage(Math.max(progress, 1), nextSummary.totalDiffs);
@@ -1084,9 +1098,10 @@ process.parentPort.once(
                         compBlockLen,
                         baseRowsProcessed: baseRecords,
                         compRowsProcessed: compRecords,
-                        totalRecords,
+                        progressTotal: baseMeta.records + compMeta.records,
                         currentSummary: summary,
                         sendMessage,
+                        isGroupMode: true,
                     });
 
                     summary = blockResult.summary;
@@ -1160,7 +1175,7 @@ process.parentPort.once(
                         compBlockLen: compData.length,
                         baseRowsProcessed: baseRecords,
                         compRowsProcessed: compRecords,
-                        totalRecords,
+                        progressTotal: totalRecords,
                         currentSummary: summary,
                         sendMessage,
                     });

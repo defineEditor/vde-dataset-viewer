@@ -38,3 +38,4 @@ release/app/yarn.lock
 
 # Development Plans
 plans
+.erb/tsconfig.tsbuildinfo

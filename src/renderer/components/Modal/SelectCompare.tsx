@@ -81,6 +81,8 @@ const styles = {
     },
 };
 
+const EMPTY_ARRAY = [];
+
 const SelectCompare: React.FC = () => {
     const dispatch = useAppDispatch();
     const { apiService } = useContext(AppContext);
@@ -93,7 +95,7 @@ const SelectCompare: React.FC = () => {
     const fileCompState =
         useAppSelector((state) => state.ui.compare.fileComp) || '';
     const groupColumnsState =
-        useAppSelector((state) => state.ui.compare.groupColumns) || [];
+        useAppSelector((state) => state.ui.compare.groupColumns) || EMPTY_ARRAY;
 
     const ignoreWhiteSpacesSettings = useAppSelector(
         (state) => state.settings.compare.ignoreWhiteSpaces,
@@ -127,11 +129,13 @@ const SelectCompare: React.FC = () => {
 
     const handleUpdateFileBase = (event) => {
         resetGroupColumns();
+        setSharedColumns([]);
         setFileBase(event.target.value);
     };
 
     const handleUpdateFileComp = (event) => {
         resetGroupColumns();
+        setSharedColumns([]);
         setFileComp(event.target.value);
     };
 
@@ -145,7 +149,11 @@ const SelectCompare: React.FC = () => {
     }, [dispatch]);
 
     const handleCompare = useCallback(
-        (newFileBase: string, newFileComp: string) => {
+        (
+            newFileBase: string,
+            newFileComp: string,
+            newGroupColumns: string[] = groupColumns,
+        ) => {
             // If there is an open compare, close it first
             if (currentCompareId) {
                 dispatch(closeCompare({ compareId: currentCompareId }));
@@ -161,7 +169,7 @@ const SelectCompare: React.FC = () => {
                 initializeCompare({
                     fileBase: newFileBase,
                     fileComp: newFileComp,
-                    groupColumns,
+                    groupColumns: newGroupColumns,
                     customSettings: {
                         ignoreWhiteSpaces,
                         ignoreValueCase,
@@ -181,67 +189,83 @@ const SelectCompare: React.FC = () => {
     );
 
     // Read the columns of both files and open the group columns selection
-    const handleGetColumns = useCallback(async () => {
-        if (!fileBase || !fileComp) {
-            return;
-        }
-
-        try {
-            if (fileBase === fileComp) {
-                // This makes no sense, so no need to check columns
+    const handleGetColumns = useCallback(
+        async (
+            targetBase: string,
+            targetComp: string,
+            targetGroupColumns: string[],
+        ) => {
+            if (!targetBase || !targetComp) {
                 return;
             }
 
-            const [baseColumns, compColumns] = await Promise.all([
-                apiService.getFileColumns(fileBase),
-                apiService.getFileColumns(fileComp),
-            ]);
+            try {
+                if (targetBase === targetComp) {
+                    // This makes no sense, so no need to check columns
+                    setSharedColumns([]);
+                    return;
+                }
 
-            const compColumnSet = new Set(
-                compColumns.map((column) => column.name.toLowerCase()),
-            );
-            const newSharedColumns = baseColumns
-                .filter((column) =>
-                    compColumnSet.has(column.name.toLowerCase()),
-                )
-                .map((column) => column.name);
+                const [baseColumns, compColumns] = await Promise.all([
+                    apiService.getFileColumns(targetBase),
+                    apiService.getFileColumns(targetComp),
+                ]);
 
-            if (newSharedColumns.length === 0) {
+                const compColumnSet = new Set(
+                    compColumns.map((column) => column.name.toLowerCase()),
+                );
+                const newSharedColumns = baseColumns
+                    .filter((column) =>
+                        compColumnSet.has(column.name.toLowerCase()),
+                    )
+                    .map((column) => column.name);
+
+                if (newSharedColumns.length === 0) {
+                    dispatch(
+                        openSnackbar({
+                            message:
+                                'The selected files do not share any columns',
+                            type: 'warning',
+                        }),
+                    );
+                    setSharedColumns([]);
+                    return;
+                }
+                setSharedColumns(newSharedColumns);
+
+                // Drop previously selected columns that are not shared anymore
+                const newSharedColumnSet = new Set(
+                    newSharedColumns.map((column) => column.toLowerCase()),
+                );
+                const stillAvailable = targetGroupColumns.filter((column) =>
+                    newSharedColumnSet.has(column.toLowerCase()),
+                );
+                if (stillAvailable.length !== targetGroupColumns.length) {
+                    setGroupColumns(stillAvailable);
+                }
+            } catch (error) {
                 dispatch(
                     openSnackbar({
-                        message: 'The selected files do not share any columns',
-                        type: 'warning',
+                        message: (error as Error).message,
+                        type: 'error',
                     }),
                 );
-                setSharedColumns([]);
-                return;
             }
-            setSharedColumns(newSharedColumns);
+        },
+        [apiService, dispatch],
+    );
 
-            // Drop previously selected columns that are not shared anymore
-            const newSharedColumnSet = new Set(
-                newSharedColumns.map((column) => column.toLowerCase()),
-            );
-            const stillAvailable = groupColumns.filter((column) =>
-                newSharedColumnSet.has(column.toLowerCase()),
-            );
-            if (stillAvailable.length !== groupColumns.length) {
-                setGroupColumns(stillAvailable);
-            }
-        } catch (error) {
-            dispatch(
-                openSnackbar({
-                    message: (error as Error).message,
-                    type: 'error',
-                }),
-            );
+    // Load shared columns on mount when reopening with existing group columns
+    useEffect(() => {
+        if (groupColumnsState.length > 0 && fileBaseState && fileCompState) {
+            handleGetColumns(fileBaseState, fileCompState, groupColumnsState);
         }
-    }, [apiService, dispatch, fileBase, fileComp, groupColumns]);
+    }, [fileBaseState, fileCompState, groupColumnsState, handleGetColumns]);
 
     const handleToggleGroupColumnsFlag = (newValue: boolean) => {
         setGroupColumnsFlag(newValue);
         if (newValue) {
-            handleGetColumns();
+            handleGetColumns(fileBase, fileComp, groupColumns);
         } else {
             resetGroupColumns();
         }
@@ -253,15 +277,19 @@ const SelectCompare: React.FC = () => {
         });
         if (result && result.length > 0) {
             resetGroupColumns();
+            const nextFileBase =
+                type === 'base' ? result[0].fullPath : fileBase;
+            const nextFileComp =
+                type === 'comp' ? result[0].fullPath : fileComp;
             if (type === 'base') {
-                setFileBase(result[0].fullPath);
+                setFileBase(nextFileBase);
             } else {
-                setFileComp(result[0].fullPath);
+                setFileComp(nextFileComp);
             }
-        }
-        // Refresh the list of columns
-        if (groupColumnsFlag) {
-            handleGetColumns();
+            // Refresh the list of columns
+            if (groupColumnsFlag) {
+                handleGetColumns(nextFileBase, nextFileComp, []);
+            }
         }
     };
 
@@ -275,7 +303,13 @@ const SelectCompare: React.FC = () => {
         if (recent.groupColumns && recent.groupColumns.length > 0) {
             setGroupColumns(recent.groupColumns);
             setGroupColumnsFlag(true);
+            handleGetColumns(
+                recent.fileBase,
+                recent.fileComp,
+                recent.groupColumns,
+            );
         } else {
+            setGroupColumnsFlag(false);
             resetGroupColumns();
         }
     };
@@ -295,8 +329,11 @@ const SelectCompare: React.FC = () => {
                     if (recentCompares[index]) {
                         event.preventDefault();
                         const recent = recentCompares[index];
-                        resetGroupColumns();
-                        handleCompare(recent.fileBase, recent.fileComp);
+                        handleCompare(
+                            recent.fileBase,
+                            recent.fileComp,
+                            recent.groupColumns || [],
+                        );
                     }
                 }
             }
@@ -306,13 +343,7 @@ const SelectCompare: React.FC = () => {
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [
-        recentCompares,
-        dispatch,
-        handleClose,
-        handleCompare,
-        resetGroupColumns,
-    ]);
+    }, [recentCompares, handleCompare]);
 
     return (
         <Dialog
@@ -535,7 +566,7 @@ const SelectCompare: React.FC = () => {
                         <List>
                             {recentCompares.slice(0, 5).map((recent, index) => (
                                 <React.Fragment
-                                    key={recent.fileBase + recent.fileComp}
+                                    key={`${recent.fileBase}|${recent.fileComp}|${(recent.groupColumns || []).join(',')}`}
                                 >
                                     <ListItem
                                         onClick={() =>
