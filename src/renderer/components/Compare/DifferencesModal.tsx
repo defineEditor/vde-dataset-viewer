@@ -33,6 +33,11 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import SearchIcon from '@mui/icons-material/Search';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import ViewColumnIcon from '@mui/icons-material/ViewColumn';
+import LayersIcon from '@mui/icons-material/Layers';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
+import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { useAppDispatch, useAppSelector } from '@redux/hooks';
 import {
     openSnackbar,
@@ -83,6 +88,32 @@ const styles = {
     rowDiffHeader: {
         backgroundColor: 'action.hover',
     },
+    collapsibleGroupHeader: {
+        backgroundColor: 'action.hover',
+        cursor: 'pointer',
+    },
+    groupHeaderWrapper: {
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        pl: 4,
+    },
+    groupToggleButton: {
+        position: 'absolute',
+        left: 0,
+    },
+    groupHeaderContent: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 0.5,
+    },
+    groupCount: {
+        color: 'text.secondary',
+        fontWeight: 400,
+    },
     headerIcon: {
         color: 'primary.contrastText',
     },
@@ -120,6 +151,70 @@ const styles = {
     },
 };
 
+interface DiffItem {
+    row: number;
+    rowBase: number | null;
+    rowCompare: number | null;
+    col: string;
+    base: ItemDataArray[number];
+    comp: ItemDataArray[number];
+    groupKey: string;
+    groupLabel: string;
+    groupCompactLabel: string;
+}
+
+const formatRowLabel = (
+    rowBase: number | null,
+    rowCompare: number | null,
+): string => {
+    if (rowBase !== null && rowCompare !== null) {
+        return rowBase === rowCompare
+            ? `${rowBase + 1}`
+            : `${rowBase + 1} / ${rowCompare + 1}`;
+    }
+    if (rowBase !== null) {
+        return `Base ${rowBase + 1}`;
+    }
+    if (rowCompare !== null) {
+        return `Comp ${rowCompare + 1}`;
+    }
+    return '-';
+};
+
+const formatGroupLabel = (
+    groupColumns: string[],
+    groupValues?: ItemDataArray,
+): string => {
+    if (!groupValues || groupColumns.length === 0) return '';
+    return groupColumns
+        .map((col, idx) => `${col}: ${groupValues[idx] ?? ''}`)
+        .join(', ');
+};
+
+const formatGroupCompactLabel = (groupValues?: ItemDataArray): string => {
+    if (!groupValues || groupValues.length === 0) return '';
+    return groupValues
+        .map((val) => (val === null || val === undefined ? '' : String(val)))
+        .join(' / ');
+};
+
+const formatGroupKey = (groupValues?: ItemDataArray): string => {
+    if (!groupValues || groupValues.length === 0) return '__ungrouped__';
+    return JSON.stringify(
+        groupValues.map((val) =>
+            val === null || val === undefined ? null : val,
+        ),
+    );
+};
+
+const formatDiffCopyLine = (diff: DiffItem, includeGroup: boolean): string => {
+    const rowText = formatRowLabel(diff.rowBase, diff.rowCompare);
+    const groupPrefix =
+        includeGroup && diff.groupLabel ? `Group: ${diff.groupLabel}\t` : '';
+    const colText = diff.col === 'whole::row' ? 'Whole Row' : diff.col;
+    return `${groupPrefix}Row: ${rowText}\tColumn: ${colText}\tBase: ${diff.base}\tCompare: ${diff.comp}`;
+};
+
 interface AllDifferencesModalProps {
     datasetDiff: DatasetDiff | null;
     handleSetGoTo: (newGoTo: Partial<IUiControl['goTo']>) => void;
@@ -146,6 +241,24 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
     const [searchTerm, setSearchTerm] = useState('');
     const searchInputRef = useRef<HTMLInputElement>(null);
 
+    const groupColumns = useMemo(
+        () => datasetDiff?.groupColumns || [],
+        [datasetDiff?.groupColumns],
+    );
+    const hasGroups = groupColumns.length > 0;
+
+    const [viewMode, setViewMode] = useState<'group' | 'row' | 'column'>(
+        hasGroups ? 'group' : 'row',
+    );
+    const [collapsedGroups, setCollapsedGroups] = useState<
+        Record<string, boolean>
+    >({});
+
+    useEffect(() => {
+        setViewMode(hasGroups ? 'group' : 'row');
+        setCollapsedGroups({});
+    }, [hasGroups, datasetDiff]);
+
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
@@ -166,50 +279,66 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
         };
     }, [handleClose]);
 
-    const [viewMode, setViewMode] = useState<'row' | 'column'>('row');
-
-    const allDifferences = useMemo(() => {
+    const allDifferences = useMemo<DiffItem[]>(() => {
         if (!datasetDiff) return [];
-        const diffs: Array<{
-            row: number;
-            col: string;
-            base: ItemDataArray[number];
-            comp: ItemDataArray[number];
-        }> = [];
+        const diffs: DiffItem[] = [];
         datasetDiff.data.modifiedRows.forEach((r) => {
             if (r.diff) {
+                const groupKey = formatGroupKey(r.groupValues);
+                const groupLabel = formatGroupLabel(
+                    groupColumns,
+                    r.groupValues,
+                );
+                const groupCompactLabel = formatGroupCompactLabel(
+                    r.groupValues,
+                );
                 Object.entries(r.diff).forEach(([col, [base, comp]]) => {
                     diffs.push({
-                        row: r.rowBase || 0,
+                        row: r.rowBase ?? r.rowCompare ?? 0,
+                        rowBase: r.rowBase,
+                        rowCompare: r.rowCompare,
                         col,
                         base,
                         comp,
+                        groupKey,
+                        groupLabel,
+                        groupCompactLabel,
                     });
                 });
             }
         });
         datasetDiff.data.addedRows.forEach((r) => {
             diffs.push({
-                row: r.rowBase || r.rowCompare || 0,
+                row: r.rowBase ?? r.rowCompare ?? 0,
+                rowBase: r.rowBase,
+                rowCompare: r.rowCompare,
                 col: 'whole::row',
                 base: r.rowBase === null ? 'Row Missing' : '',
                 comp: r.rowCompare === null ? 'Row Missing' : '',
+                groupKey: formatGroupKey(r.groupValues),
+                groupLabel: formatGroupLabel(groupColumns, r.groupValues),
+                groupCompactLabel: formatGroupCompactLabel(r.groupValues),
             });
         });
         datasetDiff.data.deletedRows.forEach((r) => {
             diffs.push({
-                row: r.rowBase || r.rowCompare || 0,
+                row: r.rowBase ?? r.rowCompare ?? 0,
+                rowBase: r.rowBase,
+                rowCompare: r.rowCompare,
                 col: 'whole::row',
                 base: r.rowBase === null ? 'Row Missing' : '',
                 comp: r.rowCompare === null ? 'Row Missing' : '',
+                groupKey: formatGroupKey(r.groupValues),
+                groupLabel: formatGroupLabel(groupColumns, r.groupValues),
+                groupCompactLabel: formatGroupCompactLabel(r.groupValues),
             });
         });
         return diffs;
-    }, [datasetDiff]);
+    }, [datasetDiff, groupColumns]);
 
     const handleGoTo = (row: number, column?: string) => {
         // Find index of this difference
-        const diffRows = new Set();
+        const diffRows = new Set<number>();
         allDifferences.forEach((diff) => {
             diffRows.add(diff.row);
         });
@@ -236,116 +365,92 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
             (d) =>
                 d.col.toLowerCase().includes(lowSearch) ||
                 String(d.base).toLowerCase().includes(lowSearch) ||
-                String(d.comp).toLowerCase().includes(lowSearch),
+                String(d.comp).toLowerCase().includes(lowSearch) ||
+                d.groupLabel.toLowerCase().includes(lowSearch) ||
+                d.groupCompactLabel.toLowerCase().includes(lowSearch),
         );
     }, [allDifferences, searchTerm]);
 
-    const groupedDifferences = useMemo(() => {
-        const groups: Record<string, typeof filteredDifferences> = {};
+    const { groupedDifferences, sortedSectionKeys } = useMemo(() => {
+        const groups: Record<string, DiffItem[]> = {};
+        const insertionOrder: string[] = [];
+
         filteredDifferences.forEach((d) => {
-            const key = viewMode === 'row' ? String(d.row) : d.col;
-            if (!groups[key]) groups[key] = [];
+            let key: string;
+            if (viewMode === 'group') {
+                key = d.groupKey;
+            } else if (viewMode === 'row') {
+                key = `${d.rowBase ?? 'null'}|${d.rowCompare ?? 'null'}`;
+            } else {
+                key = d.col;
+            }
+            if (!groups[key]) {
+                groups[key] = [];
+                insertionOrder.push(key);
+            }
             groups[key].push(d);
         });
-        return groups;
+
+        let sortedKeys: string[];
+        if (viewMode === 'row') {
+            sortedKeys = insertionOrder.sort((a, b) => {
+                const rowA = groups[a][0]?.row ?? 0;
+                const rowB = groups[b][0]?.row ?? 0;
+                return rowA - rowB;
+            });
+        } else if (viewMode === 'column') {
+            sortedKeys = [...insertionOrder].sort();
+        } else {
+            // Preserve dataset order for group view
+            sortedKeys = insertionOrder;
+        }
+
+        return {
+            groupedDifferences: groups,
+            sortedSectionKeys: sortedKeys,
+        };
     }, [filteredDifferences, viewMode]);
 
-    const sortedGroupKeys = useMemo(() => {
-        const keys = Object.keys(groupedDifferences);
-        if (viewMode === 'row') {
-            return keys.sort((a, b) => Number(a) - Number(b));
-        }
-        return keys.sort();
-    }, [groupedDifferences, viewMode]);
+    const handleToggleGroup = useCallback((groupKey: string) => {
+        setCollapsedGroups((prev) => ({
+            ...prev,
+            [groupKey]: !prev[groupKey],
+        }));
+    }, []);
 
-    const handleCopy = (row?: number, column?: string) => {
-        if (!datasetDiff) return;
-        // If row and column are provided, copy that specific cell's diff
-        if (row !== undefined && column !== undefined) {
-            const rowDiff = datasetDiff.data.modifiedRows.find(
-                (r) => r.rowBase === row,
-            );
-            if (rowDiff && rowDiff.diff && rowDiff.diff[column]) {
-                const [baseVal, compVal] = rowDiff.diff[column];
-                const diffText = `Row: ${row}\tColumn: ${column}\tBase: ${baseVal}\tCompare: ${compVal}`;
-                apiService.writeToClipboard(diffText);
-                dispatch(
-                    openSnackbar({
-                        message: `Copied to clipboard ${column}:${row} difference`,
-                        type: 'success',
-                        props: { duration: 1000 },
-                    }),
-                );
-                return;
-            }
-        }
+    const allCollapsed =
+        sortedSectionKeys.length > 0 &&
+        sortedSectionKeys.every((key) => collapsedGroups[key]);
 
-        // If row is specified, copy all diffs for that row
-        if (row !== undefined) {
-            const rowDiff = datasetDiff.data.modifiedRows.find(
-                (r) => r.rowBase === row,
-            );
-            if (rowDiff && rowDiff.diff) {
-                let diffText = '';
-                Object.entries(rowDiff.diff).forEach(
-                    ([colName, [baseVal, compVal]]) => {
-                        diffText += `Row: ${row}\tColumn: ${colName}\tBase: ${baseVal}\tCompare: ${compVal}\n`;
-                    },
-                );
-                apiService.writeToClipboard(diffText);
-                dispatch(
-                    openSnackbar({
-                        message: `Copied to clipboard row ${row + 1} difference`,
-                        type: 'success',
-                        props: { duration: 1000 },
-                    }),
-                );
-                return;
-            }
-        }
-
-        // If column is specified, copy all diffs for that column
-        if (column !== undefined) {
-            let diffText = '';
-            datasetDiff.data.modifiedRows.forEach((rowDiff) => {
-                if (rowDiff.diff && rowDiff.diff[column]) {
-                    const [baseVal, compVal] = rowDiff.diff[column];
-                    diffText += `Row: ${rowDiff.rowBase}\tColumn: ${column}\tBase: ${baseVal}\tCompare: ${compVal}\n`;
-                }
+    const handleToggleAllGroups = useCallback(() => {
+        if (allCollapsed) {
+            setCollapsedGroups({});
+        } else {
+            const next: Record<string, boolean> = {};
+            sortedSectionKeys.forEach((key) => {
+                next[key] = true;
             });
-            if (diffText) {
-                apiService.writeToClipboard(diffText);
-                dispatch(
-                    openSnackbar({
-                        message: `Copied to clipboard column ${column} differences`,
-                        type: 'success',
-                        props: { duration: 1000 },
-                    }),
-                );
-                return;
-            }
+            setCollapsedGroups(next);
         }
+    }, [allCollapsed, sortedSectionKeys]);
 
-        // If no specific row/column, copy all differences
-        let diffsText = '';
-        datasetDiff.data.modifiedRows.forEach((rowDiff) => {
-            if (rowDiff.diff) {
-                Object.entries(rowDiff.diff).forEach(
-                    ([colName, [baseVal, compVal]]) => {
-                        diffsText += `Row: ${rowDiff.rowBase}\tColumn: ${colName}\tBase: ${baseVal}\tCompare: ${compVal}\n`;
-                    },
-                );
-            }
-        });
-        apiService.writeToClipboard(diffsText.trim());
-        dispatch(
-            openSnackbar({
-                message: 'Copied to clipboard all differences',
-                type: 'success',
-                props: { duration: 1000 },
-            }),
-        );
-    };
+    const handleCopyItems = useCallback(
+        (items: DiffItem[], message: string) => {
+            if (items.length === 0) return;
+            const text = items
+                .map((item) => formatDiffCopyLine(item, hasGroups))
+                .join('\n');
+            apiService.writeToClipboard(text);
+            dispatch(
+                openSnackbar({
+                    message,
+                    type: 'success',
+                    props: { duration: 1000 },
+                }),
+            );
+        },
+        [apiService, dispatch, hasGroups],
+    );
 
     if (!datasetDiff) {
         if (open) {
@@ -353,6 +458,9 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
         }
         return null;
     }
+
+    const totalTableCols =
+        viewMode === 'group' || (viewMode === 'column' && hasGroups) ? 6 : 5;
 
     return (
         <Dialog
@@ -375,6 +483,13 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
                             size="small"
                             sx={styles.toggleButtonGroup}
                         >
+                            {hasGroups && (
+                                <Tooltip title="View differences grouped by group columns">
+                                    <ToggleButton value="group">
+                                        <LayersIcon fontSize="small" />
+                                    </ToggleButton>
+                                </Tooltip>
+                            )}
                             <Tooltip title="View differences grouped by rows">
                                 <ToggleButton value="row">
                                     <ViewListIcon fontSize="small" />
@@ -386,6 +501,28 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
                                 </ToggleButton>
                             </Tooltip>
                         </ToggleButtonGroup>
+                        {viewMode === 'group' &&
+                            sortedSectionKeys.length > 0 && (
+                                <Tooltip
+                                    title={
+                                        allCollapsed
+                                            ? 'Expand all groups'
+                                            : 'Collapse all groups'
+                                    }
+                                >
+                                    <IconButton
+                                        size="small"
+                                        onClick={handleToggleAllGroups}
+                                        sx={styles.headerIcon}
+                                    >
+                                        {allCollapsed ? (
+                                            <UnfoldMoreIcon fontSize="small" />
+                                        ) : (
+                                            <UnfoldLessIcon fontSize="small" />
+                                        )}
+                                    </IconButton>
+                                </Tooltip>
+                            )}
                     </Stack>
                     <Stack direction="row" spacing={2} sx={styles.rowCenter}>
                         <TextField
@@ -410,7 +547,12 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
                         />
                         <IconButton
                             size="small"
-                            onClick={() => handleCopy()}
+                            onClick={() =>
+                                handleCopyItems(
+                                    filteredDifferences,
+                                    'Copied to clipboard all differences',
+                                )
+                            }
                             sx={styles.headerIcon}
                         >
                             <ContentCopyIcon fontSize="small" />
@@ -429,9 +571,23 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
                     <Table size="small">
                         <TableHead>
                             <TableRow>
-                                <TableCell>
-                                    {viewMode === 'row' ? 'Column' : 'Row'}
-                                </TableCell>
+                                {viewMode === 'group' && (
+                                    <>
+                                        <TableCell>Row</TableCell>
+                                        <TableCell>Column</TableCell>
+                                    </>
+                                )}
+                                {viewMode === 'row' && (
+                                    <TableCell>Column</TableCell>
+                                )}
+                                {viewMode === 'column' && (
+                                    <>
+                                        <TableCell>Row</TableCell>
+                                        {hasGroups && (
+                                            <TableCell>Group</TableCell>
+                                        )}
+                                    </>
+                                )}
                                 <TableCell>Base Value</TableCell>
                                 <TableCell>Compare Value</TableCell>
                                 <TableCell>Diff</TableCell>
@@ -439,158 +595,335 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {sortedGroupKeys.map((groupKey) => (
-                                <React.Fragment key={groupKey}>
-                                    <TableRow sx={styles.rowDiffHeader}>
-                                        <TableCell
-                                            colSpan={5}
-                                            sx={styles.rowHeader}
+                            {sortedSectionKeys.map((sectionKey) => {
+                                const sectionItems =
+                                    groupedDifferences[sectionKey];
+                                const firstItem = sectionItems[0];
+
+                                let sectionTitle = '';
+                                if (viewMode === 'group') {
+                                    sectionTitle =
+                                        firstItem?.groupLabel || 'Group';
+                                } else if (viewMode === 'row') {
+                                    const rowTitle = `Row ${formatRowLabel(
+                                        firstItem?.rowBase ?? null,
+                                        firstItem?.rowCompare ?? null,
+                                    )}`;
+                                    sectionTitle =
+                                        hasGroups && firstItem?.groupLabel
+                                            ? `${rowTitle} — ${firstItem.groupLabel}`
+                                            : rowTitle;
+                                } else {
+                                    sectionTitle =
+                                        sectionKey === 'whole::row'
+                                            ? 'Row'
+                                            : `Column ${sectionKey}`;
+                                }
+
+                                const isGroupView = viewMode === 'group';
+                                const isCollapsed =
+                                    isGroupView &&
+                                    Boolean(collapsedGroups[sectionKey]);
+
+                                return (
+                                    <React.Fragment key={sectionKey}>
+                                        <TableRow
+                                            sx={
+                                                isGroupView
+                                                    ? styles.collapsibleGroupHeader
+                                                    : styles.rowDiffHeader
+                                            }
+                                            onClick={
+                                                isGroupView
+                                                    ? () =>
+                                                          handleToggleGroup(
+                                                              sectionKey,
+                                                          )
+                                                    : undefined
+                                            }
                                         >
-                                            <Typography variant="subtitle2">
-                                                {viewMode === 'row'
-                                                    ? `Row ${Number(groupKey) + 1}`
-                                                    : groupKey === 'whole::row'
-                                                      ? 'Row'
-                                                      : `Column ${groupKey}`}
-                                                {groupKey !== 'whole::row' && (
-                                                    <IconButton
-                                                        size="small"
-                                                        onClick={() =>
-                                                            viewMode === 'row'
-                                                                ? handleCopy(
-                                                                      Number(
-                                                                          groupKey,
-                                                                      ),
-                                                                  )
-                                                                : handleCopy(
-                                                                      undefined,
-                                                                      groupKey,
-                                                                  )
-                                                        }
-                                                        sx={styles.rowIcon}
-                                                    >
-                                                        <ContentCopyIcon fontSize="small" />
-                                                    </IconButton>
-                                                )}
-                                            </Typography>
-                                        </TableCell>
-                                    </TableRow>
-                                    {groupedDifferences[groupKey].map(
-                                        (diff) => {
-                                            const isWholeRow =
-                                                diff.col === 'whole::row';
-                                            const diffParts = !isWholeRow
-                                                ? diffChars(
-                                                      String(diff.base),
-                                                      String(diff.comp),
-                                                  )
-                                                : [];
-                                            return (
-                                                <TableRow
-                                                    key={`${diff.row}-${diff.col}`}
+                                            <TableCell
+                                                colSpan={totalTableCols}
+                                                sx={styles.rowHeader}
+                                            >
+                                                <Stack
+                                                    direction="row"
+                                                    sx={
+                                                        isGroupView
+                                                            ? styles.groupHeaderWrapper
+                                                            : styles.groupHeaderContent
+                                                    }
                                                 >
-                                                    <TableCell>
-                                                        <Button
+                                                    {isGroupView && (
+                                                        <IconButton
                                                             size="small"
-                                                            onClick={() =>
-                                                                handleGoTo(
-                                                                    (diff.row ||
-                                                                        0) + 1,
-                                                                    isWholeRow
-                                                                        ? undefined
-                                                                        : diff.col,
-                                                                )
-                                                            }
                                                             sx={
-                                                                styles.columnButton
+                                                                styles.groupToggleButton
+                                                            }
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleToggleGroup(
+                                                                    sectionKey,
+                                                                );
+                                                            }}
+                                                            aria-label={
+                                                                isCollapsed
+                                                                    ? 'Expand group'
+                                                                    : 'Collapse group'
                                                             }
                                                         >
-                                                            {viewMode === 'row'
-                                                                ? isWholeRow
-                                                                    ? diff.row +
-                                                                      1
-                                                                    : diff.col
-                                                                : diff.row + 1}
-                                                        </Button>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {String(diff.base)}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {String(diff.comp)}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {!isWholeRow && (
-                                                            <span>
-                                                                {diffParts.map(
-                                                                    (
-                                                                        part,
-                                                                        i,
-                                                                    ) => {
-                                                                        const style =
-                                                                            {
-                                                                                backgroundColor:
-                                                                                    part.added
-                                                                                        ? theme.alpha(
-                                                                                              theme
-                                                                                                  .vars!
-                                                                                                  .palette
-                                                                                                  .success
-                                                                                                  .main,
-                                                                                              0.32,
-                                                                                          )
-                                                                                        : part.removed
-                                                                                          ? theme.alpha(
-                                                                                                theme
-                                                                                                    .vars!
-                                                                                                    .palette
-                                                                                                    .error
-                                                                                                    .main,
-                                                                                                0.5,
-                                                                                            )
-                                                                                          : 'transparent',
-                                                                            } as React.CSSProperties;
-                                                                        return (
-                                                                            <span
-                                                                                key={
-                                                                                    // eslint-disable-next-line react/no-array-index-key
-                                                                                    i
-                                                                                }
-                                                                                style={
-                                                                                    style
-                                                                                }
-                                                                            >
-                                                                                {
-                                                                                    part.value
-                                                                                }
-                                                                            </span>
-                                                                        );
-                                                                    },
-                                                                )}
-                                                            </span>
+                                                            {isCollapsed ? (
+                                                                <ChevronRightIcon fontSize="small" />
+                                                            ) : (
+                                                                <ExpandMoreIcon fontSize="small" />
+                                                            )}
+                                                        </IconButton>
+                                                    )}
+                                                    <Typography
+                                                        variant="subtitle2"
+                                                        component="div"
+                                                        sx={
+                                                            styles.groupHeaderContent
+                                                        }
+                                                    >
+                                                        <span>
+                                                            {sectionTitle}
+                                                        </span>
+                                                        {isGroupView && (
+                                                            <Typography
+                                                                component="span"
+                                                                variant="subtitle2"
+                                                                sx={
+                                                                    styles.groupCount
+                                                                }
+                                                            >
+                                                                {`(${sectionItems.length})`}
+                                                            </Typography>
                                                         )}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {!isWholeRow && (
+                                                        {sectionKey !==
+                                                            'whole::row' && (
                                                             <IconButton
                                                                 size="small"
-                                                                onClick={() =>
-                                                                    handleCopy(
-                                                                        diff.row,
-                                                                        diff.col,
-                                                                    )
+                                                                onClick={(
+                                                                    e,
+                                                                ) => {
+                                                                    e.stopPropagation();
+                                                                    handleCopyItems(
+                                                                        sectionItems,
+                                                                        `Copied to clipboard ${sectionTitle} differences`,
+                                                                    );
+                                                                }}
+                                                                sx={
+                                                                    styles.rowIcon
                                                                 }
                                                             >
                                                                 <ContentCopyIcon fontSize="small" />
                                                             </IconButton>
                                                         )}
-                                                    </TableCell>
-                                                </TableRow>
-                                            );
-                                        },
-                                    )}
-                                </React.Fragment>
-                            ))}
+                                                    </Typography>
+                                                </Stack>
+                                            </TableCell>
+                                        </TableRow>
+                                        {!isCollapsed &&
+                                            sectionItems.map((diff) => {
+                                                const isWholeRow =
+                                                    diff.col === 'whole::row';
+                                                const diffParts = !isWholeRow
+                                                    ? diffChars(
+                                                          String(diff.base),
+                                                          String(diff.comp),
+                                                      )
+                                                    : [];
+                                                const rowLabel = formatRowLabel(
+                                                    diff.rowBase,
+                                                    diff.rowCompare,
+                                                );
+                                                const navRow =
+                                                    (diff.row || 0) + 1;
+
+                                                return (
+                                                    <TableRow
+                                                        key={`${diff.rowBase ?? 'n'}-${diff.rowCompare ?? 'n'}-${diff.col}`}
+                                                    >
+                                                        {viewMode ===
+                                                            'group' && (
+                                                            <>
+                                                                <TableCell>
+                                                                    <Button
+                                                                        size="small"
+                                                                        onClick={() =>
+                                                                            handleGoTo(
+                                                                                navRow,
+                                                                                isWholeRow
+                                                                                    ? undefined
+                                                                                    : diff.col,
+                                                                            )
+                                                                        }
+                                                                        sx={
+                                                                            styles.columnButton
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            rowLabel
+                                                                        }
+                                                                    </Button>
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    <Button
+                                                                        size="small"
+                                                                        onClick={() =>
+                                                                            handleGoTo(
+                                                                                navRow,
+                                                                                isWholeRow
+                                                                                    ? undefined
+                                                                                    : diff.col,
+                                                                            )
+                                                                        }
+                                                                        sx={
+                                                                            styles.columnButton
+                                                                        }
+                                                                    >
+                                                                        {isWholeRow
+                                                                            ? 'Whole Row'
+                                                                            : diff.col}
+                                                                    </Button>
+                                                                </TableCell>
+                                                            </>
+                                                        )}
+                                                        {viewMode === 'row' && (
+                                                            <TableCell>
+                                                                <Button
+                                                                    size="small"
+                                                                    onClick={() =>
+                                                                        handleGoTo(
+                                                                            navRow,
+                                                                            isWholeRow
+                                                                                ? undefined
+                                                                                : diff.col,
+                                                                        )
+                                                                    }
+                                                                    sx={
+                                                                        styles.columnButton
+                                                                    }
+                                                                >
+                                                                    {isWholeRow
+                                                                        ? rowLabel
+                                                                        : diff.col}
+                                                                </Button>
+                                                            </TableCell>
+                                                        )}
+                                                        {viewMode ===
+                                                            'column' && (
+                                                            <>
+                                                                <TableCell>
+                                                                    <Button
+                                                                        size="small"
+                                                                        onClick={() =>
+                                                                            handleGoTo(
+                                                                                navRow,
+                                                                                isWholeRow
+                                                                                    ? undefined
+                                                                                    : diff.col,
+                                                                            )
+                                                                        }
+                                                                        sx={
+                                                                            styles.columnButton
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            rowLabel
+                                                                        }
+                                                                    </Button>
+                                                                </TableCell>
+                                                                {hasGroups && (
+                                                                    <TableCell>
+                                                                        {
+                                                                            diff.groupCompactLabel
+                                                                        }
+                                                                    </TableCell>
+                                                                )}
+                                                            </>
+                                                        )}
+                                                        <TableCell>
+                                                            {String(diff.base)}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {String(diff.comp)}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {!isWholeRow && (
+                                                                <span>
+                                                                    {diffParts.map(
+                                                                        (
+                                                                            part,
+                                                                            i,
+                                                                        ) => {
+                                                                            const style =
+                                                                                {
+                                                                                    backgroundColor:
+                                                                                        part.added
+                                                                                            ? theme.alpha(
+                                                                                                  theme
+                                                                                                      .vars!
+                                                                                                      .palette
+                                                                                                      .success
+                                                                                                      .main,
+                                                                                                  0.32,
+                                                                                              )
+                                                                                            : part.removed
+                                                                                              ? theme.alpha(
+                                                                                                    theme
+                                                                                                        .vars!
+                                                                                                        .palette
+                                                                                                        .error
+                                                                                                        .main,
+                                                                                                    0.5,
+                                                                                                )
+                                                                                              : 'transparent',
+                                                                                } as React.CSSProperties;
+                                                                            return (
+                                                                                <span
+                                                                                    key={
+                                                                                        // eslint-disable-next-line react/no-array-index-key
+                                                                                        i
+                                                                                    }
+                                                                                    style={
+                                                                                        style
+                                                                                    }
+                                                                                >
+                                                                                    {
+                                                                                        part.value
+                                                                                    }
+                                                                                </span>
+                                                                            );
+                                                                        },
+                                                                    )}
+                                                                </span>
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {!isWholeRow && (
+                                                                <IconButton
+                                                                    size="small"
+                                                                    onClick={() =>
+                                                                        handleCopyItems(
+                                                                            [
+                                                                                diff,
+                                                                            ],
+                                                                            `Copied to clipboard ${diff.col}:${rowLabel} difference`,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <ContentCopyIcon fontSize="small" />
+                                                                </IconButton>
+                                                            )}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            })}
+                                    </React.Fragment>
+                                );
+                            })}
                         </TableBody>
                     </Table>
                 </TableContainer>

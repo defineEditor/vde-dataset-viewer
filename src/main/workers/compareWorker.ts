@@ -804,6 +804,7 @@ const applyBlockDiff = ({
     currentSummary,
     sendMessage,
     isGroupMode = false,
+    groupValues,
 }: {
     dataDiff: DatasetDiff['data'];
     blockDiff: ReturnType<typeof compareData>;
@@ -815,10 +816,29 @@ const applyBlockDiff = ({
     currentSummary: DatasetDiff['summary'];
     sendMessage: (progress: number, issues: number) => void;
     isGroupMode?: boolean;
+    groupValues?: ItemDataArray;
 }) => {
-    dataDiff.addedRows.push(...blockDiff.data.addedRows);
-    dataDiff.deletedRows.push(...blockDiff.data.deletedRows);
-    dataDiff.modifiedRows.push(...blockDiff.data.modifiedRows);
+    if (groupValues) {
+        dataDiff.addedRows.push(
+            ...blockDiff.data.addedRows.map((row) => ({ ...row, groupValues })),
+        );
+        dataDiff.deletedRows.push(
+            ...blockDiff.data.deletedRows.map((row) => ({
+                ...row,
+                groupValues,
+            })),
+        );
+        dataDiff.modifiedRows.push(
+            ...blockDiff.data.modifiedRows.map((row) => ({
+                ...row,
+                groupValues,
+            })),
+        );
+    } else {
+        dataDiff.addedRows.push(...blockDiff.data.addedRows);
+        dataDiff.deletedRows.push(...blockDiff.data.deletedRows);
+        dataDiff.modifiedRows.push(...blockDiff.data.modifiedRows);
+    }
 
     const nextBaseRecords = baseRowsProcessed + baseBlockLen;
     const nextCompRecords = compRowsProcessed + compBlockLen;
@@ -1043,6 +1063,7 @@ process.parentPort.once(
                     let blockDiff: ReturnType<typeof compareData>;
                     let baseBlockLen = 0;
                     let compBlockLen = 0;
+                    let blockGroupValues: ItemDataArray | undefined;
 
                     let groupKeyComparison: number | null = null;
                     if (baseChunk && compChunk) {
@@ -1056,6 +1077,7 @@ process.parentPort.once(
                     if (!baseChunk || groupKeyComparison! > 0) {
                         // Remaining compare rows belong to groups absent in base
                         compBlockLen = compChunk!.rows.length;
+                        blockGroupValues = compChunk!.key;
                         blockDiff = compareData(
                             [],
                             compChunk!.rows,
@@ -1071,6 +1093,7 @@ process.parentPort.once(
                     } else if (!compChunk || groupKeyComparison! < 0) {
                         // Remaining base rows belong to groups absent in compare
                         baseBlockLen = baseChunk.rows.length;
+                        blockGroupValues = baseChunk.key;
                         blockDiff = compareData(
                             baseChunk.rows,
                             [],
@@ -1087,6 +1110,7 @@ process.parentPort.once(
                         // Same group: compare line by line within the group
                         baseBlockLen = baseChunk.rows.length;
                         compBlockLen = compChunk.rows.length;
+                        blockGroupValues = baseChunk.key;
                         blockDiff = compareData(
                             baseChunk.rows,
                             compChunk.rows,
@@ -1114,6 +1138,7 @@ process.parentPort.once(
                         currentSummary: summary,
                         sendMessage,
                         isGroupMode: true,
+                        groupValues: blockGroupValues,
                     });
 
                     summary = blockResult.summary;

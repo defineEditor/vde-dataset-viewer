@@ -81,7 +81,7 @@ const styles = {
     },
 };
 
-const EMPTY_ARRAY = [];
+const emptyArray = [];
 
 const SelectCompare: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -95,7 +95,7 @@ const SelectCompare: React.FC = () => {
     const fileCompState =
         useAppSelector((state) => state.ui.compare.fileComp) || '';
     const groupColumnsState =
-        useAppSelector((state) => state.ui.compare.groupColumns) || EMPTY_ARRAY;
+        useAppSelector((state) => state.ui.compare.groupColumns) || emptyArray;
 
     const ignoreWhiteSpacesSettings = useAppSelector(
         (state) => state.settings.compare.ignoreWhiteSpaces,

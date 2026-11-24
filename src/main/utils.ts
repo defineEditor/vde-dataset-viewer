@@ -104,14 +104,23 @@ const parseArgs = (
     isPackaged: boolean,
 ): {
     filePath: string | null;
-    compareFiles: { path1: string; path2: string } | null;
+    compareFiles: {
+        path1: string;
+        path2: string;
+        groupColumns?: string[];
+    } | null;
     disableGpu: boolean | null;
     userDataDir: string | null;
 } => {
     const startIdx = isPackaged ? 1 : 2;
     const optionArgIdxs: number[] = [];
     let filePath: string | null = null;
-    let compareFiles: { path1: string; path2: string } | null = null;
+    let compareFiles: {
+        path1: string;
+        path2: string;
+        groupColumns?: string[];
+    } | null = null;
+    let compareBy: string[] = [];
     let userDataDir: string | null = null;
     let disableGpu: boolean | null = null;
 
@@ -138,6 +147,27 @@ const parseArgs = (
         }
     }
 
+    // Check for --compare-by
+    const compareByIdx = args.findIndex(
+        (a) => a.startsWith('--compare-by=') || a === '--compare-by',
+    );
+    if (compareByIdx !== -1) {
+        optionArgIdxs.push(compareByIdx);
+        const arg = args[compareByIdx];
+        const eqIdx = arg.indexOf('=');
+        let rawGroupCols = '';
+        if (eqIdx !== -1) {
+            rawGroupCols = arg.slice(eqIdx + 1);
+        } else if (args.length > compareByIdx + 1) {
+            optionArgIdxs.push(compareByIdx + 1);
+            rawGroupCols = args[compareByIdx + 1];
+        }
+        compareBy = rawGroupCols
+            .split(',')
+            .map((col) => col.trim())
+            .filter((col) => col.length > 0);
+    }
+
     // Check for --compare
     const compareIndex = args.indexOf('--compare');
     if (compareIndex !== -1 && args.length > compareIndex + 2) {
@@ -159,6 +189,9 @@ const parseArgs = (
                 compareFiles = {
                     path1: args[i],
                     path2: args[i + 1],
+                    ...(compareBy.length > 0
+                        ? { groupColumns: compareBy }
+                        : {}),
                 };
             }
         }

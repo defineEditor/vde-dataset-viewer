@@ -114,6 +114,7 @@ export interface DataDiffRow {
     diff?: {
         [columnName: string]: [ItemDataArray[number], ItemDataArray[number]];
     };
+    groupValues?: ItemDataArray;
 }
 
 export interface DataDiff {
@@ -367,6 +368,7 @@ export interface NewWindowProps {
     compare?: {
         path1: string;
         path2: string;
+        groupColumns?: string[];
     };
 }
 

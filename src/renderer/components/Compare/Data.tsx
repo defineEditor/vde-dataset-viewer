@@ -27,6 +27,7 @@ import BottomToolbar from '@components/Compare/BottomToolbar';
 import ApiService from '@services/ApiService';
 import DifferencesModal from '@components/Compare/DifferencesModal';
 import { clearLoadedRecords } from '@redux/slices/data';
+import { alignGroupedCompareData } from '@components/Compare/GroupedTable/alignGroups';
 
 const styles = {
     containerVertical: {
@@ -110,6 +111,8 @@ const Data: React.FC = () => {
         (state) => state.data.compare.data[currentCompareId]?.datasetDiff,
     );
     const commonCols = datasetDiff?.metadata.commonCols || emptyArray;
+    const groupColumns = datasetDiff?.groupColumns || emptyArray;
+    const isGroupedMode = groupColumns.length > 0;
     const view = useAppSelector((state) => state.ui.compare.view);
     const settings = useAppSelector((state) => state.settings);
     const viewerSettings = {
@@ -243,9 +246,20 @@ const Data: React.FC = () => {
         );
     };
 
-    const { baseAnnotations, compAnnotations, baseDiffs } = useMemo(() => {
+    const {
+        baseAnnotations,
+        compAnnotations,
+        baseAnnotationsByColId,
+        compAnnotationsByColId,
+        baseDiffs,
+    } = useMemo(() => {
         if (colIndicesBase.size === 0 || !datasetDiff) {
-            return { baseAnnotations: null, compAnnotations: null };
+            return {
+                baseAnnotations: null,
+                compAnnotations: null,
+                baseAnnotationsByColId: null,
+                compAnnotationsByColId: null,
+            };
         }
 
         const baseMap = new Map<
@@ -256,6 +270,20 @@ const Data: React.FC = () => {
             }
         >();
         const compMap = new Map<
+            string,
+            {
+                text: string | React.ReactElement;
+                color: string;
+            }
+        >();
+        const baseMapByColId = new Map<
+            string,
+            {
+                text: string | React.ReactElement;
+                color: string;
+            }
+        >();
+        const compMapByColId = new Map<
             string,
             {
                 text: string | React.ReactElement;
@@ -277,11 +305,22 @@ const Data: React.FC = () => {
         datasetDiff?.data.modifiedRows.forEach((diffRow) => {
             const { rowBase, rowCompare, diff } = diffRow;
             if (diff) {
+                const rowDiffCountText = `${Object.keys(diff).length} diffs`;
                 // Add annotation for row
                 baseMap.set(`${rowBase}`, {
-                    text: `${Object.keys(diff).length} diffs`,
+                    text: rowDiffCountText,
                     color: '',
                 });
+                baseMapByColId.set(`${rowBase}`, {
+                    text: rowDiffCountText,
+                    color: '',
+                });
+                if (rowCompare !== null) {
+                    compMapByColId.set(`${rowCompare}`, {
+                        text: rowDiffCountText,
+                        color: '',
+                    });
+                }
                 const baseDiffsRow = {};
                 Object.keys(diff).forEach((colId) => {
                     const baseColIndex = colIndicesBase.get(colId);
@@ -347,12 +386,26 @@ const Data: React.FC = () => {
                             text: diffElementBase,
                             color: '',
                         });
+                        baseMapByColId.set(
+                            `${rowBase}#${colId.toLowerCase()}`,
+                            {
+                                text: diffElementBase,
+                                color: '',
+                            },
+                        );
 
                         // Add annotation to comp
                         compMap.set(`${rowCompare}#${compColIndex + 1}`, {
                             text: diffElementComp,
                             color: '',
                         });
+                        compMapByColId.set(
+                            `${rowCompare}#${colId.toLowerCase()}`,
+                            {
+                                text: diffElementComp,
+                                color: '',
+                            },
+                        );
 
                         // Add item to baseDiffs
                         baseDiffsRow[colId] = {
@@ -375,6 +428,10 @@ const Data: React.FC = () => {
                     text: 'Row missing in compare',
                     color: '',
                 });
+                baseMapByColId.set(`${rowBase}`, {
+                    text: 'Row missing in compare',
+                    color: '',
+                });
                 const baseDiffsRow = {};
                 baseDiffsRow['whole::row'] = {
                     baseVal: `Missing in compare`,
@@ -385,6 +442,10 @@ const Data: React.FC = () => {
             }
             if (rowCompare !== null) {
                 compMap.set(`${rowCompare}`, {
+                    text: 'Row missing in base',
+                    color: '',
+                });
+                compMapByColId.set(`${rowCompare}`, {
                     text: 'Row missing in base',
                     color: '',
                 });
@@ -405,6 +466,10 @@ const Data: React.FC = () => {
                     text: 'Row missing in compare',
                     color: '',
                 });
+                baseMapByColId.set(`${rowBase}`, {
+                    text: 'Row missing in compare',
+                    color: '',
+                });
                 const baseDiffsRow = {};
                 baseDiffsRow['whole::row'] = {
                     baseVal: `Missing in compare`,
@@ -415,6 +480,10 @@ const Data: React.FC = () => {
             }
             if (rowCompare !== null) {
                 compMap.set(`${rowCompare}`, {
+                    text: 'Row missing in base',
+                    color: '',
+                });
+                compMapByColId.set(`${rowCompare}`, {
                     text: 'Row missing in base',
                     color: '',
                 });
@@ -431,9 +500,60 @@ const Data: React.FC = () => {
         return {
             baseAnnotations: baseMap,
             compAnnotations: compMap,
+            baseAnnotationsByColId: baseMapByColId,
+            compAnnotationsByColId: compMapByColId,
             baseDiffs: baseDiffsMap,
         };
     }, [datasetDiff, colIndicesBase, colIndicesComp, ignoreColumnCase]);
+
+    const alignedGroupedData = useMemo(() => {
+        if (!isGroupedMode || !data.base || !data.comp) {
+            return null;
+        }
+        return alignGroupedCompareData({
+            baseData: data.base.data,
+            compData: data.comp.data,
+            baseHeader: data.base.header,
+            compHeader: data.comp.header,
+            groupColumns,
+            options: {
+                ignoreColumnCase:
+                    datasetDiff?.settings?.ignoreColumnCase ?? ignoreColumnCase,
+                ignoreValueCase:
+                    datasetDiff?.settings?.ignoreValueCase ??
+                    settings.compare.ignoreValueCase,
+                ignoreWhiteSpaces:
+                    datasetDiff?.settings?.ignoreWhiteSpaces ??
+                    settings.compare.ignoreWhiteSpaces,
+            },
+            datasetDiff: datasetDiff || null,
+            currentPage: page,
+            pageSize,
+        });
+    }, [
+        isGroupedMode,
+        data.base,
+        data.comp,
+        groupColumns,
+        datasetDiff,
+        ignoreColumnCase,
+        settings.compare.ignoreValueCase,
+        settings.compare.ignoreWhiteSpaces,
+        page,
+        pageSize,
+    ]);
+
+    const [expandedGroupKeys, setExpandedGroupKeys] = useState<
+        Record<string, boolean>
+    >({});
+
+    useEffect(() => {
+        if (alignedGroupedData) {
+            setExpandedGroupKeys(alignedGroupedData.initialExpandedGroupKeys);
+        } else {
+            setExpandedGroupKeys({});
+        }
+    }, [alignedGroupedData]);
 
     const currentlyLoading = useRef(false);
 
@@ -633,7 +753,26 @@ const Data: React.FC = () => {
                         goTo={goTo}
                         onSetGoTo={handleSetGoTo}
                         currentPage={page}
-                        annotatedCells={baseAnnotations}
+                        annotatedCells={
+                            alignedGroupedData
+                                ? baseAnnotationsByColId
+                                : baseAnnotations
+                        }
+                        grouped={
+                            alignedGroupedData
+                                ? {
+                                      alignedRows: alignedGroupedData.baseRows,
+                                      groupColIds:
+                                          alignedGroupedData.baseGroupColIds,
+                                      groupMetaByKey:
+                                          alignedGroupedData.groupMetaByKey,
+                                      side: 'base',
+                                      expandedGroupKeys,
+                                      onExpandedGroupKeysChange:
+                                          setExpandedGroupKeys,
+                                  }
+                                : null
+                        }
                     />
                 </Box>
                 <Box
@@ -650,7 +789,26 @@ const Data: React.FC = () => {
                         settings={viewerSettings}
                         containerRef={compRef}
                         onScroll={handleScroll('comp')}
-                        annotatedCells={compAnnotations}
+                        annotatedCells={
+                            alignedGroupedData
+                                ? compAnnotationsByColId
+                                : compAnnotations
+                        }
+                        grouped={
+                            alignedGroupedData
+                                ? {
+                                      alignedRows: alignedGroupedData.compRows,
+                                      groupColIds:
+                                          alignedGroupedData.compGroupColIds,
+                                      groupMetaByKey:
+                                          alignedGroupedData.groupMetaByKey,
+                                      side: 'comp',
+                                      expandedGroupKeys,
+                                      onExpandedGroupKeysChange:
+                                          setExpandedGroupKeys,
+                                  }
+                                : null
+                        }
                         currentPage={page}
                     />
                 </Box>
