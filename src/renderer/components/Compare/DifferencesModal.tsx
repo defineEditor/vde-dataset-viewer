@@ -164,18 +164,18 @@ interface DiffItem {
 }
 
 const formatRowLabel = (
-    rowBase: number | null,
-    rowCompare: number | null,
+    rowBase: number | null | undefined,
+    rowCompare: number | null | undefined,
 ): string => {
-    if (rowBase !== null && rowCompare !== null) {
+    if (typeof rowBase === 'number' && typeof rowCompare === 'number') {
         return rowBase === rowCompare
             ? `${rowBase + 1}`
             : `${rowBase + 1} / ${rowCompare + 1}`;
     }
-    if (rowBase !== null) {
+    if (typeof rowBase === 'number') {
         return `Base ${rowBase + 1}`;
     }
-    if (rowCompare !== null) {
+    if (typeof rowCompare === 'number') {
         return `Comp ${rowCompare + 1}`;
     }
     return '-';
@@ -293,10 +293,14 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
                     r.groupValues,
                 );
                 Object.entries(r.diff).forEach(([col, [base, comp]]) => {
+                    const rowBase =
+                        typeof r.rowBase === 'number' ? r.rowBase : null;
+                    const rowCompare =
+                        typeof r.rowCompare === 'number' ? r.rowCompare : null;
                     diffs.push({
-                        row: r.rowBase ?? r.rowCompare ?? 0,
-                        rowBase: r.rowBase,
-                        rowCompare: r.rowCompare,
+                        row: rowBase ?? rowCompare ?? 0,
+                        rowBase,
+                        rowCompare,
                         col,
                         base,
                         comp,
@@ -308,26 +312,32 @@ const AllDifferencesModal: React.FC<AllDifferencesModalProps> = ({
             }
         });
         datasetDiff.data.addedRows.forEach((r) => {
+            const rowBase = typeof r.rowBase === 'number' ? r.rowBase : null;
+            const rowCompare =
+                typeof r.rowCompare === 'number' ? r.rowCompare : null;
             diffs.push({
-                row: r.rowBase ?? r.rowCompare ?? 0,
-                rowBase: r.rowBase,
-                rowCompare: r.rowCompare,
+                row: rowBase ?? rowCompare ?? 0,
+                rowBase,
+                rowCompare,
                 col: 'whole::row',
-                base: r.rowBase === null ? 'Row Missing' : '',
-                comp: r.rowCompare === null ? 'Row Missing' : '',
+                base: rowBase === null ? 'Row Missing' : '',
+                comp: rowCompare === null ? 'Row Missing' : '',
                 groupKey: formatGroupKey(r.groupValues),
                 groupLabel: formatGroupLabel(groupColumns, r.groupValues),
                 groupCompactLabel: formatGroupCompactLabel(r.groupValues),
             });
         });
         datasetDiff.data.deletedRows.forEach((r) => {
+            const rowBase = typeof r.rowBase === 'number' ? r.rowBase : null;
+            const rowCompare =
+                typeof r.rowCompare === 'number' ? r.rowCompare : null;
             diffs.push({
-                row: r.rowBase ?? r.rowCompare ?? 0,
-                rowBase: r.rowBase,
-                rowCompare: r.rowCompare,
+                row: rowBase ?? rowCompare ?? 0,
+                rowBase,
+                rowCompare,
                 col: 'whole::row',
-                base: r.rowBase === null ? 'Row Missing' : '',
-                comp: r.rowCompare === null ? 'Row Missing' : '',
+                base: rowBase === null ? 'Row Missing' : '',
+                comp: rowCompare === null ? 'Row Missing' : '',
                 groupKey: formatGroupKey(r.groupValues),
                 groupLabel: formatGroupLabel(groupColumns, r.groupValues),
                 groupCompactLabel: formatGroupCompactLabel(r.groupValues),

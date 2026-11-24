@@ -471,6 +471,9 @@ const GroupedCompareTable: React.FC<GroupedCompareTableProps> = ({
                     ...expandedGroupKeys,
                     [targetAlignedRow.vdeGroupKey]: true,
                 });
+            } else {
+                // Row does not exist on this side/page: clear goTo so it doesn't stay stuck
+                onSetGoTo({ row: null, column: null });
             }
             return;
         }

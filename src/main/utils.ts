@@ -158,7 +158,10 @@ const parseArgs = (
         let rawGroupCols = '';
         if (eqIdx !== -1) {
             rawGroupCols = arg.slice(eqIdx + 1);
-        } else if (args.length > compareByIdx + 1) {
+        } else if (
+            args.length > compareByIdx + 1 &&
+            !args[compareByIdx + 1].startsWith('-')
+        ) {
             optionArgIdxs.push(compareByIdx + 1);
             rawGroupCols = args[compareByIdx + 1];
         }

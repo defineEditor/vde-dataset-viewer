@@ -302,6 +302,9 @@ const Data: React.FC = () => {
             }
         >();
 
+        const effectiveIgnoreColumnCase =
+            datasetDiff?.settings?.ignoreColumnCase ?? ignoreColumnCase;
+
         datasetDiff?.data.modifiedRows.forEach((diffRow) => {
             const { rowBase, rowCompare, diff } = diffRow;
             if (diff) {
@@ -325,7 +328,10 @@ const Data: React.FC = () => {
                 Object.keys(diff).forEach((colId) => {
                     const baseColIndex = colIndicesBase.get(colId);
                     let compColIndex = colIndicesComp.get(colId);
-                    if (ignoreColumnCase && compColIndex === undefined) {
+                    if (
+                        effectiveIgnoreColumnCase &&
+                        compColIndex === undefined
+                    ) {
                         // ColId is using base column names, so for the compare we need to get the corresponding index
                         // Try to find case-insensitive match
                         for (const [compColId, index] of colIndicesComp) {
@@ -754,7 +760,8 @@ const Data: React.FC = () => {
                         onSetGoTo={handleSetGoTo}
                         currentPage={page}
                         annotatedCells={
-                            alignedGroupedData
+                            alignedGroupedData &&
+                            alignedGroupedData.baseGroupColIds.length > 0
                                 ? baseAnnotationsByColId
                                 : baseAnnotations
                         }
@@ -790,7 +797,8 @@ const Data: React.FC = () => {
                         containerRef={compRef}
                         onScroll={handleScroll('comp')}
                         annotatedCells={
-                            alignedGroupedData
+                            alignedGroupedData &&
+                            alignedGroupedData.compGroupColIds.length > 0
                                 ? compAnnotationsByColId
                                 : compAnnotations
                         }

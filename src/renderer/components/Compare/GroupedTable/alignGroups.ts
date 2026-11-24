@@ -42,7 +42,6 @@ type GroupCompareOptions = Pick<
 export const resolveGroupColumnIds = (
     header: IHeaderCell[],
     groupColumns: string[],
-    ignoreColumnCase: boolean,
 ): string[] => {
     const exactSet = new Set(header.map((col) => col.id));
     const lowerMap = new Map<string, string>();
@@ -57,7 +56,7 @@ export const resolveGroupColumnIds = (
     groupColumns.forEach((colName) => {
         if (exactSet.has(colName)) {
             resolved.push(colName);
-        } else if (ignoreColumnCase) {
+        } else {
             const match = lowerMap.get(colName.toLowerCase());
             if (match) {
                 resolved.push(match);
@@ -259,16 +258,8 @@ export const alignGroupedCompareData = ({
     currentPage: number;
     pageSize: number;
 }): AlignedGroupedCompareData => {
-    const baseGroupColIds = resolveGroupColumnIds(
-        baseHeader,
-        groupColumns,
-        options.ignoreColumnCase,
-    );
-    const compGroupColIds = resolveGroupColumnIds(
-        compHeader,
-        groupColumns,
-        options.ignoreColumnCase,
-    );
+    const baseGroupColIds = resolveGroupColumnIds(baseHeader, groupColumns);
+    const compGroupColIds = resolveGroupColumnIds(compHeader, groupColumns);
 
     const pageOffset = currentPage * pageSize;
     const baseRuns = buildGroupRuns(

@@ -178,7 +178,9 @@ const styles = {
         borderColor: 'table.annotatedBorder',
     },
     placeholderRowCell: {
-        backgroundColor: 'grey.100',
+        backgroundColor: 'table.annotatedCell',
+        border: '1px solid',
+        borderColor: 'table.annotatedBorder',
         cursor: 'default',
     },
     resizer: {
