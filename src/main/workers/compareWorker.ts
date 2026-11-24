@@ -16,6 +16,7 @@ import {
     DatasetMetadata,
     BasicFilter,
     ColumnMetadata,
+    GroupPageRange,
 } from '@interfaces/common';
 
 const transformData = (
@@ -324,6 +325,60 @@ const compareMetadata = (
     return metadataDiff;
 };
 
+export const compareGroupValues = (
+    a: ItemDataArray[number],
+    b: ItemDataArray[number],
+    options?: Pick<CompareSettings, 'ignoreValueCase' | 'ignoreWhiteSpaces'>,
+): number => {
+    const aMissing = a === null || a === undefined;
+    const bMissing = b === null || b === undefined;
+    if (aMissing && bMissing) return 0;
+    if (aMissing) return -1;
+    if (bMissing) return 1;
+    if (a === b) return 0;
+    if (typeof a === 'number' && typeof b === 'number') {
+        const aNaN = Number.isNaN(a);
+        const bNaN = Number.isNaN(b);
+        if (aNaN && bNaN) return 0;
+        if (aNaN) return -1;
+        if (bNaN) return 1;
+        if (a < b) return -1;
+        if (a > b) return 1;
+        return 0;
+    }
+    let sa = String(a);
+    let sb = String(b);
+    if (options?.ignoreWhiteSpaces) {
+        sa = sa.trim();
+        sb = sb.trim();
+    }
+    if (options?.ignoreValueCase) {
+        sa = sa.toLowerCase();
+        sb = sb.toLowerCase();
+    }
+    if (sa < sb) return -1;
+    if (sa > sb) return 1;
+    return 0;
+};
+
+const getGroupKey = (row: ItemDataArray, groupIdx: number[]): ItemDataArray =>
+    groupIdx.map((idx) => row[idx]);
+
+const compareGroupKeys = (
+    a: ItemDataArray,
+    b: ItemDataArray,
+    options?: Pick<CompareSettings, 'ignoreValueCase' | 'ignoreWhiteSpaces'>,
+): number => {
+    const len = Math.min(a.length, b.length);
+    for (let i = 0; i < len; i++) {
+        const cmp = compareGroupValues(a[i], b[i], options);
+        if (cmp !== 0) return cmp;
+    }
+    if (a.length < b.length) return -1;
+    if (a.length > b.length) return 1;
+    return 0;
+};
+
 export const compareData = (
     base: ItemDataArray[],
     compare: ItemDataArray[],
@@ -336,7 +391,6 @@ export const compareData = (
 ): { data: DataDiff; summary: Partial<DatasetDiff['summary']> } => {
     const {
         tolerance = 1e-12,
-        idColumns,
         maxDiffCount,
         maxColumnDiffCount,
         ignoreColumnCase,
@@ -539,59 +593,7 @@ export const compareData = (
         }
     };
 
-    if (idColumns && idColumns.length > 0) {
-        // Key-based comparison
-        const validIdCols = idColumns.filter(
-            (col) => baseCols.has(col) && compareCols.has(col),
-        );
-
-        if (validIdCols.length > 0) {
-            const generateKey = (
-                row: ItemDataArray,
-                colMap: Map<string, { index: number }>,
-            ) => {
-                return validIdCols
-                    .map((col) => {
-                        const idx = colMap.get(col)!.index;
-                        return String(row[idx]);
-                    })
-                    .join('|');
-            };
-
-            const baseMap = new Map<
-                string,
-                { row: ItemDataArray; index: number }
-            >();
-            base.forEach((row, i) => {
-                const key = generateKey(row, baseCols);
-                baseMap.set(key, { row, index: i });
-            });
-
-            const visitedKeys = new Set<string>();
-
-            compare.forEach((row, i) => {
-                const key = generateKey(row, compareCols);
-                visitedKeys.add(key);
-
-                if (baseMap.has(key)) {
-                    const baseEntry = baseMap.get(key)!;
-                    const diff = compareRow(
-                        baseEntry.row,
-                        row,
-                        baseEntry.index,
-                        i,
-                    );
-                    if (diff) {
-                        dataDiff.modifiedRows.push(diff);
-                    }
-                }
-            });
-        } else {
-            runLineByLine();
-        }
-    } else {
-        runLineByLine();
-    }
+    runLineByLine();
 
     // Get summary
     const newFirstLow =
@@ -603,7 +605,9 @@ export const compareData = (
             ? Math.max(summaryInit?.lastDiffRow || -Infinity, lastDiffRow)
             : summaryInit?.lastDiffRow || null;
     const totalDiffs =
-        dataDiff.deletedRows.length + dataDiff.modifiedRows.length;
+        dataDiff.addedRows.length +
+        dataDiff.deletedRows.length +
+        dataDiff.modifiedRows.length;
     const newTotalDiffs = (summaryInit?.totalDiffs || 0) + totalDiffs;
 
     const summary = {
@@ -612,6 +616,10 @@ export const compareData = (
         totalDiffs: newTotalDiffs,
         maxDiffReached,
         maxColDiffReached,
+        groupOrderIssues: {
+            base: false,
+            compare: false,
+        },
     };
 
     return { data: dataDiff, summary };
@@ -684,12 +692,209 @@ const getData = async (
     })) as { data: ItemDataArray[]; lastRow: number; endReached: boolean };
 };
 
+const getGroupColumnIndices = (
+    metadata: DatasetJsonMetadata,
+    groupColumns: string[],
+    datasetLabel: string,
+): number[] => {
+    const columnIndices = new Map<string, number>();
+    metadata.columns.forEach((column, index) => {
+        columnIndices.set(column.name.toLowerCase(), index);
+    });
+    return groupColumns.map((name) => {
+        const key = name.toLowerCase();
+        const index = columnIndices.get(key);
+        if (index === undefined) {
+            throw new Error(
+                `Group column "${name}" not found in the ${datasetLabel} dataset`,
+            );
+        }
+        return index;
+    });
+};
+
+interface GroupChunk {
+    key: ItemDataArray;
+    rows: ItemDataArray[];
+    startRow: number;
+}
+
+const createGroupStream = (
+    file: DatasetJson | DatasetXpt | DatasetReadStat,
+    metadata: DatasetJsonMetadata,
+    options: CompareSettings,
+    filterData: BasicFilter | null,
+    groupIdx: number[],
+    transformRows: boolean,
+    bufferSize: number,
+    pageMapsRef: { base: number[]; comp: number[] },
+    side: 'base' | 'comp',
+) => {
+    const pending: ItemDataArray[] = [];
+    let start = 0;
+    let endReached = false;
+    let rowsConsumed = 0;
+
+    const readChunk = async () => {
+        const dataFull = await getData(
+            file,
+            start,
+            bufferSize,
+            metadata.columns,
+            options,
+            filterData,
+        );
+        const data = transformRows
+            ? transformData(dataFull.data, metadata)
+            : dataFull.data;
+        pending.push(...data);
+        if (filterData !== null) {
+            start = dataFull.lastRow + 1;
+        } else {
+            start += bufferSize;
+        }
+        if (dataFull.endReached) {
+            endReached = true;
+        } else {
+            pageMapsRef[side].push(dataFull.lastRow + 1);
+        }
+    };
+
+    const next = async (limit: number): Promise<GroupChunk | null> => {
+        while (pending.length === 0 && !endReached) {
+            // eslint-disable-next-line no-await-in-loop
+            await readChunk();
+        }
+        if (pending.length === 0) {
+            return null;
+        }
+
+        const startRow = rowsConsumed;
+        const key = getGroupKey(pending[0], groupIdx);
+        const rows: ItemDataArray[] = [];
+        let i = 0;
+        while (
+            i < pending.length &&
+            rows.length < limit &&
+            compareGroupKeys(
+                getGroupKey(pending[i], groupIdx),
+                key,
+                options,
+            ) === 0
+        ) {
+            rows.push(pending[i]);
+            i++;
+        }
+
+        pending.splice(0, i);
+        rowsConsumed += rows.length;
+        return { key, rows, startRow };
+    };
+
+    return { next };
+};
+
+const applyBlockDiff = ({
+    dataDiff,
+    blockDiff,
+    baseBlockLen,
+    compBlockLen,
+    baseRowsProcessed,
+    compRowsProcessed,
+    progressTotal,
+    currentSummary,
+    sendMessage,
+    isGroupMode = false,
+    groupValues,
+}: {
+    dataDiff: DatasetDiff['data'];
+    blockDiff: ReturnType<typeof compareData>;
+    baseBlockLen: number;
+    compBlockLen: number;
+    baseRowsProcessed: number;
+    compRowsProcessed: number;
+    progressTotal: number;
+    currentSummary: DatasetDiff['summary'];
+    sendMessage: (progress: number, issues: number) => void;
+    isGroupMode?: boolean;
+    groupValues?: ItemDataArray;
+}) => {
+    if (groupValues) {
+        dataDiff.addedRows.push(
+            ...blockDiff.data.addedRows.map((row) => ({ ...row, groupValues })),
+        );
+        dataDiff.deletedRows.push(
+            ...blockDiff.data.deletedRows.map((row) => ({
+                ...row,
+                groupValues,
+            })),
+        );
+        dataDiff.modifiedRows.push(
+            ...blockDiff.data.modifiedRows.map((row) => ({
+                ...row,
+                groupValues,
+            })),
+        );
+    } else {
+        dataDiff.addedRows.push(...blockDiff.data.addedRows);
+        dataDiff.deletedRows.push(...blockDiff.data.deletedRows);
+        dataDiff.modifiedRows.push(...blockDiff.data.modifiedRows);
+    }
+
+    const nextBaseRecords = baseRowsProcessed + baseBlockLen;
+    const nextCompRecords = compRowsProcessed + compBlockLen;
+    const nextMaxDiffReached = blockDiff.summary.maxDiffReached || false;
+
+    const rowsChecked = isGroupMode
+        ? Math.max(nextBaseRecords, nextCompRecords)
+        : baseRowsProcessed + Math.min(baseBlockLen, compBlockLen);
+
+    const nextSummary = {
+        ...currentSummary,
+        ...blockDiff.summary,
+        groupOrderIssues: { ...currentSummary.groupOrderIssues },
+        totalRowsChecked: nextMaxDiffReached
+            ? Math.max(
+                  currentSummary.totalRowsChecked,
+                  (blockDiff.summary.lastDiffRow || 0) + 1,
+              )
+            : rowsChecked,
+    };
+
+    const progressNumerator = isGroupMode
+        ? nextBaseRecords + nextCompRecords
+        : nextSummary.totalRowsChecked;
+    const progress =
+        progressTotal > 0
+            ? Math.round((progressNumerator / progressTotal) * 100)
+            : 0;
+    if (progress < 100 && !nextMaxDiffReached) {
+        sendMessage(Math.max(progress, 1), nextSummary.totalDiffs);
+    } else {
+        sendMessage(99, nextSummary.totalDiffs);
+    }
+
+    return {
+        summary: nextSummary,
+        baseRecords: nextBaseRecords,
+        compRecords: nextCompRecords,
+        maxDiffReached: nextMaxDiffReached,
+    };
+};
+
 process.parentPort.once(
     'message',
     async (messageData: { data: CompareProcessTask }) => {
         const { data } = messageData;
-        const { id, fileBase, fileComp, options, fileSettings, filterData } =
-            data;
+        const {
+            id,
+            fileBase,
+            fileComp,
+            options,
+            fileSettings,
+            filterData,
+            groupColumns,
+        } = data;
 
         const sendMessage = (
             progress: number,
@@ -767,116 +972,322 @@ process.parentPort.once(
                 colsWithMetadataDiffs: 0,
                 colsWithoutDiffs: 0,
                 totalRowsChecked: 0,
+                groupOrderIssues: {
+                    base: false,
+                    compare: false,
+                },
             };
 
             const totalRecords = Math.min(baseMeta.records, compMeta.records);
             let maxDiffCountReached = false;
-            let endReached = false;
-
-            // In case of filter we need to track start positions separately
-            let startBase = 0;
-            let startComp = 0;
             let baseRecords = 0;
             let compRecords = 0;
+            let lastBaseGroupKey: ItemDataArray | null = null;
+            let lastCompGroupKey: ItemDataArray | null = null;
             // Track page maps for filtered data
             // It is needed to quickly navigate to specific rows when filter is applied
             const pageMaps = {
                 base: [0],
                 comp: [0],
             };
-            while (
-                Math.max(startBase, startComp) < totalRecords &&
-                !maxDiffCountReached &&
-                !endReached
-            ) {
-                // eslint-disable-next-line no-await-in-loop
-                const baseDataFull = await getData(
-                    baseFile,
-                    startBase,
-                    bufferSize,
-                    baseMeta.columns,
-                    options,
-                    filterData,
-                );
-                // eslint-disable-next-line no-await-in-loop
-                const compDataFull = await getData(
-                    compFile,
-                    startComp,
-                    bufferSize,
-                    compMeta.columns,
-                    options,
-                    filterData,
-                );
+            const groupPageMaps: GroupPageRange[] = [];
 
-                let baseData = baseDataFull.data;
-                let compData = compDataFull.data;
-                if (differentTypes) {
-                    if (baseType === 'json') {
-                        baseData = transformData(baseDataFull.data, baseMeta);
-                    }
-                    if (compType === 'json') {
-                        compData = transformData(compDataFull.data, compMeta);
-                    }
-                }
-
-                const blockDiff = compareData(
-                    baseData,
-                    compData,
+            // Group comparison is enabled when group columns are defined.
+            // Data is assumed to be already sorted by these columns.
+            if (groupColumns?.length > 0) {
+                const targetPageSize = Math.max(
+                    fileSettings.pageSize || bufferSize,
+                    1,
+                );
+                let pageBaseStart = 0;
+                let pageBaseLength = 0;
+                let pageCompStart = 0;
+                let pageCompLength = 0;
+                let pageAlignedLength = 0;
+                // Group-based comparison: rows are streamed in chunks so groups
+                // larger than the buffer are not held in memory entirely.
+                const baseGroupIdx = getGroupColumnIndices(
                     baseMeta,
+                    groupColumns,
+                    'base',
+                );
+                const compGroupIdx = getGroupColumnIndices(
                     compMeta,
-                    summary,
-                    options,
-                    baseRecords,
-                    compRecords,
+                    groupColumns,
+                    'compare',
                 );
 
-                dataDiff.addedRows.push(...blockDiff.data.addedRows);
-                dataDiff.deletedRows.push(...blockDiff.data.deletedRows);
-                dataDiff.modifiedRows.push(...blockDiff.data.modifiedRows);
+                const baseStream = createGroupStream(
+                    baseFile,
+                    baseMeta,
+                    options,
+                    filterData,
+                    baseGroupIdx,
+                    differentTypes && baseType === 'json',
+                    bufferSize,
+                    pageMaps,
+                    'base',
+                );
+                const compStream = createGroupStream(
+                    compFile,
+                    compMeta,
+                    options,
+                    filterData,
+                    compGroupIdx,
+                    differentTypes && compType === 'json',
+                    bufferSize,
+                    pageMaps,
+                    'comp',
+                );
 
-                summary = {
-                    ...summary,
-                    ...blockDiff.summary,
-                    totalRowsChecked: blockDiff.summary.maxDiffReached
-                        ? (blockDiff.summary.lastDiffRow || 0) + 1
-                        : baseRecords +
-                          Math.min(baseData.length, compData.length),
-                };
+                let baseChunk = await baseStream.next(bufferSize);
+                let compChunk = await compStream.next(bufferSize);
 
-                baseRecords += baseData.length;
-                compRecords += compData.length;
+                while ((baseChunk || compChunk) && !maxDiffCountReached) {
+                    if (baseChunk) {
+                        if (
+                            lastBaseGroupKey &&
+                            compareGroupKeys(
+                                baseChunk.key,
+                                lastBaseGroupKey,
+                                options,
+                            ) < 0
+                        ) {
+                            summary.groupOrderIssues.base = true;
+                        }
+                        lastBaseGroupKey = baseChunk.key;
+                    }
+                    if (compChunk) {
+                        if (
+                            lastCompGroupKey &&
+                            compareGroupKeys(
+                                compChunk.key,
+                                lastCompGroupKey,
+                                options,
+                            ) < 0
+                        ) {
+                            summary.groupOrderIssues.compare = true;
+                        }
+                        lastCompGroupKey = compChunk.key;
+                    }
 
-                maxDiffCountReached = blockDiff.summary.maxDiffReached || false;
+                    let blockDiff: ReturnType<typeof compareData>;
+                    let baseBlockLen = 0;
+                    let compBlockLen = 0;
+                    let blockGroupValues: ItemDataArray | undefined;
 
-                // Send progress
-                const progress =
-                    totalRecords > 0
-                        ? Math.round(
-                              (summary.totalRowsChecked / totalRecords) * 100,
-                          )
-                        : 0;
-                if (progress < 100 && !maxDiffCountReached) {
-                    sendMessage(Math.max(progress, 1), summary.totalDiffs);
-                } else {
-                    // If 100%, will send final message later
-                    sendMessage(99, summary.totalDiffs);
+                    let groupKeyComparison: number | null = null;
+                    if (baseChunk && compChunk) {
+                        groupKeyComparison = compareGroupKeys(
+                            baseChunk.key,
+                            compChunk.key,
+                            options,
+                        );
+                    }
+
+                    if (!baseChunk || groupKeyComparison! > 0) {
+                        // Remaining compare rows belong to groups absent in base
+                        compBlockLen = compChunk!.rows.length;
+                        blockGroupValues = compChunk!.key;
+                        blockDiff = compareData(
+                            [],
+                            compChunk!.rows,
+                            baseMeta,
+                            compMeta,
+                            summary,
+                            options,
+                            baseRecords,
+                            compChunk!.startRow,
+                        );
+                        // eslint-disable-next-line no-await-in-loop
+                        compChunk = await compStream.next(bufferSize);
+                    } else if (!compChunk || groupKeyComparison! < 0) {
+                        // Remaining base rows belong to groups absent in compare
+                        baseBlockLen = baseChunk.rows.length;
+                        blockGroupValues = baseChunk.key;
+                        blockDiff = compareData(
+                            baseChunk.rows,
+                            [],
+                            baseMeta,
+                            compMeta,
+                            summary,
+                            options,
+                            baseChunk.startRow,
+                            compRecords,
+                        );
+                        // eslint-disable-next-line no-await-in-loop
+                        baseChunk = await baseStream.next(bufferSize);
+                    } else {
+                        // Same group: compare line by line within the group
+                        baseBlockLen = baseChunk.rows.length;
+                        compBlockLen = compChunk.rows.length;
+                        blockGroupValues = baseChunk.key;
+                        blockDiff = compareData(
+                            baseChunk.rows,
+                            compChunk.rows,
+                            baseMeta,
+                            compMeta,
+                            summary,
+                            options,
+                            baseChunk.startRow,
+                            compChunk.startRow,
+                        );
+                        // eslint-disable-next-line no-await-in-loop
+                        baseChunk = await baseStream.next(bufferSize);
+                        // eslint-disable-next-line no-await-in-loop
+                        compChunk = await compStream.next(bufferSize);
+                    }
+
+                    const blockResult = applyBlockDiff({
+                        dataDiff,
+                        blockDiff,
+                        baseBlockLen,
+                        compBlockLen,
+                        baseRowsProcessed: baseRecords,
+                        compRowsProcessed: compRecords,
+                        progressTotal: baseMeta.records + compMeta.records,
+                        currentSummary: summary,
+                        sendMessage,
+                        isGroupMode: true,
+                        groupValues: blockGroupValues,
+                    });
+
+                    summary = blockResult.summary;
+                    baseRecords = blockResult.baseRecords;
+                    compRecords = blockResult.compRecords;
+                    maxDiffCountReached = blockResult.maxDiffReached;
+
+                    if (filterData === null) {
+                        const blockAlignedLength = Math.max(
+                            baseBlockLen,
+                            compBlockLen,
+                        );
+                        if (
+                            pageAlignedLength > 0 &&
+                            pageAlignedLength + blockAlignedLength >
+                                targetPageSize
+                        ) {
+                            groupPageMaps.push({
+                                baseStart: pageBaseStart,
+                                baseLength: pageBaseLength,
+                                compStart: pageCompStart,
+                                compLength: pageCompLength,
+                            });
+                            pageBaseStart += pageBaseLength;
+                            pageCompStart += pageCompLength;
+                            pageBaseLength = 0;
+                            pageCompLength = 0;
+                            pageAlignedLength = 0;
+                        }
+                        pageBaseLength += baseBlockLen;
+                        pageCompLength += compBlockLen;
+                        pageAlignedLength += blockAlignedLength;
+                    }
                 }
 
-                // If filter is applied, we need to adjust the start positions based on the last retrieved rows
-                if (filterData !== null) {
-                    startBase = baseDataFull.lastRow + 1;
-                    startComp = compDataFull.lastRow + 1;
-                } else {
-                    startBase += bufferSize;
-                    startComp += bufferSize;
+                if (
+                    filterData === null &&
+                    (pageAlignedLength > 0 || groupPageMaps.length === 0)
+                ) {
+                    groupPageMaps.push({
+                        baseStart: pageBaseStart,
+                        baseLength: pageBaseLength,
+                        compStart: pageCompStart,
+                        compLength: pageCompLength,
+                    });
                 }
-                // Check if end is reached
-                if (baseDataFull.endReached || compDataFull.endReached) {
-                    endReached = true;
-                } else {
-                    // Update page maps
-                    pageMaps.base.push(baseDataFull.lastRow + 1);
-                    pageMaps.comp.push(compDataFull.lastRow + 1);
+            } else {
+                // Line-by-line comparison within fixed-size blocks
+                let endReached = false;
+
+                // In case of filter we need to track start positions separately
+                let startBase = 0;
+                let startComp = 0;
+                while (
+                    Math.max(startBase, startComp) < totalRecords &&
+                    !maxDiffCountReached &&
+                    !endReached
+                ) {
+                    // eslint-disable-next-line no-await-in-loop
+                    const baseDataFull = await getData(
+                        baseFile,
+                        startBase,
+                        bufferSize,
+                        baseMeta.columns,
+                        options,
+                        filterData,
+                    );
+                    // eslint-disable-next-line no-await-in-loop
+                    const compDataFull = await getData(
+                        compFile,
+                        startComp,
+                        bufferSize,
+                        compMeta.columns,
+                        options,
+                        filterData,
+                    );
+
+                    let baseData = baseDataFull.data;
+                    let compData = compDataFull.data;
+                    if (differentTypes) {
+                        if (baseType === 'json') {
+                            baseData = transformData(
+                                baseDataFull.data,
+                                baseMeta,
+                            );
+                        }
+                        if (compType === 'json') {
+                            compData = transformData(
+                                compDataFull.data,
+                                compMeta,
+                            );
+                        }
+                    }
+
+                    const blockDiff = compareData(
+                        baseData,
+                        compData,
+                        baseMeta,
+                        compMeta,
+                        summary,
+                        options,
+                        baseRecords,
+                        compRecords,
+                    );
+
+                    const blockResult = applyBlockDiff({
+                        dataDiff,
+                        blockDiff,
+                        baseBlockLen: baseData.length,
+                        compBlockLen: compData.length,
+                        baseRowsProcessed: baseRecords,
+                        compRowsProcessed: compRecords,
+                        progressTotal: totalRecords,
+                        currentSummary: summary,
+                        sendMessage,
+                    });
+
+                    summary = blockResult.summary;
+                    baseRecords = blockResult.baseRecords;
+                    compRecords = blockResult.compRecords;
+                    maxDiffCountReached = blockResult.maxDiffReached;
+
+                    // If filter is applied, we need to adjust the start positions based on the last retrieved rows
+                    if (filterData !== null) {
+                        startBase = baseDataFull.lastRow + 1;
+                        startComp = compDataFull.lastRow + 1;
+                    } else {
+                        startBase += bufferSize;
+                        startComp += bufferSize;
+                    }
+                    // Check if end is reached
+                    if (baseDataFull.endReached || compDataFull.endReached) {
+                        endReached = true;
+                    } else {
+                        // Update page maps
+                        pageMaps.base.push(baseDataFull.lastRow + 1);
+                        pageMaps.comp.push(compDataFull.lastRow + 1);
+                    }
                 }
             }
 
@@ -901,13 +1312,17 @@ process.parentPort.once(
                     !metadataDiff.attributeDiffs[col],
             ).length;
 
-            sendMessage(100, summary.totalDiffs, {
+            const result: DatasetDiff = {
                 metadata: metadataDiff,
                 data: dataDiff,
                 settings: options,
+                groupColumns: groupColumns || [],
                 summary,
                 pageMaps,
-            });
+                ...(groupPageMaps.length > 0 ? { groupPageMaps } : {}),
+            };
+
+            sendMessage(100, summary.totalDiffs, result);
         } catch (error) {
             sendMessage(0, 0, undefined, (error as Error).message);
         }

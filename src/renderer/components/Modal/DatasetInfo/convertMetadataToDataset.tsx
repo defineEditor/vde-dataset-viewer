@@ -1,10 +1,6 @@
 import React from 'react';
-import { CoreCell } from '@tanstack/react-table';
-import {
-    ITableData,
-    DatasetJsonMetadata,
-    ITableRow,
-} from '@interfaces/common';
+import type { CoreCell } from '@interfaces/common';
+import { ITableData, DatasetJsonMetadata, ITableRow } from '@interfaces/common';
 import calculateColumnWidth from '@utils/calculateColumnWidth';
 import renderVariableName from '@components/Modal/DatasetInfo/VariableName';
 import renderVariableNumber from '@components/Modal/DatasetInfo/VariableNumber';

@@ -286,19 +286,37 @@ export const dataSlice = createSlice({
         },
         addRecentCompare: (
             state,
-            action: PayloadAction<{ fileBase: string; fileComp: string }>,
+            action: PayloadAction<{
+                fileBase: string;
+                fileComp: string;
+                groupColumns?: string[];
+            }>,
         ) => {
-            const { fileBase, fileComp } = action.payload;
+            const { fileBase, fileComp, groupColumns } = action.payload;
+            const normalizedGroupColumns =
+                groupColumns && groupColumns.length > 0
+                    ? groupColumns
+                    : undefined;
             // Check if already exists
             const index = state.compare.recentCompares.findIndex(
-                (c) => c.fileBase === fileBase && c.fileComp === fileComp,
+                (c) =>
+                    c.fileBase === fileBase &&
+                    c.fileComp === fileComp &&
+                    deepEqual(
+                        c.groupColumns || [],
+                        normalizedGroupColumns || [],
+                    ),
             );
             if (index !== -1) {
                 state.compare.recentCompares.splice(index, 1);
             } else if (state.compare.recentCompares.length >= 20) {
                 state.compare.recentCompares.pop();
             }
-            state.compare.recentCompares.unshift({ fileBase, fileComp });
+            state.compare.recentCompares.unshift({
+                fileBase,
+                fileComp,
+                groupColumns: normalizedGroupColumns,
+            });
         },
     },
     extraReducers: (builder) => {

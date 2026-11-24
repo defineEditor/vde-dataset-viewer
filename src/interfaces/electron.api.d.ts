@@ -18,6 +18,7 @@ import {
     DefineFileInfo,
     DefineXmlContent,
     IUiSnackbar,
+    ItemDescription,
 } from '@interfaces/common';
 
 export type Channels = 'ipc-vde';
@@ -48,6 +49,10 @@ export interface ElectronApi {
         metadata: DatasetJsonMetadata;
         lastModified: number;
     } | null>;
+    getFileColumns: (
+        filePath: string,
+        encoding: BufferEncoding | 'default',
+    ) => Promise<ItemDescription[]>;
     getData: (
         fileId: string,
         start: number,

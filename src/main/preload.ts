@@ -25,6 +25,9 @@ const closeFile: ElectronApi['closeFile'] = (fileId, mode) =>
 const getMetadata: ElectronApi['getMetadata'] = (fileId, forceReload) =>
     ipcRenderer.invoke('read:getMetadata', fileId, forceReload);
 
+const getFileColumns: ElectronApi['getFileColumns'] = (filePath, encoding) =>
+    ipcRenderer.invoke('read:getFileColumns', filePath, encoding);
+
 const getData: ElectronApi['getData'] = (
     fileId,
     start,
@@ -246,6 +249,7 @@ contextBridge.exposeInMainWorld('electron', {
     writeToClipboard,
     closeFile,
     getMetadata,
+    getFileColumns,
     getData,
     getUniqueValues,
     saveLocalStore,

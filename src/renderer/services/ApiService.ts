@@ -28,6 +28,7 @@ import {
     DefineXmlContent,
     FileWatcherEvent,
     RequestReason,
+    ItemDescription,
 } from '@interfaces/common';
 import store from '@redux/store';
 import transformData from '@services/transformData';
@@ -801,6 +802,17 @@ class ApiService {
             );
         }
         return this.openedFilesMetadata[fileId];
+    };
+
+    // Read column metadata from a file path without opening it in the viewer
+    public getFileColumns = async (
+        filePath: string,
+    ): Promise<ItemDescription[]> => {
+        const { settings } = store.getState();
+        return window.electron.getFileColumns(
+            filePath,
+            settings.other.inEncoding,
+        );
     };
 
     public getOpenedFileData = (fileId: string): ITableRow[] => {

@@ -71,7 +71,6 @@ export interface ConvertedFileInfo extends FileInfo {
 // Diff interfaces
 export interface CompareSettings {
     tolerance: number;
-    idColumns: string[];
     maxDiffCount: number;
     maxColumnDiffCount: number;
     ignorePattern: string;
@@ -84,6 +83,7 @@ export interface CompareSettings {
 export interface CompareFileSettings {
     encoding: BufferEncoding | 'default';
     bufferSize: number;
+    pageSize?: number;
 }
 
 export interface MetadataDiff {
@@ -115,6 +115,7 @@ export interface DataDiffRow {
     diff?: {
         [columnName: string]: [ItemDataArray[number], ItemDataArray[number]];
     };
+    groupValues?: ItemDataArray;
 }
 
 export interface DataDiff {
@@ -135,6 +136,17 @@ export interface DiffSummary {
     colsWithMetadataDiffs: number;
     colsWithDataDiffs: number;
     colsWithoutDiffs: number;
+    groupOrderIssues: {
+        base: boolean;
+        compare: boolean;
+    };
+}
+
+export interface GroupPageRange {
+    baseStart: number;
+    baseLength: number;
+    compStart: number;
+    compLength: number;
 }
 
 export interface DatasetDiff {
@@ -142,10 +154,12 @@ export interface DatasetDiff {
     data: DataDiff;
     summary: DiffSummary;
     settings: CompareSettings;
+    groupColumns: string[];
     pageMaps: {
         base: number[];
         comp: number[];
     };
+    groupPageMaps?: GroupPageRange[];
 }
 
 // Task interfaces
@@ -209,6 +223,7 @@ export interface CompareTask {
     type: typeof mainTaskTypes.COMPARE;
     fileBase: string;
     fileComp: string;
+    groupColumns: string[];
     filterData: BasicFilter | null;
     options: CompareSettings;
     fileSettings: CompareFileSettings;
@@ -251,6 +266,7 @@ export interface CompareProcessTask {
     webContentsId: string;
     fileBase: string;
     fileComp: string;
+    groupColumns: string[];
     filterData: BasicFilter | null;
     options: CompareSettings;
     fileSettings: CompareFileSettings;
@@ -361,6 +377,7 @@ export interface NewWindowProps {
     compare?: {
         path1: string;
         path2: string;
+        groupColumns?: string[];
     };
 }
 

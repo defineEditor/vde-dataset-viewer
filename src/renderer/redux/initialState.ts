@@ -71,7 +71,6 @@ export const settings: ISettings = {
     },
     compare: {
         tolerance: 10e-12,
-        idColumns: [],
         maxDiffCount: 100,
         maxColumnDiffCount: 50,
         ignorePattern: '',
@@ -123,6 +122,7 @@ export const ui: IUi = {
         startCompare: false,
         fileBase: null,
         fileComp: null,
+        groupColumns: [],
         view: 'horizontal',
         resultTab: 'data',
         showAllDifferences: false,

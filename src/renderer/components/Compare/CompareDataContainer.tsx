@@ -1,6 +1,11 @@
 import React, { useState, useCallback } from 'react';
 import DatasetView from '@components/DatasetView';
 import ContextMenu from '@components/DatasetView/ContextMenu';
+import GroupedCompareTable from '@components/Compare/GroupedTable';
+import {
+    GroupedCompareRow,
+    GroupMeta,
+} from '@components/Compare/GroupedTable/alignGroups';
 import {
     IHeaderCell,
     ITableData,
@@ -8,6 +13,16 @@ import {
     SettingsViewer,
     TableRowValue,
 } from '@interfaces/common';
+
+interface GroupedCompareProps {
+    alignedRows: GroupedCompareRow[];
+    groupColIds: string[];
+    groupMetaByKey: Map<string, GroupMeta>;
+    side: 'base' | 'comp';
+    expandedGroupKeys: Record<string, boolean>;
+    onExpandedGroupKeysChange: (next: Record<string, boolean>) => void;
+    pageRowRange?: { start: number; length: number } | null;
+}
 
 interface CompareDataContainerProps {
     tableData: ITableData | null;
@@ -23,6 +38,7 @@ interface CompareDataContainerProps {
         }
     > | null;
     currentPage: number;
+    grouped?: GroupedCompareProps | null;
 
     goTo?: {
         row: number | null;
@@ -40,6 +56,7 @@ const CompareDataContainer: React.FC<CompareDataContainerProps> = ({
     onScroll,
     annotatedCells,
     currentPage,
+    grouped = null,
     goTo = undefined,
     onSetGoTo = undefined,
 }) => {
@@ -88,20 +105,46 @@ const CompareDataContainer: React.FC<CompareDataContainerProps> = ({
 
     if (!tableData) return null;
 
+    const useGroupedView = grouped !== null && grouped.groupColIds.length > 0;
+
     return (
         <>
-            <DatasetView
-                tableData={tableData}
-                isLoading={isLoading}
-                handleContextMenu={handleContextMenu}
-                settings={settings}
-                containerRef={containerRef}
-                onScroll={onScroll}
-                goTo={goTo}
-                onSetGoTo={onSetGoTo}
-                currentPage={currentPage}
-                annotatedCells={annotatedCells}
-            />
+            {useGroupedView ? (
+                <GroupedCompareTable
+                    tableData={tableData}
+                    alignedRows={grouped.alignedRows}
+                    groupColIds={grouped.groupColIds}
+                    groupMetaByKey={grouped.groupMetaByKey}
+                    side={grouped.side}
+                    expandedGroupKeys={grouped.expandedGroupKeys}
+                    onExpandedGroupKeysChange={
+                        grouped.onExpandedGroupKeysChange
+                    }
+                    pageRowRange={grouped.pageRowRange}
+                    isLoading={isLoading}
+                    handleContextMenu={handleContextMenu}
+                    settings={settings}
+                    containerRef={containerRef}
+                    onScroll={onScroll}
+                    goTo={goTo}
+                    onSetGoTo={onSetGoTo}
+                    currentPage={currentPage}
+                    annotatedCells={annotatedCells}
+                />
+            ) : (
+                <DatasetView
+                    tableData={tableData}
+                    isLoading={isLoading}
+                    handleContextMenu={handleContextMenu}
+                    settings={settings}
+                    containerRef={containerRef}
+                    onScroll={onScroll}
+                    goTo={goTo}
+                    onSetGoTo={onSetGoTo}
+                    currentPage={currentPage}
+                    annotatedCells={annotatedCells}
+                />
+            )}
             <ContextMenu
                 open={contextMenu.open}
                 anchorPosition={contextMenu.position}

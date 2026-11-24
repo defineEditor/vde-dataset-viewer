@@ -539,12 +539,14 @@ export const uiSlice = createSlice({
             action: PayloadAction<{
                 fileBase: string;
                 fileComp: string;
+                groupColumns: string[];
                 customSettings?: Partial<CompareSettings>;
             }>,
         ) => {
             state.compare.startCompare = true;
             state.compare.fileBase = action.payload.fileBase;
             state.compare.fileComp = action.payload.fileComp;
+            state.compare.groupColumns = action.payload.groupColumns;
             if (action.payload.customSettings) {
                 state.compare.customSettings = action.payload.customSettings;
             } else {

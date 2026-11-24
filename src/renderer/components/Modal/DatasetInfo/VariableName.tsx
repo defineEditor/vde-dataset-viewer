@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tooltip, Button } from '@mui/material';
 import { ITableRow } from '@interfaces/common';
-import { CoreCell } from '@tanstack/react-table';
+import type { CoreCell } from '@interfaces/common';
 
 const styles = {
     nameButton: (theme) => ({

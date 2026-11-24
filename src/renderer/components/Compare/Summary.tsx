@@ -14,6 +14,7 @@ import {
     TableCell,
     Stack,
     Tooltip,
+    Alert,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlined';
@@ -110,7 +111,7 @@ const settingsLabels = {
     tolerance: 'Tolerance',
     ignoreWhiteSpaces: 'Ignore White Spaces',
     ignorePattern: 'Column Ignore Pattern',
-    idColumns: 'ID Columns',
+    groupColumns: 'Group Columns',
     ignoreColumnCase: 'Ignore Column Case',
     reorderCompareColumns: 'Reorder Compare Columns',
     maxDiffCount: 'Max Differences to Show',
@@ -281,10 +282,33 @@ const Summary: React.FC = () => {
             });
         });
 
+    if (datasetDiff.groupColumns?.length > 0) {
+        settingsData.unshift({
+            label: settingsLabels.groupColumns,
+            value: datasetDiff.groupColumns.join(', '),
+        });
+    }
+
+    const groupOrderSides = [
+        summary.groupOrderIssues?.base ? 'Base' : null,
+        summary.groupOrderIssues?.compare ? 'Compare' : null,
+    ].filter((side): side is string => side !== null);
+
+    const groupOrderWarning =
+        groupOrderSides.length > 0 ? (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+                Records are not sorted by the selected group columns in the{' '}
+                {groupOrderSides.join(' and ')} dataset
+                {groupOrderSides.length > 1 ? 's' : ''}. Group comparison
+                results can be inaccurate.
+            </Alert>
+        ) : null;
+
     return (
         <Stack sx={styles.root} direction="row" spacing={2} useFlexGap>
             {allEqual ? (
                 <Paper sx={styles.summary}>
+                    {groupOrderWarning}
                     <Typography variant="h6" gutterBottom>
                         Comparison Summary
                     </Typography>
@@ -332,6 +356,7 @@ const Summary: React.FC = () => {
                 <>
                     <Stack>
                         <Paper sx={styles.summary}>
+                            {groupOrderWarning}
                             <Typography variant="h6" gutterBottom>
                                 Comparison Summary
                             </Typography>

@@ -71,6 +71,9 @@ const Compare: React.FC = () => {
     );
 
     const settings = useAppSelector((state) => state.settings.compare);
+    const viewerPageSize = useAppSelector(
+        (state) => state.settings.viewer.pageSize,
+    );
 
     const fileBase = useAppSelector(
         (state) => state.data.compare.data[currentCompareId]?.fileBase,
@@ -80,6 +83,9 @@ const Compare: React.FC = () => {
     );
     const fileBaseUi = useAppSelector((state) => state.ui.compare.fileBase);
     const fileCompUi = useAppSelector((state) => state.ui.compare.fileComp);
+    const groupColumnsUi = useAppSelector(
+        (state) => state.ui.compare.groupColumns,
+    );
     const isComparing = useAppSelector(
         (state) => state.ui.compare.info[currentCompareId]?.isComparing,
     );
@@ -144,8 +150,13 @@ const Compare: React.FC = () => {
                 type: mainTaskTypes.COMPARE,
                 fileBase: fileBaseUi,
                 fileComp: fileCompUi,
+                groupColumns: groupColumnsUi,
                 options: newSettings,
-                fileSettings: { encoding: 'default', bufferSize: 10000 },
+                fileSettings: {
+                    encoding: 'default',
+                    bufferSize: 10000,
+                    pageSize: viewerPageSize,
+                },
                 filterData: currentFilter,
             };
             // Initiate info for this compare
@@ -155,6 +166,7 @@ const Compare: React.FC = () => {
                 addRecentCompare({
                     fileBase: fileBaseUi,
                     fileComp: fileCompUi,
+                    groupColumns: groupColumnsUi,
                 }),
             );
 
@@ -245,10 +257,12 @@ const Compare: React.FC = () => {
         dispatch,
         fileBaseUi,
         fileCompUi,
+        groupColumnsUi,
         closeCompareFiles,
         currentFilter,
         settings,
         customSettings,
+        viewerPageSize,
     ]);
 
     if (isComparing) {

@@ -31,6 +31,7 @@ import {
     setCompareFiles,
     initializeCompare,
     closeCompare,
+    openSnackbar,
 } from '@redux/slices/ui';
 import { modals, paths } from '@/misc/constants';
 import AppContext from '@utils/AppContext';
@@ -74,7 +75,13 @@ const styles = {
     flag: {
         mb: 1,
     },
+    groupColumn: {
+        backgroundColor: 'primary.main',
+        color: 'primary.contrastText',
+    },
 };
+
+const emptyArray = [];
 
 const SelectCompare: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -85,6 +92,10 @@ const SelectCompare: React.FC = () => {
 
     const fileBaseState =
         useAppSelector((state) => state.ui.compare.fileBase) || '';
+    const fileCompState =
+        useAppSelector((state) => state.ui.compare.fileComp) || '';
+    const groupColumnsState =
+        useAppSelector((state) => state.ui.compare.groupColumns) || emptyArray;
 
     const ignoreWhiteSpacesSettings = useAppSelector(
         (state) => state.settings.compare.ignoreWhiteSpaces,
@@ -92,8 +103,6 @@ const SelectCompare: React.FC = () => {
     const ignoreValueCaseSettings = useAppSelector(
         (state) => state.settings.compare.ignoreValueCase,
     );
-    const fileCompState =
-        useAppSelector((state) => state.ui.compare.fileComp) || '';
     const currentCompareId = useAppSelector(
         (state) => state.ui.compare.currentCompareId,
     );
@@ -104,14 +113,29 @@ const SelectCompare: React.FC = () => {
     const [ignoreValueCase, setIgnoreValueCase] = useState<boolean>(
         ignoreValueCaseSettings,
     );
+    const [groupColumnsFlag, setGroupColumnsFlag] = useState<boolean>(
+        groupColumnsState.length > 0,
+    );
+    const [groupColumns, setGroupColumns] =
+        useState<string[]>(groupColumnsState);
+    const [sharedColumns, setSharedColumns] = useState<string[]>([]);
+
     const [fileComp, setFileComp] = useState<string>(fileCompState);
     const [fileBase, setFileBase] = useState<string>(fileBaseState);
 
+    const resetGroupColumns = useCallback(() => {
+        setGroupColumns([]);
+    }, []);
+
     const handleUpdateFileBase = (event) => {
+        resetGroupColumns();
+        setSharedColumns([]);
         setFileBase(event.target.value);
     };
 
     const handleUpdateFileComp = (event) => {
+        resetGroupColumns();
+        setSharedColumns([]);
         setFileComp(event.target.value);
     };
 
@@ -125,7 +149,11 @@ const SelectCompare: React.FC = () => {
     }, [dispatch]);
 
     const handleCompare = useCallback(
-        (newFileBase: string, newFileComp: string) => {
+        (
+            newFileBase: string,
+            newFileComp: string,
+            newGroupColumns: string[] = groupColumns,
+        ) => {
             // If there is an open compare, close it first
             if (currentCompareId) {
                 dispatch(closeCompare({ compareId: currentCompareId }));
@@ -141,7 +169,11 @@ const SelectCompare: React.FC = () => {
                 initializeCompare({
                     fileBase: newFileBase,
                     fileComp: newFileComp,
-                    customSettings: { ignoreWhiteSpaces, ignoreValueCase },
+                    groupColumns: newGroupColumns,
+                    customSettings: {
+                        ignoreWhiteSpaces,
+                        ignoreValueCase,
+                    },
                 }),
             );
             handleClose();
@@ -152,18 +184,111 @@ const SelectCompare: React.FC = () => {
             currentCompareId,
             ignoreWhiteSpaces,
             ignoreValueCase,
+            groupColumns,
         ],
     );
+
+    // Read the columns of both files and open the group columns selection
+    const handleGetColumns = useCallback(
+        async (
+            targetBase: string,
+            targetComp: string,
+            targetGroupColumns: string[],
+        ) => {
+            if (!targetBase || !targetComp) {
+                return;
+            }
+
+            try {
+                if (targetBase === targetComp) {
+                    // This makes no sense, so no need to check columns
+                    setSharedColumns([]);
+                    return;
+                }
+
+                const [baseColumns, compColumns] = await Promise.all([
+                    apiService.getFileColumns(targetBase),
+                    apiService.getFileColumns(targetComp),
+                ]);
+
+                const compColumnSet = new Set(
+                    compColumns.map((column) => column.name.toLowerCase()),
+                );
+                const newSharedColumns = baseColumns
+                    .filter((column) =>
+                        compColumnSet.has(column.name.toLowerCase()),
+                    )
+                    .map((column) => column.name);
+
+                if (newSharedColumns.length === 0) {
+                    dispatch(
+                        openSnackbar({
+                            message:
+                                'The selected files do not share any columns',
+                            type: 'warning',
+                        }),
+                    );
+                    setSharedColumns([]);
+                    return;
+                }
+                setSharedColumns(newSharedColumns);
+
+                // Drop previously selected columns that are not shared anymore
+                const newSharedColumnSet = new Set(
+                    newSharedColumns.map((column) => column.toLowerCase()),
+                );
+                const stillAvailable = targetGroupColumns.filter((column) =>
+                    newSharedColumnSet.has(column.toLowerCase()),
+                );
+                if (stillAvailable.length !== targetGroupColumns.length) {
+                    setGroupColumns(stillAvailable);
+                }
+            } catch (error) {
+                dispatch(
+                    openSnackbar({
+                        message: (error as Error).message,
+                        type: 'error',
+                    }),
+                );
+            }
+        },
+        [apiService, dispatch],
+    );
+
+    // Load shared columns on mount when reopening with existing group columns
+    useEffect(() => {
+        if (groupColumnsState.length > 0 && fileBaseState && fileCompState) {
+            handleGetColumns(fileBaseState, fileCompState, groupColumnsState);
+        }
+    }, [fileBaseState, fileCompState, groupColumnsState, handleGetColumns]);
+
+    const handleToggleGroupColumnsFlag = (newValue: boolean) => {
+        setGroupColumnsFlag(newValue);
+        if (newValue) {
+            handleGetColumns(fileBase, fileComp, groupColumns);
+        } else {
+            resetGroupColumns();
+        }
+    };
 
     const handleSelectFile = async (type: 'base' | 'comp') => {
         const result = await apiService.openFileDialog({
             multiple: false,
         });
         if (result && result.length > 0) {
+            resetGroupColumns();
+            const nextFileBase =
+                type === 'base' ? result[0].fullPath : fileBase;
+            const nextFileComp =
+                type === 'comp' ? result[0].fullPath : fileComp;
             if (type === 'base') {
-                setFileBase(result[0].fullPath);
+                setFileBase(nextFileBase);
             } else {
-                setFileComp(result[0].fullPath);
+                setFileComp(nextFileComp);
+            }
+            // Refresh the list of columns
+            if (groupColumnsFlag) {
+                handleGetColumns(nextFileBase, nextFileComp, []);
             }
         }
     };
@@ -171,9 +296,22 @@ const SelectCompare: React.FC = () => {
     const handleSelectRecent = (recent: {
         fileBase: string;
         fileComp: string;
+        groupColumns?: string[];
     }) => {
         setFileBase(recent.fileBase);
         setFileComp(recent.fileComp);
+        if (recent.groupColumns && recent.groupColumns.length > 0) {
+            setGroupColumns(recent.groupColumns);
+            setGroupColumnsFlag(true);
+            handleGetColumns(
+                recent.fileBase,
+                recent.fileComp,
+                recent.groupColumns,
+            );
+        } else {
+            setGroupColumnsFlag(false);
+            resetGroupColumns();
+        }
     };
 
     // Keyboard shortcuts
@@ -191,7 +329,11 @@ const SelectCompare: React.FC = () => {
                     if (recentCompares[index]) {
                         event.preventDefault();
                         const recent = recentCompares[index];
-                        handleCompare(recent.fileBase, recent.fileComp);
+                        handleCompare(
+                            recent.fileBase,
+                            recent.fileComp,
+                            recent.groupColumns || [],
+                        );
                     }
                 }
             }
@@ -201,7 +343,7 @@ const SelectCompare: React.FC = () => {
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [recentCompares, dispatch, handleClose, handleCompare]);
+    }, [recentCompares, handleCompare]);
 
     return (
         <Dialog
@@ -244,6 +386,21 @@ const SelectCompare: React.FC = () => {
                                 />
                             }
                             label="Case Insensitive"
+                            sx={styles.flag}
+                        />
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={groupColumnsFlag}
+                                    onChange={() =>
+                                        handleToggleGroupColumnsFlag(
+                                            !groupColumnsFlag,
+                                        )
+                                    }
+                                    name="compare.groupColumnsFlag"
+                                />
+                            }
+                            label="Group records"
                             sx={styles.flag}
                         />
                     </Stack>
@@ -310,6 +467,42 @@ const SelectCompare: React.FC = () => {
                         />
                     </Box>
 
+                    {groupColumnsFlag && (
+                        <Box sx={styles.fileInput}>
+                            <Autocomplete
+                                multiple
+                                fullWidth
+                                options={sharedColumns}
+                                value={groupColumns}
+                                onChange={(_event, newValue) => {
+                                    setGroupColumns(newValue);
+                                }}
+                                renderValue={(value, getItemProps) =>
+                                    value.map((option, index) => (
+                                        <Chip
+                                            label={option}
+                                            {...getItemProps({ index })}
+                                            sx={styles.groupColumn}
+                                            key={option}
+                                        />
+                                    ))
+                                }
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        helperText="Datasets must be sorted by the selected group columns for correct comparison"
+                                        placeholder={
+                                            groupColumns.length === 0
+                                                ? 'Select group columns'
+                                                : undefined
+                                        }
+                                        fullWidth
+                                    />
+                                )}
+                            />
+                        </Box>
+                    )}
+
                     <Autocomplete
                         options={recentCompares}
                         getOptionLabel={(option) =>
@@ -373,7 +566,7 @@ const SelectCompare: React.FC = () => {
                         <List>
                             {recentCompares.slice(0, 5).map((recent, index) => (
                                 <React.Fragment
-                                    key={recent.fileBase + recent.fileComp}
+                                    key={`${recent.fileBase}|${recent.fileComp}|${(recent.groupColumns || []).join(',')}`}
                                 >
                                     <ListItem
                                         onClick={() =>
@@ -390,8 +583,22 @@ const SelectCompare: React.FC = () => {
                                             />
                                         </ListItemAvatar>
                                         <ListItemText
-                                            primary={`Base: ${recent.fileBase}`}
-                                            secondary={`Comp: ${recent.fileComp}`}
+                                            disableTypography
+                                            primary={
+                                                <Stack direction="column">
+                                                    <Box>
+                                                        Base: {recent.fileBase}
+                                                    </Box>
+                                                    <Box>
+                                                        Comp: {recent.fileComp}
+                                                    </Box>
+                                                </Stack>
+                                            }
+                                            secondary={
+                                                recent.groupColumns
+                                                    ? `Group columns: ${recent.groupColumns.join(', ')}`
+                                                    : undefined
+                                            }
                                         />
                                     </ListItem>
                                     <Divider />

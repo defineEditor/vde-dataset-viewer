@@ -21,7 +21,7 @@ Use the command line to update IDs, sorting, visible columns, filters, and navig
 - **showadd | sha [selectors]** adds columns to the current visible set.
 - **hide [selectors]** hides the columns.
 - **hideadd | ha [selectors]** removes additional columns from the current visible set.
-- **info | i [column]** opens variable information for one column.
+- **info | i [column]** opens information for the specified column.
 - **filter | f [expression]** replaces the current filter.
 - **filteradd | fa [expression]** appends a filter with AND.
 - **go [row] | [column] | [row:column] | [column:row]** go to a specific row, column, or cell.
@@ -180,6 +180,7 @@ This modal starts a dataset-to-dataset comparison by selecting the base file and
 - **Switch** swaps base and compare files.
 - **Ignore White Spaces** ignores leading and trailing spaces during comparison.
 - **Case Insensitive** ignores value letter case during comparison.
+- **Group Columns** compares subsets based on a key.
 - **Recent Compares** shows the history of comparisons.
 - Use Ctrl+<X> to select previously compared files.
 

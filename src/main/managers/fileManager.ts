@@ -1,4 +1,4 @@
-import { dialog, IpcMainInvokeEvent } from 'electron';
+import { dialog, IpcMainInvokeEvent, BrowserWindow } from 'electron';
 import DatasetJson from 'js-stream-dataset-json';
 import { DatasetReadStat } from 'js-stream-sas7bdat';
 import DatasetXpt from 'xport-js';
@@ -11,8 +11,9 @@ import {
     FileInfo,
     InputFileExtension,
     ItemDataArray,
+    ItemDescription,
 } from '@interfaces/common';
-import openFile from '@/main/openFile';
+import openFile, { showOpenDialog } from '@/main/openFile';
 import fs from 'fs';
 import fsPromises from 'fs/promises';
 import Filter from 'js-array-filter';
@@ -121,7 +122,8 @@ class FileManager {
             }
             newFile = { path: filePath };
         } else {
-            newFile = await openFile(folderPath);
+            const mainWindow = BrowserWindow.fromWebContents(event.sender);
+            newFile = await openFile(mainWindow, folderPath);
         }
 
         let type: DataType;
@@ -379,6 +381,46 @@ class FileManager {
         return null;
     };
 
+    // get the column metadata of a file without keeping it open
+    public getFileColumns = async (
+        _event: IpcMainInvokeEvent,
+        filePath: string,
+        encoding: BufferEncoding | 'default' = 'utf8',
+    ): Promise<ItemDescription[]> => {
+        if (!filePath || !fs.existsSync(filePath)) {
+            throw new Error(`File not found: ${filePath}`);
+        }
+
+        const extension = filePath.split('.').pop()?.toLowerCase();
+        try {
+            let metadata: DatasetJsonMetadata;
+            if (extension === 'xpt') {
+                metadata = await new DatasetXpt(filePath).getMetadata(
+                    'dataset-json1.1',
+                );
+            } else if (
+                ['sas7bdat', 'sav', 'dta', 'zsav', 'por'].includes(
+                    extension || '',
+                )
+            ) {
+                metadata = await new DatasetReadStat(filePath).getMetadata();
+            } else if (['json', 'ndjson', 'dsjc'].includes(extension || '')) {
+                const updatedEncoding: BufferEncoding =
+                    encoding === 'default' ? 'utf8' : encoding;
+                metadata = await new DatasetJson(filePath, {
+                    encoding: updatedEncoding,
+                }).getMetadata();
+            } else {
+                throw new Error('File extension not supported');
+            }
+            return metadata.columns;
+        } catch (error) {
+            throw new Error(
+                `Unable to read columns from ${filePath}: ${(error as Error).message}`,
+            );
+        }
+    };
+
     public handleGetObservations = async (
         event: IpcMainInvokeEvent,
         fileId: string,
@@ -489,7 +531,9 @@ class FileManager {
             if (multiple) {
                 properties.push('multiSelections');
             }
-            const result = await dialog.showOpenDialog({
+
+            const mainWindow = BrowserWindow.fromWebContents(event.sender);
+            const result = await showOpenDialog(mainWindow, {
                 properties,
                 defaultPath: startFolder,
                 filters,
@@ -506,7 +550,7 @@ class FileManager {
 
     // Open directory dialog
     public openFolder = async (
-        _event: IpcMainInvokeEvent,
+        event: IpcMainInvokeEvent,
         options: {
             multiple?: boolean;
             initialFolder?: string;
@@ -527,7 +571,8 @@ class FileManager {
             if (multiple) {
                 properties.push('multiSelections');
             }
-            const result = await dialog.showOpenDialog({
+            const mainWindow = BrowserWindow.fromWebContents(event.sender);
+            const result = await showOpenDialog(mainWindow, {
                 properties,
                 defaultPath: startFolder,
             });
@@ -541,7 +586,7 @@ class FileManager {
     };
 
     public openDirectoryDialog = async (
-        _event: IpcMainInvokeEvent,
+        event: IpcMainInvokeEvent,
         initialFolder: string | null,
     ): Promise<string | null> => {
         try {
@@ -554,7 +599,8 @@ class FileManager {
                 }
             }
 
-            const result = await dialog.showOpenDialog({
+            const mainWindow = BrowserWindow.fromWebContents(event.sender);
+            const result = await showOpenDialog(mainWindow, {
                 properties: ['openDirectory'],
                 defaultPath: startFolder,
             });

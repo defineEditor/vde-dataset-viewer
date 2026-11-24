@@ -315,6 +315,7 @@ app.whenReady()
             reportManager.showValidationLog,
         );
         ipcMain.handle('read:getMetadata', fileManager.handleGetMetadata);
+        ipcMain.handle('read:getFileColumns', fileManager.getFileColumns);
         ipcMain.handle(
             'read:getObservations',
             fileManager.handleGetObservations,

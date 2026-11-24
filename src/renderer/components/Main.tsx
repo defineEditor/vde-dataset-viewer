@@ -228,7 +228,7 @@ const Main: React.FC = () => {
             newWindowProps?: NewWindowProps,
         ) => {
             if (newWindowProps?.compare) {
-                const { path1, path2 } = newWindowProps.compare;
+                const { path1, path2, groupColumns } = newWindowProps.compare;
                 const handleOpenCompare = async (
                     fileBase: string,
                     fileComp: string,
@@ -237,6 +237,7 @@ const Main: React.FC = () => {
                         initializeCompare({
                             fileBase,
                             fileComp,
+                            groupColumns: groupColumns || [],
                         }),
                     );
                     dispatch(setPathname({ pathname: paths.COMPARE }));

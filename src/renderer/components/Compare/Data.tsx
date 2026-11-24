@@ -27,6 +27,10 @@ import BottomToolbar from '@components/Compare/BottomToolbar';
 import ApiService from '@services/ApiService';
 import DifferencesModal from '@components/Compare/DifferencesModal';
 import { clearLoadedRecords } from '@redux/slices/data';
+import {
+    alignGroupedCompareData,
+    findGroupPageForBaseRow,
+} from '@components/Compare/GroupedTable/alignGroups';
 
 const styles = {
     containerVertical: {
@@ -110,6 +114,16 @@ const Data: React.FC = () => {
         (state) => state.data.compare.data[currentCompareId]?.datasetDiff,
     );
     const commonCols = datasetDiff?.metadata.commonCols || emptyArray;
+    const groupColumns = datasetDiff?.groupColumns || emptyArray;
+    const isGroupedMode = groupColumns.length > 0;
+    const groupPageMaps = datasetDiff?.groupPageMaps;
+    const hasGroupPageMaps = Boolean(
+        isGroupedMode && groupPageMaps && groupPageMaps.length > 0,
+    );
+    const currentGroupPageRange = useMemo(() => {
+        if (!hasGroupPageMaps || !groupPageMaps) return null;
+        return groupPageMaps[page] || groupPageMaps[groupPageMaps.length - 1];
+    }, [hasGroupPageMaps, groupPageMaps, page]);
     const view = useAppSelector((state) => state.ui.compare.view);
     const settings = useAppSelector((state) => state.settings);
     const viewerSettings = {
@@ -129,7 +143,9 @@ const Data: React.FC = () => {
     const [data, setData] = useState<{
         base: ITableData | null;
         comp: ITableData | null;
-    }>({ base: null, comp: null });
+        baseRowOffset: number;
+        compRowOffset: number;
+    }>({ base: null, comp: null, baseRowOffset: 0, compRowOffset: 0 });
     const [loading, setLoading] = useState(false);
 
     const baseRef = useRef<HTMLDivElement>(null);
@@ -175,28 +191,48 @@ const Data: React.FC = () => {
     const handleSetGoTo = useCallback(
         (newGoTo: Partial<IUiControl['goTo']>) => {
             // Detect if page change is needed
-            if (
-                newGoTo.row !== null &&
-                newGoTo.row !== undefined &&
-                (newGoTo.row > pageSize * (page + 1) ||
-                    newGoTo.row <= pageSize * page)
-            ) {
-                const newPage = newGoTo.row
-                    ? Math.floor((newGoTo.row - 1) / pageSize)
-                    : 0;
-                dispatch(
-                    setComparePage({
-                        compareId: currentCompareId,
-                        page: newPage,
-                    }),
-                );
+            if (newGoTo.row !== null && newGoTo.row !== undefined) {
+                if (hasGroupPageMaps && groupPageMaps) {
+                    const targetPage = findGroupPageForBaseRow(
+                        groupPageMaps,
+                        newGoTo.row - 1,
+                    );
+                    if (targetPage !== -1 && targetPage !== page) {
+                        dispatch(
+                            setComparePage({
+                                compareId: currentCompareId,
+                                page: targetPage,
+                            }),
+                        );
+                    }
+                } else if (
+                    newGoTo.row > pageSize * (page + 1) ||
+                    newGoTo.row <= pageSize * page
+                ) {
+                    const newPage = newGoTo.row
+                        ? Math.floor((newGoTo.row - 1) / pageSize)
+                        : 0;
+                    dispatch(
+                        setComparePage({
+                            compareId: currentCompareId,
+                            page: newPage,
+                        }),
+                    );
+                }
             }
             setGoTo((prevGoTo) => ({
                 ...prevGoTo,
                 ...newGoTo,
             }));
         },
-        [pageSize, page, dispatch, currentCompareId],
+        [
+            pageSize,
+            page,
+            dispatch,
+            currentCompareId,
+            hasGroupPageMaps,
+            groupPageMaps,
+        ],
     );
 
     // Keep track of the last datasetDiff to avoid resetting goTo on unrelated updates
@@ -209,21 +245,23 @@ const Data: React.FC = () => {
             datasetDiff.data.modifiedRows.length > 0
         ) {
             const firstDiffRow = datasetDiff.data.modifiedRows[0];
-            if (Math.floor((firstDiffRow.rowBase || 0) / pageSize) !== page) {
-                const newPage = Math.floor(
-                    (firstDiffRow.rowBase || 0) / pageSize,
-                );
+            const firstDiffRowBase = firstDiffRow.rowBase || 0;
+            const targetPage =
+                hasGroupPageMaps && groupPageMaps
+                    ? findGroupPageForBaseRow(groupPageMaps, firstDiffRowBase)
+                    : Math.floor(firstDiffRowBase / pageSize);
+            if (targetPage !== -1 && targetPage !== page) {
                 dispatch(
                     setComparePage({
                         compareId: currentCompareId,
-                        page: newPage,
+                        page: targetPage,
                     }),
                 );
             }
             lastDatasetDiffRef.current = datasetDiff;
             // Column name here is base column name, so it will work correctly as navigation is handled by base dataset
             handleSetGoTo({
-                row: (firstDiffRow.rowBase || 0) + 1,
+                row: firstDiffRowBase + 1,
                 column: Object.keys(firstDiffRow.diff || {})[0] || null,
                 cellSelection: true,
             });
@@ -235,6 +273,8 @@ const Data: React.FC = () => {
         pageSize,
         dispatch,
         currentCompareId,
+        hasGroupPageMaps,
+        groupPageMaps,
     ]);
 
     const handleChangePage = (_event, newPage: number) => {
@@ -243,9 +283,20 @@ const Data: React.FC = () => {
         );
     };
 
-    const { baseAnnotations, compAnnotations, baseDiffs } = useMemo(() => {
+    const {
+        baseAnnotations,
+        compAnnotations,
+        baseAnnotationsByColId,
+        compAnnotationsByColId,
+        baseDiffs,
+    } = useMemo(() => {
         if (colIndicesBase.size === 0 || !datasetDiff) {
-            return { baseAnnotations: null, compAnnotations: null };
+            return {
+                baseAnnotations: null,
+                compAnnotations: null,
+                baseAnnotationsByColId: null,
+                compAnnotationsByColId: null,
+            };
         }
 
         const baseMap = new Map<
@@ -256,6 +307,20 @@ const Data: React.FC = () => {
             }
         >();
         const compMap = new Map<
+            string,
+            {
+                text: string | React.ReactElement;
+                color: string;
+            }
+        >();
+        const baseMapByColId = new Map<
+            string,
+            {
+                text: string | React.ReactElement;
+                color: string;
+            }
+        >();
+        const compMapByColId = new Map<
             string,
             {
                 text: string | React.ReactElement;
@@ -274,19 +339,36 @@ const Data: React.FC = () => {
             }
         >();
 
+        const effectiveIgnoreColumnCase =
+            datasetDiff?.settings?.ignoreColumnCase ?? ignoreColumnCase;
+
         datasetDiff?.data.modifiedRows.forEach((diffRow) => {
             const { rowBase, rowCompare, diff } = diffRow;
             if (diff) {
+                const rowDiffCountText = `${Object.keys(diff).length} diffs`;
                 // Add annotation for row
                 baseMap.set(`${rowBase}`, {
-                    text: `${Object.keys(diff).length} diffs`,
+                    text: rowDiffCountText,
                     color: '',
                 });
+                baseMapByColId.set(`${rowBase}`, {
+                    text: rowDiffCountText,
+                    color: '',
+                });
+                if (rowCompare !== null) {
+                    compMapByColId.set(`${rowCompare}`, {
+                        text: rowDiffCountText,
+                        color: '',
+                    });
+                }
                 const baseDiffsRow = {};
                 Object.keys(diff).forEach((colId) => {
                     const baseColIndex = colIndicesBase.get(colId);
                     let compColIndex = colIndicesComp.get(colId);
-                    if (ignoreColumnCase && compColIndex === undefined) {
+                    if (
+                        effectiveIgnoreColumnCase &&
+                        compColIndex === undefined
+                    ) {
                         // ColId is using base column names, so for the compare we need to get the corresponding index
                         // Try to find case-insensitive match
                         for (const [compColId, index] of colIndicesComp) {
@@ -347,12 +429,26 @@ const Data: React.FC = () => {
                             text: diffElementBase,
                             color: '',
                         });
+                        baseMapByColId.set(
+                            `${rowBase}#${colId.toLowerCase()}`,
+                            {
+                                text: diffElementBase,
+                                color: '',
+                            },
+                        );
 
                         // Add annotation to comp
                         compMap.set(`${rowCompare}#${compColIndex + 1}`, {
                             text: diffElementComp,
                             color: '',
                         });
+                        compMapByColId.set(
+                            `${rowCompare}#${colId.toLowerCase()}`,
+                            {
+                                text: diffElementComp,
+                                color: '',
+                            },
+                        );
 
                         // Add item to baseDiffs
                         baseDiffsRow[colId] = {
@@ -375,6 +471,10 @@ const Data: React.FC = () => {
                     text: 'Row missing in compare',
                     color: '',
                 });
+                baseMapByColId.set(`${rowBase}`, {
+                    text: 'Row missing in compare',
+                    color: '',
+                });
                 const baseDiffsRow = {};
                 baseDiffsRow['whole::row'] = {
                     baseVal: `Missing in compare`,
@@ -385,6 +485,10 @@ const Data: React.FC = () => {
             }
             if (rowCompare !== null) {
                 compMap.set(`${rowCompare}`, {
+                    text: 'Row missing in base',
+                    color: '',
+                });
+                compMapByColId.set(`${rowCompare}`, {
                     text: 'Row missing in base',
                     color: '',
                 });
@@ -405,6 +509,10 @@ const Data: React.FC = () => {
                     text: 'Row missing in compare',
                     color: '',
                 });
+                baseMapByColId.set(`${rowBase}`, {
+                    text: 'Row missing in compare',
+                    color: '',
+                });
                 const baseDiffsRow = {};
                 baseDiffsRow['whole::row'] = {
                     baseVal: `Missing in compare`,
@@ -415,6 +523,10 @@ const Data: React.FC = () => {
             }
             if (rowCompare !== null) {
                 compMap.set(`${rowCompare}`, {
+                    text: 'Row missing in base',
+                    color: '',
+                });
+                compMapByColId.set(`${rowCompare}`, {
                     text: 'Row missing in base',
                     color: '',
                 });
@@ -431,9 +543,64 @@ const Data: React.FC = () => {
         return {
             baseAnnotations: baseMap,
             compAnnotations: compMap,
+            baseAnnotationsByColId: baseMapByColId,
+            compAnnotationsByColId: compMapByColId,
             baseDiffs: baseDiffsMap,
         };
     }, [datasetDiff, colIndicesBase, colIndicesComp, ignoreColumnCase]);
+
+    const alignedGroupedData = useMemo(() => {
+        if (!isGroupedMode || !data.base || !data.comp) {
+            return null;
+        }
+        return alignGroupedCompareData({
+            baseData: data.base.data,
+            compData: data.comp.data,
+            baseHeader: data.base.header,
+            compHeader: data.comp.header,
+            groupColumns,
+            options: {
+                ignoreColumnCase:
+                    datasetDiff?.settings?.ignoreColumnCase ?? ignoreColumnCase,
+                ignoreValueCase:
+                    datasetDiff?.settings?.ignoreValueCase ??
+                    settings.compare.ignoreValueCase,
+                ignoreWhiteSpaces:
+                    datasetDiff?.settings?.ignoreWhiteSpaces ??
+                    settings.compare.ignoreWhiteSpaces,
+            },
+            datasetDiff: datasetDiff || null,
+            currentPage: page,
+            pageSize,
+            baseRowOffset: data.baseRowOffset,
+            compRowOffset: data.compRowOffset,
+        });
+    }, [
+        isGroupedMode,
+        data.base,
+        data.comp,
+        data.baseRowOffset,
+        data.compRowOffset,
+        groupColumns,
+        datasetDiff,
+        ignoreColumnCase,
+        settings.compare.ignoreValueCase,
+        settings.compare.ignoreWhiteSpaces,
+        page,
+        pageSize,
+    ]);
+
+    const [expandedGroupKeys, setExpandedGroupKeys] = useState<
+        Record<string, boolean>
+    >({});
+
+    useEffect(() => {
+        if (alignedGroupedData) {
+            setExpandedGroupKeys(alignedGroupedData.initialExpandedGroupKeys);
+        } else {
+            setExpandedGroupKeys({});
+        }
+    }, [alignedGroupedData]);
 
     const currentlyLoading = useRef(false);
 
@@ -457,6 +624,19 @@ const Data: React.FC = () => {
                     base: [],
                     comp: [],
                 };
+                const baseStart = currentGroupPageRange
+                    ? currentGroupPageRange.baseStart
+                    : pageMaps.base[page] || page * pageSize;
+                const baseLength = currentGroupPageRange
+                    ? currentGroupPageRange.baseLength
+                    : pageSize;
+                const compStart = currentGroupPageRange
+                    ? currentGroupPageRange.compStart
+                    : pageMaps.comp[page] || page * pageSize;
+                const compLength = currentGroupPageRange
+                    ? currentGroupPageRange.compLength
+                    : pageSize;
+
                 // Load base file
                 const fileBaseInfo = await apiService.openFile({
                     mode: 'local',
@@ -467,8 +647,8 @@ const Data: React.FC = () => {
                 const newBaseData = await getData(
                     apiService,
                     fileBaseInfo.fileId,
-                    pageMaps.base[page] || page * pageSize,
-                    pageSize,
+                    baseStart,
+                    baseLength,
                     settings,
                     commonCols,
                     currentFilter,
@@ -495,8 +675,8 @@ const Data: React.FC = () => {
                 const newCompData = await getData(
                     apiService,
                     fileCompInfo.fileId,
-                    pageMaps.comp[page] || page * pageSize,
-                    pageSize,
+                    compStart,
+                    compLength,
                     settings,
                     commonColsComp,
                     currentFilter,
@@ -514,7 +694,26 @@ const Data: React.FC = () => {
                             baseColOrder.indexOf(b.id.toLowerCase()),
                     );
                 }
-                setData({ base: newBaseData, comp: newCompData });
+                const baseRowOffset = currentGroupPageRange
+                    ? currentGroupPageRange.baseStart
+                    : !currentFilter &&
+                        newBaseData &&
+                        baseStart >= newBaseData.metadata.records
+                      ? Math.max(newBaseData.metadata.records - baseLength, 0)
+                      : page * pageSize;
+                const compRowOffset = currentGroupPageRange
+                    ? currentGroupPageRange.compStart
+                    : !currentFilter &&
+                        newCompData &&
+                        compStart >= newCompData.metadata.records
+                      ? Math.max(newCompData.metadata.records - compLength, 0)
+                      : page * pageSize;
+                setData({
+                    base: newBaseData,
+                    comp: newCompData,
+                    baseRowOffset,
+                    compRowOffset,
+                });
                 dispatch(
                     setCompareFileIds({
                         compareId: currentCompareId,
@@ -561,6 +760,7 @@ const Data: React.FC = () => {
         reorderCompareColumns,
         noDataDifferences,
         datasetDiff?.pageMaps,
+        currentGroupPageRange,
     ]);
 
     if (loading) {
@@ -633,7 +833,33 @@ const Data: React.FC = () => {
                         goTo={goTo}
                         onSetGoTo={handleSetGoTo}
                         currentPage={page}
-                        annotatedCells={baseAnnotations}
+                        annotatedCells={
+                            alignedGroupedData &&
+                            alignedGroupedData.baseGroupColIds.length > 0
+                                ? baseAnnotationsByColId
+                                : baseAnnotations
+                        }
+                        grouped={
+                            alignedGroupedData
+                                ? {
+                                      alignedRows: alignedGroupedData.baseRows,
+                                      groupColIds:
+                                          alignedGroupedData.baseGroupColIds,
+                                      groupMetaByKey:
+                                          alignedGroupedData.groupMetaByKey,
+                                      side: 'base',
+                                      expandedGroupKeys,
+                                      onExpandedGroupKeysChange:
+                                          setExpandedGroupKeys,
+                                      pageRowRange: currentGroupPageRange
+                                          ? {
+                                                start: currentGroupPageRange.baseStart,
+                                                length: currentGroupPageRange.baseLength,
+                                            }
+                                          : null,
+                                  }
+                                : null
+                        }
                     />
                 </Box>
                 <Box
@@ -650,16 +876,62 @@ const Data: React.FC = () => {
                         settings={viewerSettings}
                         containerRef={compRef}
                         onScroll={handleScroll('comp')}
-                        annotatedCells={compAnnotations}
+                        annotatedCells={
+                            alignedGroupedData &&
+                            alignedGroupedData.compGroupColIds.length > 0
+                                ? compAnnotationsByColId
+                                : compAnnotations
+                        }
+                        grouped={
+                            alignedGroupedData
+                                ? {
+                                      alignedRows: alignedGroupedData.compRows,
+                                      groupColIds:
+                                          alignedGroupedData.compGroupColIds,
+                                      groupMetaByKey:
+                                          alignedGroupedData.groupMetaByKey,
+                                      side: 'comp',
+                                      expandedGroupKeys,
+                                      onExpandedGroupKeysChange:
+                                          setExpandedGroupKeys,
+                                      pageRowRange: currentGroupPageRange
+                                          ? {
+                                                start: currentGroupPageRange.compStart,
+                                                length: currentGroupPageRange.compLength,
+                                            }
+                                          : null,
+                                  }
+                                : null
+                        }
                         currentPage={page}
                     />
                 </Box>
             </Stack>
             <BottomToolbar
-                totalRecords={totalRowsChecked}
+                totalRecords={
+                    hasGroupPageMaps && groupPageMaps
+                        ? (groupPageMaps.length - 1) * pageSize +
+                          Math.min(
+                              Math.max(
+                                  groupPageMaps[groupPageMaps.length - 1]
+                                      .baseLength,
+                                  groupPageMaps[groupPageMaps.length - 1]
+                                      .compLength,
+                                  1,
+                              ),
+                              pageSize,
+                          )
+                        : totalRowsChecked
+                }
                 page={page}
                 pageSize={pageSize}
-                records={data.base.metadata.records}
+                records={
+                    hasGroupPageMaps &&
+                    groupPageMaps &&
+                    groupPageMaps.length > 1
+                        ? Math.max(data.base.metadata.records, pageSize + 1)
+                        : data.base.metadata.records
+                }
                 onPageChange={handleChangePage}
                 diffs={baseDiffs || new Map()}
                 onSetGoTo={handleSetGoTo}

@@ -250,6 +250,7 @@ class TaskManager {
                 fileBase: task.fileBase,
                 fileComp: task.fileComp,
                 filterData: task.filterData,
+                groupColumns: task.groupColumns,
                 options: task.options,
                 fileSettings: task.fileSettings,
             });

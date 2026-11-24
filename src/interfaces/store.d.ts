@@ -234,6 +234,7 @@ export interface IUiCompare {
     startCompare: boolean;
     fileBase: string | null;
     fileComp: string | null;
+    groupColumns: string[];
     customSettings: Partial<CompareSettings>;
     view: 'horizontal' | 'vertical';
     resultTab: 'summary' | 'metadata' | 'data';
@@ -310,7 +311,11 @@ export interface CompareData {
             datasetDiff: DatasetDiff | null;
         };
     };
-    recentCompares: { fileBase: string; fileComp: string }[];
+    recentCompares: {
+        fileBase: string;
+        fileComp: string;
+        groupColumns?: string[];
+    }[];
 }
 
 export interface IData {
