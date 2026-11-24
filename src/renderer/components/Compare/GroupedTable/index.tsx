@@ -77,6 +77,7 @@ interface GroupedCompareTableProps {
     side: 'base' | 'comp';
     expandedGroupKeys: Record<string, boolean>;
     onExpandedGroupKeysChange: (next: Record<string, boolean>) => void;
+    pageRowRange?: { start: number; length: number } | null;
     settings: TableSettings;
     isLoading?: boolean;
     handleContextMenu?: (
@@ -118,6 +119,7 @@ const GroupedCompareTable: React.FC<GroupedCompareTableProps> = ({
     side,
     expandedGroupKeys,
     onExpandedGroupKeysChange,
+    pageRowRange = null,
     settings,
     isLoading = false,
     handleContextMenu = () => {},
@@ -438,17 +440,19 @@ const GroupedCompareTable: React.FC<GroupedCompareTableProps> = ({
 
     // Handle goTo navigation: auto-expand target group, then scroll to leaf row & column
     useEffect(() => {
-        if (
-            goTo.row === null ||
-            isLoading ||
-            tableHeight <= 0 ||
-            currentPage !==
-                Math.floor(Math.max(goTo.row - 1, 0) / settings.pageSize)
-        ) {
+        if (goTo.row === null || isLoading || tableHeight <= 0) {
             return;
         }
 
         const targetOrigRowIndex = goTo.row - 1;
+        const isTargetOnCurrentPage = pageRowRange
+            ? targetOrigRowIndex >= pageRowRange.start &&
+              targetOrigRowIndex < pageRowRange.start + pageRowRange.length
+            : currentPage ===
+              Math.floor(Math.max(targetOrigRowIndex, 0) / settings.pageSize);
+        if (!isTargetOnCurrentPage) {
+            return;
+        }
         const visibleIndex = rows.findIndex(
             (r) =>
                 !r.getIsGrouped() &&
@@ -515,6 +519,7 @@ const GroupedCompareTable: React.FC<GroupedCompareTableProps> = ({
         isLoading,
         tableHeight,
         currentPage,
+        pageRowRange,
         settings.pageSize,
         rows,
         alignedRows,

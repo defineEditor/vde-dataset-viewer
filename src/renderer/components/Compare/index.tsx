@@ -71,6 +71,9 @@ const Compare: React.FC = () => {
     );
 
     const settings = useAppSelector((state) => state.settings.compare);
+    const viewerPageSize = useAppSelector(
+        (state) => state.settings.viewer.pageSize,
+    );
 
     const fileBase = useAppSelector(
         (state) => state.data.compare.data[currentCompareId]?.fileBase,
@@ -149,7 +152,11 @@ const Compare: React.FC = () => {
                 fileComp: fileCompUi,
                 groupColumns: groupColumnsUi,
                 options: newSettings,
-                fileSettings: { encoding: 'default', bufferSize: 10000 },
+                fileSettings: {
+                    encoding: 'default',
+                    bufferSize: 10000,
+                    pageSize: viewerPageSize,
+                },
                 filterData: currentFilter,
             };
             // Initiate info for this compare
@@ -255,6 +262,7 @@ const Compare: React.FC = () => {
         currentFilter,
         settings,
         customSettings,
+        viewerPageSize,
     ]);
 
     if (isComparing) {

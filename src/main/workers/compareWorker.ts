@@ -16,6 +16,7 @@ import {
     DatasetMetadata,
     BasicFilter,
     ColumnMetadata,
+    GroupPageRange,
 } from '@interfaces/common';
 
 const transformData = (
@@ -989,10 +990,20 @@ process.parentPort.once(
                 base: [0],
                 comp: [0],
             };
+            const groupPageMaps: GroupPageRange[] = [];
 
             // Group comparison is enabled when group columns are defined.
             // Data is assumed to be already sorted by these columns.
             if (groupColumns?.length > 0) {
+                const targetPageSize = Math.max(
+                    fileSettings.pageSize || bufferSize,
+                    1,
+                );
+                let pageBaseStart = 0;
+                let pageBaseLength = 0;
+                let pageCompStart = 0;
+                let pageCompLength = 0;
+                let pageAlignedLength = 0;
                 // Group-based comparison: rows are streamed in chunks so groups
                 // larger than the buffer are not held in memory entirely.
                 const baseGroupIdx = getGroupColumnIndices(
@@ -1145,6 +1156,45 @@ process.parentPort.once(
                     baseRecords = blockResult.baseRecords;
                     compRecords = blockResult.compRecords;
                     maxDiffCountReached = blockResult.maxDiffReached;
+
+                    if (filterData === null) {
+                        const blockAlignedLength = Math.max(
+                            baseBlockLen,
+                            compBlockLen,
+                        );
+                        if (
+                            pageAlignedLength > 0 &&
+                            pageAlignedLength + blockAlignedLength >
+                                targetPageSize
+                        ) {
+                            groupPageMaps.push({
+                                baseStart: pageBaseStart,
+                                baseLength: pageBaseLength,
+                                compStart: pageCompStart,
+                                compLength: pageCompLength,
+                            });
+                            pageBaseStart += pageBaseLength;
+                            pageCompStart += pageCompLength;
+                            pageBaseLength = 0;
+                            pageCompLength = 0;
+                            pageAlignedLength = 0;
+                        }
+                        pageBaseLength += baseBlockLen;
+                        pageCompLength += compBlockLen;
+                        pageAlignedLength += blockAlignedLength;
+                    }
+                }
+
+                if (
+                    filterData === null &&
+                    (pageAlignedLength > 0 || groupPageMaps.length === 0)
+                ) {
+                    groupPageMaps.push({
+                        baseStart: pageBaseStart,
+                        baseLength: pageBaseLength,
+                        compStart: pageCompStart,
+                        compLength: pageCompLength,
+                    });
                 }
             } else {
                 // Line-by-line comparison within fixed-size blocks
@@ -1269,6 +1319,7 @@ process.parentPort.once(
                 groupColumns: groupColumns || [],
                 summary,
                 pageMaps,
+                ...(groupPageMaps.length > 0 ? { groupPageMaps } : {}),
             };
 
             sendMessage(100, summary.totalDiffs, result);

@@ -1,6 +1,7 @@
 import {
     CompareSettings,
     DatasetDiff,
+    GroupPageRange,
     IHeaderCell,
     ITableRow,
     TableRowValue,
@@ -237,6 +238,27 @@ const buildDiffRowSets = (datasetDiff: DatasetDiff | null) => {
     return { baseDiffRows, compDiffRows };
 };
 
+export const findGroupPageForBaseRow = (
+    groupPageMaps: GroupPageRange[],
+    rowIndex: number,
+): number => {
+    if (rowIndex < 0 || groupPageMaps.length === 0) return -1;
+    let low = 0;
+    let high = groupPageMaps.length - 1;
+    while (low <= high) {
+        const mid = Math.floor((low + high) / 2);
+        const range = groupPageMaps[mid];
+        if (rowIndex < range.baseStart) {
+            high = mid - 1;
+        } else if (rowIndex >= range.baseStart + range.baseLength) {
+            low = mid + 1;
+        } else {
+            return mid;
+        }
+    }
+    return -1;
+};
+
 export const alignGroupedCompareData = ({
     baseData,
     compData,
@@ -247,6 +269,8 @@ export const alignGroupedCompareData = ({
     datasetDiff,
     currentPage,
     pageSize,
+    baseRowOffset,
+    compRowOffset,
 }: {
     baseData: ITableRow[];
     compData: ITableRow[];
@@ -257,21 +281,25 @@ export const alignGroupedCompareData = ({
     datasetDiff: DatasetDiff | null;
     currentPage: number;
     pageSize: number;
+    baseRowOffset?: number;
+    compRowOffset?: number;
 }): AlignedGroupedCompareData => {
     const baseGroupColIds = resolveGroupColumnIds(baseHeader, groupColumns);
     const compGroupColIds = resolveGroupColumnIds(compHeader, groupColumns);
 
-    const pageOffset = currentPage * pageSize;
+    const defaultPageOffset = currentPage * pageSize;
+    const resolvedBaseRowOffset = baseRowOffset ?? defaultPageOffset;
+    const resolvedCompRowOffset = compRowOffset ?? defaultPageOffset;
     const baseRuns = buildGroupRuns(
         baseData,
         baseGroupColIds,
-        pageOffset,
+        resolvedBaseRowOffset,
         options,
     );
     const compRuns = buildGroupRuns(
         compData,
         compGroupColIds,
-        pageOffset,
+        resolvedCompRowOffset,
         options,
     );
 

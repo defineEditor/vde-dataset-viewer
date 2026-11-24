@@ -87,22 +87,25 @@ const getData = async (
         return null;
     }
 
-    // Check if start is not after the end of the dataset
-    let safeStart = start;
-    if (start >= metadata.records) {
-        safeStart = Math.max(metadata.records - length, 0);
-    }
+    let itemData: ITableRow[] = [];
+    if (length > 0) {
+        // Check if start is not after the end of the dataset
+        let safeStart = start;
+        if (start >= metadata.records) {
+            safeStart = Math.max(metadata.records - length, 0);
+        }
 
-    const itemData = (await apiService.getObservations(
-        fileId,
-        safeStart,
-        length,
-        settings,
-        filterColumns,
-        filterData,
-        requestReason,
-        keepOpenedData,
-    )) as ITableRow[];
+        itemData = (await apiService.getObservations(
+            fileId,
+            safeStart,
+            length,
+            settings,
+            filterColumns,
+            filterData,
+            requestReason,
+            keepOpenedData,
+        )) as ITableRow[];
+    }
 
     if (filterColumns && filterColumns.length > 0) {
         // Filter metadata columns to include only those in filterColumns

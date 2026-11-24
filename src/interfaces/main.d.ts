@@ -83,6 +83,7 @@ export interface CompareSettings {
 export interface CompareFileSettings {
     encoding: BufferEncoding | 'default';
     bufferSize: number;
+    pageSize?: number;
 }
 
 export interface MetadataDiff {
@@ -141,6 +142,13 @@ export interface DiffSummary {
     };
 }
 
+export interface GroupPageRange {
+    baseStart: number;
+    baseLength: number;
+    compStart: number;
+    compLength: number;
+}
+
 export interface DatasetDiff {
     metadata: MetadataDiff;
     data: DataDiff;
@@ -151,6 +159,7 @@ export interface DatasetDiff {
         base: number[];
         comp: number[];
     };
+    groupPageMaps?: GroupPageRange[];
 }
 
 // Task interfaces

@@ -21,6 +21,7 @@ interface GroupedCompareProps {
     side: 'base' | 'comp';
     expandedGroupKeys: Record<string, boolean>;
     onExpandedGroupKeysChange: (next: Record<string, boolean>) => void;
+    pageRowRange?: { start: number; length: number } | null;
 }
 
 interface CompareDataContainerProps {
@@ -119,6 +120,7 @@ const CompareDataContainer: React.FC<CompareDataContainerProps> = ({
                     onExpandedGroupKeysChange={
                         grouped.onExpandedGroupKeysChange
                     }
+                    pageRowRange={grouped.pageRowRange}
                     isLoading={isLoading}
                     handleContextMenu={handleContextMenu}
                     settings={settings}
